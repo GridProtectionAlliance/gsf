@@ -13,6 +13,7 @@ using GSF;
 using GSF.IO;
 using GSF.TimeSeries.Adapters;
 using System.ServiceModel.Description;
+using System.Reflection;
 
 namespace GrafanaAdapters.GrafanaFunctions
 {
@@ -39,12 +40,16 @@ namespace GrafanaAdapters.GrafanaFunctions
             string functionQuery = parsedParameters.Last();
 
             // Recursive call to parse the nested function
+            //CALL RECURSIVELY FOR TYPE DATA
+            //SliceAdd(0.033,DATA!GPA_BIRMINGHAM:115KV_LINE1_IB_IB.MAG,DATA!GPA_BIRMINGHAM:115KV_LINE1_IB_IB.MAG)
+            //tolerance -> default 0.033 and move to end
             DataSourceValueGroup[] nestedResult = ParseFunction(functionQuery ?? "", dataSourceBase, queryData);
 
             // Apply the compute function
             for (int i = 0; i < nestedResult.Length; i++)
             {
-                object[] computeParameters = GenerateParameters(function, functionParameters, nestedResult[i].Source);
+                //object[] computeParameters = GenerateParameters(function, functionParameters, nestedResult[i].Source);
+                List<IParameter> computeParameters = NewGenerateParameters(dataSourceBase, nestedResult[i].Target, function, functionParameters, nestedResult[i].Source);
                 IEnumerable<DataSourceValue> computedValues = function.Compute(computeParameters); 
 
                 nestedResult[i].Source = computedValues;
@@ -199,6 +204,40 @@ namespace GrafanaAdapters.GrafanaFunctions
             }
 
             return metadataDict;
+        }
+
+
+        public static List<IParameter> NewGenerateParameters(GrafanaDataSourceBase dataSourceBase, string target, 
+            IGrafanaFunction function, string[] parsedParameters, IEnumerable<DataSourceValue> dataPoints)
+        {
+            List<IParameter> parameters = function.Parameters;
+            int paramIndex = 0;
+            foreach (IParameter parameter in parameters)
+            {
+                //Data
+                if (parameter is Parameter<IEnumerable<DataSourceValue>> dataSourceValueParameter)
+                {
+                    dataSourceValueParameter.SetValue(dataSourceBase, dataPoints, target);
+                }
+                //Other
+                else
+                {
+                    //Not enough parameters 
+                    if (paramIndex >= parsedParameters.Length)
+                    {
+                        //If required throws error. If not sets to default
+                        parameter.SetValue(dataSourceBase, null, target); 
+                    }
+                    //Have a valid parameter
+                    else
+                    {
+                        parameter.SetValue(dataSourceBase, parsedParameters[paramIndex], target);
+                        paramIndex++;
+                    }
+                }
+            }
+
+            return parameters;
         }
 
         public static object[] GenerateParameters(IGrafanaFunction function, string[] parsedParameters, IEnumerable<DataSourceValue> dataPoints)

@@ -1,5 +1,7 @@
-﻿using System;
+﻿using GSF.Data;
+using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.ServiceModel.Description;
 using System.Text;
@@ -60,10 +62,86 @@ namespace GrafanaAdapters.GrafanaFunctions
     internal class Parameter<T> : IParameter<T>
     {
         public T Default { get; set; }
+        public T Value { get; set; }
         public string Description { get; set; }
         public bool Required { get; set; }
         public Type ParameterType => typeof(T);
         public string ParameterTypeName { get; set; }
+
+        public void SetValue(GrafanaDataSourceBase dataSourceBase, object value, string target)
+        {
+            // No value specified
+            if (value == null)
+            {
+                // Required -> error
+                if (this.Required)
+                {
+                    throw new ArgumentException($"Required parameter '{this.GetType().ToString()}' is missing.");
+                }
+                // Not required -> default
+                else
+                {
+                    Value = this.Default;
+                }
+            }
+
+            // Data point
+            if(typeof(T) == typeof(IEnumerable<DataSourceValue>))
+            {
+                Value = (T)value;
+                return;
+            }
+
+            string valueString = value.ToString();
+
+            // String
+            if (typeof(T) == typeof(string))
+            {
+                Value = (T)(object)valueString;
+                return;
+            }
+            
+            // Attempt to convert
+            try
+            {
+                Value = (T)Convert.ChangeType(valueString, typeof(T));
+            }
+
+            // Not proper type, check metadata
+            catch (Exception)
+            {
+                // Attempt to get metadata
+                DataRow[] rows = dataSourceBase?.Metadata.Tables["ActiveMeasurements"].Select($"PointTag = '{target}'") ?? new DataRow[0];
+                string metaValue = string.Empty;
+                if (rows.Length > 0 && rows[0].Table.Columns.Contains(valueString))
+                {
+                    metaValue = rows[0][valueString].ToString();
+                }
+
+                // Did not find
+                if(metaValue == string.Empty)
+                {
+                    //Value = this.Default;
+                    //return;
+                    throw new ArgumentException($"Did not locate valid metadata for '{target}'.");
+                }
+
+                // Found, attempt to convert
+                try
+                {
+                    Value = (T)Convert.ChangeType(metaValue, typeof(T));
+                }
+                catch (Exception ex)
+                {
+                    //Value = this.Default;
+                    throw new Exception("Error converting " + valueString + " to " + typeof(T) + " with found metadata of " + metaValue + ".", ex);
+                }
+            }
+        }
+        //public void GetValue()
+        //{
+
+        //}
     }
 
 

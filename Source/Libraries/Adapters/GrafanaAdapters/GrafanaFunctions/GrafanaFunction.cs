@@ -30,12 +30,12 @@ namespace GrafanaAdapters.GrafanaFunctions
         public List<IParameter> Parameters { get; } =
             new List<IParameter>
             {
-                new Parameter<decimal>
+                new Parameter<double>
                 {
                     Default = 0,
                     Description = "A floating point value representing an additive offset to be applied to each value the source series.",
                     Required = true,
-                    ParameterTypeName = "decimal"
+                    ParameterTypeName = "string"
                 },
                 new Parameter<IEnumerable<DataSourceValue>>
                 {
@@ -47,13 +47,17 @@ namespace GrafanaAdapters.GrafanaFunctions
             };
 
         /// <inheritdoc />
-        public IEnumerable<DataSourceValue> Compute(object[] values)
+        public IEnumerable<DataSourceValue> Compute(List<IParameter> parameters)
         {
             // Get Values
-            double value = double.Parse(values[0].ToString());
-            IEnumerable<DataSourceValue> dataSourceValues = (IEnumerable<DataSourceValue>)values[1];
+            double value = (parameters[0] as IParameter<double>).Value;
+            IEnumerable<DataSourceValue> dataSourceValues = (parameters[1] as IParameter<IEnumerable<DataSourceValue>>).Value;
 
-            // Compute
+            // Get Values
+            //double value = double.Parse(values[0].ToString());
+            //IEnumerable<DataSourceValue> dataSourceValues = (IEnumerable<DataSourceValue>)values[1];
+
+            //// Compute
             IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Select(dataValue =>
                 new DataSourceValue
                 {
@@ -102,11 +106,11 @@ namespace GrafanaAdapters.GrafanaFunctions
             };
 
         /// <inheritdoc />
-        public IEnumerable<DataSourceValue> Compute(object[] values)
+        public IEnumerable<DataSourceValue> Compute(List<IParameter> parameters)
         {
             // Get Values
-            IEnumerable<DataSourceValue> dataSourceValues = (IEnumerable<DataSourceValue>)values[0];
-
+            //IEnumerable<DataSourceValue> dataSourceValues = (IEnumerable<DataSourceValue>)values[0];
+            IEnumerable<DataSourceValue> dataSourceValues = (parameters[0] as IParameter<IEnumerable<DataSourceValue>>).Value;
             // Compute
             IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Select(dataValue =>
                 new DataSourceValue
@@ -164,11 +168,11 @@ namespace GrafanaAdapters.GrafanaFunctions
             };
 
         /// <inheritdoc />
-        public IEnumerable<DataSourceValue> Compute(object[] values)
+        public IEnumerable<DataSourceValue> Compute(List<IParameter> parameters)
         {
             // Get Values
-            int numberDecimals = int.Parse(values[0].ToString());
-            IEnumerable<DataSourceValue> dataSourceValues = (IEnumerable<DataSourceValue>)values[1];
+            int numberDecimals = (parameters[0] as IParameter<int>).Value;
+            IEnumerable<DataSourceValue> dataSourceValues = (parameters[1] as IParameter<IEnumerable<DataSourceValue>>).Value;
 
             // Compute
             IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Select(dataValue =>

@@ -163,28 +163,6 @@ namespace GrafanaAdapters
 
                 //DataSourceValueGroup[] valueGroups = request.targets.Select(target => QueryTarget(target, target.target, startTime, stopTime, request.interval, false, false, null, cancellationToken)).SelectMany(groups => groups).ToArray();
 
-                if (request.targets != null)
-                {
-                    foreach (var target in request.targets)
-                    {
-                        if (target.metadataSelection != null)
-                        {
-                            foreach (var entry in target.metadataSelection)
-                            {
-                                string key = entry.Key;
-                                List<string> values = entry.Value;
-
-                                Console.WriteLine($"Target refId: {target.refId}");
-                                Console.WriteLine($"Table Name (Key): {key}");
-                                foreach (string value in values)
-                                {
-                                    Console.WriteLine($"Value: {value}");
-                                }
-                            }
-                        }
-                    }
-                }
-
                 // Establish result series sequentially so that order remains consistent between calls
                 List<TimeSeriesValues> result = valueGroups.Select(valueGroup => new TimeSeriesValues
                 {

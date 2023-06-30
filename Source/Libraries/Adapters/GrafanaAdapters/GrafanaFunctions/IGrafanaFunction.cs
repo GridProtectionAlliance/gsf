@@ -40,9 +40,9 @@ namespace GrafanaAdapters.GrafanaFunctions
         /// <summary>
         /// Performs the computation of the Grafana function.
         /// </summary>
-        /// <param name="values">The input values for the computation.</param>
-        /// <returns>A sequence of computed data source values.</returns>
-        IEnumerable<DataSourceValue> Compute(object[] values);
+        /// <param name="parameters">The input parameters for the computation.</param>
+        /// <returns>A sequence of computed data source parameters.</returns>
+        IEnumerable<DataSourceValue> Compute(List<IParameter> parameters);
     }
 
     /// <summary>
@@ -69,6 +69,14 @@ namespace GrafanaAdapters.GrafanaFunctions
         /// Gets or sets the type name of the parameter.
         /// </summary>
         string ParameterTypeName { get; set; }
+        /// <summary>
+        /// Sets the value of the parameter.
+        /// </summary>
+        void SetValue(GrafanaDataSourceBase dataSourceBase, object value, string target);
+        /// <summary>
+        /// Gets the value of the parameter.
+        /// </summary>
+        //void GetValue();
     }
 
     /// <summary>
@@ -82,6 +90,11 @@ namespace GrafanaAdapters.GrafanaFunctions
         /// </summary>
         T Default { get; set; }
 
+        /// <summary>
+        /// Gets or sets the actual value of the parameter.
+        /// </summary>
+        T Value { get; set;  }
+        
     }
 
 }
