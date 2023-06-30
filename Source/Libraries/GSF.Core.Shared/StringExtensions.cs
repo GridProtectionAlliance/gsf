@@ -358,7 +358,11 @@ namespace GSF
 
             foreach (string key in pairs.Keys)
             {
+               
                 value = pairs[key];
+                
+                if (value is null)
+                    continue;
 
                 if (value.IndexOfAny(delimiters) >= 0)
                     value = startValueDelimiter + value + endValueDelimiter;
