@@ -44,6 +44,7 @@ using System.Linq;
 using System.Security;
 using System.Reflection;
 using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 #if MONO
 using System.Xml.Linq;
@@ -51,7 +52,6 @@ using GSF.Communication;
 #else
 using System.Runtime.Serialization.Formatters;
 using System.Runtime.Serialization.Formatters.Soap;
-using System.Text;
 #endif
 using AnalogDefinition = PhasorWebUI.Adapters.AnalogDefinition;
 using ConfigurationCell = PhasorWebUI.Adapters.ConfigurationCell;

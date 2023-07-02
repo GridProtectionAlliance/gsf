@@ -40,7 +40,7 @@ namespace GSF.TimeSeries.Transport
         static Common()
         {
         #if MONO
-            s_useManagedEncryption = true;
+            UseManagedEncryption = true;
         #else
             const string fipsKeyOld = "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Lsa";
             const string fipsKeyNew = "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Lsa\\FipsAlgorithmPolicy";
