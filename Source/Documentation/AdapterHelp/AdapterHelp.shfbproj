@@ -13,7 +13,8 @@
     <RootNamespace>AdapterHelp</RootNamespace>
     <Name>AdapterHelp</Name>
     <!-- SHFB properties -->
-    <FrameworkVersion>.NET Framework 4.6.1</FrameworkVersion>
+    <FrameworkVersion>.NET Framework 4.8</FrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <OutputPath>..\..\..\Build\Help\Adapters\</OutputPath>
     <HtmlHelpName>GSFTimeSeriesAdapters</HtmlHelpName>
     <Language>en-US</Language>
