@@ -73,6 +73,7 @@ using GSF.Diagnostics;
 using GSF.Threading;
 
 // ReSharper disable AccessToDisposedClosure
+#pragma warning disable CS0649
 namespace GSF.Communication
 {
     /// <summary>

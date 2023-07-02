@@ -104,11 +104,11 @@ namespace GSF.Diagnostics
         {
         }
 
-    #if MONO
+#if MONO
         /// <summary>
         /// Initializes a new instance of the <see cref="PerformanceMonitor"/> class.
         /// </summary>
-        /// <param name="samplingInterval">Interval, in milliseconds, at which the <see cref="Counters"/> are to be sampled.</param>
+        /// <param name="samplingInterval">Interval, in milliseconds, at which the <see cref="PerformanceMonitorBase.Counters"/> are to be sampled.</param>
         /// <param name="addDefaultCounters">Set to <c>true</c> to add default counters; otherwise <c>false</c>.</param>
         // Process based performance counters on Mono are initialized via current process ID
         public PerformanceMonitor(double samplingInterval, bool addDefaultCounters = true)

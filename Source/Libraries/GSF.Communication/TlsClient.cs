@@ -47,6 +47,7 @@ using System.Threading;
 
 // ReSharper disable AccessToDisposedClosure
 // ReSharper disable ArrangeAccessorOwnerBody
+#pragma warning disable CS0649
 namespace GSF.Communication
 {
     /// <summary>
