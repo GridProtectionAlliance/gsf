@@ -1388,7 +1388,9 @@ namespace GSF.TimeSeries
         {
             try
             {
+            #if !MONO
                 GenerateLocalCertificate();
+            #endif
 
                 SetupTempPath();
 
