@@ -339,6 +339,7 @@ namespace GrafanaAdapters.GrafanaFunctions
             {
                 char currentChar = expression[i];
 
+                //Count parenthesis
                 if (currentChar == '(')
                 {
                     nestedParenthesesCount++;
@@ -348,11 +349,13 @@ namespace GrafanaAdapters.GrafanaFunctions
                     nestedParenthesesCount--;
                 }
 
+                //Not inside (), store
                 if (currentChar == ',' && nestedParenthesesCount == 0)
                 {
                     parameters.Add(currentParameter.ToString().Trim());
                     currentParameter.Clear();
                 }
+                //Inside (), append for next part
                 else
                 {
                     currentParameter.Append(currentChar);
