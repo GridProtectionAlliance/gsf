@@ -204,11 +204,11 @@ namespace GSF.Security
         /// </summary>
         public const bool DefaultUseDatabaseLogging = true;
 
-        private const string DefaultMessageUserNotDefined = "User \"{0}\" is not defined.";
-        private const string DefaultMessageUserIsDisabled = "User \"{0}\" is disabled.";
-        private const string DefaultMessageUserIsLockedOut = "User \"{0}\" is not locked out.";
-        private const string DefaultMessageUserPasswordExpired = "User \"{0}\" has an expired password or password has not been set.";
-        private const string DefaultMessageUserHasNoRoles = "User \"{0}\" has not been assigned any roles and therefore has no rights. Contact your administrator.";
+        protected const string DefaultMessageUserNotDefined = "User \"{0}\" is not defined.";
+        protected const string DefaultMessageUserIsDisabled = "User \"{0}\" is disabled.";
+        protected const string DefaultMessageUserIsLockedOut = "User \"{0}\" is not locked out.";
+        protected const string DefaultMessageUserPasswordExpired = "User \"{0}\" has an expired password or password has not been set.";
+        protected const string DefaultMessageUserHasNoRoles = "User \"{0}\" has not been assigned any roles and therefore has no rights. Contact your administrator.";
 
         /// <summary>
         /// Defines the provider ID for the <see cref="AdoSecurityProvider"/>.
