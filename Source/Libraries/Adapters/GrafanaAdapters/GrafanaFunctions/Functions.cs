@@ -31,32 +31,62 @@ namespace GrafanaAdapters.GrafanaFunctions
 
             //Split Parameters
             string[] parsedParameters = ParseParameters(parameterValue);
-            string[] functionParameters;
-            if (parsedParameters.Length > 1)
-                functionParameters = parsedParameters.Take(parsedParameters.Length - 1).ToArray();
-            else
-                functionParameters = new string[0]; 
+            List<string> functionParameters = new List<string>();
+            List<string> queryExpressions = new List<string>();
+            int paramIndex = 0;
 
-            string functionQuery = parsedParameters.Last();
+            // Seperate datapoints from params
+            foreach (string parameter in parsedParameters)
+            {
+                // Datapoint
+                if (function.Parameters[paramIndex] is IParameter<IEnumerable<DataSourceValue>>)
+                {
+                    queryExpressions.Add(parameter);
+                }
+                // Other Parameter
+                else
+                {
+                    functionParameters.Add(parameter);
+                }
+                paramIndex++;
+            }
+
+            List<DataSourceValueGroup[]> groupedDataValues = new List<DataSourceValueGroup[]>();
+            foreach(string query in queryExpressions)
+            {
+                DataSourceValueGroup[] queryResult = ParseFunction(query ?? "", dataSourceBase, queryData);
+                groupedDataValues.Add(queryResult);
+            }
+
+            List<DataSourceValueGroup[]> regroupedDataValues = RegroupDataValues(groupedDataValues);
+
+            //if (parsedParameters.Length > 1)
+            //    functionParameters = parsedParameters.Take(parsedParameters.Length - 1).ToArray();
+            //else
+            //    functionParameters = new string[0]; 
+
+            //string functionQuery = parsedParameters.Last();
 
             // Recursive call to parse the nested function
             //CALL RECURSIVELY FOR TYPE DATA
             //SliceAdd(0.033,DATA!GPA_BIRMINGHAM:115KV_LINE1_IB_IB.MAG,DATA!GPA_BIRMINGHAM:115KV_LINE1_IB_IB.MAG)
             //tolerance -> default 0.033 and move to end
-            DataSourceValueGroup[] nestedResult = ParseFunction(functionQuery ?? "", dataSourceBase, queryData);
+            //DataSourceValueGroup[] nestedResult = ParseFunction(functionQuery ?? "", dataSourceBase, queryData);
 
-            // Apply the compute function
-            for (int i = 0; i < nestedResult.Length; i++)
+            // Apply the compute
+            List<DataSourceValueGroup> res = new List<DataSourceValueGroup>();
+            foreach (DataSourceValueGroup[] dataValues in regroupedDataValues)
             {
-                //object[] computeParameters = GenerateParameters(function, functionParameters, nestedResult[i].Source);
-                List<IParameter> computeParameters = NewGenerateParameters(dataSourceBase, nestedResult[i].Target, function, functionParameters, nestedResult[i].Source);
-                IEnumerable<DataSourceValue> computedValues = function.Compute(computeParameters); 
+                List<IParameter> computeParameters = GenerateParameters(dataSourceBase, function, functionParameters, dataValues);
+                IEnumerable<DataSourceValue> computedValues = function.Compute(computeParameters);
 
-                nestedResult[i].Source = computedValues;
+                //Take first 
+                dataValues[0].Source = computedValues;
+                res.Add(dataValues[0]);
             }
 
             // Return the result to the previous call
-            return nestedResult;
+            return res.ToArray();
         }
 
         public static (IGrafanaFunction function, string parameterValue) MatchFunction(string expression)
@@ -207,31 +237,42 @@ namespace GrafanaAdapters.GrafanaFunctions
         }
 
 
-        public static List<IParameter> NewGenerateParameters(GrafanaDataSourceBase dataSourceBase, string target, 
-            IGrafanaFunction function, string[] parsedParameters, IEnumerable<DataSourceValue> dataPoints)
+        public static List<IParameter> GenerateParameters(GrafanaDataSourceBase dataSourceBase, 
+            IGrafanaFunction function, List<string> parsedParameters, DataSourceValueGroup[] dataValues)
         {
             List<IParameter> parameters = function.Parameters;
             int paramIndex = 0;
+            int dataIndex = 0;
             foreach (IParameter parameter in parameters)
             {
                 //Data
                 if (parameter is Parameter<IEnumerable<DataSourceValue>> dataSourceValueParameter)
                 {
-                    dataSourceValueParameter.SetValue(dataSourceBase, dataPoints, target);
+                    //Not enough parameters 
+                    if (dataIndex >= dataValues.Length)
+                    {
+                        dataSourceValueParameter.SetValue(dataSourceBase, null, null);
+                    }
+                    else
+                    {
+                        dataSourceValueParameter.SetValue(dataSourceBase, dataValues[dataIndex].Source, dataValues[dataIndex].Target);
+                        dataIndex++;
+                    }
+
                 }
-                //Other
+                //Parameter
                 else
                 {
                     //Not enough parameters 
-                    if (paramIndex >= parsedParameters.Length)
+                    if (paramIndex >= parsedParameters.Count)
                     {
                         //If required throws error. If not sets to default
-                        parameter.SetValue(dataSourceBase, null, target); 
+                        parameter.SetValue(dataSourceBase, null, null); 
                     }
                     //Have a valid parameter
                     else
                     {
-                        parameter.SetValue(dataSourceBase, parsedParameters[paramIndex], target);
+                        parameter.SetValue(dataSourceBase, parsedParameters[paramIndex], dataValues[0].Target);
                         paramIndex++;
                     }
                 }
@@ -290,27 +331,43 @@ namespace GrafanaAdapters.GrafanaFunctions
                 return new string[0];
             }
 
-            int indexOpenBracket = expression.IndexOf('(');
+            List<string> parameters = new List<string>();
+            StringBuilder currentParameter = new StringBuilder();
+            int nestedParenthesesCount = 0;
 
-            // If '(' doesn't exist, return split
-            if (indexOpenBracket == -1)
+            for (int i = 0; i < expression.Length; i++)
             {
-                return expression.Split(',');
+                char currentChar = expression[i];
+
+                if (currentChar == '(')
+                {
+                    nestedParenthesesCount++;
+                }
+                else if (currentChar == ')')
+                {
+                    nestedParenthesesCount--;
+                }
+
+                if (currentChar == ',' && nestedParenthesesCount == 0)
+                {
+                    parameters.Add(currentParameter.ToString().Trim());
+                    currentParameter.Clear();
+                }
+                else
+                {
+                    currentParameter.Append(currentChar);
+                }
             }
 
-            string parametersSubstring = expression.Substring(0, indexOpenBracket);
-
-            // Split the substring by comma
-            string[] parameters = parametersSubstring.Split(',');
-
-            if (parameters.Length > 0 && !string.IsNullOrWhiteSpace(parameters[parameters.Length - 1]))
+            if (currentParameter.Length > 0)
             {
-                // Last item is not empty or whitespace, append the remaining expression
-                parameters[parameters.Length - 1] += expression.Substring(indexOpenBracket);
+                parameters.Add(currentParameter.ToString().Trim());
             }
 
-            return parameters;
+            return parameters.ToArray();
         }
+
+
 
         public static List<IGrafanaFunction> GetGrafanaFunctions()
         {
@@ -327,6 +384,43 @@ namespace GrafanaAdapters.GrafanaFunctions
             }
 
             return grafanaFunctions;
+        }
+
+        public static List<DataSourceValueGroup[]> RegroupDataValues(List<DataSourceValueGroup[]> groupedDataValues)
+        {
+            List<DataSourceValueGroup[]> result = new List<DataSourceValueGroup[]>();
+
+            //Empty list
+            if (groupedDataValues.Count == 0)
+            {
+                return result;
+            }
+
+            int arrayLength = groupedDataValues.Any() ? groupedDataValues.Max(arr => arr.Length) : 0;
+            int groupCount = groupedDataValues.Count;
+
+            for (int i = 0; i < arrayLength; i++)
+            {
+                DataSourceValueGroup[] newGroup = new DataSourceValueGroup[groupCount];
+
+                for (int j = 0; j < groupCount; j++)
+                {
+                    if (i < groupedDataValues[j].Length)
+                    {
+                        newGroup[j] = groupedDataValues[j][i];
+                    }
+                    //Out of bounds
+                    else
+                    { 
+                        newGroup[j] = null;
+                    }
+                }
+
+                result.Add(newGroup);
+            }
+
+
+            return result;
         }
     }
 
