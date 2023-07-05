@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using GSF.Units;
 
 namespace GrafanaAdapters.GrafanaFunctions
 {
@@ -37,9 +39,9 @@ namespace GrafanaAdapters.GrafanaFunctions
                     Required = true,
                     ParameterTypeName = "string"
                 },
-                new Parameter<IEnumerable<DataSourceValue>>
+                new Parameter<DataSourceValueGroup>
                 {
-                    Default = Enumerable.Empty<DataSourceValue>(),
+                    Default = new DataSourceValueGroup(),
                     Description = "Data Points",
                     Required = true,
                     ParameterTypeName = "data"
@@ -47,18 +49,18 @@ namespace GrafanaAdapters.GrafanaFunctions
             };
 
         /// <inheritdoc />
-        public IEnumerable<DataSourceValue> Compute(List<IParameter> parameters)
+        public DataSourceValueGroup Compute(List<IParameter> parameters)
         {
             // Get Values
             double value = (parameters[0] as IParameter<double>).Value;
-            IEnumerable<DataSourceValue> dataSourceValues = (parameters[1] as IParameter<IEnumerable<DataSourceValue>>).Value;
+            DataSourceValueGroup dataSourceValues = (parameters[1] as IParameter<DataSourceValueGroup>).Value;
 
             // Get Values
             //double value = double.Parse(values[0].ToString());
             //IEnumerable<DataSourceValue> dataSourceValues = (IEnumerable<DataSourceValue>)values[1];
 
             //// Compute
-            IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Select(dataValue =>
+            IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source.Select(dataValue =>
                 new DataSourceValue
                 {
                     Value = value + dataValue.Value,
@@ -66,7 +68,8 @@ namespace GrafanaAdapters.GrafanaFunctions
                     Target = dataValue.Target
                 });
 
-            return transformedDataSourceValues;
+            dataSourceValues.Source = transformedDataSourceValues;
+            return dataSourceValues;
         }
 
         /// <summary>
@@ -103,16 +106,16 @@ namespace GrafanaAdapters.GrafanaFunctions
                     Required = true,
                     ParameterTypeName = "string"
                 },
-                new Parameter<IEnumerable<DataSourceValue>>
+                new Parameter<DataSourceValueGroup>
                 {
-                    Default = Enumerable.Empty<DataSourceValue>(),
+                    Default = new DataSourceValueGroup(),
                     Description = "First datapoint",
                     Required = true,
                     ParameterTypeName = "data"
                 },
-                new Parameter<IEnumerable<DataSourceValue>>
+                new Parameter<DataSourceValueGroup>
                 {
-                    Default = Enumerable.Empty<DataSourceValue>(),
+                    Default = new DataSourceValueGroup(),
                     Description = "Second datapoint",
                     Required = true,
                     ParameterTypeName = "data"
@@ -120,15 +123,18 @@ namespace GrafanaAdapters.GrafanaFunctions
             };
 
         /// <inheritdoc />
-        public IEnumerable<DataSourceValue> Compute(List<IParameter> parameters)
+        public DataSourceValueGroup Compute(List<IParameter> parameters)
         {
             // Get Values
             double tolerance = (parameters[0] as IParameter<double>).Value;
-            IEnumerable<DataSourceValue> firstValues = (parameters[1] as IParameter<IEnumerable<DataSourceValue>>).Value;
-            IEnumerable<DataSourceValue> secondValues = (parameters[2] as IParameter<IEnumerable<DataSourceValue>>).Value;
+            DataSourceValueGroup firstData = (parameters[1] as IParameter<DataSourceValueGroup>).Value;
+            DataSourceValueGroup secondData = (parameters[2] as IParameter<DataSourceValueGroup>).Value;
+
+            //TimeSliceScanner scanner = new(firstValues, tolerance / SI.Milli);
+
 
             //Compute
-            IEnumerable<DataSourceValue> combinedValues = firstValues.Zip(secondValues, (first, second) =>
+            IEnumerable<DataSourceValue> combinedValues = firstData.Source.Zip(secondData.Source, (first, second) =>
             {
                 double combinedValue = first.Value + second.Value;
 
@@ -140,7 +146,10 @@ namespace GrafanaAdapters.GrafanaFunctions
                 };
             });
 
-            return combinedValues;
+
+            firstData.Source = combinedValues;
+
+            return firstData;
         }
 
         /// <summary>
@@ -170,9 +179,9 @@ namespace GrafanaAdapters.GrafanaFunctions
         public List<IParameter> Parameters { get; } =
             new List<IParameter>
             {
-                new Parameter<IEnumerable<DataSourceValue>>
+                new Parameter<DataSourceValueGroup>
                 {
-                    Default = Enumerable.Empty<DataSourceValue>(),
+                    Default = new DataSourceValueGroup(),
                     Description = "Data Points",
                     Required = true,
                     ParameterTypeName = "data"
@@ -180,13 +189,12 @@ namespace GrafanaAdapters.GrafanaFunctions
             };
 
         /// <inheritdoc />
-        public IEnumerable<DataSourceValue> Compute(List<IParameter> parameters)
+        public DataSourceValueGroup Compute(List<IParameter> parameters)
         {
             // Get Values
-            //IEnumerable<DataSourceValue> dataSourceValues = (IEnumerable<DataSourceValue>)values[0];
-            IEnumerable<DataSourceValue> dataSourceValues = (parameters[0] as IParameter<IEnumerable<DataSourceValue>>).Value;
+            DataSourceValueGroup dataSourceValues = (parameters[0] as IParameter<DataSourceValueGroup>).Value;
             // Compute
-            IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Select(dataValue =>
+            IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source.Select(dataValue =>
                 new DataSourceValue
                 {
                     Value = Math.Abs(dataValue.Value),
@@ -194,7 +202,9 @@ namespace GrafanaAdapters.GrafanaFunctions
                     Target = dataValue.Target
                 });
 
-            return transformedDataSourceValues;
+            dataSourceValues.Source = transformedDataSourceValues;
+
+            return dataSourceValues;
         }
 
         /// <summary>
@@ -232,9 +242,9 @@ namespace GrafanaAdapters.GrafanaFunctions
                     Required = false,
                     ParameterTypeName = "int"
                 },
-                new Parameter<IEnumerable<DataSourceValue>>
+                new Parameter<DataSourceValueGroup>
                 {
-                    Default = Enumerable.Empty<DataSourceValue>(),
+                    Default = new DataSourceValueGroup(),
                     Description = "Data Points",
                     Required = true,
                     ParameterTypeName = "data"
@@ -242,14 +252,14 @@ namespace GrafanaAdapters.GrafanaFunctions
             };
 
         /// <inheritdoc />
-        public IEnumerable<DataSourceValue> Compute(List<IParameter> parameters)
+        public DataSourceValueGroup Compute(List<IParameter> parameters)
         {
             // Get Values
             int numberDecimals = (parameters[0] as IParameter<int>).Value;
-            IEnumerable<DataSourceValue> dataSourceValues = (parameters[1] as IParameter<IEnumerable<DataSourceValue>>).Value;
+            DataSourceValueGroup dataSourceValues = (parameters[1] as IParameter<DataSourceValueGroup>).Value;
 
             // Compute
-            IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Select(dataValue =>
+            IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source.Select(dataValue =>
                 new DataSourceValue
                 {
                     Value = Math.Round(dataValue.Value, numberDecimals),
@@ -257,7 +267,9 @@ namespace GrafanaAdapters.GrafanaFunctions
                     Target = dataValue.Target
                 });
 
-            return transformedDataSourceValues;
+            dataSourceValues.Source = transformedDataSourceValues;
+
+            return dataSourceValues;
         }
 
         /// <summary>

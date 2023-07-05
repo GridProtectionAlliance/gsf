@@ -42,7 +42,7 @@ namespace GrafanaAdapters.GrafanaFunctions
         /// </summary>
         /// <param name="parameters">The input parameters for the computation.</param>
         /// <returns>A sequence of computed data source parameters.</returns>
-        IEnumerable<DataSourceValue> Compute(List<IParameter> parameters);
+        DataSourceValueGroup Compute(List<IParameter> parameters);
     }
 
     /// <summary>

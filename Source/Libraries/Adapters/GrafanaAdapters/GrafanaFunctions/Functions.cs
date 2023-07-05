@@ -31,15 +31,15 @@ namespace GrafanaAdapters.GrafanaFunctions
 
             //Split Parameters
             string[] parsedParameters = ParseParameters(parameterValue);
-            List<string> functionParameters = new List<string>();
-            List<string> queryExpressions = new List<string>();
+            List<string> functionParameters = new List<string>(); //Other params
+            List<string> queryExpressions = new List<string>(); //Datapoints
             int paramIndex = 0;
 
             // Seperate datapoints from params
             foreach (string parameter in parsedParameters)
             {
                 // Datapoint
-                if (function.Parameters[paramIndex] is IParameter<IEnumerable<DataSourceValue>>)
+                if (function.Parameters[paramIndex] is IParameter<DataSourceValueGroup>)
                 {
                     queryExpressions.Add(parameter);
                 }
@@ -51,6 +51,7 @@ namespace GrafanaAdapters.GrafanaFunctions
                 paramIndex++;
             }
 
+            //Fetch datapoints query
             List<DataSourceValueGroup[]> groupedDataValues = new List<DataSourceValueGroup[]>();
             foreach(string query in queryExpressions)
             {
@@ -58,31 +59,18 @@ namespace GrafanaAdapters.GrafanaFunctions
                 groupedDataValues.Add(queryResult);
             }
 
+            //Regroup datapoints to align for function
+            //Ex: [A, B] & [C, D] -> [A, C] & [B, D]
             List<DataSourceValueGroup[]> regroupedDataValues = RegroupDataValues(groupedDataValues);
 
-            //if (parsedParameters.Length > 1)
-            //    functionParameters = parsedParameters.Take(parsedParameters.Length - 1).ToArray();
-            //else
-            //    functionParameters = new string[0]; 
-
-            //string functionQuery = parsedParameters.Last();
-
-            // Recursive call to parse the nested function
-            //CALL RECURSIVELY FOR TYPE DATA
-            //SliceAdd(0.033,DATA!GPA_BIRMINGHAM:115KV_LINE1_IB_IB.MAG,DATA!GPA_BIRMINGHAM:115KV_LINE1_IB_IB.MAG)
-            //tolerance -> default 0.033 and move to end
-            //DataSourceValueGroup[] nestedResult = ParseFunction(functionQuery ?? "", dataSourceBase, queryData);
-
-            // Apply the compute
+            // Apply the function
             List<DataSourceValueGroup> res = new List<DataSourceValueGroup>();
             foreach (DataSourceValueGroup[] dataValues in regroupedDataValues)
             {
                 List<IParameter> computeParameters = GenerateParameters(dataSourceBase, function, functionParameters, dataValues);
-                IEnumerable<DataSourceValue> computedValues = function.Compute(computeParameters);
+                DataSourceValueGroup computedValues = function.Compute(computeParameters);
 
-                //Take first 
-                dataValues[0].Source = computedValues;
-                res.Add(dataValues[0]);
+                res.Add(computedValues);
             }
 
             // Return the result to the previous call
@@ -246,7 +234,7 @@ namespace GrafanaAdapters.GrafanaFunctions
             foreach (IParameter parameter in parameters)
             {
                 //Data
-                if (parameter is Parameter<IEnumerable<DataSourceValue>> dataSourceValueParameter)
+                if (parameter is Parameter<DataSourceValueGroup> dataSourceValueParameter)
                 {
                     //Not enough parameters 
                     if (dataIndex >= dataValues.Length)
@@ -255,7 +243,7 @@ namespace GrafanaAdapters.GrafanaFunctions
                     }
                     else
                     {
-                        dataSourceValueParameter.SetValue(dataSourceBase, dataValues[dataIndex].Source, dataValues[dataIndex].Target);
+                        dataSourceValueParameter.SetValue(dataSourceBase, dataValues[dataIndex], dataValues[dataIndex].Target);
                         dataIndex++;
                     }
 

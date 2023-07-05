@@ -85,8 +85,8 @@ namespace GrafanaAdapters.GrafanaFunctions
                 }
             }
 
-            // Data point
-            if(typeof(T) == typeof(IEnumerable<DataSourceValue>))
+            // Data
+            if(typeof(T) == typeof(DataSourceValueGroup))
             {
                 Value = (T)value;
                 return;
