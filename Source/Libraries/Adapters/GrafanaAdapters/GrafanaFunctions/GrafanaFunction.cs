@@ -55,11 +55,7 @@ namespace GrafanaAdapters.GrafanaFunctions
             double value = (parameters[0] as IParameter<double>).Value;
             DataSourceValueGroup dataSourceValues = (parameters[1] as IParameter<DataSourceValueGroup>).Value;
 
-            // Get Values
-            //double value = double.Parse(values[0].ToString());
-            //IEnumerable<DataSourceValue> dataSourceValues = (IEnumerable<DataSourceValue>)values[1];
-
-            //// Compute
+            // Compute
             IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source.Select(dataValue =>
                 new DataSourceValue
                 {
@@ -68,6 +64,7 @@ namespace GrafanaAdapters.GrafanaFunctions
                     Target = dataValue.Target
                 });
 
+            dataSourceValues.Target = $"{value}+{dataSourceValues.Target}";
             dataSourceValues.Source = transformedDataSourceValues;
             return dataSourceValues;
         }
@@ -79,7 +76,7 @@ namespace GrafanaAdapters.GrafanaFunctions
     }
 
     /// <summary>
-    /// Represents the "Add" function that adds a decimal number to a DataSourceValue.
+    /// Represents the "SliceAdd" function that adds two DataSourceValues.
     /// </summary>
     public class SliceAdd : IGrafanaFunction
     {
@@ -101,7 +98,7 @@ namespace GrafanaAdapters.GrafanaFunctions
             {
                 new Parameter<double>
                 {
-                    Default = 0,
+                    Default = 0.033,
                     Description = "The level of tolerance.",
                     Required = true,
                     ParameterTypeName = "string"
@@ -130,30 +127,47 @@ namespace GrafanaAdapters.GrafanaFunctions
             DataSourceValueGroup firstData = (parameters[1] as IParameter<DataSourceValueGroup>).Value;
             DataSourceValueGroup secondData = (parameters[2] as IParameter<DataSourceValueGroup>).Value;
 
-            //TimeSliceScanner scanner = new(firstValues, tolerance / SI.Milli);
-
-
-            //Compute
-            IEnumerable<DataSourceValue> combinedValues = firstData.Source.Zip(secondData.Source, (first, second) =>
+            List<DataSourceValueGroup> dataGroups = new List<DataSourceValueGroup>
             {
-                double combinedValue = first.Value + second.Value;
+                firstData,
+                secondData
+            };
 
-                return new DataSourceValue
+            TimeSliceScanner scanner = new(dataGroups, tolerance / SI.Milli);
+            IEnumerable<DataSourceValue> combinedValues = new List<DataSourceValue>(); 
+            while (!scanner.DataReadComplete)
+            {
+                IEnumerable<DataSourceValue> datapointGroups = scanner.ReadNextTimeSlice();
+                int numberDatapoints = datapointGroups.Count();
+                if (datapointGroups.Count() != dataGroups.Count())
                 {
-                    Value = combinedValue,
-                    Time = first.Time, 
-                    Target = first.Target 
-                };
-            });
+                    continue;
+                }
 
+                double totalValue = 0;
+                double totalTime = 0;
+                foreach (DataSourceValue datapoint in datapointGroups)
+                {
+                    totalValue += datapoint.Value;
+                    totalTime += datapoint.Time;
+                }
 
+                combinedValues = combinedValues.Append(new DataSourceValue
+                {
+                    Value = totalValue,
+                    Time = totalTime / numberDatapoints,
+                    Target = datapointGroups.First().Target 
+                });
+            }
+
+            firstData.Target = $"{firstData.Target}+{secondData.Target}";
             firstData.Source = combinedValues;
 
             return firstData;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Add"/> class.
+        /// Initializes a new instance of the <see cref="SliceAdd"/> class.
         /// </summary>
         public SliceAdd() { }
     }
@@ -202,6 +216,7 @@ namespace GrafanaAdapters.GrafanaFunctions
                     Target = dataValue.Target
                 });
 
+            dataSourceValues.Target = $"Abs({dataSourceValues.Target})";
             dataSourceValues.Source = transformedDataSourceValues;
 
             return dataSourceValues;
@@ -235,6 +250,13 @@ namespace GrafanaAdapters.GrafanaFunctions
         public List<IParameter> Parameters { get; } =
             new List<IParameter>
             {
+                new Parameter<DataSourceValueGroup>
+                {
+                    Default = new DataSourceValueGroup(),
+                    Description = "Data Points",
+                    Required = true,
+                    ParameterTypeName = "data"
+                },
                 new Parameter<int>
                 {
                     Default = 0,
@@ -242,21 +264,14 @@ namespace GrafanaAdapters.GrafanaFunctions
                     Required = false,
                     ParameterTypeName = "int"
                 },
-                new Parameter<DataSourceValueGroup>
-                {
-                    Default = new DataSourceValueGroup(),
-                    Description = "Data Points",
-                    Required = true,
-                    ParameterTypeName = "data"
-                }
             };
 
         /// <inheritdoc />
         public DataSourceValueGroup Compute(List<IParameter> parameters)
         {
             // Get Values
-            int numberDecimals = (parameters[0] as IParameter<int>).Value;
-            DataSourceValueGroup dataSourceValues = (parameters[1] as IParameter<DataSourceValueGroup>).Value;
+            DataSourceValueGroup dataSourceValues = (parameters[0] as IParameter<DataSourceValueGroup>).Value;
+            int numberDecimals = (parameters[1] as IParameter<int>).Value;
 
             // Compute
             IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source.Select(dataValue =>
@@ -267,13 +282,14 @@ namespace GrafanaAdapters.GrafanaFunctions
                     Target = dataValue.Target
                 });
 
+            dataSourceValues.Target = $"Round({numberDecimals},{dataSourceValues.Target})";
             dataSourceValues.Source = transformedDataSourceValues;
 
             return dataSourceValues;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="AbsoluteValue"/> class.
+        /// Initializes a new instance of the <see cref="Round"/> class.
         /// </summary>
         public Round() { }
     }

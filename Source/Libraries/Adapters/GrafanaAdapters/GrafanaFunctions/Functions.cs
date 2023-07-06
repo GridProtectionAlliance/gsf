@@ -243,7 +243,7 @@ namespace GrafanaAdapters.GrafanaFunctions
                     }
                     else
                     {
-                        dataSourceValueParameter.SetValue(dataSourceBase, dataValues[dataIndex], dataValues[dataIndex].Target);
+                        dataSourceValueParameter.SetValue(dataSourceBase, dataValues[dataIndex], dataValues[dataIndex].RootTarget);
                         dataIndex++;
                     }
 
@@ -260,7 +260,7 @@ namespace GrafanaAdapters.GrafanaFunctions
                     //Have a valid parameter
                     else
                     {
-                        parameter.SetValue(dataSourceBase, parsedParameters[paramIndex], dataValues[0].Target);
+                        parameter.SetValue(dataSourceBase, parsedParameters[paramIndex], dataValues[0].RootTarget);
                         paramIndex++;
                     }
                 }
