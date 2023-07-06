@@ -204,10 +204,29 @@ namespace GSF.Security
         /// </summary>
         public const bool DefaultUseDatabaseLogging = true;
 
+        /// <summary>
+        /// Default message displayed when user is not defined.
+        /// </summary>
         protected const string DefaultMessageUserNotDefined = "User \"{0}\" is not defined.";
+
+        /// <summary>
+        /// Default message displayed when user is disabled.
+        /// </summary>
         protected const string DefaultMessageUserIsDisabled = "User \"{0}\" is disabled.";
+
+        /// <summary>
+        /// Default message displayed when user is locked out.
+        /// </summary>
         protected const string DefaultMessageUserIsLockedOut = "User \"{0}\" is not locked out.";
+
+        /// <summary>
+        /// Default message displayed when password is expired or has not been set.
+        /// </summary>
         protected const string DefaultMessageUserPasswordExpired = "User \"{0}\" has an expired password or password has not been set.";
+
+        /// <summary>
+        /// Default message displayed when user is not a member of any roles.
+        /// </summary>
         protected const string DefaultMessageUserHasNoRoles = "User \"{0}\" has not been assigned any roles and therefore has no rights. Contact your administrator.";
 
         /// <summary>
