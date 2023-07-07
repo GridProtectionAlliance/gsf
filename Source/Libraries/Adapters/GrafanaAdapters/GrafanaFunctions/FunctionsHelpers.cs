@@ -23,7 +23,14 @@ namespace GrafanaAdapters.GrafanaFunctions
         public Type ParameterType => typeof(T);
         public string ParameterTypeName { get; set; }
 
-        public void SetValue(GrafanaDataSourceBase dataSourceBase, object value, string target)
+        /*
+         * This function is used to convert the value to the proper type
+         * If the type of value provided and expected match, then it directly converts
+         * If the types do not match, then it first searches through the provided metadata.
+         * If nothing is found, it looks through ActiveMeasurements for it.
+         * Finally, if none of the above work it throws an error.
+         */
+        public void SetValue(GrafanaDataSourceBase dataSourceBase, object value, string target, Dictionary<string, string> metadata)
         {
             // No value specified
             if (value == null)
@@ -66,38 +73,43 @@ namespace GrafanaAdapters.GrafanaFunctions
             // Not proper type, check metadata
             catch (Exception)
             {
-                // Attempt to get metadata
-                DataRow[] rows = dataSourceBase?.Metadata.Tables["ActiveMeasurements"].Select($"PointTag = '{target}'") ?? new DataRow[0];
-                string metaValue = string.Empty;
-                if (rows.Length > 0 && rows[0].Table.Columns.Contains(valueString))
+                // Attempt to find in dictionary
+                if (metadata.Count != 0 && metadata.TryGetValue(valueString, out string metaValue))
                 {
-                    metaValue = rows[0][valueString].ToString();
+                    // Found, attempt to convert
+                    try
+                    {
+                        Value = (T)Convert.ChangeType(metaValue, typeof(T));
+                    }
+                    catch (Exception ex)
+                    {
+                        //Value = this.Default;
+                        throw new Exception($"Error converting {valueString} to {typeof(T)} with found metadata of {metaValue} .", ex);
+                    }
                 }
+                // Not found, check ActiveMeasurements
+                else
+                {
+                    DataRow[] rows = dataSourceBase?.Metadata.Tables["ActiveMeasurements"].Select($"PointTag = '{target}'") ?? new DataRow[0];
+                    //Not valid
+                    if (!(rows.Length > 0 && rows[0].Table.Columns.Contains(valueString)))
+                    {
+                        throw new ArgumentException($"Metadata '{valueString}' not found");
+                    }
 
-                // Did not find
-                if(metaValue == string.Empty)
-                {
-                    //Value = this.Default;
-                    //return;
-                    throw new ArgumentException($"Did not locate valid metadata for '{target}'.");
-                }
-
-                // Found, attempt to convert
-                try
-                {
-                    Value = (T)Convert.ChangeType(metaValue, typeof(T));
-                }
-                catch (Exception ex)
-                {
-                    //Value = this.Default;
-                    throw new Exception("Error converting " + valueString + " to " + typeof(T) + " with found metadata of " + metaValue + ".", ex);
-                }
+                    // Found, attempt to convert
+                    string foundValue = rows[0][valueString].ToString();
+                    try
+                    {
+                        Value = (T)Convert.ChangeType(foundValue, typeof(T));
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception($"Error converting {valueString} to {typeof(T)} with found metadata of {foundValue}.", ex);
+                    }
+                }    
             }
         }
-        //public void GetValue()
-        //{
-
-        //}
     }
 
 

@@ -225,8 +225,7 @@ namespace GrafanaAdapters.GrafanaFunctions
         }
 
 
-        public static List<IParameter> GenerateParameters(GrafanaDataSourceBase dataSourceBase, 
-            IGrafanaFunction function, List<string> parsedParameters, DataSourceValueGroup[] dataValues)
+        public static List<IParameter> GenerateParameters(GrafanaDataSourceBase dataSourceBase, IGrafanaFunction function, List<string> parsedParameters, DataSourceValueGroup[] dataValues)
         {
             List<IParameter> parameters = function.Parameters;
             int paramIndex = 0;
@@ -239,11 +238,11 @@ namespace GrafanaAdapters.GrafanaFunctions
                     //Not enough parameters 
                     if (dataIndex >= dataValues.Length)
                     {
-                        dataSourceValueParameter.SetValue(dataSourceBase, null, null);
+                        dataSourceValueParameter.SetValue(dataSourceBase, null, null, null);
                     }
                     else
                     {
-                        dataSourceValueParameter.SetValue(dataSourceBase, dataValues[dataIndex], dataValues[dataIndex].RootTarget);
+                        dataSourceValueParameter.SetValue(dataSourceBase, dataValues[dataIndex], dataValues[dataIndex].RootTarget, dataValues[dataIndex].metadata);
                         dataIndex++;
                     }
 
@@ -255,12 +254,13 @@ namespace GrafanaAdapters.GrafanaFunctions
                     if (paramIndex >= parsedParameters.Count)
                     {
                         //If required throws error. If not sets to default
-                        parameter.SetValue(dataSourceBase, null, null); 
+                        parameter.SetValue(dataSourceBase, null, null, null); 
                     }
                     //Have a valid parameter
                     else
                     {
-                        parameter.SetValue(dataSourceBase, parsedParameters[paramIndex], dataValues[0].RootTarget);
+                        //Uses metadata from first 
+                        parameter.SetValue(dataSourceBase, parsedParameters[paramIndex], dataValues[0]?.RootTarget, dataValues[0]?.metadata);
                         paramIndex++;
                     }
                 }

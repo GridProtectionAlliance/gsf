@@ -72,7 +72,7 @@ namespace GrafanaAdapters.GrafanaFunctions
         /// <summary>
         /// Sets the value of the parameter.
         /// </summary>
-        void SetValue(GrafanaDataSourceBase dataSourceBase, object value, string target);
+        void SetValue(GrafanaDataSourceBase dataSourceBase, object value, string target, Dictionary<string, string> metadata);
     }
 
     /// <summary>
