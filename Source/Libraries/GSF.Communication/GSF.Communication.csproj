@@ -105,9 +105,7 @@
     <Compile Include="ServerBase.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="TlsClient.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="TlsClient.cs" />
     <Compile Include="TlsServer.cs">
       <SubType>Component</SubType>
     </Compile>

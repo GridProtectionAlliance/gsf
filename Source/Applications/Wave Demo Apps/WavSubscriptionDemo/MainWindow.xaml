@@ -11,6 +11,7 @@
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_Tools">
+                <MenuItem Header="_Save Audio" Click="SaveAudioMenuItem_Click" />
                 <MenuItem x:Name="VisualizationMenu" Header="_Visualization" Click="VisualizationMenuItem_Click">
                     <MenuItem.Resources>
                         <Style TargetType="{x:Type RadioButton}">

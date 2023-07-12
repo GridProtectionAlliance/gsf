@@ -52,11 +52,11 @@ namespace WavSubscriptionDemo
         public MainWindow()
         {
             InitializeComponent();
-            this.Loaded += MainWindow_Loaded;
-            this.Closing += MainWindow_Closing;
-            m_viewModel = new ControlPanelViewModel(this.WaveForm);
-            this.ControlPanel.DataContext = m_viewModel;
-            this.Stat.DataContext = new StatViewModel(m_viewModel.AudioGraph);
+            Loaded += MainWindow_Loaded;
+            Closing += MainWindow_Closing;
+            m_viewModel = new ControlPanelViewModel(WaveForm);
+            ControlPanel.DataContext = m_viewModel;
+            Stat.DataContext = new StatViewModel(m_viewModel.AudioGraph);
             m_viewModel.AudioGraph.PlaybackStateChanged += AudioGraph_PlaybackStateChanged;
         }
 
@@ -67,10 +67,7 @@ namespace WavSubscriptionDemo
                 .Where(item => item.Icon is RadioButton)
                 .SingleOrDefault(item => ((RadioButton)item.Icon).IsChecked == true);
 
-            if (selectedItem != null)
-                return selectedItem.Header.ToString();
-
-            return null;
+            return selectedItem?.Header.ToString();
         }
 
         // Sets the selected visualization to the option matching the given header name.
@@ -78,24 +75,19 @@ namespace WavSubscriptionDemo
         {
             MenuItem selectedItem;
 
-            if (headerName == null)
+            if (headerName is null)
             {
                 selectedItem = VisualizationMenu.Items.Cast<MenuItem>().First();
             }
             else
             {
                 selectedItem = VisualizationMenu.Items.Cast<MenuItem>()
-                    .Where(item => item.Header != null)
+                    .Where(item => item.Header is not null)
                     .SingleOrDefault(item => item.Header.ToString() == headerName);
             }
 
-            if (selectedItem != null)
-            {
-                RadioButton itemIcon = selectedItem.Icon as RadioButton;
-
-                if (itemIcon != null)
-                    itemIcon.IsChecked = true;
-            }
+            if (selectedItem?.Icon is RadioButton itemIcon)
+                itemIcon.IsChecked = true;
         }
 
         // Handles the main window's Loaded event. Restores application settings from last run.
@@ -108,22 +100,24 @@ namespace WavSubscriptionDemo
             string visualization = ConfigurationManager.AppSettings["Visualization"];
             string useZeroMQChannel = ConfigurationManager.AppSettings["UseZeroMQChannel"];
 
-            if (connectionUri != null)
+            if (connectionUri is not null)
                 m_viewModel.ConnectionUri = connectionUri;
 
-            if (enableCompression != null)
+            if (enableCompression is not null)
                 m_viewModel.EnableCompression = enableCompression.ParseBoolean();
 
-            if (enableEncryption != null)
+            if (enableEncryption is not null)
                 m_viewModel.EnableEncryption = enableEncryption.ParseBoolean();
 
-            if (ipv6Enabled != null)
+            if (ipv6Enabled is not null)
                 m_viewModel.IPv6Enabled = ipv6Enabled.ParseBoolean();
 
-            if (useZeroMQChannel != null)
+            if (useZeroMQChannel is not null)
                 m_viewModel.UseZeroMQChannel = useZeroMQChannel.ParseBoolean();
 
             SetSelectedVisualization(visualization);
+
+            m_viewModel.ReplayStopTime = "*";
         }
 
         // Handles the main window's Closing event. Stores application settings from this run.
@@ -164,40 +158,40 @@ namespace WavSubscriptionDemo
                 // Restore the various UI elements in case they
                 // changed the last time the state was updated.
                 Cursor = Cursors.Arrow;
-                this.ControlPanel.IsEnabled = true;
-                this.PlaybackStateLabel.Foreground = Brushes.White;
-                this.PlaybackStateLabel.Content = "";
+                ControlPanel.IsEnabled = true;
+                PlaybackStateLabel.Foreground = Brushes.White;
+                PlaybackStateLabel.Content = "";
 
                 switch (e.Argument1)
                 {
                     case PlaybackState.Connected:
                     case PlaybackState.Playing:
-                        this.ControlPanel.DisabledButtons.Visibility = Visibility.Collapsed;
+                        ControlPanel.DisabledButtons.Visibility = Visibility.Collapsed;
                         break;
                     case PlaybackState.Connecting:
                     case PlaybackState.Buffering:
                         Cursor = Cursors.Wait;
-                        this.ControlPanel.IsEnabled = false;
-                        this.ControlPanel.DisabledButtons.Visibility = Visibility.Visible;
+                        ControlPanel.IsEnabled = false;
+                        ControlPanel.DisabledButtons.Visibility = Visibility.Visible;
                         defaultMessage = e.Argument1 + "...";
                         break;
                     case PlaybackState.Disconnected:
-                        this.ControlPanel.DisabledButtons.Visibility = Visibility.Visible;
+                        ControlPanel.DisabledButtons.Visibility = Visibility.Visible;
                         break;
                     case PlaybackState.TimedOut:
-                        this.PlaybackStateLabel.Foreground = Brushes.Red;
+                        PlaybackStateLabel.Foreground = Brushes.Red;
                         defaultMessage = "Connection timed out";
                         break;
                     case PlaybackState.Exception:
-                        this.PlaybackStateLabel.Foreground = Brushes.Red;
+                        PlaybackStateLabel.Foreground = Brushes.Red;
                         defaultMessage = "Exception encountered";
                         break;
                 }
 
-                if (e.Argument2 != null)
-                    this.PlaybackStateLabel.Content = e.Argument2;
-                else if (defaultMessage != null)
-                    this.PlaybackStateLabel.Content = defaultMessage;
+                if (e.Argument2 is not null)
+                    PlaybackStateLabel.Content = e.Argument2;
+                else if (defaultMessage is not null)
+                    PlaybackStateLabel.Content = defaultMessage;
             }
         }
 
@@ -219,7 +213,7 @@ namespace WavSubscriptionDemo
         // Handles the "Help > About" menu item's Click event.
         private void AboutMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            string localNamespace = this.GetType().Namespace;
+            string localNamespace = GetType().Namespace;
             AboutDialog aboutDialog = new AboutDialog();
             aboutDialog.SetCompanyUrl("http://www.gridprotectionalliance.org/");
             aboutDialog.SetCompanyLogo(AssemblyInfo.EntryAssembly.GetEmbeddedResource(localNamespace + ".Resources.HelpAboutLogo.png"));
@@ -231,10 +225,21 @@ namespace WavSubscriptionDemo
         private void VisualizationMenuItem_Click(object sender, RoutedEventArgs e)
         {
             MenuItem source = e.Source as MenuItem;
-            RadioButton sourceIcon = (source == null) ? null : source.Icon as RadioButton;
 
-            if (sourceIcon != null)
+            if (source?.Icon is RadioButton sourceIcon)
                 sourceIcon.IsChecked = true;
+        }
+
+        // Handles the "Save Audio" menu item's Click event.
+        private void SaveAudioMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (!m_viewModel.IsPlaying)
+            {
+                MessageBox.Show("No audio is currently playing.", "Save Audio", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            m_viewModel.SaveCapturedAudioCommand.Execute(null);
         }
     }
 }

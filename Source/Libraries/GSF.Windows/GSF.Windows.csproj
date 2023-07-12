@@ -75,9 +75,7 @@
     <Compile Include="ErrorManagement\ErrorDialog.Designer.cs">
       <DependentUpon>ErrorDialog.cs</DependentUpon>
     </Compile>
-    <Compile Include="ErrorManagement\ErrorLogger.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="ErrorManagement\ErrorLogger.cs" />
     <Compile Include="Forms\AboutDialog.cs">
       <SubType>Form</SubType>
     </Compile>

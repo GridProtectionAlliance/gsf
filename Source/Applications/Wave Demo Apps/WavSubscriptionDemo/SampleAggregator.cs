@@ -66,7 +66,7 @@ namespace WavSubscriptionDemo
             
             if (count >= NotificationCount && NotificationCount > 0)
             {
-                if (MaximumCalculated != null && Application.Current != null)
+                if (MaximumCalculated is not null && Application.Current is not null)
                 {
                     //WavSubscriptionDemo.App.Current.Dispatcher.Invoke(new Action<object, MaxSampleEventArgs>(MaximumCalculated), this, new MaxSampleEventArgs(minValue, maxValue));
                     MaximumCalculated(this, new MaxSampleEventArgs(minValue, maxValue));
@@ -81,8 +81,8 @@ namespace WavSubscriptionDemo
         [DebuggerStepThrough]
         public MaxSampleEventArgs(float minValue, float maxValue)
         {
-            this.MaxSample = maxValue;
-            this.MinSample = minValue;
+            MaxSample = maxValue;
+            MinSample = minValue;
         }
         public float MaxSample { get; private set; }
         public float MinSample { get; private set; }

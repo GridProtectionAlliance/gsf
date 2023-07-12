@@ -59,10 +59,7 @@ namespace WavSubscriptionDemo
         /// </summary>
         public int SamplesPerSecond
         {
-            get
-            {
-                return m_samplesPerSecond;
-            }
+            get => m_samplesPerSecond;
             set
             {
                 m_samplesPerSecond = value;
@@ -75,10 +72,7 @@ namespace WavSubscriptionDemo
         /// </summary>
         public int KilobitsPerSecond
         {
-            get
-            {
-                return m_kilobitsPerSecond;
-            }
+            get => m_kilobitsPerSecond;
             set
             {
                 m_kilobitsPerSecond = value;
@@ -91,10 +85,7 @@ namespace WavSubscriptionDemo
         /// </summary>
         public string Smoothness
         {
-            get
-            {
-                return m_smoothness;
-            }
+            get => m_smoothness;
             set
             {
                 m_smoothness = value;
@@ -107,10 +98,7 @@ namespace WavSubscriptionDemo
         /// </summary>
         public string FractionSamplesLost
         {
-            get
-            {
-                return m_fractionSamplesLost;
-            }
+            get => m_fractionSamplesLost;
             set
             {
                 m_fractionSamplesLost = value;
@@ -124,23 +112,22 @@ namespace WavSubscriptionDemo
         {
             double lostSamples = e.Argument4;
 
-            this.SamplesPerSecond = e.Argument1;
-            this.KilobitsPerSecond = e.Argument2;
-            this.Smoothness = string.Format("{0:0.0000}", e.Argument3);
+            SamplesPerSecond = e.Argument1;
+            KilobitsPerSecond = e.Argument2;
+            Smoothness = string.Format("{0:0.0000}", e.Argument3);
 
             if (double.IsNaN(lostSamples))
-                this.FractionSamplesLost = ". . .";
+                FractionSamplesLost = ". . .";
             else if (lostSamples <= 0.0)
-                this.FractionSamplesLost = "0.0000";
+                FractionSamplesLost = "0.0000";
             else
-                this.FractionSamplesLost = string.Format("{0:0.0000}", lostSamples);
+                FractionSamplesLost = string.Format("{0:0.0000}", lostSamples);
         }
 
         // Triggers the PropertyChanged event.
         private void OnPropertyChanged(string propertyName)
         {
-            if (PropertyChanged != null)
-                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

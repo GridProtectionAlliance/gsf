@@ -45,13 +45,13 @@ namespace WavSubscriptionDemo
         private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape)
-                this.Close();
+                Close();
         }
 
         // Handles the "Close" button's Click event.
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
-            this.Close();
+            Close();
         }
     }
 }

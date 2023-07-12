@@ -54,50 +54,26 @@ namespace WavSubscriptionDemo
 
         public event EventHandler<MaxSampleEventArgs> MaximumCalculated
         {
-            add
-            {
-                aggregator.MaximumCalculated += value;
-            }
-            remove
-            {
-                aggregator.MaximumCalculated -= value;
-            }
+            add => aggregator.MaximumCalculated += value;
+            remove => aggregator.MaximumCalculated -= value;
         }
 
         public event EventHandler<EventArgs<List<string>>> GotSongList
         {
-            add
-            {
-                playback.GotSongList += value;
-            }
-            remove
-            {
-                playback.GotSongList -= value;
-            }
+            add => playback.GotSongList += value;
+            remove => playback.GotSongList -= value;
         }
 
         public event EventHandler<EventArgs<int, int, float, double>> StatsUpdated
         {
-            add
-            {
-                playback.StatsUpdated += value;
-            }
-            remove
-            {
-                playback.StatsUpdated -= value;
-            }
+            add => playback.StatsUpdated += value;
+            remove => playback.StatsUpdated -= value;
         }
 
         public event EventHandler<EventArgs<PlaybackState, string>> PlaybackStateChanged
         {
-            add
-            {
-                playback.StateChanged += value;
-            }
-            remove
-            {
-                playback.StateChanged -= value;
-            }
+            add => playback.StateChanged += value;
+            remove => playback.StateChanged -= value;
         }
 
         public AudioGraph()
@@ -115,83 +91,59 @@ namespace WavSubscriptionDemo
 
         public int NotificationsPerSecond
         {
-            get
-            {
-                return aggregator.NotificationCount;
-            }
-            set
-            {
-                aggregator.NotificationCount = value;
-            }
+            get => aggregator.NotificationCount;
+            set => aggregator.NotificationCount = value;
         }
 
         public string ConnectionUri
         {
-            get
-            {
-                return playback.ConnectionUri;
-            }
-            set
-            {
-                playback.ConnectionUri = value;
-            }
+            get => playback.ConnectionUri;
+            set => playback.ConnectionUri = value;
         }
 
         public bool EnableCompression
         {
-            get
-            {
-                return playback.EnableCompression;
-            }
-            set
-            {
-                playback.EnableCompression = value;
-            }
+            get => playback.EnableCompression;
+            set => playback.EnableCompression = value;
         }
 
         public bool EnableEncryption
         {
-            get
-            {
-                return playback.EnableEncryption;
-            }
-            set
-            {
-                playback.EnableEncryption = value;
-            }
+            get => playback.EnableEncryption;
+            set => playback.EnableEncryption = value;
         }
 
         public bool IPv6Enabled
         {
-            get
-            {
-                return playback.IPv6Enabled;
-            }
-            set
-            {
-                playback.IPv6Enabled = value;
-            }
+            get => playback.IPv6Enabled;
+            set => playback.IPv6Enabled = value;
         }
 
         public bool UseZeroMQChannel
         {
-            get
-            {
-                return playback.UseZeroMQChannel;
-            }
-            set
-            {
-                playback.UseZeroMQChannel = value;
-            }
+            get => playback.UseZeroMQChannel;
+            set => playback.UseZeroMQChannel = value;
         }
 
-        public int PlaybackSampleRate
+        public bool ReplayEnabled
         {
-            get
-            {
-                return playback.SampleRate;
-            }
+            get => playback.ReplayEnabled;
+            set => playback.ReplayEnabled = value;
         }
+
+        public string ReplayStartTime
+        {
+            get => playback.ReplayStartTime;
+            set => playback.ReplayStartTime = value;
+        }
+
+        public string ReplayStopTime
+        {
+            get => playback.ReplayStopTime;
+            set => playback.ReplayStopTime = value;
+        }
+
+        public int PlaybackSampleRate => playback.SampleRate;
 
         public bool HasCapturedAudio
         {
@@ -224,7 +176,7 @@ namespace WavSubscriptionDemo
 
         public void SaveRecordedAudio(string fileName)
         {
-            throw new NotImplementedException();
+            playback.StartRecording(fileName);
         }
 
         public void PlayCapturedAudio()
@@ -239,7 +191,7 @@ namespace WavSubscriptionDemo
 
         public void Dispose()
         {
-            if (playback != null)
+            if (playback is not null)
             {
                 playback.Dispose();
                 playback = null;
