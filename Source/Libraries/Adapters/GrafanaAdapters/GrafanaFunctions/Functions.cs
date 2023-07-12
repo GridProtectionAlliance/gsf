@@ -61,6 +61,7 @@ namespace GrafanaAdapters.GrafanaFunctions
 
             //Regroup datapoints to align for function
             //Ex: [A, B] & [C, D] -> [A, C] & [B, D]
+            //If unequal number [A, B] & [C] fill remaining space with last element [A, C] & [B, C]
             List<DataSourceValueGroup[]> regroupedDataValues = RegroupDataValues(groupedDataValues);
 
             // Apply the function
@@ -381,7 +382,7 @@ namespace GrafanaAdapters.GrafanaFunctions
         {
             List<DataSourceValueGroup[]> result = new List<DataSourceValueGroup[]>();
 
-            //Empty list
+            // Empty list
             if (groupedDataValues.Count == 0)
             {
                 return result;
@@ -400,19 +401,29 @@ namespace GrafanaAdapters.GrafanaFunctions
                     {
                         newGroup[j] = groupedDataValues[j][i];
                     }
-                    //Out of bounds
+                    // Out of bounds
                     else
-                    { 
-                        newGroup[j] = null;
+                    {
+                        // Check if the current group has elements
+                        if (groupedDataValues[j].Length > 0)
+                        {
+                            // Take the last element
+                            newGroup[j] = groupedDataValues[j][groupedDataValues[j].Length - 1];
+                        }
+                        else
+                        {
+                            // No elements in the current group, set to null
+                            newGroup[j] = null;
+                        }
                     }
                 }
 
                 result.Add(newGroup);
             }
 
-
             return result;
         }
+
     }
 
 }
