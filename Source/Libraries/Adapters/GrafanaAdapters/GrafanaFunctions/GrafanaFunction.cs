@@ -211,7 +211,7 @@ namespace GrafanaAdapters.GrafanaFunctions
             IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source.Select(dataValue =>
                 new DataSourceValue
                 {
-                    Value = Math.Abs(dataValue.Value),
+                    Value = Math.Abs(dataValue.Value),  
                     Time = dataValue.Time,
                     Target = dataValue.Target
                 });

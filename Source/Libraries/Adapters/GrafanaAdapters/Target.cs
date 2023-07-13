@@ -45,6 +45,10 @@ namespace GrafanaAdapters
         /// </summary>
         public string type { get; set; }
         /// <summary>
+        /// Target method, can either be phasor or not
+        /// </summary>
+        public bool isPhasor { get; set; }
+        /// <summary>
         /// Metadata selections
         /// </summary>
         public Dictionary<string, List<string>> metadataSelection { get; set; }

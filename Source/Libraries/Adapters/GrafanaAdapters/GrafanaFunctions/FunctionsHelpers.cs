@@ -122,12 +122,13 @@ namespace GrafanaAdapters.GrafanaFunctions
         public string Interval { get; }
         public bool IncludePeaks { get; }
         public bool DropEmptySeries { get; }
+        public bool IsPhasor { get; }
         public Dictionary<string, List<string>> MetadataSelection { get; }
 
         public CancellationToken CancellationToken { get; }
 
         public QueryDataHolder(Target sourceTarget, DateTime startTime, DateTime stopTime, string interval, bool includePeaks, 
-            bool dropEmptySeries, Dictionary<string, List<string>> metadataSelection, CancellationToken cancellationToken)
+            bool dropEmptySeries, bool isPhasor, Dictionary<string, List<string>> metadataSelection, CancellationToken cancellationToken)
         {
             SourceTarget = sourceTarget;
             StartTime = startTime;
@@ -135,6 +136,7 @@ namespace GrafanaAdapters.GrafanaFunctions
             Interval = interval;
             IncludePeaks = includePeaks;
             DropEmptySeries = dropEmptySeries;
+            IsPhasor = isPhasor;
             MetadataSelection = metadataSelection;
             CancellationToken = cancellationToken;
         }

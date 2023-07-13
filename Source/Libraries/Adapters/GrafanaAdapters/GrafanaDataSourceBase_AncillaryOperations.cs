@@ -90,7 +90,7 @@ namespace GrafanaAdapters
             {
                 return TargetCache<string[]>.GetOrAdd($"search!{target}", () =>
                 {
-                    if (request.target is not null)
+                        if (request.target is not null)
                     {
                         // Attempt to parse search target as a SQL SELECT statement that will operate as a filter for in memory metadata (not a database query)
                         if (parseSelectExpression(request.target.Trim(), out string tableName, out string[] fieldNames, out string expression, out string sortField, out int takeCount))
@@ -159,7 +159,17 @@ namespace GrafanaAdapters
                     }
 
                     // Non "SELECT" style expressions default to searches on ActiveMeasurements meta-data table
-                    return Metadata.Tables["ActiveMeasurements"].Select($"ID LIKE '{InstanceName}:%' AND PointTag LIKE '%{target}%'").Take(MaximumSearchTargetsPerRequest).Select(row => $"{row["PointTag"]}").ToArray();
+                    if (request.isPhasor)
+                    {
+                        return Metadata.Tables["Phasor"].AsEnumerable()
+                            .Select(row => row["Label"].ToString())
+                            .ToArray();
+                    }
+                    // Non "SELECT" style expressions default to searches on ActiveMeasurements meta-data table
+                    else
+                    {
+                        return Metadata.Tables["ActiveMeasurements"].Select($"ID LIKE '{InstanceName}:%' AND PointTag LIKE '%{target}%'").Take(MaximumSearchTargetsPerRequest).Select(row => $"{row["PointTag"]}").ToArray();
+                    }
                 });
             },
             cancellationToken);

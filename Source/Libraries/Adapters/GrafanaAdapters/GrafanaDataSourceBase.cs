@@ -154,7 +154,7 @@ namespace GrafanaAdapters
 
                 foreach (Target target in request.targets)
                 {
-                    QueryDataHolder queryData = new QueryDataHolder(target, startTime, stopTime, request.interval, false, false, target.metadataSelection, cancellationToken);
+                    QueryDataHolder queryData = new QueryDataHolder(target, startTime, stopTime, request.interval, false, false, request.isPhasor, target.metadataSelection, cancellationToken);
                     DataSourceValueGroup[] groups = Functions.ParseFunction(target.target, this, queryData);
                     allGroups.AddRange(groups);  // adding each group to the overall list
                 }

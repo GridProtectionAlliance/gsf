@@ -79,5 +79,9 @@ namespace GrafanaAdapters
         /// Ad-hoc filters to apply.
         /// </summary>
         public List<AdHocFilter> adhocFilters { get; set; }
+        /// <summary>
+        /// Specifies if is in Phasor mode.
+        /// </summary>
+        public bool isPhasor { get; set; }
     }
 }
