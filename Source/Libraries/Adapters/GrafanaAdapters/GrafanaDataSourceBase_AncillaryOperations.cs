@@ -225,11 +225,11 @@ namespace GrafanaAdapters
         /// <param name="request">Annotation request.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>Queried annotations from data source.</returns>
-        public virtual async Task<List<AnnotationResponse>> Annotations(AnnotationRequest request, CancellationToken cancellationToken)
+        public virtual async Task<List<AnnotationResponse>> Annotations<T>(AnnotationRequest request, CancellationToken cancellationToken)
         {
             AnnotationType type = request.ParseQueryType(out bool useFilterExpression);
             Dictionary<string, DataRow> definitions = request.ParseSourceDefinitions(type, Metadata, useFilterExpression);
-            List<TimeSeriesValues> annotationData = await Query(request.ExtractQueryRequest(definitions.Keys, MaximumAnnotationsPerRequest), cancellationToken);
+            List<TimeSeriesValues> annotationData = await Query<T>(request.ExtractQueryRequest(definitions.Keys, MaximumAnnotationsPerRequest), cancellationToken);
             List<AnnotationResponse> responses = new();
 
             foreach (TimeSeriesValues values in annotationData)

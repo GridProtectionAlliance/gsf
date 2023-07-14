@@ -49,7 +49,7 @@ namespace GrafanaAdapters.GrafanaFunctions
             }
 
             // Data
-            if(typeof(T) == typeof(DataSourceValueGroup))
+            if(typeof(T) == typeof(IDataSourceValueGroup))
             {
                 Value = (T)value;
                 return;

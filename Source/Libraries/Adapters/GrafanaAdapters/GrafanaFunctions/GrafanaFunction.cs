@@ -39,9 +39,9 @@ namespace GrafanaAdapters.GrafanaFunctions
                     Required = true,
                     ParameterTypeName = "string"
                 },
-                new Parameter<DataSourceValueGroup>
+                new Parameter<IDataSourceValueGroup>
                 {
-                    Default = new DataSourceValueGroup(),
+                    Default = new DataSourceValueGroup<DataSourceValue>(),
                     Description = "Data Points",
                     Required = true,
                     ParameterTypeName = "data"
@@ -49,11 +49,11 @@ namespace GrafanaAdapters.GrafanaFunctions
             };
 
         /// <inheritdoc />
-        public DataSourceValueGroup Compute(List<IParameter> parameters)
+        public DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
         {
             // Get Values
             double value = (parameters[0] as IParameter<double>).Value;
-            DataSourceValueGroup dataSourceValues = (parameters[1] as IParameter<DataSourceValueGroup>).Value;
+            DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
 
             // Compute
             IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source.Select(dataValue =>
@@ -66,7 +66,18 @@ namespace GrafanaAdapters.GrafanaFunctions
 
             dataSourceValues.Target = $"{value}+{dataSourceValues.Target}";
             dataSourceValues.Source = transformedDataSourceValues;
+
             return dataSourceValues;
+        }
+
+        /// <summary>
+        /// Computes based on type PhasorValue
+        /// </summary>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
+        public DataSourceValueGroup<PhasorValue> ComputePhasor(List<IParameter> parameters)
+        {
+            return null;
         }
 
         /// <summary>
@@ -103,38 +114,42 @@ namespace GrafanaAdapters.GrafanaFunctions
                     Required = true,
                     ParameterTypeName = "string"
                 },
-                new Parameter<DataSourceValueGroup>
+                new Parameter<IDataSourceValueGroup>
                 {
-                    Default = new DataSourceValueGroup(),
+                    Default = new DataSourceValueGroup<DataSourceValue>(),
                     Description = "First datapoint",
                     Required = true,
                     ParameterTypeName = "data"
                 },
-                new Parameter<DataSourceValueGroup>
+                new Parameter<IDataSourceValueGroup>
                 {
-                    Default = new DataSourceValueGroup(),
+                    Default = new DataSourceValueGroup<DataSourceValue>(),
                     Description = "Second datapoint",
                     Required = true,
                     ParameterTypeName = "data"
                 }
             };
 
-        /// <inheritdoc />
-        public DataSourceValueGroup Compute(List<IParameter> parameters)
+        /// <summary>
+        /// Computes based on type DataSourceValue
+        /// </summary>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
+        public DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
         {
             // Get Values
             double tolerance = (parameters[0] as IParameter<double>).Value;
-            DataSourceValueGroup firstData = (parameters[1] as IParameter<DataSourceValueGroup>).Value;
-            DataSourceValueGroup secondData = (parameters[2] as IParameter<DataSourceValueGroup>).Value;
+            DataSourceValueGroup<DataSourceValue> firstData = (DataSourceValueGroup<DataSourceValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
+            DataSourceValueGroup<DataSourceValue> secondData = (DataSourceValueGroup<DataSourceValue>)(parameters[2] as IParameter<IDataSourceValueGroup>).Value;
 
-            List<DataSourceValueGroup> dataGroups = new List<DataSourceValueGroup>
+            List<DataSourceValueGroup<DataSourceValue>> dataGroups = new List<DataSourceValueGroup<DataSourceValue>>
             {
                 firstData,
                 secondData
             };
 
             TimeSliceScanner scanner = new(dataGroups, tolerance / SI.Milli);
-            IEnumerable<DataSourceValue> combinedValues = new List<DataSourceValue>(); 
+            IEnumerable<DataSourceValue> combinedValues = new List<DataSourceValue>();
             while (!scanner.DataReadComplete)
             {
                 IEnumerable<DataSourceValue> datapointGroups = scanner.ReadNextTimeSlice();
@@ -156,7 +171,7 @@ namespace GrafanaAdapters.GrafanaFunctions
                 {
                     Value = totalValue,
                     Time = totalTime / numberDatapoints,
-                    Target = datapointGroups.First().Target 
+                    Target = datapointGroups.First().Target
                 });
             }
 
@@ -164,6 +179,16 @@ namespace GrafanaAdapters.GrafanaFunctions
             firstData.Source = combinedValues;
 
             return firstData;
+        }
+
+        /// <summary>
+        /// Computes based on type PhasorValue
+        /// </summary>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
+        public DataSourceValueGroup<PhasorValue> ComputePhasor(List<IParameter> parameters)
+        {
+            return null;
         }
 
         /// <summary>
@@ -193,25 +218,29 @@ namespace GrafanaAdapters.GrafanaFunctions
         public List<IParameter> Parameters { get; } =
             new List<IParameter>
             {
-                new Parameter<DataSourceValueGroup>
+                new Parameter<IDataSourceValueGroup>
                 {
-                    Default = new DataSourceValueGroup(),
+                    Default = new DataSourceValueGroup<DataSourceValue>(),
                     Description = "Data Points",
                     Required = true,
                     ParameterTypeName = "data"
                 }
             };
 
-        /// <inheritdoc />
-        public DataSourceValueGroup Compute(List<IParameter> parameters)
+        /// <summary>
+        /// Computes based on type DataSourceValue
+        /// </summary>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
+        public DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
         {
             // Get Values
-            DataSourceValueGroup dataSourceValues = (parameters[0] as IParameter<DataSourceValueGroup>).Value;
+            DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
             // Compute
             IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source.Select(dataValue =>
                 new DataSourceValue
                 {
-                    Value = Math.Abs(dataValue.Value),  
+                    Value = Math.Abs(dataValue.Value),
                     Time = dataValue.Time,
                     Target = dataValue.Target
                 });
@@ -220,6 +249,16 @@ namespace GrafanaAdapters.GrafanaFunctions
             dataSourceValues.Source = transformedDataSourceValues;
 
             return dataSourceValues;
+        }
+
+        /// <summary>
+        /// Computes based on type PhasorValue
+        /// </summary>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
+        public DataSourceValueGroup<PhasorValue> ComputePhasor(List<IParameter> parameters)
+        {
+            return null;
         }
 
         /// <summary>
@@ -250,9 +289,9 @@ namespace GrafanaAdapters.GrafanaFunctions
         public List<IParameter> Parameters { get; } =
             new List<IParameter>
             {
-                new Parameter<DataSourceValueGroup>
+                new Parameter<IDataSourceValueGroup>
                 {
-                    Default = new DataSourceValueGroup(),
+                    Default = new DataSourceValueGroup<DataSourceValue>(),
                     Description = "Data Points",
                     Required = true,
                     ParameterTypeName = "data"
@@ -267,10 +306,10 @@ namespace GrafanaAdapters.GrafanaFunctions
             };
 
         /// <inheritdoc />
-        public DataSourceValueGroup Compute(List<IParameter> parameters)
+        public DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
         {
             // Get Values
-            DataSourceValueGroup dataSourceValues = (parameters[0] as IParameter<DataSourceValueGroup>).Value;
+            DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
             int numberDecimals = (parameters[1] as IParameter<int>).Value;
 
             // Compute
@@ -286,6 +325,16 @@ namespace GrafanaAdapters.GrafanaFunctions
             dataSourceValues.Source = transformedDataSourceValues;
 
             return dataSourceValues;
+        }
+
+        /// <summary>
+        /// Computes based on type PhasorValue
+        /// </summary>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
+        public DataSourceValueGroup<PhasorValue> ComputePhasor(List<IParameter> parameters)
+        {
+            return null;
         }
 
         /// <summary>

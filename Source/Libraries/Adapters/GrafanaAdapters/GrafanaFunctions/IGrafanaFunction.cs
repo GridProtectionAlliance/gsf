@@ -42,7 +42,13 @@ namespace GrafanaAdapters.GrafanaFunctions
         /// </summary>
         /// <param name="parameters">The input parameters for the computation.</param>
         /// <returns>A sequence of computed data source parameters.</returns>
-        DataSourceValueGroup Compute(List<IParameter> parameters);
+        DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters);
+        /// <summary>
+        /// Performs the computation for phasor of the Grafana function.
+        /// </summary>
+        /// <param name="parameters">The input parameters for the computation.</param>
+        /// <returns>A sequence of computed data source parameters.</returns>
+        DataSourceValueGroup<PhasorValue> ComputePhasor(List<IParameter> parameters);
     }
 
     /// <summary>

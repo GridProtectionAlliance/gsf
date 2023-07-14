@@ -52,15 +52,32 @@ namespace GrafanaAdapters
                 m_baseTicks = UnixTimeTag.BaseTicks.Value;
             }
 
-            public override IEnumerable<DataSourceValue> QueryDataSourceValues(DateTime startTime, DateTime stopTime, string interval, bool includePeaks, Dictionary<ulong, string> targetMap)
+            public override IEnumerable<T> QueryDataSourceValues<T>(DateTime startTime, DateTime stopTime, string interval, bool includePeaks, Dictionary<ulong, string> targetMap)
             {
-                return m_parent.Archive.ReadData(targetMap.Keys.Select(pointID => (int)pointID), startTime, stopTime, false).Select(dataPoint => new DataSourceValue
+                if (typeof(T) == typeof(DataSourceValue))
                 {
-                    Target = targetMap[(ulong)dataPoint.HistorianID],
-                    Value = dataPoint.Value,
-                    Time = (dataPoint.Time.ToDateTime().Ticks - m_baseTicks) / (double)Ticks.PerMillisecond,
-                    Flags = dataPoint.Quality.MeasurementQuality()
-                });
+                    return m_parent.Archive.ReadData(targetMap.Keys.Select(pointID => (int)pointID), startTime, stopTime, false).Select(dataPoint => new DataSourceValue
+                    {
+                        Target = targetMap[(ulong)dataPoint.HistorianID],
+                        Value = dataPoint.Value,
+                        Time = (dataPoint.Time.ToDateTime().Ticks - m_baseTicks) / (double)Ticks.PerMillisecond,
+                        Flags = dataPoint.Quality.MeasurementQuality()
+                    }).Cast<T>();
+                }
+
+                else if (typeof(T) == typeof(PhasorValue))
+                {
+                    return m_parent.Archive.ReadData(targetMap.Keys.Select(pointID => (int)pointID), startTime, stopTime, false).Select(dataPoint => new PhasorValue
+                    {
+                        Target = targetMap[(ulong)dataPoint.HistorianID],
+                        Magnitude = dataPoint.Value,
+                        Amplitude = dataPoint.Value,
+                        Time = (dataPoint.Time.ToDateTime().Ticks - m_baseTicks) / (double)Ticks.PerMillisecond,
+                        Flags = dataPoint.Quality.MeasurementQuality()
+                    }).Cast<T>();
+                }
+
+                return Enumerable.Empty<T>();
             }
         }
 

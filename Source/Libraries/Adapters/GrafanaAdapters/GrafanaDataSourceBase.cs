@@ -88,14 +88,14 @@ namespace GrafanaAdapters
         /// <param name="includePeaks">Flag that determines if decimated data should include min/max interval peaks over provided time range.</param>
         /// <param name="targetMap">Set of IDs with associated targets to query.</param>
         /// <returns>Queried data source data in terms of value and time.</returns>
-        public abstract IEnumerable<DataSourceValue> QueryDataSourceValues(DateTime startTime, DateTime stopTime, string interval, bool includePeaks, Dictionary<ulong, string> targetMap);
+        public abstract IEnumerable<T> QueryDataSourceValues<T>(DateTime startTime, DateTime stopTime, string interval, bool includePeaks, Dictionary<ulong, string> targetMap);
 
         /// <summary>
         /// Queries data source returning data as Grafana time-series data set.
         /// </summary>
         /// <param name="request">Query request.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
-        public Task<List<TimeSeriesValues>> Query(QueryRequest request, CancellationToken cancellationToken)
+        public Task<List<TimeSeriesValues>> Query<T>(QueryRequest request, CancellationToken cancellationToken)
         {
             bool isFilterMatch(string target, AdHocFilter filter)
             {
@@ -131,12 +131,6 @@ namespace GrafanaAdapters
                 });
             }
 
-            //float lookupTargetCoordinate(string target, string field)
-            //{
-            //    return TargetCache<float>.GetOrAdd($"{target}_{field}", () =>
-            //        LookupTargetMetadata(target)?.ConvertNullableField<float>(field) ?? 0.0F);
-            //}
-
             // Task allows processing of multiple simultaneous queries
             return Task.Factory.StartNew(() =>
             {
@@ -150,16 +144,16 @@ namespace GrafanaAdapters
                     target.target = target.target?.Trim() ?? "";
 
 
-                List<DataSourceValueGroup> allGroups = new List<DataSourceValueGroup>();
+                List<DataSourceValueGroup<T>> allGroups = new List<DataSourceValueGroup<T>>();
 
                 foreach (Target target in request.targets)
                 {
                     QueryDataHolder queryData = new QueryDataHolder(target, startTime, stopTime, request.interval, false, false, request.isPhasor, target.metadataSelection, cancellationToken);
-                    DataSourceValueGroup[] groups = Functions.ParseFunction(target.target, this, queryData);
+                    DataSourceValueGroup<T>[] groups = Functions.ParseFunction<T>(target.target, this, queryData);
                     allGroups.AddRange(groups);  // adding each group to the overall list
                 }
 
-                DataSourceValueGroup[] valueGroups = allGroups.ToArray();
+                DataSourceValueGroup<T>[] valueGroups = allGroups.ToArray();
 
                 //DataSourceValueGroup[] OLDvalueGroups = request.targets.Select(target => QueryTarget(target, target.target, startTime, stopTime, request.interval, false, false, null, cancellationToken)).SelectMany(groups => groups).ToArray();
 
@@ -184,16 +178,31 @@ namespace GrafanaAdapters
                 Parallel.ForEach(result, new ParallelOptions { CancellationToken = cancellationToken }, series =>
                 {
                     // For deferred enumerations, any work to be done is left till last moment - in this case "ToList()" invokes actual operation                    
-                    DataSourceValueGroup valueGroup = valueGroups.First(group => group.Target.Equals(series.target));
-                    IEnumerable<DataSourceValue> values = valueGroup.Source;
+                    DataSourceValueGroup<T> valueGroup = valueGroups.First(group => group.Target.Equals(series.target));
+                    if (typeof(T) == typeof(DataSourceValue)) {
+                        IEnumerable<DataSourceValue> values = valueGroup.Source.Cast<DataSourceValue>();
 
-                    if (valueGroup.SourceTarget?.excludeNormalFlags ?? false)
-                        values = values.Where(value => value.Flags != MeasurementStateFlags.Normal);
+                        if (valueGroup.SourceTarget?.excludeNormalFlags ?? false)
+                            values = values.Where(value => value.Flags != MeasurementStateFlags.Normal);
 
-                    if (valueGroup.SourceTarget?.excludedFlags > uint.MinValue)
-                        values = values.Where(value => ((uint)value.Flags & valueGroup.SourceTarget.excludedFlags) == 0);
+                        if (valueGroup.SourceTarget?.excludedFlags > uint.MinValue)
+                            values = values.Where(value => ((uint)value.Flags & valueGroup.SourceTarget.excludedFlags) == 0);
 
-                    series.datapoints = values.Select(dataValue => new[] { dataValue.Value, dataValue.Time }).ToList();
+                        series.datapoints = values.Select(dataValue => new[] { dataValue.Value, dataValue.Time }).ToList();
+                    }
+
+                    else if (typeof(T) == typeof(PhasorValue))
+                    {
+                        IEnumerable<PhasorValue> values = valueGroup.Source.Cast<PhasorValue>();
+
+                        if (valueGroup.SourceTarget?.excludeNormalFlags ?? false)
+                            values = values.Where(value => value.Flags != MeasurementStateFlags.Normal);
+
+                        if (valueGroup.SourceTarget?.excludedFlags > uint.MinValue)
+                            values = values.Where(value => ((uint)value.Flags & valueGroup.SourceTarget.excludedFlags) == 0);
+
+                        series.datapoints = values.Select(dataValue => new[] { dataValue.Magnitude, dataValue.Amplitude, dataValue.Time }).ToList();
+                    }
                 });
 
                 #region [ Original "request.maxDataPoints" Implementation ]
@@ -218,6 +227,7 @@ namespace GrafanaAdapters
             cancellationToken);
         }
 
+        /*
         private IEnumerable<DataSourceValueGroup> QueryTarget(Target sourceTarget, string queryExpression, DateTime startTime, DateTime stopTime, string interval, bool includePeaks, bool dropEmptySeries, string imports, CancellationToken cancellationToken)
         {
             // Handle query commands
@@ -364,6 +374,7 @@ namespace GrafanaAdapters
                     refId = sourceTarget.refId
                 };
         }
+        */
 
         private DataRow LookupTargetMetadata(string target)
         {

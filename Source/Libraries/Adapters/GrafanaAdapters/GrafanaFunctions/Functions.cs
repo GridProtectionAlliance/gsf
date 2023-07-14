@@ -14,19 +14,20 @@ using GSF.IO;
 using GSF.TimeSeries.Adapters;
 using System.ServiceModel.Description;
 using System.Reflection;
+using System.Security.Cryptography;
 
 namespace GrafanaAdapters.GrafanaFunctions
 {
     internal class Functions
     {
-        public static DataSourceValueGroup[] ParseFunction(string expression, GrafanaDataSourceBase dataSourceBase, QueryDataHolder queryData)
+        public static DataSourceValueGroup<T>[] ParseFunction<T>(string expression, GrafanaDataSourceBase dataSourceBase, QueryDataHolder queryData)
         {
-            (IGrafanaFunction function, string parameterValue) = MatchFunction(expression);
+            (IGrafanaFunction function, string parameterValue) = MatchFunction<T>(expression);
 
             // Base Case
             if (function == null)
             {
-                return GetDataSourceValue(parameterValue, dataSourceBase, queryData);
+                return GetDataSourceValue<T>(parameterValue, dataSourceBase, queryData);
             }
 
             //Split Parameters
@@ -39,7 +40,7 @@ namespace GrafanaAdapters.GrafanaFunctions
             foreach (string parameter in parsedParameters)
             {
                 // Datapoint
-                if (function.Parameters[paramIndex] is IParameter<DataSourceValueGroup>)
+                if (function.Parameters[paramIndex] is IParameter<IDataSourceValueGroup>)
                 {
                     queryExpressions.Add(parameter);
                 }
@@ -52,24 +53,36 @@ namespace GrafanaAdapters.GrafanaFunctions
             }
 
             //Fetch datapoints query
-            List<DataSourceValueGroup[]> groupedDataValues = new List<DataSourceValueGroup[]>();
+            List<DataSourceValueGroup<T>[]> groupedDataValues = new List<DataSourceValueGroup<T>[]>();
             foreach(string query in queryExpressions)
             {
-                DataSourceValueGroup[] queryResult = ParseFunction(query ?? "", dataSourceBase, queryData);
+                DataSourceValueGroup<T>[] queryResult = ParseFunction<T>(query ?? "", dataSourceBase, queryData);
                 groupedDataValues.Add(queryResult);
             }
 
             //Regroup datapoints to align for function
             //Ex: [A, B] & [C, D] -> [A, C] & [B, D]
             //If unequal number [A, B] & [C] fill remaining space with last element [A, C] & [B, C]
-            List<DataSourceValueGroup[]> regroupedDataValues = RegroupDataValues(groupedDataValues);
+            List<DataSourceValueGroup<T>[]> regroupedDataValues = RegroupDataValues(groupedDataValues);
 
             // Apply the function
-            List<DataSourceValueGroup> res = new List<DataSourceValueGroup>();
-            foreach (DataSourceValueGroup[] dataValues in regroupedDataValues)
+            List<DataSourceValueGroup<T>> res = new List<DataSourceValueGroup<T>>();
+            foreach (DataSourceValueGroup<T>[] dataValues in regroupedDataValues)
             {
                 List<IParameter> computeParameters = GenerateParameters(dataSourceBase, function, functionParameters, dataValues);
-                DataSourceValueGroup computedValues = function.Compute(computeParameters);
+                DataSourceValueGroup<T> computedValues;
+                if (typeof(T) == typeof(DataSourceValue))
+                {
+                    computedValues = (DataSourceValueGroup<T>)(object)function.Compute(computeParameters);
+                }
+                else if (typeof(T) == typeof(PhasorValue))
+                {
+                    computedValues = (DataSourceValueGroup<T>)(object)function.ComputePhasor(computeParameters);
+                }
+                else
+                {
+                    throw new InvalidOperationException($"Unsupported type parameter '{typeof(T)}' in Compute method");
+                }
 
                 res.Add(computedValues);
             }
@@ -78,9 +91,10 @@ namespace GrafanaAdapters.GrafanaFunctions
             return res.ToArray();
         }
 
-        public static (IGrafanaFunction function, string parameterValue) MatchFunction(string expression)
+        public static (IGrafanaFunction function, string parameterValue) MatchFunction<T>(string expression)
         {
-            List<IGrafanaFunction> grafanaFunctions = GetGrafanaFunctions();
+            List<IGrafanaFunction> grafanaFunctions = GetGrafanaFunctions(); 
+
             foreach (IGrafanaFunction function in grafanaFunctions)
             {
                 // Check if the expression matches the current function's regex
@@ -98,11 +112,11 @@ namespace GrafanaAdapters.GrafanaFunctions
             return (null, expression);
         }
 
-        public static DataSourceValueGroup[] GetDataSourceValue(string expression, GrafanaDataSourceBase dataSourceBase, QueryDataHolder queryData)
+        public static DataSourceValueGroup<T>[] GetDataSourceValue<T>(string expression, GrafanaDataSourceBase dataSourceBase, QueryDataHolder queryData)
         {
             if(expression == "" || expression == null)
             {
-                return new DataSourceValueGroup[0];
+                return new DataSourceValueGroup<T>[0];
             }
 
             DataSet Metadata = dataSourceBase.Metadata;
@@ -164,22 +178,33 @@ namespace GrafanaAdapters.GrafanaFunctions
             }
 
             // Query underlying data source for each target - to prevent parallel read from data source we enumerate immediately
-            List<DataSourceValue> dataValues = dataSourceBase.QueryDataSourceValues(queryData.StartTime, queryData.StopTime, queryData.Interval, queryData.IncludePeaks, targetMap)
+            List<T> dataValues = dataSourceBase.QueryDataSourceValues<T>(queryData.StartTime, queryData.StopTime, queryData.Interval, queryData.IncludePeaks, targetMap)
                 .TakeWhile(_ => !queryData.CancellationToken.IsCancellationRequested).ToList();
 
-
-
-            DataSourceValueGroup[] dataResult = new DataSourceValueGroup[targetMap.Count];
+            DataSourceValueGroup<T>[] dataResult = new DataSourceValueGroup<T>[targetMap.Count];
             int index = 0;
 
             foreach (KeyValuePair<ulong, string> target in targetMap)
             {
-                DataSourceValueGroup dataSourceValueGroup = new DataSourceValueGroup
+                IEnumerable<T> filteredValues = null;
+                if (typeof(T) == typeof(DataSourceValue))
+                {
+                    filteredValues = (IEnumerable<T>)dataValues.OfType<DataSourceValue>()
+                        .Where(dataValue => dataValue.Target.Equals(target.Value));
+                }
+                else if (typeof(T) == typeof(PhasorValue))
+                {
+                    // You need to replace this with the actual operation for PhasorValue
+                    filteredValues = (IEnumerable<T>)dataValues.OfType<PhasorValue>()
+                        .Where(phasorValue => phasorValue.Target.Equals(target.Value));
+                }
+
+                DataSourceValueGroup<T> dataSourceValueGroup = new DataSourceValueGroup<T>
                 {
                     Target = target.Value,
                     RootTarget = target.Value,
                     SourceTarget = queryData.SourceTarget,
-                    Source = dataValues.Where(dataValue => dataValue.Target.Equals(target.Value)),
+                    Source = filteredValues,
                     DropEmptySeries = queryData.DropEmptySeries,
                     refId = queryData.SourceTarget.refId,
                     metadata = GetMetadata(dataSourceBase, target.Value, queryData.MetadataSelection)
@@ -226,7 +251,7 @@ namespace GrafanaAdapters.GrafanaFunctions
         }
 
 
-        public static List<IParameter> GenerateParameters(GrafanaDataSourceBase dataSourceBase, IGrafanaFunction function, List<string> parsedParameters, DataSourceValueGroup[] dataValues)
+        public static List<IParameter> GenerateParameters<T>(GrafanaDataSourceBase dataSourceBase, IGrafanaFunction function, List<string> parsedParameters, DataSourceValueGroup<T>[] dataValues)
         {
             List<IParameter> parameters = function.Parameters;
             int paramIndex = 0;
@@ -234,7 +259,7 @@ namespace GrafanaAdapters.GrafanaFunctions
             foreach (IParameter parameter in parameters)
             {
                 //Data
-                if (parameter is Parameter<DataSourceValueGroup> dataSourceValueParameter)
+                if (parameter is Parameter<IDataSourceValueGroup> dataSourceValueParameter)
                 {
                     //Not enough parameters 
                     if (dataIndex >= dataValues.Length)
@@ -270,7 +295,7 @@ namespace GrafanaAdapters.GrafanaFunctions
             return parameters;
         }
 
-        public static object[] GenerateParameters(IGrafanaFunction function, string[] parsedParameters, IEnumerable<DataSourceValue> dataPoints)
+        public static object[] GenerateParameters<T>(IGrafanaFunction function, string[] parsedParameters, IEnumerable<DataSourceValue> dataPoints)
         {
             object[] parameters = new object[function.Parameters.Count()];
             int index = 0;
@@ -378,9 +403,9 @@ namespace GrafanaAdapters.GrafanaFunctions
             return grafanaFunctions;
         }
 
-        public static List<DataSourceValueGroup[]> RegroupDataValues(List<DataSourceValueGroup[]> groupedDataValues)
+        public static List<DataSourceValueGroup<T>[]> RegroupDataValues<T>(List<DataSourceValueGroup<T>[]> groupedDataValues)
         {
-            List<DataSourceValueGroup[]> result = new List<DataSourceValueGroup[]>();
+            List<DataSourceValueGroup<T>[]> result = new List<DataSourceValueGroup<T>[]>();
 
             // Empty list
             if (groupedDataValues.Count == 0)
@@ -393,7 +418,7 @@ namespace GrafanaAdapters.GrafanaFunctions
 
             for (int i = 0; i < arrayLength; i++)
             {
-                DataSourceValueGroup[] newGroup = new DataSourceValueGroup[groupCount];
+                DataSourceValueGroup<T>[] newGroup = new DataSourceValueGroup<T>[groupCount];
 
                 for (int j = 0; j < groupCount; j++)
                 {

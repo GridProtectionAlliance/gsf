@@ -45,12 +45,12 @@ namespace GrafanaAdapters
         /// </summary>
         /// <param name="dataset">Source <see cref="DataSourceValue"/> series to scan.</param>
         /// <param name="tolerance">Time tolerance for data slices in Unix epoch milliseconds.</param>
-        public TimeSliceScanner(IEnumerable<DataSourceValueGroup> dataset, double tolerance = 0.0D)
+        public TimeSliceScanner(IEnumerable<DataSourceValueGroup<DataSourceValue>> dataset, double tolerance = 0.0D)
         {
             m_enumerators = new List<IEnumerator<DataSourceValue>>();
             Tolerance = tolerance;
 
-            foreach (DataSourceValueGroup group in dataset)
+            foreach (DataSourceValueGroup<DataSourceValue> group in dataset)
             {
                 IEnumerator<DataSourceValue> enumerator = group.Source.GetEnumerator();
 
