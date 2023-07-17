@@ -71,7 +71,7 @@ namespace GrafanaAdapters
                     {
                         Target = targetMap[(ulong)dataPoint.HistorianID],
                         Magnitude = dataPoint.Value,
-                        Amplitude = dataPoint.Value,
+                        Angle = dataPoint.Value,
                         Time = (dataPoint.Time.ToDateTime().Ticks - m_baseTicks) / (double)Ticks.PerMillisecond,
                         Flags = dataPoint.Quality.MeasurementQuality()
                     }).Cast<T>();

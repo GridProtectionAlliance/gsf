@@ -27,7 +27,10 @@ namespace GrafanaAdapters.GrafanaFunctions
             // Base Case
             if (function == null)
             {
-                return GetDataSourceValue<T>(parameterValue, dataSourceBase, queryData);
+                if (queryData.IsPhasor)
+                    return GetPhasor(parameterValue, dataSourceBase, queryData) as DataSourceValueGroup<T>[];
+                else
+                    return GetDataSource(parameterValue, dataSourceBase, queryData) as DataSourceValueGroup<T>[];
             }
 
             //Split Parameters
@@ -112,11 +115,106 @@ namespace GrafanaAdapters.GrafanaFunctions
             return (null, expression);
         }
 
-        public static DataSourceValueGroup<T>[] GetDataSourceValue<T>(string expression, GrafanaDataSourceBase dataSourceBase, QueryDataHolder queryData)
+        public static DataSourceValueGroup<PhasorValue>[] GetPhasor(string expression, GrafanaDataSourceBase dataSourceBase, QueryDataHolder queryData)
+        {
+            if (expression == "" || expression == null)
+            {
+                return new DataSourceValueGroup<PhasorValue>[0];
+            }
+
+            DataSet Metadata = dataSourceBase.Metadata;
+            List<DataSourceValueGroup<PhasorValue>> dataSourceValueGroups = new List<DataSourceValueGroup<PhasorValue>>();
+            string[] allTargets = expression.Split(';');
+
+            //Loop through all targets
+            foreach(string targetLabel in allTargets)
+            {
+                //Get phasor id
+                DataRow[] phasorRows = Metadata.Tables["Phasor"].Select($"Label = '{targetLabel}'");
+                int targetId = -1;
+                if (phasorRows.Length > 0)
+                    targetId = Convert.ToInt32(phasorRows[0]["ID"]);
+                else
+                    throw new Exception($"Unable to find label {targetLabel}");
+
+                //Match phasor id to measurements
+                DataRow[] measurementRows = Metadata.Tables["ActiveMeasurements"].Select($"PhasorID = '{targetId}'");
+
+                if(measurementRows.Length < 2)
+                {
+                    throw new Exception($"Did not locate both magnitude and longitude for {targetId}");
+                }
+
+                //Get data
+                List<DataSourceValue> magValues = new();
+                List<DataSourceValue> angValues = new();
+                foreach (DataRow row in measurementRows)
+                {
+                    Dictionary<ulong, string> targetMap = new();
+                    ulong id = Convert.ToUInt64(row["ID"].ToString().Split(':')[1]);
+                    string pointTag = row["PointTag"].ToString();
+                    targetMap[id] = pointTag;
+
+                    List<DataSourceValue> dataValues = dataSourceBase.QueryDataSourceValues<DataSourceValue>(queryData.StartTime, queryData.StopTime, queryData.Interval, queryData.IncludePeaks, targetMap)
+                        .TakeWhile(_ => !queryData.CancellationToken.IsCancellationRequested).ToList();
+                    
+                    //Assign to proper values
+                    if (pointTag.EndsWith(".MAG"))
+                        magValues = dataValues;
+                    else if (pointTag.EndsWith(".ANG"))
+                        angValues = dataValues;
+                    else
+                        throw new Exception($"Point format for {pointTag} is neither .MAG nor .ANG");
+                }
+
+                //Error check
+                if (magValues.Count != angValues.Count)
+                    throw new Exception($"Number of data points for mag or ang values do not match for {targetLabel}");
+
+                //Convert datasource data to phasor data 
+                IEnumerable<PhasorValue> phasorValues = GeneratePhasorValues();
+
+                IEnumerable<PhasorValue> GeneratePhasorValues()
+                {
+                    int index = 0;
+                    foreach (DataSourceValue mag in magValues)
+                    {
+                        PhasorValue phasor = new PhasorValue();
+                        phasor.Target = targetLabel;
+                        phasor.Flags = mag.Flags;
+                        phasor.Time = mag.Time;
+                        phasor.Magnitude = mag.Value;
+                        phasor.Angle = angValues[index].Value;
+
+                        index++;
+
+                        yield return phasor;
+                    }
+                }
+
+                DataSourceValueGroup<PhasorValue> dataSourceValueGroup = new DataSourceValueGroup<PhasorValue>
+                {
+                    Target = targetLabel,
+                    RootTarget = targetLabel,
+                    SourceTarget = queryData.SourceTarget,
+                    Source = phasorValues,
+                    DropEmptySeries = queryData.DropEmptySeries,
+                    refId = queryData.SourceTarget.refId,
+                    metadata = GetMetadata(dataSourceBase, targetLabel, queryData.MetadataSelection)
+                };
+
+                dataSourceValueGroups.Add(dataSourceValueGroup);
+            }
+
+
+            return dataSourceValueGroups.ToArray();
+        }
+
+        public static DataSourceValueGroup<DataSourceValue>[] GetDataSource(string expression, GrafanaDataSourceBase dataSourceBase, QueryDataHolder queryData)
         {
             if(expression == "" || expression == null)
             {
-                return new DataSourceValueGroup<T>[0];
+                return new DataSourceValueGroup<DataSourceValue>[0];
             }
 
             DataSet Metadata = dataSourceBase.Metadata;
@@ -178,28 +276,18 @@ namespace GrafanaAdapters.GrafanaFunctions
             }
 
             // Query underlying data source for each target - to prevent parallel read from data source we enumerate immediately
-            List<T> dataValues = dataSourceBase.QueryDataSourceValues<T>(queryData.StartTime, queryData.StopTime, queryData.Interval, queryData.IncludePeaks, targetMap)
+            List<DataSourceValue> dataValues = dataSourceBase.QueryDataSourceValues<DataSourceValue>(queryData.StartTime, queryData.StopTime, queryData.Interval, queryData.IncludePeaks, targetMap)
                 .TakeWhile(_ => !queryData.CancellationToken.IsCancellationRequested).ToList();
 
-            DataSourceValueGroup<T>[] dataResult = new DataSourceValueGroup<T>[targetMap.Count];
+            DataSourceValueGroup<DataSourceValue>[] dataResult = new DataSourceValueGroup<DataSourceValue>[targetMap.Count];
             int index = 0;
 
             foreach (KeyValuePair<ulong, string> target in targetMap)
             {
-                IEnumerable<T> filteredValues = null;
-                if (typeof(T) == typeof(DataSourceValue))
-                {
-                    filteredValues = (IEnumerable<T>)dataValues.OfType<DataSourceValue>()
+                IEnumerable<DataSourceValue> filteredValues = (IEnumerable<DataSourceValue>)dataValues.OfType<DataSourceValue>()
                         .Where(dataValue => dataValue.Target.Equals(target.Value));
-                }
-                else if (typeof(T) == typeof(PhasorValue))
-                {
-                    // You need to replace this with the actual operation for PhasorValue
-                    filteredValues = (IEnumerable<T>)dataValues.OfType<PhasorValue>()
-                        .Where(phasorValue => phasorValue.Target.Equals(target.Value));
-                }
 
-                DataSourceValueGroup<T> dataSourceValueGroup = new DataSourceValueGroup<T>
+                DataSourceValueGroup<DataSourceValue> dataSourceValueGroup = new DataSourceValueGroup<DataSourceValue>
                 {
                     Target = target.Value,
                     RootTarget = target.Value,
@@ -218,6 +306,7 @@ namespace GrafanaAdapters.GrafanaFunctions
             return dataResult;
         }
 
+        //TODO FIX FOR PHASOR
         public static Dictionary<string, string> GetMetadata(GrafanaDataSourceBase dataSourceBase, string rootTarget, Dictionary<string, List<string>> metadataSelection)
         {
             // Create a new dictionary to hold the metadata values

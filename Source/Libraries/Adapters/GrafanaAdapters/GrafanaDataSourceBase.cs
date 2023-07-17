@@ -201,7 +201,7 @@ namespace GrafanaAdapters
                         if (valueGroup.SourceTarget?.excludedFlags > uint.MinValue)
                             values = values.Where(value => ((uint)value.Flags & valueGroup.SourceTarget.excludedFlags) == 0);
 
-                        series.datapoints = values.Select(dataValue => new[] { dataValue.Magnitude, dataValue.Amplitude, dataValue.Time }).ToList();
+                        series.datapoints = values.Select(dataValue => new[] { dataValue.Magnitude, dataValue.Angle, dataValue.Time }).ToList();
                     }
                 });
 

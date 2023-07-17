@@ -19,7 +19,7 @@ namespace GrafanaAdapters
         /// <summary>
         /// Queried value.
         /// </summary>
-        public double Amplitude;
+        public double Angle;
 
         /// <summary>
         /// Timestamp, in Unix epoch milliseconds, of queried value.

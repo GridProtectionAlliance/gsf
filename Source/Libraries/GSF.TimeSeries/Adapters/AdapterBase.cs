@@ -1230,6 +1230,7 @@ namespace GSF.TimeSeries.Adapters
             MeasurementKey key;
             bool dataSourceAvailable = dataSource is not null;
 
+
             if (string.IsNullOrWhiteSpace(value))
                 return keys.ToArray();
 
@@ -1293,7 +1294,11 @@ namespace GSF.TimeSeries.Adapters
 
                         if (key == MeasurementKey.Undefined && dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
                         {
-                            DataRow[] filteredRows = dataSource.Tables[measurementTable].Select($"SignalID = '{id}'");
+                            DataRow[] filteredRows;
+                            if (measurementTable == "Phasor")
+                                filteredRows = dataSource.Tables[measurementTable].Select($"Label = '{id}'");
+                            else
+                                filteredRows = dataSource.Tables[measurementTable].Select($"SignalID = '{id}'");
 
                             if (filteredRows.Length > 0)
                                 MeasurementKey.TryCreateOrUpdate(id, filteredRows[0][nameof(ID)].ToString(), out key);
@@ -1304,13 +1309,25 @@ namespace GSF.TimeSeries.Adapters
                         if (dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
                         {
                             // The item could not be parsed as a signal ID, but we do have a data source we can use to find the signal ID
-                            DataRow[] filteredRows = dataSource.Tables[measurementTable].Select($"ID = '{item.Trim()}'");
+                            DataRow[] filteredRows;
+                            if (measurementTable == "Phasor")
+                            {
+                                filteredRows = dataSource.Tables[measurementTable].Select($"Label = '{item.Trim()}'");
+                                if (filteredRows.Length > 0)
+                                {
+                                    key = MeasurementKey.LookUpOrCreate(filteredRows[0]["ID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), filteredRows[0][nameof(ID)].ToString());
+                                }
+                            }
+                            else
+                            {
+                                filteredRows = dataSource.Tables[measurementTable].Select($"ID = '{item.Trim()}'");
 
-                            if (filteredRows.Length == 0)
-                                filteredRows = dataSource.Tables[measurementTable].Select($"PointTag = '{item.Trim()}'");
+                                if (filteredRows.Length == 0)
+                                    filteredRows = dataSource.Tables[measurementTable].Select($"PointTag = '{item.Trim()}'");
 
-                            if (filteredRows.Length > 0)
-                                key = MeasurementKey.LookUpOrCreate(filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), filteredRows[0][nameof(ID)].ToString());
+                                if (filteredRows.Length > 0)
+                                    key = MeasurementKey.LookUpOrCreate(filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), filteredRows[0][nameof(ID)].ToString());
+                            }
                         }
 
                         // If all else fails, attempt to parse the item as a measurement key
