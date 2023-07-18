@@ -69,7 +69,8 @@ namespace GrafanaAdapters
                 {
                     return m_parent.Archive.ReadData(targetMap.Keys.Select(pointID => (int)pointID), startTime, stopTime, false).Select(dataPoint => new PhasorValue
                     {
-                        Target = targetMap[(ulong)dataPoint.HistorianID],
+                        MagnitudeTarget = targetMap[(ulong)dataPoint.HistorianID],
+                        AngleTarget = targetMap[(ulong)dataPoint.HistorianID],
                         Magnitude = dataPoint.Value,
                         Angle = dataPoint.Value,
                         Time = (dataPoint.Time.ToDateTime().Ticks - m_baseTicks) / (double)Ticks.PerMillisecond,

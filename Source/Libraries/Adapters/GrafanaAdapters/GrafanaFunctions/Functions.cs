@@ -192,12 +192,15 @@ namespace GrafanaAdapters.GrafanaFunctions
                     int index = 0;
                     foreach (DataSourceValue mag in magValues)
                     {
-                        PhasorValue phasor = new PhasorValue();
-                        phasor.Target = $"{targetNames[0]};{targetNames[1]}";
-                        phasor.Flags = mag.Flags;
-                        phasor.Time = mag.Time;
-                        phasor.Magnitude = mag.Value;
-                        phasor.Angle = angValues[index].Value;
+                        PhasorValue phasor = new()
+                        {
+                            MagnitudeTarget = targetNames[0],
+                            AngleTarget = targetNames[1],
+                            Flags = mag.Flags,
+                            Time = mag.Time,
+                            Magnitude = mag.Value,
+                            Angle = angValues[index].Value
+                        };
 
                         index++;
 

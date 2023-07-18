@@ -8,9 +8,13 @@ namespace GrafanaAdapters
     public struct PhasorValue
     {
         /// <summary>
-        /// Query target, e.g., a point-tag.
+        /// Query magnitude target, e.g., a point-tag.
         /// </summary>
-        public string Target;
+        public string MagnitudeTarget;
+        /// <summary>
+        /// Query magnitude target, e.g., a point-tag.
+        /// </summary>
+        public string AngleTarget;
 
         /// <summary>
         /// Queried value.

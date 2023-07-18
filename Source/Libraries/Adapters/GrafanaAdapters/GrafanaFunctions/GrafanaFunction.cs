@@ -59,6 +59,7 @@ namespace GrafanaAdapters.GrafanaFunctions
             IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source.Select(dataValue =>
                 new DataSourceValue
                 {
+                    Flags = dataValue.Flags,
                     Value = value + dataValue.Value,
                     Time = dataValue.Time,
                     Target = dataValue.Target
@@ -77,7 +78,27 @@ namespace GrafanaAdapters.GrafanaFunctions
         /// <returns></returns>
         public DataSourceValueGroup<PhasorValue> ComputePhasor(List<IParameter> parameters)
         {
-            return null;
+            // Get Values
+            double value = (parameters[0] as IParameter<double>).Value;
+            DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
+
+            // Compute
+            IEnumerable<PhasorValue> transformedDataSourceValues = phasorValues.Source.Select(phasorValue =>
+                new PhasorValue
+                {
+                    Flags = phasorValue.Flags,
+                    Magnitude = value + phasorValue.Magnitude,
+                    Angle = phasorValue.Angle,
+                    Time = phasorValue.Time,
+                    MagnitudeTarget = phasorValue.MagnitudeTarget,
+                    AngleTarget = phasorValue.AngleTarget,
+                });
+
+            string[] labels = phasorValues.Target.Split(';');
+            phasorValues.Target = $"{value}+{labels[0]};{value}+{labels[1]}";
+            phasorValues.Source = transformedDataSourceValues;
+
+            return phasorValues;
         }
 
         /// <summary>
@@ -148,7 +169,7 @@ namespace GrafanaAdapters.GrafanaFunctions
                 secondData
             };
 
-            TimeSliceScanner scanner = new(dataGroups, tolerance / SI.Milli);
+            TimeSliceScanner<DataSourceValue> scanner = new(dataGroups, tolerance / SI.Milli);
             IEnumerable<DataSourceValue> combinedValues = new List<DataSourceValue>();
             while (!scanner.DataReadComplete)
             {
@@ -188,7 +209,55 @@ namespace GrafanaAdapters.GrafanaFunctions
         /// <returns></returns>
         public DataSourceValueGroup<PhasorValue> ComputePhasor(List<IParameter> parameters)
         {
-            return null;
+            // Get Values
+            double tolerance = (parameters[0] as IParameter<double>).Value;
+            DataSourceValueGroup<PhasorValue> firstData = (DataSourceValueGroup<PhasorValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
+            DataSourceValueGroup<PhasorValue> secondData = (DataSourceValueGroup<PhasorValue>)(parameters[2] as IParameter<IDataSourceValueGroup>).Value;
+
+            List<DataSourceValueGroup<PhasorValue>> dataGroups = new List<DataSourceValueGroup<PhasorValue>>
+            {
+                firstData,
+                secondData
+            };
+
+            TimeSliceScanner<PhasorValue> scanner = new(dataGroups, tolerance / SI.Milli);
+            IEnumerable<PhasorValue> combinedValues = new List<PhasorValue>();
+            while (!scanner.DataReadComplete)
+            {
+                IEnumerable<PhasorValue> datapointGroups = scanner.ReadNextTimeSlice();
+                int numberDatapoints = datapointGroups.Count();
+                if (datapointGroups.Count() != dataGroups.Count())
+                {
+                    continue;
+                }
+
+                double totalMag = 0;
+                double totalAng = 0;
+                double totalTime = 0;
+                foreach (PhasorValue datapoint in datapointGroups)
+                {
+                    totalMag += datapoint.Magnitude;
+                    totalAng += datapoint.Angle;
+                    totalTime += datapoint.Time;
+                }
+
+                combinedValues = combinedValues.Append(new PhasorValue
+                {
+                    Magnitude = totalMag,
+                    Angle = totalAng,
+                    Time = totalTime / numberDatapoints,
+                    MagnitudeTarget = datapointGroups.First().MagnitudeTarget,
+                    AngleTarget = datapointGroups.First().AngleTarget,
+                });
+            }
+
+            string[] firstNames = firstData.Target.Split(';');
+            string[] secondNames = secondData.Target.Split(';');
+
+            firstData.Target = $"{firstNames[0]}+{secondNames[0]};{firstNames[1]}+{secondNames[1]}";
+            firstData.Source = combinedValues;
+
+            return firstData;
         }
 
         /// <summary>
@@ -240,6 +309,7 @@ namespace GrafanaAdapters.GrafanaFunctions
             IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source.Select(dataValue =>
                 new DataSourceValue
                 {
+                    Flags = dataValue.Flags,
                     Value = Math.Abs(dataValue.Value),
                     Time = dataValue.Time,
                     Target = dataValue.Target
@@ -258,7 +328,25 @@ namespace GrafanaAdapters.GrafanaFunctions
         /// <returns></returns>
         public DataSourceValueGroup<PhasorValue> ComputePhasor(List<IParameter> parameters)
         {
-            return null;
+            // Get Values
+            DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
+            // Compute
+            IEnumerable<PhasorValue> transformedDataSourceValues = phasorValues.Source.Select(phasorValue =>
+                new PhasorValue
+                {
+                    Flags = phasorValue.Flags,
+                    Magnitude = Math.Abs(phasorValue.Magnitude),
+                    Angle = Math.Abs(phasorValue.Angle),
+                    Time = phasorValue.Time,
+                    MagnitudeTarget = phasorValue.MagnitudeTarget,
+                    AngleTarget = phasorValue.AngleTarget,
+                });
+
+            string[] labels = phasorValues.Target.Split(';');
+            phasorValues.Target = $"Abs({labels[0]});Abs({labels[1]})";
+            phasorValues.Source = transformedDataSourceValues;
+
+            return phasorValues;
         }
 
         /// <summary>
@@ -316,6 +404,7 @@ namespace GrafanaAdapters.GrafanaFunctions
             IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source.Select(dataValue =>
                 new DataSourceValue
                 {
+                    Flags = dataValue.Flags,
                     Value = Math.Round(dataValue.Value, numberDecimals),
                     Time = dataValue.Time,
                     Target = dataValue.Target
@@ -334,7 +423,27 @@ namespace GrafanaAdapters.GrafanaFunctions
         /// <returns></returns>
         public DataSourceValueGroup<PhasorValue> ComputePhasor(List<IParameter> parameters)
         {
-            return null;
+            // Get Values
+            DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
+            int numberDecimals = (parameters[1] as IParameter<int>).Value;
+
+            // Compute
+            IEnumerable<PhasorValue> transformedDataSourceValues = phasorValues.Source.Select(phasorValue =>
+                new PhasorValue
+                {
+                    Flags = phasorValue.Flags,
+                    Magnitude = Math.Round(phasorValue.Magnitude, numberDecimals),
+                    Angle = Math.Round(phasorValue.Angle, numberDecimals),
+                    Time = phasorValue.Time,
+                    MagnitudeTarget = phasorValue.MagnitudeTarget,
+                    AngleTarget = phasorValue.AngleTarget,
+                });
+
+            string[] labels = phasorValues.Target.Split(';');
+            phasorValues.Target = $"Round({labels[0]},{numberDecimals});Round({labels[1]},{numberDecimals})";
+            phasorValues.Source = transformedDataSourceValues;
+
+            return phasorValues;
         }
 
         /// <summary>

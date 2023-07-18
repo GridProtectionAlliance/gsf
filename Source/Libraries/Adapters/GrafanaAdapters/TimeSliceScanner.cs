@@ -21,38 +21,40 @@
 //
 //******************************************************************************************************
 
+using GSF.TimeSeries;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace GrafanaAdapters
 {
     /// <summary>
-    /// Reads series of <see cref="DataSourceValue"/> instances for the same time interval.
+    /// Reads series of instances for the same time interval.
     /// </summary>
-    public class TimeSliceScanner
+    public class TimeSliceScanner<T>
     {
         #region [ Members ]
 
         // Fields
-        private readonly List<IEnumerator<DataSourceValue>> m_enumerators;
+        private readonly List<IEnumerator<T>> m_enumerators;
 
         #endregion
 
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="TimeSliceScanner"/>.
+        /// Creates a new <see cref="TimeSliceScanner{T}"/>.
         /// </summary>
-        /// <param name="dataset">Source <see cref="DataSourceValue"/> series to scan.</param>
+        /// <param name="dataset">Source series to scan.</param>
         /// <param name="tolerance">Time tolerance for data slices in Unix epoch milliseconds.</param>
-        public TimeSliceScanner(IEnumerable<DataSourceValueGroup<DataSourceValue>> dataset, double tolerance = 0.0D)
+        public TimeSliceScanner(IEnumerable<DataSourceValueGroup<T>> dataset, double tolerance = 0.0D)
         {
-            m_enumerators = new List<IEnumerator<DataSourceValue>>();
+            m_enumerators = new List<IEnumerator<T>>();
             Tolerance = tolerance;
 
-            foreach (DataSourceValueGroup<DataSourceValue> group in dataset)
+            foreach (DataSourceValueGroup<T> group in dataset)
             {
-                IEnumerator<DataSourceValue> enumerator = group.Source.GetEnumerator();
+                IEnumerator<T> enumerator = group.Source.GetEnumerator();
 
                 // Add enumerator to the list if it has at least one value
                 if (enumerator.MoveNext())
@@ -86,20 +88,43 @@ namespace GrafanaAdapters
         /// otherwise, <c>false</c> to publish all series values since last slice.
         /// </param>
         /// <returns>Next time slice.</returns>
-        public IEnumerable<DataSourceValue> ReadNextTimeSlice(bool lastValue = true)
+        public IEnumerable<T> ReadNextTimeSlice(bool lastValue = true)
         {
-            if (lastValue)
+            //DataSourceValues
+            if (typeof(T) == typeof(DataSourceValue))
             {
-                Dictionary<string, DataSourceValue> nextSlice = new(StringComparer.OrdinalIgnoreCase);
-                ReadNextTimeSlice(value => nextSlice[value.Target] = value);
-                return nextSlice.Values;
+                if (lastValue)
+                {
+                    Dictionary<string, DataSourceValue> nextSlice = new(StringComparer.OrdinalIgnoreCase);
+                    ReadNextTimeSlice(value => nextSlice[value.Target] = value);
+                    return (IEnumerable<T>)(object)nextSlice.Values;
+                }
+                else
+                {
+                    List<DataSourceValue> nextSlice = new();
+                    ReadNextTimeSlice(value => nextSlice.Add(value));
+                    return (List<T>)(object)nextSlice;
+                }
             }
-            else
+
+            //PhasorValues
+            else if (typeof(T) == typeof(PhasorValue))
             {
-                List<DataSourceValue> nextSlice = new();
-                ReadNextTimeSlice(value => nextSlice.Add(value));
-                return nextSlice;
+                if (lastValue)
+                {
+                    Dictionary<string, PhasorValue> nextSlice = new(StringComparer.OrdinalIgnoreCase);
+                    ReadNextPhasorTimeSlice(value => nextSlice[value.MagnitudeTarget] = value);
+                    return (IEnumerable<T>)(object)nextSlice.Values;
+                }
+                else
+                {
+                    List<PhasorValue> nextSlice = new();
+                    ReadNextPhasorTimeSlice(value => nextSlice.Add(value));
+                    return (List<T>)(object)nextSlice;
+                }
             }
+
+            return Enumerable.Empty<T>();
         }
 
         private void ReadNextTimeSlice(Action<DataSourceValue> addValue)
@@ -123,6 +148,74 @@ namespace GrafanaAdapters
 
             // Publish all values at the current time
             foreach (IEnumerator<DataSourceValue> enumerator in m_enumerators)
+            {
+                bool enumerationComplete = false;
+                dataPoint = enumerator.Current;
+
+                if (dataPoint.Time <= publishTime)
+                {
+                    // Attempt to advance to next data point, tracking completed enumerators
+                    if (!enumerator.MoveNext())
+                    {
+                        enumerationComplete = true;
+                        completed.Add(index);
+                    }
+
+                    addValue(dataPoint);
+
+                    // Make sure any point IDs with duplicated times directly follow
+                    if (!enumerationComplete)
+                    {
+                        while (enumerator.Current.Time <= publishTime)
+                        {
+                            addValue(enumerator.Current);
+
+                            if (!enumerator.MoveNext())
+                            {
+                                completed.Add(index);
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                index++;
+            }
+
+            // Remove completed enumerators
+            if (completed.Count == 0)
+                return;
+
+            completed.Sort();
+
+            // Remove highest numeric indexes first to retain source index integrity
+            for (int i = completed.Count - 1; i >= 0; i--)
+                m_enumerators.RemoveAt(completed[i]);
+
+            completed.Clear();
+        }
+
+        private void ReadNextPhasorTimeSlice(Action<PhasorValue> addValue)
+        {
+            PhasorValue dataPoint;
+            double publishTime = double.MaxValue;
+
+            // Find minimum publication time for current values
+            foreach (IEnumerator<PhasorValue> enumerator in m_enumerators)
+            {
+                dataPoint = enumerator.Current;
+
+                if (dataPoint.Time < publishTime)
+                    publishTime = dataPoint.Time;
+            }
+
+            publishTime += Tolerance;
+
+            List<int> completed = new();
+            int index = 0;
+
+            // Publish all values at the current time
+            foreach (IEnumerator<PhasorValue> enumerator in m_enumerators)
             {
                 bool enumerationComplete = false;
                 dataPoint = enumerator.Current;
