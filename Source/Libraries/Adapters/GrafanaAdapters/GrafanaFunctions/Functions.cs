@@ -72,7 +72,7 @@ namespace GrafanaAdapters.GrafanaFunctions
             List<DataSourceValueGroup<T>> res = new List<DataSourceValueGroup<T>>();
             foreach (DataSourceValueGroup<T>[] dataValues in regroupedDataValues)
             {
-                List<IParameter> computeParameters = GenerateParameters(dataSourceBase, function, functionParameters, dataValues);
+                List<IParameter> computeParameters = GenerateParameters(dataSourceBase, function, functionParameters, dataValues, queryData);
                 DataSourceValueGroup<T> computedValues;
                 if (typeof(T) == typeof(DataSourceValue))
                 {
@@ -115,6 +115,7 @@ namespace GrafanaAdapters.GrafanaFunctions
             return (null, expression);
         }
 
+        //TO DO ADD SELECT FUNCTIONALITY
         public static DataSourceValueGroup<PhasorValue>[] GetPhasor(string expression, GrafanaDataSourceBase dataSourceBase, QueryDataHolder queryData)
         {
             if (expression == "" || expression == null)
@@ -148,6 +149,7 @@ namespace GrafanaAdapters.GrafanaFunctions
                 //Get data
                 List<DataSourceValue> magValues = new();
                 List<DataSourceValue> angValues = new();
+                string[] targetNames = { "", ""};
                 foreach (DataRow row in measurementRows)
                 {
                     Dictionary<ulong, string> targetMap = new();
@@ -160,9 +162,15 @@ namespace GrafanaAdapters.GrafanaFunctions
                     
                     //Assign to proper values
                     if (pointTag.EndsWith(".MAG"))
+                    {
                         magValues = dataValues;
+                        targetNames[0] = pointTag;
+                    }
                     else if (pointTag.EndsWith(".ANG"))
+                    {
                         angValues = dataValues;
+                        targetNames[1] = pointTag;
+                    }
                     else
                         throw new Exception($"Point format for {pointTag} is neither .MAG nor .ANG");
                 }
@@ -170,6 +178,11 @@ namespace GrafanaAdapters.GrafanaFunctions
                 //Error check
                 if (magValues.Count != angValues.Count)
                     throw new Exception($"Number of data points for mag or ang values do not match for {targetLabel}");
+
+                if (targetNames[0] == "")
+                    throw new Exception($"Unable to find magnitude name for {targetLabel}");
+                else if (targetNames[1] == "")
+                    throw new Exception($"Unable to find angle name for {targetLabel}");
 
                 //Convert datasource data to phasor data 
                 IEnumerable<PhasorValue> phasorValues = GeneratePhasorValues();
@@ -180,7 +193,7 @@ namespace GrafanaAdapters.GrafanaFunctions
                     foreach (DataSourceValue mag in magValues)
                     {
                         PhasorValue phasor = new PhasorValue();
-                        phasor.Target = targetLabel;
+                        phasor.Target = $"{targetNames[0]};{targetNames[1]}";
                         phasor.Flags = mag.Flags;
                         phasor.Time = mag.Time;
                         phasor.Magnitude = mag.Value;
@@ -194,13 +207,13 @@ namespace GrafanaAdapters.GrafanaFunctions
 
                 DataSourceValueGroup<PhasorValue> dataSourceValueGroup = new DataSourceValueGroup<PhasorValue>
                 {
-                    Target = targetLabel,
+                    Target = $"{targetNames[0]};{targetNames[1]}",
                     RootTarget = targetLabel,
                     SourceTarget = queryData.SourceTarget,
                     Source = phasorValues,
                     DropEmptySeries = queryData.DropEmptySeries,
                     refId = queryData.SourceTarget.refId,
-                    metadata = GetMetadata(dataSourceBase, targetLabel, queryData.MetadataSelection)
+                    metadata = GetMetadata(dataSourceBase, targetLabel, queryData.MetadataSelection, true)
                 };
 
                 dataSourceValueGroups.Add(dataSourceValueGroup);
@@ -295,7 +308,7 @@ namespace GrafanaAdapters.GrafanaFunctions
                     Source = filteredValues,
                     DropEmptySeries = queryData.DropEmptySeries,
                     refId = queryData.SourceTarget.refId,
-                    metadata = GetMetadata(dataSourceBase, target.Value, queryData.MetadataSelection)
+                    metadata = GetMetadata(dataSourceBase, target.Value, queryData.MetadataSelection, false)
                 };
 
                 dataResult[index] = dataSourceValueGroup;
@@ -306,8 +319,8 @@ namespace GrafanaAdapters.GrafanaFunctions
             return dataResult;
         }
 
-        //TODO FIX FOR PHASOR
-        public static Dictionary<string, string> GetMetadata(GrafanaDataSourceBase dataSourceBase, string rootTarget, Dictionary<string, List<string>> metadataSelection)
+        public static Dictionary<string, string> GetMetadata(GrafanaDataSourceBase dataSourceBase, 
+            string rootTarget, Dictionary<string, List<string>> metadataSelection, bool isPhasor = false)
         {
             // Create a new dictionary to hold the metadata values
             var metadataDict = new Dictionary<string, string>();
@@ -323,7 +336,8 @@ namespace GrafanaAdapters.GrafanaFunctions
             {
                 string table = entry.Key;
                 List<string> values = entry.Value;
-                DataRow[] rows = dataSourceBase?.Metadata.Tables[table].Select($"PointTag = '{rootTarget}'") ?? new DataRow[0];
+                string selectQuery = isPhasor ? $"Label = '{rootTarget}'" : $"PointTag = '{rootTarget}'";
+                DataRow[] rows = dataSourceBase?.Metadata.Tables[table].Select(selectQuery) ?? new DataRow[0];
 
                 // Populate the entry dictionary with the metadata values
                 foreach (string value in values)
@@ -340,7 +354,8 @@ namespace GrafanaAdapters.GrafanaFunctions
         }
 
 
-        public static List<IParameter> GenerateParameters<T>(GrafanaDataSourceBase dataSourceBase, IGrafanaFunction function, List<string> parsedParameters, DataSourceValueGroup<T>[] dataValues)
+        public static List<IParameter> GenerateParameters<T>(GrafanaDataSourceBase dataSourceBase, IGrafanaFunction function, 
+            List<string> parsedParameters, DataSourceValueGroup<T>[] dataValues, QueryDataHolder queryData)
         {
             List<IParameter> parameters = function.Parameters;
             int paramIndex = 0;
@@ -353,11 +368,12 @@ namespace GrafanaAdapters.GrafanaFunctions
                     //Not enough parameters 
                     if (dataIndex >= dataValues.Length)
                     {
-                        dataSourceValueParameter.SetValue(dataSourceBase, null, null, null);
+                        dataSourceValueParameter.SetValue(dataSourceBase, null, null, null, queryData.IsPhasor);
                     }
                     else
                     {
-                        dataSourceValueParameter.SetValue(dataSourceBase, dataValues[dataIndex], dataValues[dataIndex].RootTarget, dataValues[dataIndex].metadata);
+                        dataSourceValueParameter.SetValue(dataSourceBase, dataValues[dataIndex], 
+                            dataValues[dataIndex].RootTarget, dataValues[dataIndex].metadata, queryData.IsPhasor);
                         dataIndex++;
                     }
 
@@ -369,13 +385,13 @@ namespace GrafanaAdapters.GrafanaFunctions
                     if (paramIndex >= parsedParameters.Count)
                     {
                         //If required throws error. If not sets to default
-                        parameter.SetValue(dataSourceBase, null, null, null); 
+                        parameter.SetValue(dataSourceBase, null, null, null, queryData.IsPhasor); 
                     }
                     //Have a valid parameter
                     else
                     {
                         //Uses metadata from first 
-                        parameter.SetValue(dataSourceBase, parsedParameters[paramIndex], dataValues[0]?.RootTarget, dataValues[0]?.metadata);
+                        parameter.SetValue(dataSourceBase, parsedParameters[paramIndex], dataValues[0]?.RootTarget, dataValues[0]?.metadata, queryData.IsPhasor);
                         paramIndex++;
                     }
                 }

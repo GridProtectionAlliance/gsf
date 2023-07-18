@@ -30,7 +30,8 @@ namespace GrafanaAdapters.GrafanaFunctions
          * If nothing is found, it looks through ActiveMeasurements for it.
          * Finally, if none of the above work it throws an error.
          */
-        public void SetValue(GrafanaDataSourceBase dataSourceBase, object value, string target, Dictionary<string, string> metadata)
+        public void SetValue(GrafanaDataSourceBase dataSourceBase, object value, string target, 
+            Dictionary<string, string> metadata, bool isPhasor)
         {
             // No value specified
             if (value == null)
@@ -90,7 +91,11 @@ namespace GrafanaAdapters.GrafanaFunctions
                 // Not found, check ActiveMeasurements
                 else
                 {
-                    DataRow[] rows = dataSourceBase?.Metadata.Tables["ActiveMeasurements"].Select($"PointTag = '{target}'") ?? new DataRow[0];
+                    DataRow[] rows;
+                    if (isPhasor)
+                        rows = dataSourceBase?.Metadata.Tables["Phasor"].Select($"Label = '{target}'") ?? new DataRow[0];
+                    else
+                        rows = dataSourceBase?.Metadata.Tables["ActiveMeasurements"].Select($"PointTag = '{target}'") ?? new DataRow[0];
                     //Not valid
                     if (!(rows.Length > 0 && rows[0].Table.Columns.Contains(valueString)))
                     {
