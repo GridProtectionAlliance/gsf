@@ -115,7 +115,6 @@ namespace GrafanaAdapters.GrafanaFunctions
             return (null, expression);
         }
 
-        //TO DO ADD SELECT FUNCTIONALITY
         public static DataSourceValueGroup<PhasorValue>[] GetPhasor(string expression, GrafanaDataSourceBase dataSourceBase, QueryDataHolder queryData)
         {
             if (expression == "" || expression == null)
@@ -126,30 +125,59 @@ namespace GrafanaAdapters.GrafanaFunctions
             DataSet Metadata = dataSourceBase.Metadata;
             List<DataSourceValueGroup<PhasorValue>> dataSourceValueGroups = new List<DataSourceValueGroup<PhasorValue>>();
             string[] allTargets = expression.Split(';');
+            HashSet<string> targetSet = new HashSet<string>();
+            Dictionary<int, string> phasorTargets = new Dictionary<int, string>();
 
             //Loop through all targets
             foreach(string targetLabel in allTargets)
             {
+                if (targetLabel.StartsWith("FILTER ", StringComparison.OrdinalIgnoreCase))
+                {
+                    targetSet.UnionWith(TargetCache<string[]>.GetOrAdd(targetLabel, () =>
+                    {
+                        MeasurementKey[] results = AdapterBase.ParseInputMeasurementKeys(Metadata, false, targetLabel.SplitAlias(out string alias), "Phasor");
+
+                        if (!string.IsNullOrWhiteSpace(alias) && results.Length == 1)
+                            return new[] { $"{alias}={results[0].TagFromKey(Metadata)}" };
+
+                        return results.Select(key => key.TagFromKey(Metadata)).ToArray();
+                    }));
+
+                    foreach (string targetId in targetSet)
+                    {
+                        phasorTargets[Convert.ToInt32(targetId)] = targetLabel;
+                    }
+                    continue;
+                }
+
                 //Get phasor id
                 DataRow[] phasorRows = Metadata.Tables["Phasor"].Select($"Label = '{targetLabel}'");
-                int targetId = -1;
-                if (phasorRows.Length > 0)
-                    targetId = Convert.ToInt32(phasorRows[0]["ID"]);
-                else
+                if (phasorRows.Length == 0)
                     throw new Exception($"Unable to find label {targetLabel}");
 
-                //Match phasor id to measurements
-                DataRow[] measurementRows = Metadata.Tables["ActiveMeasurements"].Select($"PhasorID = '{targetId}'");
-
-                if(measurementRows.Length < 2)
+                foreach (DataRow row in phasorRows)
                 {
-                    throw new Exception($"Did not locate both magnitude and longitude for {targetId}");
+                    int targetId = Convert.ToInt32(phasorRows[0]["ID"]);
+                    phasorTargets[targetId] = targetLabel;
+                }
+            }
+
+            foreach (KeyValuePair<int, string> item in phasorTargets)
+            {
+                int phasorId = item.Key;
+                string phasorLabel = item.Value;
+                //Match phasor id to measurements
+                DataRow[] measurementRows = Metadata.Tables["ActiveMeasurements"].Select($"PhasorID = '{phasorId}'");
+
+                if (measurementRows.Length < 2)
+                {
+                    throw new Exception($"Did not locate both magnitude and longitude for {phasorLabel} with {phasorId} id");
                 }
 
                 //Get data
                 List<DataSourceValue> magValues = new();
                 List<DataSourceValue> angValues = new();
-                string[] targetNames = { "", ""};
+                string[] dataSourceNames = { "", "" };
                 foreach (DataRow row in measurementRows)
                 {
                     Dictionary<ulong, string> targetMap = new();
@@ -159,17 +187,17 @@ namespace GrafanaAdapters.GrafanaFunctions
 
                     List<DataSourceValue> dataValues = dataSourceBase.QueryDataSourceValues<DataSourceValue>(queryData.StartTime, queryData.StopTime, queryData.Interval, queryData.IncludePeaks, targetMap)
                         .TakeWhile(_ => !queryData.CancellationToken.IsCancellationRequested).ToList();
-                    
+
                     //Assign to proper values
                     if (pointTag.EndsWith(".MAG"))
                     {
                         magValues = dataValues;
-                        targetNames[0] = pointTag;
+                        dataSourceNames[0] = pointTag;
                     }
                     else if (pointTag.EndsWith(".ANG"))
                     {
                         angValues = dataValues;
-                        targetNames[1] = pointTag;
+                        dataSourceNames[1] = pointTag;
                     }
                     else
                         throw new Exception($"Point format for {pointTag} is neither .MAG nor .ANG");
@@ -177,12 +205,12 @@ namespace GrafanaAdapters.GrafanaFunctions
 
                 //Error check
                 if (magValues.Count != angValues.Count)
-                    throw new Exception($"Number of data points for mag or ang values do not match for {targetLabel}");
+                    throw new Exception($"Number of data points for mag or ang values do not match for {dataSourceNames[0]} and {dataSourceNames[1]}");
 
-                if (targetNames[0] == "")
-                    throw new Exception($"Unable to find magnitude name for {targetLabel}");
-                else if (targetNames[1] == "")
-                    throw new Exception($"Unable to find angle name for {targetLabel}");
+                if (dataSourceNames[0] == "")
+                    throw new Exception($"Unable to find magnitude name for {phasorLabel}");
+                else if (dataSourceNames[1] == "")
+                    throw new Exception($"Unable to find angle name for {phasorLabel}");
 
                 //Convert datasource data to phasor data 
                 IEnumerable<PhasorValue> phasorValues = GeneratePhasorValues();
@@ -194,8 +222,8 @@ namespace GrafanaAdapters.GrafanaFunctions
                     {
                         PhasorValue phasor = new()
                         {
-                            MagnitudeTarget = targetNames[0],
-                            AngleTarget = targetNames[1],
+                            MagnitudeTarget = dataSourceNames[0],
+                            AngleTarget = dataSourceNames[1],
                             Flags = mag.Flags,
                             Time = mag.Time,
                             Magnitude = mag.Value,
@@ -210,13 +238,13 @@ namespace GrafanaAdapters.GrafanaFunctions
 
                 DataSourceValueGroup<PhasorValue> dataSourceValueGroup = new DataSourceValueGroup<PhasorValue>
                 {
-                    Target = $"{targetNames[0]};{targetNames[1]}",
-                    RootTarget = targetLabel,
+                    Target = $"{dataSourceNames[0]};{dataSourceNames[1]}",
+                    RootTarget = phasorLabel,
                     SourceTarget = queryData.SourceTarget,
                     Source = phasorValues,
                     DropEmptySeries = queryData.DropEmptySeries,
                     refId = queryData.SourceTarget.refId,
-                    metadata = GetMetadata(dataSourceBase, targetLabel, queryData.MetadataSelection, true)
+                    metadata = GetMetadata(dataSourceBase, phasorLabel, queryData.MetadataSelection, true)
                 };
 
                 dataSourceValueGroups.Add(dataSourceValueGroup);

@@ -1240,7 +1240,11 @@ namespace GSF.TimeSeries.Adapters
             {
                 foreach (DataRow row in dataSource.Tables[tableName].Select(expression, sortField).Take(takeCount))
                 {
-                    key = MeasurementKey.LookUpOrCreate(row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), row[nameof(ID)].ToString());
+                    if(tableName == "Phasor")
+                        key = MeasurementKey.LookUpOrCreate(row["ID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), row[nameof(ID)].ToString());
+                    else
+                        key = MeasurementKey.LookUpOrCreate(row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), row[nameof(ID)].ToString());
+
 
                     if (key != MeasurementKey.Undefined)
                         keys.Add(key);
@@ -1263,7 +1267,10 @@ namespace GSF.TimeSeries.Adapters
 
                         foreach (DataRow row in results.Rows)
                         {
-                            key = MeasurementKey.LookUpOrCreate(row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), row[nameof(ID)].ToString());
+                            if(measurementTable == "Phasor")
+                                key = MeasurementKey.LookUpOrCreate(row["ID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), row[nameof(ID)].ToString());
+                            else
+                                key = MeasurementKey.LookUpOrCreate(row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), row[nameof(ID)].ToString());
 
                             if (key != MeasurementKey.Undefined)
                                 keys.Add(key);
@@ -1294,11 +1301,7 @@ namespace GSF.TimeSeries.Adapters
 
                         if (key == MeasurementKey.Undefined && dataSourceAvailable && dataSource.Tables.Contains(measurementTable))
                         {
-                            DataRow[] filteredRows;
-                            if (measurementTable == "Phasor")
-                                filteredRows = dataSource.Tables[measurementTable].Select($"Label = '{id}'");
-                            else
-                                filteredRows = dataSource.Tables[measurementTable].Select($"SignalID = '{id}'");
+                            DataRow[] filteredRows = dataSource.Tables[measurementTable].Select($"SignalID = '{id}'");
 
                             if (filteredRows.Length > 0)
                                 MeasurementKey.TryCreateOrUpdate(id, filteredRows[0][nameof(ID)].ToString(), out key);
@@ -1310,24 +1313,14 @@ namespace GSF.TimeSeries.Adapters
                         {
                             // The item could not be parsed as a signal ID, but we do have a data source we can use to find the signal ID
                             DataRow[] filteredRows;
-                            if (measurementTable == "Phasor")
-                            {
-                                filteredRows = dataSource.Tables[measurementTable].Select($"Label = '{item.Trim()}'");
-                                if (filteredRows.Length > 0)
-                                {
-                                    key = MeasurementKey.LookUpOrCreate(filteredRows[0]["ID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), filteredRows[0][nameof(ID)].ToString());
-                                }
-                            }
-                            else
-                            {
-                                filteredRows = dataSource.Tables[measurementTable].Select($"ID = '{item.Trim()}'");
 
-                                if (filteredRows.Length == 0)
-                                    filteredRows = dataSource.Tables[measurementTable].Select($"PointTag = '{item.Trim()}'");
+                            filteredRows = dataSource.Tables[measurementTable].Select($"ID = '{item.Trim()}'");
 
-                                if (filteredRows.Length > 0)
-                                    key = MeasurementKey.LookUpOrCreate(filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), filteredRows[0][nameof(ID)].ToString());
-                            }
+                            if (filteredRows.Length == 0)
+                                filteredRows = dataSource.Tables[measurementTable].Select($"PointTag = '{item.Trim()}'");
+
+                            if (filteredRows.Length > 0)
+                                key = MeasurementKey.LookUpOrCreate(filteredRows[0]["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), filteredRows[0][nameof(ID)].ToString());
                         }
 
                         // If all else fails, attempt to parse the item as a measurement key
