@@ -8,7 +8,8 @@ using System.Threading.Tasks;
 namespace GrafanaAdapters.GrafanaFunctions
 {
     /// <summary>
-    /// Represents the "Round" function that rounds the value of a DataSourceValue.
+    /// Returns a series of values that represent the rounded value, with N fractional digits, of each of the values in the source series.
+    /// N, optional, is a positive integer value representing the number of decimal places in the return value - defaults to 0.
     /// </summary>
     public class Round : IGrafanaFunction
     {
@@ -16,7 +17,7 @@ namespace GrafanaAdapters.GrafanaFunctions
         public string Name { get; } = "Round";
 
         /// <inheritdoc />
-        public string Description { get; } = "Rounds the value of DataSourceValue";
+        public string Description { get; } = "Returns a series of values that represent the rounded value, with N fractional digits, of each of the values in the source series.";
 
         /// <inheritdoc />
         public Type Type { get; } = typeof(AbsoluteValue);
@@ -91,7 +92,7 @@ namespace GrafanaAdapters.GrafanaFunctions
                 });
 
             string[] labels = phasorValues.Target.Split(';');
-            phasorValues.Target = $"Round({labels[0]},{numberDecimals});Round({labels[1]},{numberDecimals})";
+            phasorValues.Target = $"{Name}({labels[0]},{numberDecimals});{Name}({labels[1]},{numberDecimals})";
             phasorValues.Source = transformedDataSourceValues;
 
             return phasorValues;

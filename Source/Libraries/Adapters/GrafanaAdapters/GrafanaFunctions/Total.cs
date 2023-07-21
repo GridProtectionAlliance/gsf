@@ -8,21 +8,21 @@ using System.Threading.Tasks;
 namespace GrafanaAdapters.GrafanaFunctions
 {
     /// <summary>
-    /// Returns a series of values that represent the absolute value each of the values in the source series.
+    /// Returns a single value that represents the sum of the values in the source series.
     /// </summary>
-    public class AbsoluteValue : IGrafanaFunction
+    public class Total : IGrafanaFunction
     {
         /// <inheritdoc />
-        public string Name { get; } = "AbsoluteValue";
+        public string Name { get; } = "Total";
 
         /// <inheritdoc />
-        public string Description { get; } = "Returns a series of values that represent the absolute value each of the values in the source series.";
+        public string Description { get; } = "Returns a single value that represents the sum of the values in the source series.";
 
         /// <inheritdoc />
-        public Type Type { get; } = typeof(AbsoluteValue);
+        public Type Type { get; } = typeof(Total);
 
         /// <inheritdoc />
-        public Regex Regex { get; } = new Regex(string.Format(FunctionsModelHelper.ExpressionFormat, "(AbsoluteValue|Abs)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        public Regex Regex { get; } = new Regex(string.Format(FunctionsModelHelper.ExpressionFormat, "(Total|Sum)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         /// <inheritdoc />
         public List<IParameter> Parameters { get; } =
@@ -46,18 +46,16 @@ namespace GrafanaAdapters.GrafanaFunctions
         {
             // Get Values
             DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
+
             // Compute
-            IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source.Select(dataValue =>
-                new DataSourceValue
-                {
-                    Flags = dataValue.Flags,
-                    Value = Math.Abs(dataValue.Value),
-                    Time = dataValue.Time,
-                    Target = dataValue.Target
-                });
+            DataSourceValue averageDataSourceValue = new()
+            {
+                Time = dataSourceValues.Source.Last().Time,
+                Value = dataSourceValues.Source.Sum(dataValue => dataValue.Value)
+            };
 
             dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
-            dataSourceValues.Source = transformedDataSourceValues;
+            dataSourceValues.Source = Enumerable.Repeat(averageDataSourceValue, 1);
 
             return dataSourceValues;
         }
@@ -72,28 +70,26 @@ namespace GrafanaAdapters.GrafanaFunctions
             // Get Values
             DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
             // Compute
-            IEnumerable<PhasorValue> transformedDataSourceValues = phasorValues.Source.Select(phasorValue =>
-                new PhasorValue
-                {
-                    Flags = phasorValue.Flags,
-                    Magnitude = Math.Abs(phasorValue.Magnitude),
-                    Angle = Math.Abs(phasorValue.Angle),
-                    Time = phasorValue.Time,
-                    MagnitudeTarget = phasorValue.MagnitudeTarget,
-                    AngleTarget = phasorValue.AngleTarget,
-                });
+            double sumOfMags = phasorValues.Source.Sum(dataValue => dataValue.Magnitude);
+            double sumOfAngs = phasorValues.Source.Sum(dataValue => dataValue.Angle);
+            PhasorValue averageDataSourceValue = new()
+            {
+                Time = phasorValues.Source.Last().Time,
+                Magnitude = phasorValues.Source.Sum(dataValue => dataValue.Magnitude),
+                Angle = phasorValues.Source.Sum(dataValue => dataValue.Angle)
+            };
+
 
             string[] labels = phasorValues.Target.Split(';');
             phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
-            phasorValues.Source = transformedDataSourceValues;
+            phasorValues.Source = Enumerable.Repeat(averageDataSourceValue, 1);
 
             return phasorValues;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="AbsoluteValue"/> class.
+        /// Initializes a new instance of the <see cref="Total"/> class.
         /// </summary>
-        public AbsoluteValue() { }
+        public Total() { }
     }
-
 }

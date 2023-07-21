@@ -8,21 +8,21 @@ using System.Threading.Tasks;
 namespace GrafanaAdapters.GrafanaFunctions
 {
     /// <summary>
-    /// Returns a series of values that represent the absolute value each of the values in the source series.
+    /// Returns a series of values that represent the unique set of values in the source series.
     /// </summary>
-    public class AbsoluteValue : IGrafanaFunction
+    public class Distinct : IGrafanaFunction
     {
         /// <inheritdoc />
-        public string Name { get; } = "AbsoluteValue";
+        public string Name { get; } = "Distinct";
 
         /// <inheritdoc />
-        public string Description { get; } = "Returns a series of values that represent the absolute value each of the values in the source series.";
+        public string Description { get; } = "Returns a series of values that represent the unique set of values in the source series.";
 
         /// <inheritdoc />
-        public Type Type { get; } = typeof(AbsoluteValue);
+        public Type Type { get; } = typeof(Distinct);
 
         /// <inheritdoc />
-        public Regex Regex { get; } = new Regex(string.Format(FunctionsModelHelper.ExpressionFormat, "(AbsoluteValue|Abs)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        public Regex Regex { get; } = new Regex(string.Format(FunctionsModelHelper.ExpressionFormat, "(Distinct|Unique)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         /// <inheritdoc />
         public List<IParameter> Parameters { get; } =
@@ -46,18 +46,12 @@ namespace GrafanaAdapters.GrafanaFunctions
         {
             // Get Values
             DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
+
             // Compute
-            IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source.Select(dataValue =>
-                new DataSourceValue
-                {
-                    Flags = dataValue.Flags,
-                    Value = Math.Abs(dataValue.Value),
-                    Time = dataValue.Time,
-                    Target = dataValue.Target
-                });
+            IEnumerable<DataSourceValue> distinctValues = dataSourceValues.Source.GroupBy(dataValue => dataValue.Value).Select(group => group.First());
 
             dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
-            dataSourceValues.Source = transformedDataSourceValues;
+            dataSourceValues.Source = distinctValues;
 
             return dataSourceValues;
         }
@@ -71,29 +65,20 @@ namespace GrafanaAdapters.GrafanaFunctions
         {
             // Get Values
             DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
+
             // Compute
-            IEnumerable<PhasorValue> transformedDataSourceValues = phasorValues.Source.Select(phasorValue =>
-                new PhasorValue
-                {
-                    Flags = phasorValue.Flags,
-                    Magnitude = Math.Abs(phasorValue.Magnitude),
-                    Angle = Math.Abs(phasorValue.Angle),
-                    Time = phasorValue.Time,
-                    MagnitudeTarget = phasorValue.MagnitudeTarget,
-                    AngleTarget = phasorValue.AngleTarget,
-                });
+            IEnumerable<PhasorValue> distinctValues = phasorValues.Source.GroupBy(dataValue => dataValue.Magnitude).Select(group => group.First());
 
             string[] labels = phasorValues.Target.Split(';');
             phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
-            phasorValues.Source = transformedDataSourceValues;
+            phasorValues.Source = distinctValues;
 
             return phasorValues;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="AbsoluteValue"/> class.
+        /// Initializes a new instance of the <see cref="Distinct"/> class.
         /// </summary>
-        public AbsoluteValue() { }
+        public Distinct() { }
     }
-
 }

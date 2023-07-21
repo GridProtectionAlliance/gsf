@@ -9,7 +9,8 @@ using GSF.Units;
 namespace GrafanaAdapters.GrafanaFunctions
 {
     /// <summary>
-    /// Represents the "SliceAdd" function that adds two DataSourceValues.
+    /// Returns one series by combining two other series within an offset N.
+    /// N is a floating point value representing an additive offset to be applied to each value the source series.
     /// </summary>
     public class SliceAdd : IGrafanaFunction
     {
@@ -17,7 +18,7 @@ namespace GrafanaAdapters.GrafanaFunctions
         public string Name { get; } = "SliceAdd";
 
         /// <inheritdoc />
-        public string Description { get; } = "Adds two DataSourceValue together to a certain degree of tolerance";
+        public string Description { get; } = "Returns one series by combining two other series within an offset N.";
 
         /// <inheritdoc />
         public Type Type { get; } = typeof(SliceAdd);

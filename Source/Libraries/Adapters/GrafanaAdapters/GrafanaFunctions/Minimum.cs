@@ -8,21 +8,21 @@ using System.Threading.Tasks;
 namespace GrafanaAdapters.GrafanaFunctions
 {
     /// <summary>
-    /// Returns a series of values that represent the absolute value each of the values in the source series.
+    /// Returns a single value that is the minimum of the values in the source series.
     /// </summary>
-    public class AbsoluteValue : IGrafanaFunction
+    public class Minimum : IGrafanaFunction
     {
         /// <inheritdoc />
-        public string Name { get; } = "AbsoluteValue";
+        public string Name { get; } = "Minimum";
 
         /// <inheritdoc />
-        public string Description { get; } = "Returns a series of values that represent the absolute value each of the values in the source series.";
+        public string Description { get; } = "Returns a single value that is the minimum of the values in the source series.";
 
         /// <inheritdoc />
-        public Type Type { get; } = typeof(AbsoluteValue);
+        public Type Type { get; } = typeof(Minimum);
 
         /// <inheritdoc />
-        public Regex Regex { get; } = new Regex(string.Format(FunctionsModelHelper.ExpressionFormat, "(AbsoluteValue|Abs)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        public Regex Regex { get; } = new Regex(string.Format(FunctionsModelHelper.ExpressionFormat, "(Minimum|Min)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         /// <inheritdoc />
         public List<IParameter> Parameters { get; } =
@@ -46,18 +46,12 @@ namespace GrafanaAdapters.GrafanaFunctions
         {
             // Get Values
             DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
+
             // Compute
-            IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source.Select(dataValue =>
-                new DataSourceValue
-                {
-                    Flags = dataValue.Flags,
-                    Value = Math.Abs(dataValue.Value),
-                    Time = dataValue.Time,
-                    Target = dataValue.Target
-                });
+            DataSourceValue minimumDataSourceValue = dataSourceValues.Source.OrderBy(dataValue => dataValue.Value).First();
 
             dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
-            dataSourceValues.Source = transformedDataSourceValues;
+            dataSourceValues.Source = Enumerable.Repeat(minimumDataSourceValue, 1);
 
             return dataSourceValues;
         }
@@ -72,28 +66,18 @@ namespace GrafanaAdapters.GrafanaFunctions
             // Get Values
             DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
             // Compute
-            IEnumerable<PhasorValue> transformedDataSourceValues = phasorValues.Source.Select(phasorValue =>
-                new PhasorValue
-                {
-                    Flags = phasorValue.Flags,
-                    Magnitude = Math.Abs(phasorValue.Magnitude),
-                    Angle = Math.Abs(phasorValue.Angle),
-                    Time = phasorValue.Time,
-                    MagnitudeTarget = phasorValue.MagnitudeTarget,
-                    AngleTarget = phasorValue.AngleTarget,
-                });
+            PhasorValue minimumPhasorValue = phasorValues.Source.OrderBy(dataValue => dataValue.Magnitude).First();
 
             string[] labels = phasorValues.Target.Split(';');
             phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
-            phasorValues.Source = transformedDataSourceValues;
+            phasorValues.Source = Enumerable.Repeat(minimumPhasorValue, 1);
 
             return phasorValues;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="AbsoluteValue"/> class.
+        /// Initializes a new instance of the <see cref="Minimum"/> class.
         /// </summary>
-        public AbsoluteValue() { }
+        public Minimum() { }
     }
-
 }

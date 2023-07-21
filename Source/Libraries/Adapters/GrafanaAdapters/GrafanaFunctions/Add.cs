@@ -8,7 +8,9 @@ using System.Threading.Tasks;
 namespace GrafanaAdapters.GrafanaFunctions
 {
     /// <summary>
-    /// Represents the "Add" function that adds a decimal number to a DataSourceValue.
+    /// Returns a series of values that represent each of the values in the source series added with N.
+    /// N is a floating point value representing an additive offset to be applied to each value the source series.
+    /// N can either be constant value or a named target available from the expression.
     /// </summary>
     public class Add : IGrafanaFunction
     {
@@ -16,7 +18,7 @@ namespace GrafanaAdapters.GrafanaFunctions
         public string Name { get; } = "Add";
 
         /// <inheritdoc />
-        public string Description { get; } = "Adds a decimal number to DataSourceValue";
+        public string Description { get; } = "Returns a series of values that represent each of the values in the source series added with N.";
 
         /// <inheritdoc />
         public Type Type { get; } = typeof(Add);
