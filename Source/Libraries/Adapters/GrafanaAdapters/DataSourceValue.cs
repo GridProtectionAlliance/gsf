@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using GSF.TimeSeries;
+using System.Collections.Generic;
 
 namespace GrafanaAdapters
 {
@@ -49,5 +50,24 @@ namespace GrafanaAdapters
         /// Flags for queried value.
         /// </summary>
         public MeasurementStateFlags Flags;
+    }
+
+    /// <summary>
+    /// Helper class to compare two datasources
+    /// </summary>
+    public class DataSourceValueComparer : IComparer<DataSourceValue>
+    {
+        /// <summary>
+        /// Compare function
+        /// </summary>
+        public int Compare(DataSourceValue x, DataSourceValue y)
+        {
+            int result = x.Value.CompareTo(y.Value);
+
+            if (result != 0)
+                return result;
+
+            return x.Time.CompareTo(y.Time);
+        }
     }
 }

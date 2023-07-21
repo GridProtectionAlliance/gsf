@@ -1,4 +1,5 @@
 ﻿using GSF.TimeSeries;
+using System.Collections.Generic;
 
 namespace GrafanaAdapters
 {
@@ -34,5 +35,29 @@ namespace GrafanaAdapters
         /// Flags for queried value.
         /// </summary>
         public MeasurementStateFlags Flags;
+    }
+
+    /// <summary>
+    /// Helper class to compare two phasors
+    /// </summary>
+    public class PhasorValueComparer : IComparer<PhasorValue>
+    {
+        /// <summary>
+        /// Compare function
+        /// </summary>
+        public int Compare(PhasorValue x, PhasorValue y)
+        {
+            int result = x.Magnitude.CompareTo(y.Magnitude);
+
+            if (result != 0)
+                return result;
+
+            result = x.Angle.CompareTo(y.Angle);
+
+            if (result != 0)
+                return result;
+
+            return x.Time.CompareTo(y.Time);
+        }
     }
 }
