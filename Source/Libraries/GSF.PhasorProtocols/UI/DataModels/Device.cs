@@ -749,7 +749,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         /// <param name="acronym">Acronym of device.</param>
         public static string GetConfigurationCacheFileName(string acronym) =>
-            Path.Combine(ConfigurationCachePath, $"{acronym}.configuration.json");
+            Path.Combine(ConfigurationCachePath, $"{acronym}.json");
 
         /// <summary>
         /// Gets the path to the configuration cache directory.

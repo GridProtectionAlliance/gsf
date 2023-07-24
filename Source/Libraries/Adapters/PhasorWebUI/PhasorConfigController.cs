@@ -105,7 +105,7 @@ namespace PhasorWebUI
         public static string GetConfigurationCacheFileName([FromUri(Name = "id")] string acronym)
         {
             // Path traversal attacks are prevented by replacing invalid file name characters
-            return Path.Combine(ConfigurationCachePath, $"{acronym.ReplaceCharacters('_', c => Path.GetInvalidFileNameChars().Contains(c))}.configuration.json");
+            return Path.Combine(ConfigurationCachePath, $"{acronym.ReplaceCharacters('_', c => Path.GetInvalidFileNameChars().Contains(c))}.json");
         }
 
         /// <summary>
