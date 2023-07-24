@@ -58,6 +58,7 @@
   <ItemGroup>
     <Compile Include="FrameBasedRandomValueInputAdapter.cs" />
     <Compile Include="MovingValueInputAdapter.cs" />
+    <Compile Include="NormalizeSubsecondTimestampsFilterAdapter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RandomValueInputAdapter.cs" />
     <Compile Include="SampleActionAdapter.cs" />
