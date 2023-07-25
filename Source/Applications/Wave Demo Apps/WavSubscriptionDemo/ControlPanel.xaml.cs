@@ -67,9 +67,7 @@ namespace WavSubscriptionDemo
         private void ConnectToStreamSource()
         {
             ControlPanelViewModel viewModel = DataContext as ControlPanelViewModel;
-
-            if (viewModel != null)
-                viewModel.ConnectToStreamSource();
+            viewModel!.ConnectToStreamSource();
         }
     }
 }

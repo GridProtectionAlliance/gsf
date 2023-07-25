@@ -68,15 +68,15 @@ namespace WavSubscriptionDemo
         
         public PolylineWaveFormControl()
         {
-            this.SizeChanged += OnSizeChanged;
+            SizeChanged += OnSizeChanged;
             InitializeComponent();
 
             renderTimer = CreateRenderTimer();
             maxValues = new ConcurrentQueue<float>();
             minValues = new ConcurrentQueue<float>();
 
-            topLine.Stroke = this.Foreground;
-            bottomLine.Stroke = this.Foreground;
+            topLine.Stroke = Foreground;
+            bottomLine.Stroke = Foreground;
             topLine.StrokeThickness = 1.5;
             bottomLine.StrokeThickness = 1.5;
             mainCanvas.Children.Add(topLine);
@@ -89,8 +89,8 @@ namespace WavSubscriptionDemo
             renderPosition = 0;
             ClearAllPoints();
 
-            this.yTranslate = this.ActualHeight / 2;
-            this.yScale = this.ActualHeight / 2;
+            yTranslate = ActualHeight / 2;
+            yScale = ActualHeight / 2;
         }
 
         protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
