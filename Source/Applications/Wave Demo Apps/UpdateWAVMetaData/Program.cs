@@ -146,7 +146,7 @@ namespace UpdateWAVMetaData
                                 "Enabled) VALUES({0}, {1}, {2}, {3}, {4}, {5}, {6})", "deviceID", "pointTag", "signalTypeID", "phasorSourceIndex", "signalReference", "description", "enabled");
 
                             // Insert new measurement record
-                            connection.ExecuteNonQuery(parameterizedQuery, (object)deviceID, pointTag, signalTypeID, phasorIndex, acronym + signalSuffix + phasorIndex, name + " - channel " + phasorIndex, database.Bool(true));
+                            connection.ExecuteNonQuery(parameterizedQuery, (object)deviceID, pointTag, signalTypeID, phasorIndex, acronym + signalSuffix + phasorIndex, name + " - channel " + i, database.Bool(true));
                             //Convert.ToInt32(connection.ExecuteScalar(database.ParameterizedQueryString("SELECT PointID FROM Measurement WHERE PointTag = {0}", "pointTag"), pointTag));
                         }
 
