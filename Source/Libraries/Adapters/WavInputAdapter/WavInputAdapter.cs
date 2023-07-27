@@ -73,24 +73,17 @@ namespace WavInputAdapter
         /// <summary>
         /// Gets or sets the name of the file from which to read measurements.
         /// </summary>
-        [ConnectionStringParameter, Description("The name of the file from which to read measurements.")]
-        public string WavFileName
-        {
-            get;
-            set;
-        }
+        [ConnectionStringParameter]
+        [Description("The name of the file from which to read measurements.")]
+        public string WavFileName { get; set; }
 
         /// <summary>
         /// Gets or sets the amount of time, in seconds, needed to recover from a back log.
         /// </summary>
-        [ConnectionStringParameter,
-        Description("The amount of time, in seconds, needed to recover from a back log."),
-        DefaultValue(DefaultRecoveryDelay)]
-        public double RecoveryDelay
-        {
-            get;
-            set;
-        }
+        [ConnectionStringParameter]
+        [Description("The amount of time, in seconds, needed to recover from a back log.")]
+        [DefaultValue(DefaultRecoveryDelay)]
+        public double RecoveryDelay { get; set; }
 
         /// <summary>
         /// Gets or sets flag that determines if WAV file should be cached in memory.
@@ -98,14 +91,10 @@ namespace WavInputAdapter
         /// <remarks>
         /// Useful for situations where disk I/O can be a bottleneck.
         /// </remarks>
-        [ConnectionStringParameter,
-        Description("Flag that determines if WAV file should be cached in memory. This can be useful for situations where disk I/O can be a bottleneck. Note that this will occupy RAM for entire file size - be cautious."),
-        DefaultValue(false)]
-        public bool MemoryCache
-        {
-            get;
-            set;
-        }
+        [ConnectionStringParameter]
+        [Description("Flag that determines if WAV file should be cached in memory. This can be useful for situations where disk I/O can be a bottleneck. Note that this will occupy RAM for entire file size - be cautious.")]
+        [DefaultValue(false)]
+        public bool MemoryCache { get; set; }
 
         /// <summary>
         /// Gets or sets the output measurements.
@@ -115,20 +104,14 @@ namespace WavInputAdapter
         /// by this adapter will be copies of these output measurements, in which
         /// only the values and timestamps will differ.
         /// </remarks>
-        [ConnectionStringParameter,
-        DefaultValue(null),
-        Description("Defines primary keys of output measurements the adapter expects; can be one of a filter expression, measurement key, point tag or Guid."),
-        CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
+        [ConnectionStringParameter]
+        [DefaultValue(null)]
+        [Description("Defines primary keys of output measurements the adapter expects; can be one of a filter expression, measurement key, point tag or Guid.")]
+        [CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
         public override IMeasurement[] OutputMeasurements
         {
-            get
-            {
-                return base.OutputMeasurements;
-            }
-            set
-            {
-                base.OutputMeasurements = value.OrderBy(measurement => measurement.Key.ToString()).ToArray();
-            }
+            get => base.OutputMeasurements;
+            set => base.OutputMeasurements = value.OrderBy(measurement => measurement.Key.ToString()).ToArray();
         }
 
         /// <summary>
@@ -156,12 +139,8 @@ namespace WavInputAdapter
             base.Initialize();
 
             Dictionary<string, string> settings = Settings;
-            string setting;
 
-            if (settings.TryGetValue("recoveryDelay", out setting))
-                RecoveryDelay = double.Parse(setting);
-            else
-                RecoveryDelay = DefaultRecoveryDelay;
+            RecoveryDelay = settings.TryGetValue("recoveryDelay", out string setting) ? double.Parse(setting) : DefaultRecoveryDelay;
 
             if (!settings.TryGetValue("wavFileName", out setting))
                 throw new ArgumentException("wavFileName is missing from settings - Example: wavFileName=Bohemian Rhapsody.wav");
@@ -202,12 +181,12 @@ namespace WavInputAdapter
         /// </summary>
         protected override void AttemptDisconnection()
         {
-            if ((object)m_dataReader != null)
-            {
-                m_dataReader.Close();
-                m_dataReader.Dispose();
-                m_dataReader = null;
-            }
+            if (m_dataReader is null)
+                return;
+
+            m_dataReader.Close();
+            m_dataReader.Dispose();
+            m_dataReader = null;
         }
 
         /// <summary>
@@ -216,28 +195,27 @@ namespace WavInputAdapter
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
         {
-            if (!m_disposed)
-            {
-                try
-                {
-                    if (disposing)
-                    {
-                        if ((object)m_dataReader != null)
-                        {
-                            m_dataReader.Close();
-                            m_dataReader.Dispose();
-                            m_dataReader = null;
-                        }
+            if (m_disposed)
+                return;
 
-                        if ((object)m_dataCache != null)
-                            m_dataCache.Dispose();
-                    }
-                }
-                finally
+            try
+            {
+                if (!disposing)
+                    return;
+
+                if (m_dataReader is not null)
                 {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_dataReader.Close();
+                    m_dataReader.Dispose();
+                    m_dataReader = null;
                 }
+
+                m_dataCache?.Dispose();
+            }
+            finally
+            {
+                m_disposed = true;          // Prevent duplicate dispose.
+                base.Dispose(disposing);    // Call base class Dispose().
             }
         }
 
@@ -252,19 +230,18 @@ namespace WavInputAdapter
                 return $"Streaming for \"{Path.GetFileName(WavFileName)}\" is paused...".CenterText(maxLength);
 
             TimeSpan time = Ticks.FromSeconds(m_dataIndex / (double)m_sampleRate);
-            return $"Streaming \"{Path.GetFileName(WavFileName)}\" at time {time.ToString(@"m\:ss")} / {m_audioLength.ToString(@"m\:ss")} - {time.TotalSeconds / m_audioLength.TotalSeconds:0.00%}.".CenterText(maxLength);
+            return $"Streaming \"{Path.GetFileName(WavFileName)}\" at time {time:m\\:ss} / {m_audioLength:m\\:ss} - {time.TotalSeconds / m_audioLength.TotalSeconds:0.00%}.".CenterText(maxLength);
         }
 
         private void ProcessMeasurements()
         {
-            List<IMeasurement> measurements = new List<IMeasurement>((int)(Ticks.ToSeconds(GapThreshold) * m_sampleRate * m_channels * 1.1D));
-            LittleBinaryValue[] sample;
+            List<IMeasurement> measurements = new((int)(Ticks.ToSeconds(GapThreshold) * m_sampleRate * m_channels * 1.1D));
 
             while (Enabled)
             {
                 try
                 {
-                    SpinWait spinner = new SpinWait();
+                    SpinWait spinner = new();
 
                     // Determine what time it is now
                     long now = DateTime.UtcNow.Ticks;
@@ -285,11 +262,11 @@ namespace WavInputAdapter
                     // we catch up to the current time.
                     while (timestamp < now)
                     {
-                        sample = m_dataReader.GetNextSample();
+                        LittleBinaryValue[] sample = m_dataReader.GetNextSample();
 
                         // If the sample is null, we've reached the end of the file - close and reopen,
                         // resetting the data index and start time
-                        if (sample == null)
+                        if (sample is null)
                         {
                             m_dataReader.Close();
                             m_dataReader.Dispose();
@@ -329,22 +306,21 @@ namespace WavInputAdapter
         // Open wave reader - either from memory loaded WAV or directly from disk
         private WaveDataReader OpenWaveDataReader()
         {
-            if (MemoryCache)
+            if (!MemoryCache)
+                return WaveDataReader.FromFile(WavFileName);
+
+            if (m_dataCache is null)
             {
-                if ((object)m_dataCache == null)
-                {
-                    m_dataCache = new BlockAllocatedMemoryStream();
+                m_dataCache = new BlockAllocatedMemoryStream();
 
-                    using (FileStream stream = File.OpenRead(WavFileName))
-                        stream.CopyTo(m_dataCache);
-                }
-
-                m_dataCache.Position = 0;
-
-                return WaveDataReader.FromStream(m_dataCache);
+                using FileStream stream = File.OpenRead(WavFileName);
+                stream.CopyTo(m_dataCache);
             }
 
-            return WaveDataReader.FromFile(WavFileName);
+            m_dataCache.Position = 0;
+
+            return WaveDataReader.FromStream(m_dataCache);
+
         }
 
         #endregion
