@@ -77,6 +77,7 @@
     </Compile>
     <Compile Include="RelayCommand.cs" />
     <Compile Include="SampleAggregator.cs" />
+    <Compile Include="Settings.cs" />
     <Compile Include="StatControl.xaml.cs">
       <DependentUpon>StatControl.xaml</DependentUpon>
     </Compile>

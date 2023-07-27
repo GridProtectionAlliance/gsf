@@ -49,153 +49,136 @@ namespace WavSubscriptionDemo
     /// </summary>
     public class AudioGraph : IDisposable
     {
-        private AudioPlayback playback;
-        private readonly SampleAggregator aggregator;
+        private AudioPlayback m_playback;
+        private readonly SampleAggregator m_aggregator;
 
         public event EventHandler<MaxSampleEventArgs> MaximumCalculated
         {
-            add => aggregator.MaximumCalculated += value;
-            remove => aggregator.MaximumCalculated -= value;
+            add => m_aggregator.MaximumCalculated += value;
+            remove => m_aggregator.MaximumCalculated -= value;
         }
 
-        public event EventHandler<EventArgs<List<string>>> GotSongList
+        public event EventHandler<EventArgs<Dictionary<string, string>>> GotSongList
         {
-            add => playback.GotSongList += value;
-            remove => playback.GotSongList -= value;
+            add => m_playback.GotSongList += value;
+            remove => m_playback.GotSongList -= value;
         }
 
-        public event EventHandler<EventArgs<int, int, float, double>> StatsUpdated
+        public event EventHandler<EventArgs<(int, int, float, double, Ticks)>> StatsUpdated
         {
-            add => playback.StatsUpdated += value;
-            remove => playback.StatsUpdated -= value;
+            add => m_playback.StatsUpdated += value;
+            remove => m_playback.StatsUpdated -= value;
         }
 
         public event EventHandler<EventArgs<PlaybackState, string>> PlaybackStateChanged
         {
-            add => playback.StateChanged += value;
-            remove => playback.StateChanged -= value;
+            add => m_playback.StateChanged += value;
+            remove => m_playback.StateChanged -= value;
         }
 
         public AudioGraph()
         {
-            playback = new AudioPlayback();
-            playback.OnSample += OnSample;
-            aggregator = new SampleAggregator();
-            aggregator.NotificationCount = 100;
+            m_playback = new AudioPlayback();
+            m_playback.OnSample += OnSample;
+            m_aggregator = new SampleAggregator { NotificationCount = 100 };
         }
 
-        void OnSample(object sender, SampleEventArgs e)
-        {
-            aggregator.Add(e.Left);
-        }
+        private void OnSample(object sender, SampleEventArgs e) => 
+            m_aggregator.Add(e.Left, e.Right);
 
         public int NotificationsPerSecond
         {
-            get => aggregator.NotificationCount;
-            set => aggregator.NotificationCount = value;
+            get => m_aggregator.NotificationCount;
+            set => m_aggregator.NotificationCount = value;
         }
 
         public string ConnectionUri
         {
-            get => playback.ConnectionUri;
-            set => playback.ConnectionUri = value;
+            get => m_playback.ConnectionUri;
+            set => m_playback.ConnectionUri = value;
         }
 
         public bool EnableCompression
         {
-            get => playback.EnableCompression;
-            set => playback.EnableCompression = value;
+            get => m_playback.EnableCompression;
+            set => m_playback.EnableCompression = value;
         }
 
         public bool EnableEncryption
         {
-            get => playback.EnableEncryption;
-            set => playback.EnableEncryption = value;
+            get => m_playback.EnableEncryption;
+            set => m_playback.EnableEncryption = value;
         }
 
         public bool IPv6Enabled
         {
-            get => playback.IPv6Enabled;
-            set => playback.IPv6Enabled = value;
+            get => m_playback.IPv6Enabled;
+            set => m_playback.IPv6Enabled = value;
         }
 
         public bool UseZeroMQChannel
         {
-            get => playback.UseZeroMQChannel;
-            set => playback.UseZeroMQChannel = value;
+            get => m_playback.UseZeroMQChannel;
+            set => m_playback.UseZeroMQChannel = value;
         }
 
         public bool ReplayEnabled
         {
-            get => playback.ReplayEnabled;
-            set => playback.ReplayEnabled = value;
+            get => m_playback.ReplayEnabled;
+            set => m_playback.ReplayEnabled = value;
         }
 
         public string ReplayStartTime
         {
-            get => playback.ReplayStartTime;
-            set => playback.ReplayStartTime = value;
+            get => m_playback.ReplayStartTime;
+            set => m_playback.ReplayStartTime = value;
         }
 
         public string ReplayStopTime
         {
-            get => playback.ReplayStopTime;
-            set => playback.ReplayStopTime = value;
+            get => m_playback.ReplayStopTime;
+            set => m_playback.ReplayStopTime = value;
         }
 
-        public int PlaybackSampleRate => playback.SampleRate;
+        public int PlaybackSampleRate => m_playback.SampleRate;
 
-        public bool HasCapturedAudio
-        {
-            get;
-            private set;
-        }
+        public bool HasCapturedAudio { get; private set; }
 
         public void ConnectToStreamSource()
         {
-            playback.DisconnectFromStreamSource();
-            playback.ConnectToStreamSource();
+            m_playback.DisconnectFromStreamSource();
+            m_playback.ConnectToStreamSource();
         }
 
         public void PlayStream(string songName)
         {
             CancelCurrentOperation();
-            aggregator.NotificationCount = 200;
-            playback.Play(songName);
+            m_aggregator.NotificationCount = 200;
+            m_playback.Play(songName);
         }
 
-        private void CancelCurrentOperation()
-        {
-            playback.Stop();
-        }
+        private void CancelCurrentOperation() => 
+            m_playback.Stop();
 
-        public void Stop()
-        {
+        public void Stop() => 
             CancelCurrentOperation();
-        }
 
-        public void SaveRecordedAudio(string fileName)
-        {
-            playback.StartRecording(fileName);
-        }
+        public void SaveRecordedAudio(string fileName) => 
+            m_playback.StartRecording(fileName);
 
-        public void PlayCapturedAudio()
-        {
+        public void PlayCapturedAudio() => 
             throw new NotImplementedException();
-        }
 
-        public void StartCapture(int captureSeconds)
-        {
-            aggregator.NotificationCount = 200;
-        }
+        public void StartCapture(int captureSeconds) => 
+            m_aggregator.NotificationCount = 200;
 
         public void Dispose()
         {
-            if (playback is not null)
-            {
-                playback.Dispose();
-                playback = null;
-            }
+            if (m_playback is null)
+                return;
+
+            m_playback.Dispose();
+            m_playback = null;
         }
     }
 }

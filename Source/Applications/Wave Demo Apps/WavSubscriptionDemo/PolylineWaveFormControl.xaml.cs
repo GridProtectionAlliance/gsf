@@ -52,17 +52,17 @@ namespace WavSubscriptionDemo
     /// </summary>
     public partial class PolylineWaveFormControl : UserControl, IWaveFormRenderer
     {
-        readonly DispatcherTimer renderTimer;
-        ConcurrentQueue<float> maxValues;
-        ConcurrentQueue<float> minValues;
+        private readonly DispatcherTimer renderTimer;
+        private ConcurrentQueue<float> maxValues;
+        private ConcurrentQueue<float> minValues;
 
-        readonly Polyline topLine = new Polyline();
-        readonly Polyline bottomLine = new Polyline();
+        private readonly Polyline topLine = new Polyline();
+        private readonly Polyline bottomLine = new Polyline();
 
-        int renderPosition;
-        double yTranslate = 40;
-        double yScale = 40;
-        int blankZone = 10;
+        private int renderPosition;
+        private double yTranslate = 40;
+        private double yScale = 40;
+        private int blankZone = 10;
 
         public int SampleRate { get; set; }
         
@@ -82,8 +82,8 @@ namespace WavSubscriptionDemo
             mainCanvas.Children.Add(topLine);
             mainCanvas.Children.Add(bottomLine);
         }
-        
-        void OnSizeChanged(object sender, SizeChangedEventArgs e)
+
+        private void OnSizeChanged(object sender, SizeChangedEventArgs e)
         {
             // We will remove everything as we are going to rescale vertically
             renderPosition = 0;
@@ -114,7 +114,7 @@ namespace WavSubscriptionDemo
             return timer;
         }
 
-        void RenderTimer_Tick(object sender, EventArgs e)
+        private void RenderTimer_Tick(object sender, EventArgs e)
         {
             if (Visibility != Visibility.Visible)
             {

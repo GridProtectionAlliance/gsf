@@ -9,10 +9,11 @@
         </Grid.RowDefinitions>
 
         <StackPanel HorizontalAlignment="Center">
-            <CheckBox Margin="0,0,0,10" Content="Use ZeroMQ Channel" IsChecked="{Binding UseZeroMQChannel}" />
             <CheckBox Margin="0,0,0,10" Content="Enable Compression" IsChecked="{Binding EnableCompression}" />
             <CheckBox Margin="0,0,0,10" Content="Enable TLS Encryption" IsChecked="{Binding EnableEncryption}" />
-            <CheckBox Margin="0,0,0,10" Content="IPv6 Enabled" IsChecked="{Binding IPv6Enabled}" />
+            <CheckBox Margin="0,0,0,10" Content="Use IPv6 Connection" IsChecked="{Binding IPv6Enabled}" />
+            <CheckBox Margin="0,0,0,10" Content="Use ZeroMQ Channel" IsChecked="{Binding UseZeroMQChannel}" />
+            <CheckBox Margin="0,0,0,10" Content="Show Replay Controls" IsChecked="{Binding ShowReplayControls}" />
         </StackPanel>
                 
         <Button Grid.Row="1" Width="70" Height="25" Content="Close" HorizontalAlignment="Right" Click="CloseButton_Click" />        

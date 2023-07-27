@@ -51,8 +51,8 @@ namespace WavSubscriptionDemo
     /// </summary>
     internal class RelayCommand : ICommand
     {
-        readonly Action _execute;
-        readonly Func<bool> _canExecute;
+        private readonly Action _execute;
+        private readonly Func<bool> _canExecute;
 
         /// <summary>
         /// Creates a new command that can always execute.
