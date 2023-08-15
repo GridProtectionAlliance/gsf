@@ -131,20 +131,11 @@ namespace GrafanaAdapters.GrafanaFunctions
             //Loop through all targets
             foreach(string targetLabel in allTargets)
             {
-                if (targetLabel.StartsWith("FILTER ", StringComparison.OrdinalIgnoreCase))
+                if (targetLabel.StartsWith("FILTER ", StringComparison.OrdinalIgnoreCase) && AdapterBase.ParseFilterExpression(targetLabel.SplitAlias(out string alias), out string tableName, out string exp, out string sortField, out int takeCount))
                 {
-                    targetSet.UnionWith(TargetCache<string[]>.GetOrAdd(targetLabel, () =>
+                    foreach (DataRow row in dataSourceBase.Metadata.Tables[tableName].Select(exp, sortField).Take(takeCount))
                     {
-                        MeasurementKey[] results = AdapterBase.ParseInputMeasurementKeys(Metadata, false, targetLabel.SplitAlias(out string alias), "Phasor");
-
-                        if (!string.IsNullOrWhiteSpace(alias) && results.Length == 1)
-                            return new[] { $"{alias}={results[0].TagFromKey(Metadata)}" };
-
-                        return results.Select(key => key.TagFromKey(Metadata)).ToArray();
-                    }));
-
-                    foreach (string targetId in targetSet)
-                    {
+                        int targetId = Convert.ToInt32(row["ID"]);
                         phasorTargets[Convert.ToInt32(targetId)] = targetLabel;
                     }
                     continue;
