@@ -68,7 +68,7 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// 0000 1000 0000 0000 User designated command. Used to send latest configuration frame version.
         /// </summary>
-        SendLatestConfigurationFrameVersion = (ushort)Bits.Bit00 | (ushort)Bits.Bit03,
+        SendLatestConfigurationFrameVersion = (ushort)Bits.Bit11,
         /// <summary>
         /// Reserved bits.
         /// </summary>
