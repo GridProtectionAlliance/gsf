@@ -337,6 +337,10 @@ namespace PhasorProtocolAdapters.IeeeC37_118
                 }
                 else
                 {
+                    // Translate latest configuration frame version into proper command based on protocol
+                    if (commandFrame.Command == DeviceCommand.SendLatestConfigurationFrameVersion)
+                        commandFrame.Command = TargetConfigurationType == DraftRevision.Std2011 ? DeviceCommand.SendConfigurationFrame3 : DeviceCommand.SendConfigurationFrame2; 
+
                     switch (commandFrame.Command)
                     {
                         case DeviceCommand.SendConfigurationFrame1:
