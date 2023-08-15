@@ -28,11 +28,11 @@ using System.Windows;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("WavSubscriptionDemo")]
-[assembly: AssemblyDescription("WAV File Player GEP Subcription Demo")]
+[assembly: AssemblyTitle("WAV Subscription Demo")]
+[assembly: AssemblyDescription("WAV File Player GEP Subscription Demo")]
 [assembly: AssemblyCompany("Grid Protection Alliance")]
 [assembly: AssemblyProduct("Grid Solutions Framework")]
-[assembly: AssemblyCopyright("Copyright © GPA, 2013.  All Rights Reserved.")]
+[assembly: AssemblyCopyright("Copyright © GPA, 2023.  All Rights Reserved.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -76,7 +76,7 @@ using System.Windows;
 //
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
-// [assembly: AssemblyVersion("2.4.145.0")]
-[assembly: AssemblyVersion("2.4.145.0")]
-[assembly: AssemblyFileVersion("2.4.145.0")]
-[assembly: AssemblyInformationalVersion("2.4.145-beta")]
+// [assembly: AssemblyVersion("2.4.146.0")]
+[assembly: AssemblyVersion("2.4.146.0")]
+[assembly: AssemblyFileVersion("2.4.146.0")]
+[assembly: AssemblyInformationalVersion("2.4.146-beta")]

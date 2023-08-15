@@ -5,7 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
              d:DesignHeight="200" d:DesignWidth="500">
-    
+
     <UserControl.Resources>
         <Style TargetType="{x:Type TextBlock}">
             <Style.Setters>
@@ -16,7 +16,7 @@
                 <Setter Property="VerticalAlignment" Value="Bottom" />
             </Style.Setters>
         </Style>
-        
+
         <Style TargetType="{x:Type Label}">
             <Style.Setters>
                 <Setter Property="HorizontalAlignment" Value="Center" />
@@ -24,9 +24,10 @@
             </Style.Setters>
         </Style>
     </UserControl.Resources>
-    
+
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="25" />
             <RowDefinition Height="2*" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
@@ -37,17 +38,19 @@
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        
-        <TextBlock Text="{Binding Path=SamplesPerSecond}" />
-        <Label Content="Measurements / Second" Grid.Row="1" />
-        
-        <TextBlock Text="{Binding Path=KilobitsPerSecond}" Grid.Column="1" />
-        <Label Content="kbps" Grid.Row="1" Grid.Column="1" />
 
-        <TextBlock Text="{Binding Path=Smoothness}" Grid.Column="2" />
-        <Label Content="Smoothness" Grid.Row="1" Grid.Column="2" />
-        
-        <TextBlock Text="{Binding Path=FractionSamplesLost}" Grid.Column="3" />
-        <Label Content="Fraction of Loss" Grid.Row="1" Grid.Column="3" />
+        <TextBlock Text="{Binding Path=SamplesPerSecond}" Grid.Row="1" Grid.Column="0" />
+        <Label Content="Measurements / Second" Grid.Row="2" Grid.Column="0" />
+
+        <TextBlock Text="{Binding Path=KilobitsPerSecond}" Grid.Row="1" Grid.Column="1" />
+        <Label Content="kbps" Grid.Row="2" Grid.Column="1" />
+
+        <TextBlock Text="{Binding Path=Smoothness}" Grid.Row="1" Grid.Column="2" />
+        <Label Content="Smoothness" Grid.Row="2" Grid.Column="2" />
+
+        <TextBlock Text="{Binding Path=FractionSamplesLost}" Grid.Row="1" Grid.Column="3" />
+        <Label Content="Fraction of Loss" Grid.Row="2" Grid.Column="3" />
+
+        <Label Content="{Binding LastSampleTime}" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="4" VerticalAlignment="Center" HorizontalAlignment="Center" />
     </Grid>
 </UserControl>

@@ -44,7 +44,7 @@ namespace WavSubscriptionDemo
     /// </summary>
     public partial class MainWindow : Window
     {
-        readonly ControlPanelViewModel m_viewModel;
+        private readonly ControlPanelViewModel m_viewModel;
 
         /// <summary>
         /// Creates the main window for the Wave Subscription Demo.
@@ -99,6 +99,9 @@ namespace WavSubscriptionDemo
             string ipv6Enabled = ConfigurationManager.AppSettings["IPv6Enabled"];
             string visualization = ConfigurationManager.AppSettings["Visualization"];
             string useZeroMQChannel = ConfigurationManager.AppSettings["UseZeroMQChannel"];
+            string showReplayControls = ConfigurationManager.AppSettings["ShowReplayControls"];
+            string windowTitle = ConfigurationManager.AppSettings["WindowTitle"];
+
 
             if (connectionUri is not null)
                 m_viewModel.ConnectionUri = connectionUri;
@@ -114,6 +117,12 @@ namespace WavSubscriptionDemo
 
             if (useZeroMQChannel is not null)
                 m_viewModel.UseZeroMQChannel = useZeroMQChannel.ParseBoolean();
+
+            if (showReplayControls is not null)
+                m_viewModel.ShowReplayControls = showReplayControls.ParseBoolean();
+
+            Title = windowTitle ?? AssemblyInfo.EntryAssembly.Title;
+            Tag = Title;
 
             SetSelectedVisualization(visualization);
 
@@ -131,6 +140,8 @@ namespace WavSubscriptionDemo
             config.AppSettings.Settings.Remove("IPv6Enabled");
             config.AppSettings.Settings.Remove("Visualization");
             config.AppSettings.Settings.Remove("UseZeroMQChannel");
+            config.AppSettings.Settings.Remove("ShowReplayControls");
+            config.AppSettings.Settings.Remove("WindowTitle");
 
             config.AppSettings.Settings.Add("ConnectionUri", m_viewModel.ConnectionUri);
             config.AppSettings.Settings.Add("EnableCompression", m_viewModel.EnableCompression.ToString());
@@ -138,6 +149,8 @@ namespace WavSubscriptionDemo
             config.AppSettings.Settings.Add("IPv6Enabled", m_viewModel.IPv6Enabled.ToString());
             config.AppSettings.Settings.Add("Visualization", GetSelectedVisualizationHeaderName());
             config.AppSettings.Settings.Add("UseZeroMQChannel", m_viewModel.UseZeroMQChannel.ToString());
+            config.AppSettings.Settings.Add("ShowReplayControls", m_viewModel.ShowReplayControls.ToString());
+            config.AppSettings.Settings.Add("WindowTitle", Tag?.ToString() ?? AssemblyInfo.EntryAssembly.Title);
             config.Save(ConfigurationSaveMode.Modified);
 
             m_viewModel.Dispose();
@@ -167,6 +180,9 @@ namespace WavSubscriptionDemo
                     case PlaybackState.Connected:
                     case PlaybackState.Playing:
                         ControlPanel.DisabledButtons.Visibility = Visibility.Collapsed;
+
+                        if (e.Argument1 == PlaybackState.Playing)
+                            defaultMessage = $"Playing {m_viewModel.SongDescription}...";
                         break;
                     case PlaybackState.Connecting:
                     case PlaybackState.Buffering:
@@ -198,7 +214,7 @@ namespace WavSubscriptionDemo
         // Handles the "Tools > Options" menu item's Click event.
         private void OptionsMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            OptionsWindow optionsWindow = new OptionsWindow();
+            OptionsWindow optionsWindow = new();
             optionsWindow.DataContext = m_viewModel;
             optionsWindow.Owner = this;
             optionsWindow.ShowDialog();
@@ -214,7 +230,7 @@ namespace WavSubscriptionDemo
         private void AboutMenuItem_Click(object sender, RoutedEventArgs e)
         {
             string localNamespace = GetType().Namespace;
-            AboutDialog aboutDialog = new AboutDialog();
+            AboutDialog aboutDialog = new();
             aboutDialog.SetCompanyUrl("http://www.gridprotectionalliance.org/");
             aboutDialog.SetCompanyLogo(AssemblyInfo.EntryAssembly.GetEmbeddedResource(localNamespace + ".Resources.HelpAboutLogo.png"));
             aboutDialog.SetCompanyDisclaimer(AssemblyInfo.EntryAssembly.GetEmbeddedResource(localNamespace + ".Resources.Disclaimer.txt"));

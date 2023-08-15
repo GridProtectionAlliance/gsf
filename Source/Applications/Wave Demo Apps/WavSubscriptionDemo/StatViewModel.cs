@@ -23,7 +23,9 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.ComponentModel;
+using System.Text.RegularExpressions;
 using GSF;
 
 namespace WavSubscriptionDemo
@@ -37,6 +39,7 @@ namespace WavSubscriptionDemo
         private int m_kilobitsPerSecond;
         private string m_smoothness;
         private string m_fractionSamplesLost;
+        private string m_lastSampleTime;
 
         /// <summary>
         /// Occurs when a property of the view-model changes.
@@ -106,28 +109,57 @@ namespace WavSubscriptionDemo
             }
         }
 
+        /// <summary>
+        /// Gets or sets the time of the last sample received from the stream source.
+        /// </summary>
+        public string LastSampleTime
+        { 
+            get => m_lastSampleTime; 
+            set
+            {
+                m_lastSampleTime = value;
+                OnPropertyChanged("LastSampleTime");
+            }
+        }
+
         // Handles the audio graph's StatsUpdated event. Updates the properties
         // in this view-model so that they can be displayed to the user.
-        private void AudioGraph_StatsUpdated(object sender, EventArgs<int, int, float, double> e)
+        private void AudioGraph_StatsUpdated(object sender, EventArgs<(int, int, float, double, Ticks)> e)
         {
-            double lostSamples = e.Argument4;
+            (int samplesPerSecond, int kilobitsPerSecond, float smoothness, double lostSamples, Ticks lastSampleTime) = e.Argument;
 
-            SamplesPerSecond = e.Argument1;
-            KilobitsPerSecond = e.Argument2;
-            Smoothness = string.Format("{0:0.0000}", e.Argument3);
+            SamplesPerSecond = samplesPerSecond;
+            KilobitsPerSecond = kilobitsPerSecond;
+            Smoothness = $"{smoothness:0.0000}";
 
-            if (double.IsNaN(lostSamples))
-                FractionSamplesLost = ". . .";
-            else if (lostSamples <= 0.0)
-                FractionSamplesLost = "0.0000";
+            FractionSamplesLost = lostSamples switch
+            {
+                double.NaN => ". . .",
+                <= 0.0 => "0.0000",
+                _ => $"{lostSamples:0.0000}"
+            };
+
+            long ticks = lastSampleTime.Value;
+
+            if (ticks > 0L)
+            {
+                DateTime utcTime = new(ticks, DateTimeKind.Utc);
+                DateTime localTime = utcTime.ToLocalTime();
+                LastSampleTime = $"Last Sample Time: {localTime:MM/dd/yyyy hh:mm:ss.fff tt} {TimeZone}";
+            }
             else
-                FractionSamplesLost = string.Format("{0:0.0000}", lostSamples);
+            {
+                LastSampleTime = "";
+            }
         }
 
         // Triggers the PropertyChanged event.
-        private void OnPropertyChanged(string propertyName)
-        {
+        private void OnPropertyChanged(string propertyName) => 
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
+
+        private static string s_timeZone;
+
+        private static string TimeZone => 
+            s_timeZone ??= Regex.Replace(TimeZoneInfo.Local.DisplayName, @"\((.*?)\)", string.Empty).Trim();
     }
 }

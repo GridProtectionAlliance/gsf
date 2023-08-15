@@ -43,36 +43,35 @@ using System.Windows;
 
 namespace WavSubscriptionDemo
 {
-    class SampleAggregator
+    internal class SampleAggregator
     {
         // volume
         public event EventHandler<MaxSampleEventArgs> MaximumCalculated;
-        private float maxValue;
-        private float minValue;
+
+        private float m_maxValue;
+        private float m_minValue;
+        private int m_count;
+
         public int NotificationCount { get; set; }
-        int count;
 
         public void Reset()
         {
-            count = 0;
-            maxValue = minValue = 0;
+            m_count = 0;
+            m_maxValue = m_minValue = 0;
         }
 
-        public void Add(float value)
+        public void Add(float leftValue, float rightValue)
         {
-            maxValue = Math.Max(maxValue, value);
-            minValue = Math.Min(minValue, value);
-            count++;
-            
-            if (count >= NotificationCount && NotificationCount > 0)
-            {
-                if (MaximumCalculated is not null && Application.Current is not null)
-                {
-                    //WavSubscriptionDemo.App.Current.Dispatcher.Invoke(new Action<object, MaxSampleEventArgs>(MaximumCalculated), this, new MaxSampleEventArgs(minValue, maxValue));
-                    MaximumCalculated(this, new MaxSampleEventArgs(minValue, maxValue));
-                }
-                Reset();
-            }            
+            m_maxValue = Math.Max(m_maxValue, Math.Max(leftValue, rightValue));
+            m_minValue = Math.Min(m_minValue, Math.Min(leftValue, rightValue));
+            m_count++;
+
+            if (m_count < NotificationCount || NotificationCount <= 0)
+                return;
+
+            MaximumCalculated?.Invoke(this, new MaxSampleEventArgs(m_minValue, m_maxValue));
+
+            Reset();
         }
     }
 
@@ -84,8 +83,10 @@ namespace WavSubscriptionDemo
             MaxSample = maxValue;
             MinSample = minValue;
         }
-        public float MaxSample { get; private set; }
-        public float MinSample { get; private set; }
+
+        public float MaxSample { get; }
+
+        public float MinSample { get; }
     }
 }
 

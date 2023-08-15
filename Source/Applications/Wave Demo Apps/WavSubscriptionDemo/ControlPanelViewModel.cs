@@ -40,6 +40,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using GSF;
@@ -47,26 +48,27 @@ using Microsoft.Win32;
 
 namespace WavSubscriptionDemo
 {
-    class ControlPanelViewModel : INotifyPropertyChanged, IDisposable
+    internal class ControlPanelViewModel : INotifyPropertyChanged, IDisposable
     {
-        List<string> songList;
-        string songName;
-        string currentSong;
-        bool isPlaying;
-        bool isConnected;
+        private Dictionary<string, string> m_songList;
+        private string m_songName;
+        private string m_currentSong;
+        private bool m_isPlaying;
+        private bool m_isConnected;
+        private bool m_showReplayControls;
 
-        int captureSeconds;
-        readonly AudioGraph audioGraph;
-        readonly IWaveFormRenderer waveFormRenderer;
+        private int m_captureSeconds;
+        private readonly AudioGraph m_audioGraph;
+        private readonly IWaveFormRenderer m_waveFormRenderer;
 
         public ControlPanelViewModel(IWaveFormRenderer waveFormRenderer)
         {
-            this.waveFormRenderer = waveFormRenderer;
-            audioGraph = new AudioGraph();
-            audioGraph.MaximumCalculated += audioGraph_MaximumCalculated;
-            audioGraph.GotSongList += audioGraph_GotSongList;
-            audioGraph.PlaybackStateChanged += audioGraph_PlaybackStateChanged;
-            captureSeconds = 10;
+            m_waveFormRenderer = waveFormRenderer;
+            m_audioGraph = new AudioGraph();
+            m_audioGraph.MaximumCalculated += audioGraph_MaximumCalculated;
+            m_audioGraph.GotSongList += audioGraph_GotSongList;
+            m_audioGraph.PlaybackStateChanged += audioGraph_PlaybackStateChanged;
+            m_captureSeconds = 10;
             NotificationsPerSecond = 100;
             ConnectionUri = "localhost:6175";
             EnableCompression = false;
@@ -92,149 +94,169 @@ namespace WavSubscriptionDemo
                         () => true);
         }
 
-        public AudioGraph AudioGraph => audioGraph;
+        public AudioGraph AudioGraph => m_audioGraph;
 
         public string ConnectionUri
         {
-            get => audioGraph.ConnectionUri;
+            get => m_audioGraph.ConnectionUri;
             set
             {
-                audioGraph.ConnectionUri = value;
+                m_audioGraph.ConnectionUri = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("ConnectionUri"));
             }
         }
 
-        public List<string> SongList
+        public Dictionary<string, string> SongList
         {
-            get => songList;
+            get => m_songList;
             set
             {
-                songList = value;
+                m_songList = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("SongList"));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("SongNames"));
             }
         }
 
+        public string[] SongNames => 
+            m_songList?.Select(kvp => kvp.Key).ToArray() ?? Array.Empty<string>();
+
         public string SongName
         {
-            get => songName;
+            get => m_songName;
             set
             {
-                songName = value;
+                m_songName = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("SongName"));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("SongDescription"));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("PlayDescription"));
 
-                if (isPlaying)
+                if (m_isPlaying)
                     PlayStream();
             }
         }
 
+        public string SongDescription => 
+            m_songList is null ? string.Empty : 
+            m_songList.TryGetValue(m_songName, out string description) ? description : string.Empty;
+
+        public string PlayDescription => $"Play {SongDescription}";
+
         public bool EnableCompression
         {
-            get => audioGraph.EnableCompression;
+            get => m_audioGraph.EnableCompression;
             set
             {
-                if (audioGraph.EnableCompression == value)
+                if (m_audioGraph.EnableCompression == value)
                     return;
 
-                audioGraph.EnableCompression = value;
+                m_audioGraph.EnableCompression = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("EnableCompression"));
             }
         }
 
         public bool EnableEncryption
         {
-            get => audioGraph.EnableEncryption;
+            get => m_audioGraph.EnableEncryption;
             set
             {
-                if (audioGraph.EnableEncryption == value)
+                if (m_audioGraph.EnableEncryption == value)
                     return;
 
-                audioGraph.EnableEncryption = value;
+                m_audioGraph.EnableEncryption = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("EnableEncryption"));
             }
         }
 
         public bool IPv6Enabled
         {
-            get => audioGraph.IPv6Enabled;
+            get => m_audioGraph.IPv6Enabled;
             set
             {
-                if (audioGraph.IPv6Enabled == value)
+                if (m_audioGraph.IPv6Enabled == value)
                     return;
 
-                audioGraph.IPv6Enabled = value;
+                m_audioGraph.IPv6Enabled = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IPv6Enabled"));
             }
         }
 
         public bool UseZeroMQChannel
         {
-            get => audioGraph.UseZeroMQChannel;
+            get => m_audioGraph.UseZeroMQChannel;
             set
             {
-                if (audioGraph.UseZeroMQChannel == value)
+                if (m_audioGraph.UseZeroMQChannel == value)
                     return;
 
-                audioGraph.UseZeroMQChannel = value;
+                m_audioGraph.UseZeroMQChannel = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("UseZeroMQChannel"));
             }
         }
 
-        public bool ReplayEnabled
+        public bool ShowReplayControls
         {
-            get => audioGraph.ReplayEnabled;
+            get => m_showReplayControls;
             set
             {
-                if (audioGraph.ReplayEnabled == value)
+                m_showReplayControls = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("ShowReplayControls"));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("ReplayControlsVisibility"));
+            }
+        }
+
+        public Visibility ReplayControlsVisibility => 
+            m_showReplayControls ? Visibility.Visible : Visibility.Collapsed;
+
+        public bool ReplayEnabled
+        {
+            get => m_audioGraph.ReplayEnabled;
+            set
+            {
+                if (m_audioGraph.ReplayEnabled == value)
                     return;
 
-                audioGraph.ReplayEnabled = value;
+                m_audioGraph.ReplayEnabled = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("ReplayEnabled"));
             }
         }
 
         public string ReplayStartTime
         {
-            get => audioGraph.ReplayStartTime;
+            get => m_audioGraph.ReplayStartTime;
             set
             {
-                audioGraph.ReplayStartTime = value;
+                m_audioGraph.ReplayStartTime = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("ReplayStartTime"));
             }
         }
 
         public string ReplayStopTime
         {
-            get => audioGraph.ReplayStopTime;
+            get => m_audioGraph.ReplayStopTime;
             set
             {
-                audioGraph.ReplayStopTime = value;
+                m_audioGraph.ReplayStopTime = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("ReplayStopTime"));
             }
         }
 
-        public bool IsConnected => isConnected;
+        public bool IsConnected => m_isConnected;
 
-        public bool IsPlaying => isPlaying;
+        public bool IsPlaying => m_isPlaying;
 
-        void audioGraph_MaximumCalculated(object sender, MaxSampleEventArgs e)
-        {
-            waveFormRenderer.AddValue(e.MaxSample, e.MinSample);
-        }
+        private void audioGraph_MaximumCalculated(object sender, MaxSampleEventArgs e) => 
+            m_waveFormRenderer.AddValue(e.MaxSample, e.MinSample);
 
-        void audioGraph_CaptureComplete(object sender, EventArgs e)
-        {
+        private void audioGraph_CaptureComplete(object sender, EventArgs e) => 
             CommandManager.InvalidateRequerySuggested();
-        }
 
-        void audioGraph_GotSongList(object sender, EventArgs<List<string>> e)
-        {
+        private void audioGraph_GotSongList(object sender, EventArgs<Dictionary<string, string>> e) => 
             SongList = e.Argument;
-        }
 
-        void audioGraph_PlaybackStateChanged(object sender, EventArgs<PlaybackState, string> e)
+        private void audioGraph_PlaybackStateChanged(object sender, EventArgs<PlaybackState, string> e)
         {
-            isPlaying = (e.Argument1 == PlaybackState.Playing);
-            isConnected = (e.Argument1 != PlaybackState.Disconnected && e.Argument1 != PlaybackState.TimedOut && e.Argument1 != PlaybackState.Disposed);
+            m_isPlaying = (e.Argument1 == PlaybackState.Playing);
+            m_isConnected = (e.Argument1 != PlaybackState.Disconnected && e.Argument1 != PlaybackState.TimedOut && e.Argument1 != PlaybackState.Disposed);
 
             switch (e.Argument1)
             {
@@ -242,59 +264,43 @@ namespace WavSubscriptionDemo
                 case PlaybackState.TimedOut:
                 case PlaybackState.Stopped:
                 case PlaybackState.Disposed:
-                    Application.Current.Dispatcher.Invoke(waveFormRenderer.Reset);
+                    Application.Current.Dispatcher.Invoke(m_waveFormRenderer.Reset);
                     break;
             }
         }
 
-        public ICommand PlayStreamCommand
-        {
-            get;
-            private set;
-        }
-        public ICommand CaptureCommand
-        {
-            get;
-            private set;
-        }
-        public ICommand PlayCapturedAudioCommand
-        {
-            get;
-            private set;
-        }
-        public ICommand SaveCapturedAudioCommand
-        {
-            get;
-            private set;
-        }
-        public ICommand StopCommand
-        {
-            get;
-            private set;
-        }
+        public ICommand PlayStreamCommand { get; }
 
-        public void ConnectToStreamSource()
-        {
-            audioGraph.ConnectToStreamSource();
-        }
+        public ICommand CaptureCommand { get; }
+
+        public ICommand PlayCapturedAudioCommand { get; }
+
+        public ICommand SaveCapturedAudioCommand { get; }
+
+        public ICommand StopCommand { get; }
+
+        public void ConnectToStreamSource() => 
+            m_audioGraph.ConnectToStreamSource();
 
         private void PlayStream()
         {
-            if (!isPlaying || songName != currentSong)
-            {
-                Application.Current.MainWindow.Title = "Wave Subscriber - " + songName;
-                currentSong = songName;
-                waveFormRenderer.Reset();
-                audioGraph.PlayStream(songName);
-                waveFormRenderer.SampleRate = audioGraph.PlaybackSampleRate;
-            }
+            if (m_isPlaying && m_songName == m_currentSong)
+                return;
+
+            if (Application.Current?.MainWindow is not null)
+                Application.Current.MainWindow.Title = $"{Application.Current.MainWindow.Tag} - {m_songName}";
+
+            m_currentSong = m_songName;
+            m_waveFormRenderer.Reset();
+            m_audioGraph.PlayStream(m_songName);
+            m_waveFormRenderer.SampleRate = m_audioGraph.PlaybackSampleRate;
         }
 
         private void Capture()
         {
             try
             {
-                audioGraph.StartCapture(CaptureSeconds);
+                m_audioGraph.StartCapture(CaptureSeconds);
             }
             catch (Exception e)
             {
@@ -302,70 +308,61 @@ namespace WavSubscriptionDemo
             }
         }
 
-        private void PlayCapturedAudio()
-        {
-            audioGraph.PlayCapturedAudio();
-        }
+        private void PlayCapturedAudio() => 
+            m_audioGraph.PlayCapturedAudio();
 
-        private bool HasCapturedAudio()
-        {
-            return audioGraph.HasCapturedAudio;
-        }
+        private bool HasCapturedAudio() => 
+            m_audioGraph.HasCapturedAudio;
 
         private void SaveCapturedAudio()
         {
-            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            SaveFileDialog saveFileDialog = new();
             saveFileDialog.DefaultExt = ".wav";
             saveFileDialog.Filter = "WAV Audio File (*.wav)|*.wav";
             bool? result = saveFileDialog.ShowDialog();
 
             if (result.HasValue && result.Value)
-                audioGraph.SaveRecordedAudio(saveFileDialog.FileName);
+                m_audioGraph.SaveRecordedAudio(saveFileDialog.FileName);
         }
 
         private void Stop()
         {
-            audioGraph.Stop();
-            waveFormRenderer.Reset();
+            m_audioGraph.Stop();
+            m_waveFormRenderer.Reset();
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private void RaisePropertyChangedEvent(string propertyName)
-        {
+        private void RaisePropertyChangedEvent(string propertyName) => 
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
 
         public int CaptureSeconds
         {
-            get => captureSeconds;
+            get => m_captureSeconds;
             set
             {
-                if (captureSeconds != value)
-                {
-                    captureSeconds = value;
-                    RaisePropertyChangedEvent("CaptureSeconds");
-                }
+                if (m_captureSeconds == value)
+                    return;
+
+                m_captureSeconds = value;
+                RaisePropertyChangedEvent("CaptureSeconds");
             }
         }
 
         public int NotificationsPerSecond
         {
-            get => audioGraph.NotificationsPerSecond;
+            get => m_audioGraph.NotificationsPerSecond;
             set
             {
-                if (NotificationsPerSecond != value)
-                {
-                    audioGraph.NotificationsPerSecond = value;
-                    RaisePropertyChangedEvent("NotificationsPerSecond");
-                }
+                if (NotificationsPerSecond == value)
+                    return;
+
+                m_audioGraph.NotificationsPerSecond = value;
+                RaisePropertyChangedEvent("NotificationsPerSecond");
             }
         }
 
-        public void Dispose()
-        {
-            audioGraph.Dispose();
-        }
+        public void Dispose() => 
+            m_audioGraph.Dispose();
     }
 }

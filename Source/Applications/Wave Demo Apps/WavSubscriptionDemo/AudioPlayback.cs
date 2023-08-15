@@ -74,7 +74,7 @@ namespace WavSubscriptionDemo
         Exception
     }
 
-    class AudioPlayback : IDisposable
+    internal class AudioPlayback : IDisposable
     {
         public const int MINIMUM_SAMPLE_RATE = 8000;
         public const int DEFAULT_SAMPLE_RATE = 44100;
@@ -102,6 +102,7 @@ namespace WavSubscriptionDemo
         private long m_lastStatCalcTime;
         private long m_lastMeasurementCount;
         private long m_lastTotalBytesReceived;
+        private Ticks m_lastSampleTimestamp;
 
         private int[] m_samplesPerSecondPeriod;
         private int[] m_kilobitsPerSecondPeriod;
@@ -112,7 +113,7 @@ namespace WavSubscriptionDemo
         /// <summary>
         /// Provides the song list to the user interface.
         /// </summary>
-        public event EventHandler<EventArgs<List<string>>> GotSongList;
+        public event EventHandler<EventArgs<Dictionary<string, string>>> GotSongList;
 
         /// <summary>
         /// Provides sample data to the user interface.
@@ -122,7 +123,7 @@ namespace WavSubscriptionDemo
         /// <summary>
         /// Provides the statistics calculated in this class to the user interface.
         /// </summary>
-        public event EventHandler<EventArgs<int, int, float, double>> StatsUpdated;
+        public event EventHandler<EventArgs<(int, int, float, double, Ticks)>> StatsUpdated;
 
         /// <summary>
         /// Notifies the user interface of the state of this player.
@@ -139,29 +140,17 @@ namespace WavSubscriptionDemo
         /// the client when a song is chosen. The port value of the UDP parameter defines the port
         /// on which the client will listen for data from the server.
         /// </remarks>
-        public string ConnectionUri
-        {
-            get;
-            set;
-        }
+        public string ConnectionUri { get; set; }
 
         /// <summary>
         /// Gets or sets a flag that determines whether to enable compression on the UDP stream.
         /// </summary>
-        public bool EnableCompression
-        {
-            get;
-            set;
-        }
+        public bool EnableCompression { get; set; }
 
         /// <summary>
         /// Gets or sets a flag that determines whether to enable encryption on the data stream.
         /// </summary>
-        public bool EnableEncryption
-        {
-            get;
-            set;
-        }
+        public bool EnableEncryption { get; set; }
 
         /// <summary>
         /// Gets or sets a flag that determines whether to enable IPv6.
@@ -170,47 +159,27 @@ namespace WavSubscriptionDemo
         /// This application forces the use of either IPv4 or IPv6.
         /// If IPv6 is not enabled, IPv4 will be forced.
         /// </remarks>
-        public bool IPv6Enabled
-        {
-            get;
-            set;
-        }
+        public bool IPv6Enabled { get; set; }
 
         /// <summary>
         /// Gets or sets a flag that determines if ZeroMQ channel should be used.
         /// </summary>
-        public bool UseZeroMQChannel
-        {
-            get;
-            set;
-        }
+        public bool UseZeroMQChannel { get; set; }
 
         /// <summary>
         /// Gets or sets flag that determines if historical replay is enabled.
         /// </summary>
-        public bool ReplayEnabled
-        {
-            get;
-            set;
-        }
+        public bool ReplayEnabled { get; set; }
 
         /// <summary>
         /// Gets or sets the time at which the playback should start.
         /// </summary>
-        public string ReplayStartTime
-        {
-            get;
-            set;
-        }
+        public string ReplayStartTime { get; set; }
 
         /// <summary>
         /// Gets or sets the time at which the playback should stop.
         /// </summary>
-        public string ReplayStopTime
-        {
-            get;
-            set;
-        }
+        public string ReplayStopTime { get; set; }
 
         /// <summary>
         /// Gets the sample rate of the playback.
@@ -248,15 +217,11 @@ namespace WavSubscriptionDemo
         /// </summary>
         public void DisconnectFromStreamSource()
         {
-            DataSubscriber subscriber;
-            Timer timeoutTimer;
-            DataSet metadata;
-
             Stop();
 
-            subscriber = m_dataSubscriber;
-            timeoutTimer = m_timeoutTimer;
-            metadata = m_metadata;
+            DataSubscriber subscriber = m_dataSubscriber;
+            Timer timeoutTimer = m_timeoutTimer;
+            DataSet metadata = m_metadata;
 
             m_dataSubscriber = null;
             m_timeoutTimer = null;
@@ -280,96 +245,101 @@ namespace WavSubscriptionDemo
             if (m_dataSubscriber is null || m_metadata is null)
                 return;
 
-            UnsynchronizedSubscriptionInfo info;
-
-            StringBuilder filterExpression = new StringBuilder();
-            DataTable deviceTable = m_metadata.Tables["DeviceDetail"];
-            DataTable measurementTable = m_metadata.Tables["MeasurementDetail"];
-
-            Dictionary<string, string> uriSettings;
-            string dataChannel = null;
-            int uriIndex = ConnectionUri.IndexOf(URI_SEPARATOR, StringComparison.Ordinal);
-
-            m_channelIndexes = new ConcurrentDictionary<Guid, int>();
-            m_sampleRate = DEFAULT_SAMPLE_RATE;
-            m_numChannels = DEFAULT_NUM_CHANNELS;
-
-            // Get sample rate from metadata.
-            string sampleRate = deviceTable?.Rows.Cast<DataRow>()
-                .Single(row => row["Acronym"].ToNonNullString() == songName)["FramesPerSecond"].ToNonNullString();
-
-            if (!string.IsNullOrEmpty(sampleRate))
-                m_sampleRate = int.Parse(sampleRate);
-
-            // Get measurements from metadata.
-            if (measurementTable is not null)
+            try
             {
-                IEnumerable<DataRow> measurementRows = measurementTable.Rows.Cast<DataRow>()
-                    .Where(row => row["DeviceAcronym"].ToNonNullString() == songName)
-                    .Where(row => new[] { "ALOG", "VPHM", "VPHA" }.Contains(row["SignalAcronym"].ToNonNullString()))
-                    .Where(row => row["Enabled"].ToNonNullString().ParseBoolean())
-                    .OrderBy(row => row["ID"].ToNonNullString());
+                StringBuilder filterExpression = new();
+                DataTable deviceTable = m_metadata.Tables["DeviceDetail"];
+                DataTable measurementTable = m_metadata.Tables["MeasurementDetail"];
 
-                m_numChannels = 0;
+                string dataChannel = null;
+                int uriIndex = ConnectionUri.IndexOf(URI_SEPARATOR, StringComparison.Ordinal);
 
-                foreach (DataRow row in measurementRows)
+                m_channelIndexes = new ConcurrentDictionary<Guid, int>();
+                m_sampleRate = DEFAULT_SAMPLE_RATE;
+                m_numChannels = DEFAULT_NUM_CHANNELS;
+
+                // Get sample rate from metadata.
+                string sampleRate = deviceTable?.Rows.Cast<DataRow>()
+                    .Single(row => row["Acronym"].ToNonNullString() == songName)["FramesPerSecond"].ToNonNullString();
+
+                if (!string.IsNullOrEmpty(sampleRate))
+                    m_sampleRate = int.Parse(sampleRate);
+
+                // Get measurements from metadata.
+                if (measurementTable is not null)
                 {
-                    Guid measurementID = Guid.Parse(row["SignalID"].ToNonNullString());
+                    IEnumerable<DataRow> measurementRows = measurementTable.Rows.Cast<DataRow>()
+                        .Where(row => row["DeviceAcronym"].ToNonNullString() == songName)
+                        .Where(row => new[] { "ALOG", "VPHM", "VPHA" }.Contains(row["SignalAcronym"].ToNonNullString()))
+                        .Where(row => row["Enabled"].ToNonNullString().ParseBoolean())
+                        .OrderBy(row => row["ID"].ToNonNullString());
 
-                    if (m_numChannels > 0)
-                        filterExpression.Append(';');
+                    m_numChannels = 0;
 
-                    filterExpression.Append(measurementID);
-                    m_channelIndexes[measurementID] = m_numChannels;
-                    m_numChannels++;
+                    foreach (DataRow row in measurementRows)
+                    {
+                        Guid measurementID = Guid.Parse(row["SignalID"].ToNonNullString());
+
+                        if (m_numChannels > 0)
+                            filterExpression.Append(';');
+
+                        filterExpression.Append(measurementID);
+                        m_channelIndexes[measurementID] = m_numChannels;
+                        m_numChannels++;
+                    }
                 }
+
+                // Create UDP data channel if specified.
+                if (uriIndex >= 0)
+                {
+                    Dictionary<string, string> uriSettings = ConnectionUri.Substring(uriIndex + URI_SEPARATOR.Length).ParseKeyValuePairs('&');
+
+                    if (uriSettings.ContainsKey("udp"))
+                        dataChannel = $"dataChannel={{port={uriSettings["udp"]}; interface={(IPv6Enabled ? "::0" : "0.0.0.0")}}}";
+                }
+
+                m_buffer = new ConcurrentQueue<IMeasurement>();
+                m_dumpTimer = CreateDumpTimer();
+                m_statTimer = CreateStatTimer();
+                m_waveProvider = new BufferedWaveProvider(new WaveFormat(m_sampleRate < MINIMUM_SAMPLE_RATE ? MINIMUM_SAMPLE_RATE : m_sampleRate, m_numChannels));
+                m_wavePlayer = CreateWavePlayer(m_waveProvider);
+                m_waveProvider.DiscardOnBufferOverflow = true;
+
+                UnsynchronizedSubscriptionInfo info = new(false)
+                {
+                    FilterExpression = filterExpression.ToString(),
+                    ExtraConnectionStringParameters = dataChannel
+                };
+
+                if (ReplayEnabled)
+                {
+                    const string DateTimeFormat = "MM-dd-yyyy HH:mm:ss.fff";
+
+                    info.StartTime = DateTime.TryParse(ReplayStartTime, DateTimeFormatInfo.InvariantInfo, DateTimeStyles.AssumeLocal, out DateTime startTime) ?
+                        startTime.ToUniversalTime().ToString(DateTimeFormat) :
+                        ReplayStartTime;
+
+                    info.StopTime = DateTime.TryParse(ReplayStopTime, DateTimeFormatInfo.InvariantInfo, DateTimeStyles.AssumeLocal, out DateTime stopTime) ?
+                        stopTime.ToUniversalTime().ToString(DateTimeFormat) :
+                        ReplayStopTime;
+
+                    info.ProcessingInterval = 1000;
+
+                    //if (info.ProcessingInterval == 0)
+                    //    info.ProcessingInterval = 1;
+                }
+
+                m_statTimer.Start();
+                m_wavePlayer.Play();
+                m_dataSubscriber.UnsynchronizedSubscribe(info);
+                m_timeoutTimer.Start();
+
+                OnStateChanged(PlaybackState.Buffering);
             }
-
-            // Create UDP data channel if specified.
-            if (uriIndex >= 0)
+            catch (Exception ex)
             {
-                uriSettings = ConnectionUri.Substring(uriIndex + URI_SEPARATOR.Length).ParseKeyValuePairs('&');
-
-                if (uriSettings.ContainsKey("udp"))
-                    dataChannel = $"dataChannel={{port={uriSettings["udp"]}; interface={(IPv6Enabled ? "::0" : "0.0.0.0")}}}";
+                OnStateChanged(PlaybackState.Exception, ex.Message);
             }
-
-            m_buffer = new ConcurrentQueue<IMeasurement>();
-            m_dumpTimer = CreateDumpTimer();
-            m_statTimer = CreateStatTimer();
-            m_waveProvider = new BufferedWaveProvider(new WaveFormat(m_sampleRate < MINIMUM_SAMPLE_RATE ? MINIMUM_SAMPLE_RATE : m_sampleRate, m_numChannels));
-            m_wavePlayer = CreateWavePlayer(m_waveProvider);
-            m_waveProvider.DiscardOnBufferOverflow = true;
-
-            info = new UnsynchronizedSubscriptionInfo(false)
-            {
-                FilterExpression = filterExpression.ToString(),
-                ExtraConnectionStringParameters = dataChannel
-            };
-
-            if (ReplayEnabled)
-            {
-                const string DateTimeFormat = "MM-dd-yyyy HH:mm:ss.fff";
-
-                info.StartTime = DateTime.TryParse(ReplayStartTime, DateTimeFormatInfo.InvariantInfo, DateTimeStyles.AssumeLocal, out DateTime startTime) ? 
-                    startTime.ToUniversalTime().ToString(DateTimeFormat) : 
-                    ReplayStartTime;
-
-                info.StopTime = DateTime.TryParse(ReplayStopTime, DateTimeFormatInfo.InvariantInfo, DateTimeStyles.AssumeLocal, out DateTime stopTime) ?
-                    stopTime.ToUniversalTime().ToString(DateTimeFormat) :
-                    ReplayStopTime;
-
-                info.ProcessingInterval = 1000;
-
-                //if (info.ProcessingInterval == 0)
-                //    info.ProcessingInterval = 1;
-            }
-
-            m_statTimer.Start();
-            m_wavePlayer.Play();
-            m_dataSubscriber.UnsynchronizedSubscribe(info);
-            m_timeoutTimer.Start();
-            OnStateChanged(PlaybackState.Buffering);
         }
 
         /// <summary>
@@ -429,16 +399,12 @@ namespace WavSubscriptionDemo
         }
 
         // Triggers the GotSongList event.
-        private void OnGotSongList(List<string> songList)
-        {
-            GotSongList?.Invoke(this, new EventArgs<List<string>>(songList));
-        }
+        private void OnGotSongList(Dictionary<string, string> songList) => 
+            GotSongList?.Invoke(this, new EventArgs<Dictionary<string, string>>(songList));
 
         // Triggers the StateChanged event.
-        private void OnStateChanged(PlaybackState state, string message = null)
-        {
+        private void OnStateChanged(PlaybackState state, string message = null) => 
             StateChanged?.Invoke(this, new EventArgs<PlaybackState, string>(state, message));
-        }
 
         // ------ Data Subscriber Methods ------
 
@@ -446,9 +412,9 @@ namespace WavSubscriptionDemo
         // Subscribers created through this method should also be released by the ReleaseDataSubscriber method.
         private DataSubscriber CreateDataSubscriber()
         {
-            DataSubscriber subscriber = new DataSubscriber();
+            DataSubscriber subscriber = new();
             int index = ConnectionUri.IndexOf(URI_SEPARATOR, StringComparison.Ordinal);
-            string server = (index >= 0) ? ConnectionUri.Substring(0, index) : ConnectionUri;
+            string server = index >= 0 ? ConnectionUri.Substring(0, index) : ConnectionUri;
 
             subscriber.StatusMessage += DataSubscriber_StatusMessage;
             subscriber.ProcessException += DataSubscriber_ProcessException;
@@ -490,40 +456,34 @@ namespace WavSubscriptionDemo
         // Subscribers created through the CreateDataSubscriber should be released by this method.
         private void ReleaseDataSubscriber(DataSubscriber subscriber)
         {
-            if (subscriber is not null)
-            {
-                subscriber.Unsubscribe();
+            if (subscriber is null)
+                return;
 
-                subscriber.StatusMessage -= DataSubscriber_StatusMessage;
-                subscriber.ProcessException -= DataSubscriber_ProcessException;
-                subscriber.ConnectionEstablished -= DataSubscriber_ConnectionEstablished;
-                subscriber.ConnectionTerminated -= DataSubscriber_ConnectionTerminated;
-                subscriber.MetaDataReceived -= DataSubscriber_MetaDataReceived;
-                subscriber.DataStartTime -= DataSubscriber_DataStartTime;
-                subscriber.NewMeasurements -= DataSubscriber_NewMeasurements;
+            subscriber.Unsubscribe();
 
-                subscriber.Dispose();
-            }
+            subscriber.StatusMessage -= DataSubscriber_StatusMessage;
+            subscriber.ProcessException -= DataSubscriber_ProcessException;
+            subscriber.ConnectionEstablished -= DataSubscriber_ConnectionEstablished;
+            subscriber.ConnectionTerminated -= DataSubscriber_ConnectionTerminated;
+            subscriber.MetaDataReceived -= DataSubscriber_MetaDataReceived;
+            subscriber.DataStartTime -= DataSubscriber_DataStartTime;
+            subscriber.NewMeasurements -= DataSubscriber_NewMeasurements;
+
+            subscriber.Dispose();
         }
 
         // Disposes of the metadata object. There is no corresponding creation method
         // because the metadata is received through the subscriber event.
-        private void ReleaseMetadata(DataSet metadata)
-        {
+        private void ReleaseMetadata(DataSet metadata) => 
             metadata?.Dispose();
-        }
 
         // Handles the subscriber's StatusMessage event.
-        private void DataSubscriber_StatusMessage(object sender, EventArgs<string> e)
-        {
+        private void DataSubscriber_StatusMessage(object sender, EventArgs<string> e) => 
             Console.WriteLine(e.Argument);
-        }
 
         // Handles the subscriber's ProcessException event.
-        private void DataSubscriber_ProcessException(object sender, EventArgs<Exception> e)
-        {
+        private void DataSubscriber_ProcessException(object sender, EventArgs<Exception> e) => 
             Console.Error.WriteLine(e.Argument.Message);
-        }
 
         // Handles the subscriber's ConnectionEstablished event.
         private void DataSubscriber_ConnectionEstablished(object sender, EventArgs e)
@@ -532,43 +492,38 @@ namespace WavSubscriptionDemo
             // but we are restarting the timer for the full ten seconds.
             // This is because the connection was successful,
             // but metadata refresh can still timeout.
-            if (m_timeoutTimer is not null && m_dataSubscriber is not null)
-            {
-                m_timeoutTimer.Stop();
+            if (m_timeoutTimer is null || m_dataSubscriber is null)
+                return;
 
-                m_dataSubscriber.SendServerCommand(ServerCommand.MetaDataRefresh);
+            m_timeoutTimer.Stop();
 
-                //if (EnableEncryption)
-                //    m_dataSubscriber.SendServerCommand(ServerCommand.RotateCipherKeys);
+            m_dataSubscriber.SendServerCommand(ServerCommand.MetaDataRefresh);
 
-                m_timeoutTimer.Start();
-            }
+            //if (EnableEncryption)
+            //    m_dataSubscriber.SendServerCommand(ServerCommand.RotateCipherKeys);
+
+            m_timeoutTimer.Start();
         }
 
         // Handles the subscriber's ConnectionTerminated event.
-        private void DataSubscriber_ConnectionTerminated(object sender, EventArgs e)
-        {
+        private void DataSubscriber_ConnectionTerminated(object sender, EventArgs e) => 
             DisconnectFromStreamSource();
-        }
 
         // Handles the subscriber's MetaDataReceived event.
         private void DataSubscriber_MetaDataReceived(object sender, EventArgs<DataSet> e)
         {
-            List<string> songs;
-            DataTable deviceTable;
-
             // Stop the timeout timer because the connection was successful.
             m_timeoutTimer?.Stop();
 
             m_metadata = e.Argument;
-            deviceTable = m_metadata.Tables["DeviceDetail"];
+            DataTable deviceTable = m_metadata.Tables["DeviceDetail"];
 
             // Get the song list from the metadata.
             if (deviceTable is not null)
             {
-                songs = deviceTable.Rows.Cast<DataRow>()
+                Dictionary<string, string> songs = deviceTable.Rows.Cast<DataRow>()
                     .Where(row => row["Enabled"].ToNonNullString("0").ParseBoolean())
-                    .Select(row => row["Acronym"].ToNonNullString()).ToList();
+                    .ToDictionary(row => row["Acronym"].ToNonNullString(), row => row["Name"].ToNonNullString());
 
                 //.Where(row => row["ProtocolName"].ToNonNullString() == "Wave Form Input Adapter")
 
@@ -596,38 +551,38 @@ namespace WavSubscriptionDemo
             // Queue the measurements up in the buffer.
             foreach (IMeasurement measurement in e.Argument)
             {
-                if (m_channelIndexes.ContainsKey(measurement.ID))
-                {
-                    // Perform a rough per signal upsample if minimum sample rate is not met
-                    if (m_sampleRate < MINIMUM_SAMPLE_RATE)
-                    {
-                        IMeasurement upsampledMeasurement;
-                        double frequency = measurement.Value;
+                if (!m_channelIndexes.ContainsKey(measurement.ID))
+                    continue;
 
-                        for (int i = 0; i < MINIMUM_SAMPLE_RATE / m_sampleRate; i++)
-                        {
-                            upsampledMeasurement = Measurement.Clone(measurement);
-                            upsampledMeasurement.Value = Timbre.PureTone(frequency, i, 0, MINIMUM_SAMPLE_RATE) * Damping.Natural(i, MINIMUM_SAMPLE_RATE / m_sampleRate, MINIMUM_SAMPLE_RATE) * (Int16.MaxValue * 0.90D);
-                            m_buffer.Enqueue(upsampledMeasurement);
-                        }
-                    }
-                    else
+                // Perform a rough per signal up-sample if minimum sample rate is not met
+                if (m_sampleRate < MINIMUM_SAMPLE_RATE)
+                {
+                    double frequency = measurement.Value;
+
+                    for (int i = 0; i < MINIMUM_SAMPLE_RATE / m_sampleRate; i++)
                     {
-                        m_buffer.Enqueue(measurement);
+                        IMeasurement upsampledMeasurement = Measurement.Clone(measurement);
+                        upsampledMeasurement.Value = Timbre.PureTone(frequency, i, 0, MINIMUM_SAMPLE_RATE) * Damping.Natural(i, MINIMUM_SAMPLE_RATE / m_sampleRate, MINIMUM_SAMPLE_RATE) * (short.MaxValue * 0.90D);
+                        m_buffer.Enqueue(upsampledMeasurement);
                     }
                 }
+                else
+                {
+                    m_buffer.Enqueue(measurement);
+                }
             }
+
+            if (m_dumpTimer is null || m_dumpTimer.IsRunning || m_buffer.Count / 2 <= m_sampleRate)
+                return;
 
             // If we've managed to buffer a full second of data,
             // stop the timeout timer and start the dump timer.
             // The dump timer is sending measurements to the sound card
             // so change the playback state to playing.
-            if (m_dumpTimer is not null && !m_dumpTimer.IsRunning && m_buffer.Count / 2 > m_sampleRate)
-            {
-                m_timeoutTimer?.Stop();
-                m_dumpTimer.Start();
-                OnStateChanged(PlaybackState.Playing);
-            }
+            m_timeoutTimer?.Stop();
+            m_dumpTimer.Start();
+
+            OnStateChanged(PlaybackState.Playing);
         }
 
         // ------ Timer Methods ------
@@ -636,10 +591,12 @@ namespace WavSubscriptionDemo
         // should be released by the ReleaseTimeoutTimer method.
         private Timer CreateTimeoutTimer()
         {
-            Timer timeoutTimer = new Timer();
+            Timer timeoutTimer = new()
+            {
+                AutoReset = false,
+                Interval = 15000.0D
+            };
 
-            timeoutTimer.AutoReset = false;
-            timeoutTimer.Interval = 15000.0;
             timeoutTimer.Elapsed += TimeoutTimer_Elapsed;
 
             return timeoutTimer;
@@ -649,22 +606,24 @@ namespace WavSubscriptionDemo
         // through the CreateTimeoutTimer method should be released through this method.
         private void ReleaseTimeoutTimer(Timer timeoutTimer)
         {
-            if (timeoutTimer is not null)
-            {
-                timeoutTimer.Elapsed -= TimeoutTimer_Elapsed;
-                timeoutTimer.Stop();
-                timeoutTimer.Dispose();
-            }
+            if (timeoutTimer is null)
+                return;
+
+            timeoutTimer.Elapsed -= TimeoutTimer_Elapsed;
+            timeoutTimer.Stop();
+            timeoutTimer.Dispose();
         }
 
         // Creates the dump timer. Timers created through this method
         // should be released through the ReleaseDumpTimer method.
         private PrecisionTimer CreateDumpTimer()
         {
-            PrecisionTimer dumpTimer = new PrecisionTimer();
+            PrecisionTimer dumpTimer = new()
+            {
+                AutoReset = true,
+                Period = 100
+            };
 
-            dumpTimer.AutoReset = true;
-            dumpTimer.Period = 100;
             dumpTimer.Tick += DumpTimer_Tick;
 
             return dumpTimer;
@@ -674,22 +633,24 @@ namespace WavSubscriptionDemo
         // through the CreateDumpTimer method should be released through this method.
         private void ReleaseDumpTimer(PrecisionTimer dumpTimer)
         {
-            if (dumpTimer is not null)
-            {
-                dumpTimer.Tick -= DumpTimer_Tick;
-                dumpTimer.Stop();
-                dumpTimer.Dispose();
-            }
+            if (dumpTimer is null)
+                return;
+
+            dumpTimer.Tick -= DumpTimer_Tick;
+            dumpTimer.Stop();
+            dumpTimer.Dispose();
         }
 
         // Creates the stat timer. Timers created through this method
         // should be released through the ReleaseStatTimer method.
         private Timer CreateStatTimer()
         {
-            Timer statTimer = new Timer();
+            Timer statTimer = new()
+            {
+                AutoReset = true,
+                Interval = 1000.0D
+            };
 
-            statTimer.AutoReset = true;
-            statTimer.Interval = 1000.0;
             statTimer.Elapsed += StatTimer_Elapsed;
 
             // Create stat periods
@@ -720,7 +681,9 @@ namespace WavSubscriptionDemo
             m_lastTotalBytesReceived = 0L;
             m_lastStatCalcTime = 0L;
 
-            StatsUpdated?.Invoke(this, new EventArgs<int, int, float, double>(0, 0, 0.0F, double.NaN));
+            StatsUpdated?.Invoke(this, new EventArgs<(int, int, float, double, Ticks)>((0, 0, 0.0F, double.NaN, m_lastSampleTimestamp)));
+
+            m_lastSampleTimestamp = 0L;
         }
 
         // Handles the timeout timer's Elapsed event.
@@ -734,8 +697,7 @@ namespace WavSubscriptionDemo
         private void DumpTimer_Tick(object sender, EventArgs e)
         {
             byte[] buffer = new byte[65536];
-            List<IMeasurement[]> dumpMeasurements = new List<IMeasurement[]>();
-            IMeasurement dequeuedMeasurement;
+            List<IMeasurement[]> dumpMeasurements = new();
             int count = 0;
 
             // Remove all the measurements from the buffer and place them in the list of samples.
@@ -745,12 +707,9 @@ namespace WavSubscriptionDemo
 
                 for (int i = 0; i < m_numChannels; i++)
                 {
-                    Guid id;
-                    int index;
-
-                    m_buffer.TryDequeue(out dequeuedMeasurement);
-                    id = dequeuedMeasurement.ID;
-                    index = m_channelIndexes[id];
+                    m_buffer.TryDequeue(out IMeasurement dequeuedMeasurement);
+                    Guid id = dequeuedMeasurement.ID;
+                    int index = m_channelIndexes[id];
                     sample[index] = dequeuedMeasurement;
                 }
 
@@ -762,21 +721,15 @@ namespace WavSubscriptionDemo
                 // Put the sample in the buffer.
                 for (int i = 0; i < m_numChannels; i++)
                 {
-                    byte[] channelValue;
-
                     // Assuming 16-bit integer samples for WAV files
-                    if (sample[i] is not null)
-                        channelValue = LittleEndian.GetBytes((short)sample[i].Value);
-                    else
-                        channelValue = new byte[2];
-
+                    byte[] channelValue = sample[i] is null ? new byte[2] : LittleEndian.GetBytes((short)sample[i].Value);
                     Buffer.BlockCopy(channelValue, 0, buffer, count, 2);
                     count += 2;
                 }
 
                 // If the buffer is full, send it to the
                 // sound card and start a new buffer.
-                if (count + (m_numChannels * 2) > buffer.Length)
+                if (count + m_numChannels * 2 > buffer.Length)
                 {
                     m_waveProvider.AddSamples(buffer, 0, count);
                     m_waveFileWriter?.Write(buffer, 0, count);
@@ -784,14 +737,17 @@ namespace WavSubscriptionDemo
                 }
 
                 // Notify the user interface of new samples.
-                if (OnSample is not null)
-                {
-                    const float volume = 0.000035F;
-                    float left = (sample[0] is not null) ? (float)sample[0].Value : 0.0F;
-                    float right = m_numChannels > 1 ? ((sample[1] is not null) ? (float)sample[1].Value : 0.0F) : left;
-                    OnSample(this, new SampleEventArgs(left * volume, right * volume));
-                }
+                if (OnSample is null)
+                    continue;
+
+                const float Volume = 0.000035F;
+                float left = sample[0] is not null ? (float)sample[0].Value : 0.0F;
+                float right = m_numChannels > 1 ? sample[1] is not null ? (float)sample[1].Value : 0.0F : left;
+
+                OnSample(this, new SampleEventArgs(left * Volume, right * Volume));
             }
+
+            m_lastSampleTimestamp = dumpMeasurements.Count > 0 ? dumpMeasurements[dumpMeasurements.Count - 1][0].Timestamp : m_lastSampleTimestamp;
 
             // Send remaining samples to the sound card.
             if (count > 0)
@@ -840,9 +796,9 @@ namespace WavSubscriptionDemo
                 int samplesPerSecond = (int)m_samplesPerSecondPeriod.Take(m_periodIndexCount).Average();
                 int kilobitsPerSecond = (int)m_kilobitsPerSecondPeriod.Take(m_periodIndexCount).Average();
                 float smoothness = m_smoothnessPeriod.Take(m_periodIndexCount).Average();
-                double lostSamples = (m_periodIndexCount <= 5) ? double.NaN : m_lostSamples;
+                double lostSamples = m_periodIndexCount <= 5 ? double.NaN : m_lostSamples;
 
-                StatsUpdated(this, new EventArgs<int, int, float, double>(samplesPerSecond, kilobitsPerSecond, smoothness, lostSamples));
+                StatsUpdated(this, new EventArgs<(int, int, float, double, Ticks)>((samplesPerSecond, kilobitsPerSecond, smoothness, lostSamples, m_lastSampleTimestamp)));
             }
 
             m_lastMeasurementCount = Interlocked.Read(ref m_measurementCount);
@@ -865,11 +821,11 @@ namespace WavSubscriptionDemo
         // the CreateWavePlayer method should be released by this method.
         private void ReleaseWavePlayer(IWavePlayer player)
         {
-            if (player is not null)
-            {
-                player.Stop();
-                player.Dispose();
-            }
+            if (player is null)
+                return;
+
+            player.Stop();
+            player.Dispose();
         }
     }
 }
