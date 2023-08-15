@@ -1640,7 +1640,11 @@ namespace GSF.PhasorProtocols
                                 3 => DeviceCommand.SendConfigurationFrame3,
                                 _ => UnsupportedConfigurationFrameVersion()
                             };
-                        };
+                        }
+                        else
+                        {
+                            ConfigurationFrameVersion = UnsupportedConfigurationFrameVersion();
+                        }
                     }
                 }
             }
