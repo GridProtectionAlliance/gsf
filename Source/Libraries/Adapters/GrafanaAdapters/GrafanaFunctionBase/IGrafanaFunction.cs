@@ -38,7 +38,7 @@ namespace GrafanaAdapters.GrafanaFunctions
         List<IParameter> Parameters { get; }
 
         /// <summary>
-        /// Performs the computation of the Grafana function.
+        /// Performs the computation for DataSourceValue of the Grafana function.
         /// </summary>
         /// <param name="parameters">The input parameters for the computation.</param>
         /// <returns>A sequence of computed data source parameters.</returns>
