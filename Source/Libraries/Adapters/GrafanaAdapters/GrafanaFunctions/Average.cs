@@ -10,6 +10,13 @@ namespace GrafanaAdapters.GrafanaFunctions
     /// <summary>
     /// Returns a single value that represents the mean of the values in the source series.
     /// </summary>
+    /// <remarks>
+    /// Signature: <c>Average(expression)</c><br/>
+    /// Returns: Single value.<br/>
+    /// Example: <c>Average(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
+    /// Variants: Average, Avg, Mean<br/>
+    /// Execution: Immediate enumeration.
+    /// </remarks>
     public class Average : IGrafanaFunction
     {
         /// <inheritdoc />
@@ -48,15 +55,14 @@ namespace GrafanaAdapters.GrafanaFunctions
             DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
 
             // Compute
-            double sumOfValues = dataSourceValues.Source.Sum(dataValue => dataValue.Value);
-            DataSourceValue averageDataSourceValue = new()
-            {
-                Time = dataSourceValues.Source.Last().Time,
-                Value = sumOfValues / dataSourceValues.Source.Count()
-            };
+            DataSourceValue lastElement = dataSourceValues.Source.Last();
+            lastElement.Value = dataSourceValues.Source
+                            .Select(dataValue => { return dataValue.Value; })
+                            .Average();
 
+            // Set Values
             dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
-            dataSourceValues.Source = Enumerable.Repeat(averageDataSourceValue, 1);
+            dataSourceValues.Source = Enumerable.Repeat(lastElement, 1);
 
             return dataSourceValues;
         }
@@ -70,20 +76,20 @@ namespace GrafanaAdapters.GrafanaFunctions
         {
             // Get Values
             DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
+
             // Compute
-            double sumOfMags = phasorValues.Source.Sum(dataValue => dataValue.Magnitude);
-            double sumOfAngs = phasorValues.Source.Sum(dataValue => dataValue.Angle);
-            PhasorValue averagePhasorValue = new()
-            {
-                Time = phasorValues.Source.Last().Time,
-                Magnitude = sumOfMags / phasorValues.Source.Count(),
-                Angle = sumOfMags / phasorValues.Source.Count()
-            };
+            PhasorValue lastElement = phasorValues.Source.Last();
+            lastElement.Magnitude = phasorValues.Source
+                            .Select(dataValue => { return dataValue.Magnitude; })
+                            .Average();
+            lastElement.Angle = phasorValues.Source
+                            .Select(dataValue => { return dataValue.Angle; })
+                            .Average();
 
-
+            // Set Values
             string[] labels = phasorValues.Target.Split(';');
             phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
-            phasorValues.Source = Enumerable.Repeat(averagePhasorValue, 1);
+            phasorValues.Source = Enumerable.Repeat(lastElement, 1);
 
             return phasorValues;
         }
