@@ -8,10 +8,17 @@ using GSF.Units;
 
 namespace GrafanaAdapters.GrafanaFunctions
 {
+
     /// <summary>
-    /// Returns one series by combining two other series within an offset N.
-    /// N is a floating point value representing an additive offset to be applied to each value the source series.
+    /// Returns a series of values that represent each of the values in the source series added with another series of values.
     /// </summary>
+    /// <remarks>
+    /// Signature: <c>SliceAdd(N, expression)</c><br/>
+    /// Returns: Series of values.<br/>
+    /// Example: <c>SliceAdd(FILTER ActiveMeasurements WHERE SignalType='ABC', FILTER ActiveMeasurements WHERE SignalType='CALC')</c><br/>
+    /// Variants: SliceAdd<br/>
+    /// Execution: Deferred enumeration.
+    /// </remarks>
     public class SliceAdd : IGrafanaFunction
     {
         /// <inheritdoc />
@@ -72,34 +79,26 @@ namespace GrafanaAdapters.GrafanaFunctions
             };
 
             TimeSliceScanner<DataSourceValue> scanner = new(dataGroups, tolerance / SI.Milli);
-            IEnumerable<DataSourceValue> combinedValues = new List<DataSourceValue>();
+            List<DataSourceValue> combinedValuesList = new();
             while (!scanner.DataReadComplete)
             {
                 IEnumerable<DataSourceValue> datapointGroups = scanner.ReadNextTimeSlice();
-                int numberDatapoints = datapointGroups.Count();
+
+                //Error check
                 if (datapointGroups.Count() != dataGroups.Count())
-                {
                     continue;
-                }
 
-                double totalValue = 0;
-                double totalTime = 0;
-                foreach (DataSourceValue datapoint in datapointGroups)
-                {
-                    totalValue += datapoint.Value;
-                    totalTime += datapoint.Time;
-                }
-
-                combinedValues = combinedValues.Append(new DataSourceValue
-                {
-                    Value = totalValue,
-                    Time = totalTime / numberDatapoints,
-                    Target = datapointGroups.First().Target
-                });
+                //Compute & Set Values
+                DataSourceValue transformedValue = datapointGroups.Last();
+                transformedValue.Value = datapointGroups.Select(dataValue => { return dataValue.Value; }).Sum();
+                transformedValue.Time = datapointGroups.Select(dataValue => { return dataValue.Time; }).Average();
+                combinedValuesList.Add(transformedValue);
             }
 
+            IEnumerable<DataSourceValue> combinedValuesEnumerable = combinedValuesList;
+
             firstData.Target = $"{firstData.Target}+{secondData.Target}";
-            firstData.Source = combinedValues;
+            firstData.Source = combinedValuesEnumerable;
 
             return firstData;
         }
@@ -123,41 +122,29 @@ namespace GrafanaAdapters.GrafanaFunctions
             };
 
             TimeSliceScanner<PhasorValue> scanner = new(dataGroups, tolerance / SI.Milli);
-            IEnumerable<PhasorValue> combinedValues = new List<PhasorValue>();
+            List<PhasorValue> combinedValuesList = new();
             while (!scanner.DataReadComplete)
             {
                 IEnumerable<PhasorValue> datapointGroups = scanner.ReadNextTimeSlice();
-                int numberDatapoints = datapointGroups.Count();
+
+                //Error check
                 if (datapointGroups.Count() != dataGroups.Count())
-                {
                     continue;
-                }
 
-                double totalMag = 0;
-                double totalAng = 0;
-                double totalTime = 0;
-                foreach (PhasorValue datapoint in datapointGroups)
-                {
-                    totalMag += datapoint.Magnitude;
-                    totalAng += datapoint.Angle;
-                    totalTime += datapoint.Time;
-                }
-
-                combinedValues = combinedValues.Append(new PhasorValue
-                {
-                    Magnitude = totalMag,
-                    Angle = totalAng,
-                    Time = totalTime / numberDatapoints,
-                    MagnitudeTarget = datapointGroups.First().MagnitudeTarget,
-                    AngleTarget = datapointGroups.First().AngleTarget,
-                });
+                PhasorValue transformedValue = datapointGroups.Last();
+                transformedValue.Magnitude = datapointGroups.Select(dataValue => { return dataValue.Magnitude; }).Sum();
+                transformedValue.Angle = datapointGroups.Select(dataValue => { return dataValue.Angle; }).Average();
+                transformedValue.Time = datapointGroups.Select(dataValue => { return dataValue.Time; }).Average();
+                combinedValuesList.Add(transformedValue);
             }
+
+            IEnumerable<PhasorValue> combinedValuesEnumerable = combinedValuesList;
 
             string[] firstNames = firstData.Target.Split(';');
             string[] secondNames = secondData.Target.Split(';');
 
             firstData.Target = $"{firstNames[0]}+{secondNames[0]};{firstNames[1]}+{secondNames[1]}";
-            firstData.Source = combinedValues;
+            firstData.Source = combinedValuesEnumerable;
 
             return firstData;
         }

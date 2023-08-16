@@ -50,6 +50,7 @@ namespace GrafanaAdapters.GrafanaFunctions
             // Compute
             DataSourceValue minimumDataSourceValue = dataSourceValues.Source.OrderBy(dataValue => dataValue.Value).First();
 
+            // Set Values
             dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
             dataSourceValues.Source = Enumerable.Repeat(minimumDataSourceValue, 1);
 
@@ -65,9 +66,11 @@ namespace GrafanaAdapters.GrafanaFunctions
         {
             // Get Values
             DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
+            
             // Compute
             PhasorValue minimumPhasorValue = phasorValues.Source.OrderBy(dataValue => dataValue.Magnitude).First();
 
+            // Set Values
             string[] labels = phasorValues.Target.Split(';');
             phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
             phasorValues.Source = Enumerable.Repeat(minimumPhasorValue, 1);

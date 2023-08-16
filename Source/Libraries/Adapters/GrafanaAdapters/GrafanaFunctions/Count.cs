@@ -10,6 +10,13 @@ namespace GrafanaAdapters.GrafanaFunctions
     /// <summary>
     /// Returns a single value that is the count of the values in the source series.
     /// </summary>
+    /// <remarks>
+    /// Signature: <c>Count(expression)</c><br/>
+    /// Returns: Single value.<br/>
+    /// Example: <c>Count(PPA:1; PPA:2; PPA:3)</c><br/>
+    /// Variants: Count<br/>
+    /// Execution: Immediate enumeration.
+    /// </remarks>
     public class Count : IGrafanaFunction
     {
         /// <inheritdoc />
@@ -48,16 +55,13 @@ namespace GrafanaAdapters.GrafanaFunctions
             DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
 
             // Compute
-            IEnumerable<DataSourceValue> orderedValues = dataSourceValues.Source.OrderBy(dataValue => dataValue.Value);
+            DataSourceValue lastElement = dataSourceValues.Source.Last();
+            lastElement.Value = dataSourceValues.Source
+                            .Count();
 
-            DataSourceValue dataSourceValue = new()
-            {
-                Time = orderedValues.Last().Time,
-                Value = orderedValues.Count()
-            };
-
+            // Set Values
             dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
-            dataSourceValues.Source = Enumerable.Repeat(dataSourceValue, 1);
+            dataSourceValues.Source = Enumerable.Repeat(lastElement, 1);
 
             return dataSourceValues;
         }
@@ -73,17 +77,14 @@ namespace GrafanaAdapters.GrafanaFunctions
             DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
 
             // Compute
-            IEnumerable<PhasorValue> orderedValues = phasorValues.Source.OrderBy(dataValue => dataValue.Magnitude);
-            PhasorValue phasorValue = new()
-            {
-                Time = orderedValues.Last().Time,
-                Magnitude = orderedValues.Count(),
-                Angle = orderedValues.Count()
-            };
+            PhasorValue lastElement = phasorValues.Source.Last();
+            lastElement.Magnitude = phasorValues.Source.Count();
+            lastElement.Angle = phasorValues.Source.Count();
 
+            // Set Values
             string[] labels = phasorValues.Target.Split(';');
             phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
-            phasorValues.Source = Enumerable.Repeat(phasorValue, 1);
+            phasorValues.Source = Enumerable.Repeat(lastElement, 1);
 
             return phasorValues;
         }

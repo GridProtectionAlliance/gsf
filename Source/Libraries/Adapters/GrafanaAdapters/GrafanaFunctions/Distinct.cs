@@ -10,6 +10,13 @@ namespace GrafanaAdapters.GrafanaFunctions
     /// <summary>
     /// Returns a series of values that represent the unique set of values in the source series.
     /// </summary>
+    /// <remarks>
+    /// Signature: <c>Distinct(expression)</c><br/>
+    /// Returns: Series of values.<br/>
+    /// Example: <c>Distinct(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
+    /// Variants: Distinct, Unique<br/>
+    /// Execution: Deferred enumeration.
+    /// </remarks>
     public class Distinct : IGrafanaFunction
     {
         /// <inheritdoc />
@@ -50,6 +57,7 @@ namespace GrafanaAdapters.GrafanaFunctions
             // Compute
             IEnumerable<DataSourceValue> distinctValues = dataSourceValues.Source.GroupBy(dataValue => dataValue.Value).Select(group => group.First());
 
+            // Set Values
             dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
             dataSourceValues.Source = distinctValues;
 
@@ -69,6 +77,7 @@ namespace GrafanaAdapters.GrafanaFunctions
             // Compute
             IEnumerable<PhasorValue> distinctValues = phasorValues.Source.GroupBy(dataValue => dataValue.Magnitude).Select(group => group.First());
 
+            // Set Values
             string[] labels = phasorValues.Target.Split(';');
             phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
             phasorValues.Source = distinctValues;

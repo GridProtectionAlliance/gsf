@@ -11,6 +11,13 @@ namespace GrafanaAdapters.GrafanaFunctions
     /// Returns a series of values that represent the rounded value, with N fractional digits, of each of the values in the source series.
     /// N, optional, is a positive integer value representing the number of decimal places in the return value - defaults to 0.
     /// </summary>
+    /// <remarks>
+    /// Signature: <c>Round([N = 0], expression)</c><br/>
+    /// Returns: Series of values.<br/>
+    /// Example: <c>Round(3, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
+    /// Variants: Round<br/>
+    /// Execution: Deferred enumeration.
+    /// </remarks>
     public class Round : IGrafanaFunction
     {
         /// <inheritdoc />
@@ -53,16 +60,16 @@ namespace GrafanaAdapters.GrafanaFunctions
             int numberDecimals = (parameters[1] as IParameter<int>).Value;
 
             // Compute
-            IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source.Select(dataValue =>
-                new DataSourceValue
-                {
-                    Flags = dataValue.Flags,
-                    Value = Math.Round(dataValue.Value, numberDecimals),
-                    Time = dataValue.Time,
-                    Target = dataValue.Target
-                });
+            IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source.Select(dataSourceValue =>
+            {
+                DataSourceValue transformedValue = dataSourceValue;
+                transformedValue.Value = Math.Round(transformedValue.Value, numberDecimals);
 
-            dataSourceValues.Target = $"Round({numberDecimals},{dataSourceValues.Target})";
+                return transformedValue;
+            });
+
+            // Set Values
+            dataSourceValues.Target = $"{Name}({dataSourceValues.Target},{numberDecimals})";
             dataSourceValues.Source = transformedDataSourceValues;
 
             return dataSourceValues;
@@ -80,20 +87,19 @@ namespace GrafanaAdapters.GrafanaFunctions
             int numberDecimals = (parameters[1] as IParameter<int>).Value;
 
             // Compute
-            IEnumerable<PhasorValue> transformedDataSourceValues = phasorValues.Source.Select(phasorValue =>
-                new PhasorValue
-                {
-                    Flags = phasorValue.Flags,
-                    Magnitude = Math.Round(phasorValue.Magnitude, numberDecimals),
-                    Angle = Math.Round(phasorValue.Angle, numberDecimals),
-                    Time = phasorValue.Time,
-                    MagnitudeTarget = phasorValue.MagnitudeTarget,
-                    AngleTarget = phasorValue.AngleTarget,
-                });
+            IEnumerable<PhasorValue> transformedPhasorValues = phasorValues.Source.Select(phasorValue =>
+            {
+                PhasorValue transformedValue = phasorValue;
+                transformedValue.Magnitude = Math.Round(transformedValue.Magnitude, numberDecimals);
+                transformedValue.Angle = Math.Round(transformedValue.Angle, numberDecimals);
 
+                return transformedValue;
+            });
+
+            // Set Values
             string[] labels = phasorValues.Target.Split(';');
             phasorValues.Target = $"{Name}({labels[0]},{numberDecimals});{Name}({labels[1]},{numberDecimals})";
-            phasorValues.Source = transformedDataSourceValues;
+            phasorValues.Source = transformedPhasorValues;
 
             return phasorValues;
         }

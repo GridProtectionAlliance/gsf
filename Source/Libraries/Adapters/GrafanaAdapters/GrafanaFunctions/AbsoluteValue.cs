@@ -10,6 +10,13 @@ namespace GrafanaAdapters.GrafanaFunctions
     /// <summary>
     /// Returns a series of values that represent the absolute value each of the values in the source series.
     /// </summary>
+    /// <remarks>
+    /// Signature: <c>AbsoluteValue(expression)</c><br/>
+    /// Returns: Series of values.<br/>
+    /// Example: <c>AbsoluteValue(FILTER ActiveMeasurements WHERE SignalType='CALC')</c><br/>
+    /// Variants: AbsoluteValue, Abs<br/>
+    /// Execution: Deferred enumeration.
+    /// </remarks>
     public class AbsoluteValue : IGrafanaFunction
     {
         /// <inheritdoc />
@@ -46,16 +53,17 @@ namespace GrafanaAdapters.GrafanaFunctions
         {
             // Get Values
             DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
-            // Compute
-            IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source.Select(dataValue =>
-                new DataSourceValue
-                {
-                    Flags = dataValue.Flags,
-                    Value = Math.Abs(dataValue.Value),
-                    Time = dataValue.Time,
-                    Target = dataValue.Target
-                });
 
+            // Compute
+            IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source.Select(dataSourceValue =>
+            {
+                DataSourceValue transformedValue = dataSourceValue;
+                transformedValue.Value = Math.Abs(transformedValue.Value);
+
+                return transformedValue;
+            });
+
+            // Set Values
             dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
             dataSourceValues.Source = transformedDataSourceValues;
 
@@ -71,21 +79,21 @@ namespace GrafanaAdapters.GrafanaFunctions
         {
             // Get Values
             DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
-            // Compute
-            IEnumerable<PhasorValue> transformedDataSourceValues = phasorValues.Source.Select(phasorValue =>
-                new PhasorValue
-                {
-                    Flags = phasorValue.Flags,
-                    Magnitude = Math.Abs(phasorValue.Magnitude),
-                    Angle = Math.Abs(phasorValue.Angle),
-                    Time = phasorValue.Time,
-                    MagnitudeTarget = phasorValue.MagnitudeTarget,
-                    AngleTarget = phasorValue.AngleTarget,
-                });
 
+            // Compute
+            IEnumerable<PhasorValue> transformedPhasorValues = phasorValues.Source.Select(phasorValue =>
+            {
+                PhasorValue transformedValue = phasorValue;
+                transformedValue.Magnitude = Math.Abs(transformedValue.Magnitude);
+                transformedValue.Angle = Math.Abs(transformedValue.Angle);
+
+                return transformedValue;
+            });
+
+            // Set Values
             string[] labels = phasorValues.Target.Split(';');
             phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
-            phasorValues.Source = transformedDataSourceValues;
+            phasorValues.Source = transformedPhasorValues;
 
             return phasorValues;
         }

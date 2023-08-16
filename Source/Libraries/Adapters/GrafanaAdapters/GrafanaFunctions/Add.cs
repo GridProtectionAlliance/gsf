@@ -12,6 +12,13 @@ namespace GrafanaAdapters.GrafanaFunctions
     /// N is a floating point value representing an additive offset to be applied to each value the source series.
     /// N can either be constant value or a named target available from the expression.
     /// </summary>
+    /// <remarks>
+    /// Signature: <c>Add(N, expression)</c><br/>
+    /// Returns: Series of values.<br/>
+    /// Example: <c>Add(1.5, FILTER ActiveMeasurements WHERE SignalType='CALC')</c><br/>
+    /// Variants: Add<br/>
+    /// Execution: Deferred enumeration.
+    /// </remarks>
     public class Add : IGrafanaFunction
     {
         /// <inheritdoc />
@@ -54,15 +61,15 @@ namespace GrafanaAdapters.GrafanaFunctions
             DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
 
             // Compute
-            IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source.Select(dataValue =>
-                new DataSourceValue
-                {
-                    Flags = dataValue.Flags,
-                    Value = value + dataValue.Value,
-                    Time = dataValue.Time,
-                    Target = dataValue.Target
-                });
+            IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source.Select(dataSourceValue =>
+            {
+                DataSourceValue transformedValue = dataSourceValue;
+                transformedValue.Value += value;
 
+                return transformedValue;
+            });
+
+            // Set Values
             dataSourceValues.Target = $"{value}+{dataSourceValues.Target}";
             dataSourceValues.Source = transformedDataSourceValues;
 
@@ -81,20 +88,18 @@ namespace GrafanaAdapters.GrafanaFunctions
             DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
 
             // Compute
-            IEnumerable<PhasorValue> transformedDataSourceValues = phasorValues.Source.Select(phasorValue =>
-                new PhasorValue
-                {
-                    Flags = phasorValue.Flags,
-                    Magnitude = value + phasorValue.Magnitude,
-                    Angle = phasorValue.Angle,
-                    Time = phasorValue.Time,
-                    MagnitudeTarget = phasorValue.MagnitudeTarget,
-                    AngleTarget = phasorValue.AngleTarget,
-                });
+            IEnumerable<PhasorValue> transformedPhasorValues = phasorValues.Source.Select(phasorValue =>
+            {
+                PhasorValue transformedValue = phasorValue;
+                transformedValue.Magnitude += value;
 
+                return transformedValue;
+            });
+
+            // Set Values
             string[] labels = phasorValues.Target.Split(';');
             phasorValues.Target = $"{value}+{labels[0]};{value}+{labels[1]}";
-            phasorValues.Source = transformedDataSourceValues;
+            phasorValues.Source = transformedPhasorValues;
 
             return phasorValues;
         }
