@@ -183,6 +183,57 @@ namespace GSF.Web.Hosting
     }
 
     /// <summary>
+    /// Configures the <see cref="WebPageController"/> when adding it to the Owin pipeline.
+    /// </summary>
+    public interface IWebPageControllerBuilder
+    {
+        /// <summary>
+        /// Use the given page as the default page to display on the default path.
+        /// </summary>
+        /// <param name="defaultWebPage">The default page to display on the default path.</param>
+        /// <returns>The web page controller builder.</returns>
+        IWebPageControllerBuilder UseDefaultWebPage(string defaultWebPage);
+
+        /// <summary>
+        /// Use the given model as the model to use when rendering Razor templates.
+        /// </summary>
+        /// <typeparam name="T">Type of <paramref name="model"/>.</typeparam>
+        /// <param name="model">Reference to model to use when rendering Razor templates.</param>
+        /// <returns>The web page controller builder.</returns>
+        IWebPageControllerBuilder UseModel<T>(T model);
+
+        /// <summary>
+        /// Use the given authentication options for enabling sessions.
+        /// </summary>
+        /// <param name="authenticationOptions">Authentication options for enabling sessions.</param>
+        /// <returns>The web page controller builder.</returns>
+        IWebPageControllerBuilder UseAuthenticationOptions(AuthenticationOptions authenticationOptions);
+
+        /// <summary>
+        /// Use the given function to configure custom routes for selecting pages.
+        /// </summary>
+        /// <param name="routeConfig">Function that configures the custom routes.</param>
+        /// <returns>The web page controller builder.</returns>
+        /// <remarks>
+        /// The routes should set the controller, action, and pageName as in the following example.
+        ///
+        /// <code>
+        /// routes.MapHttpRoute(
+        ///     name: "MyCustomRoute",
+        ///     routeTemplate: "my/custom/route",
+        ///     defaults: new
+        ///     {
+        ///         controller = "WebPage",
+        ///         action = "GetPage",
+        ///         pageName = "Index.html"
+        ///     }
+        /// );
+        /// </code>
+        /// </remarks>
+        IWebPageControllerBuilder UseCustomRoutes(Action<HttpRouteCollection> routeConfig);
+    }
+
+    /// <summary>
     /// Defines extension function for registering <see cref="WebPageController"/> in web server pipeline.
     /// </summary>
     public static class WebPageControllerAppBuilderExtensions
@@ -235,6 +286,86 @@ namespace GSF.Web.Hosting
             public IDependencyScope BeginScope() => this;
         }
 
+        // Configures the WebPageController when adding it to the Owin pipeline.
+        private sealed class WebPageControllerBuilder : IWebPageControllerBuilder
+        {
+            public string DefaultWebPage { get; set; } = "Index.html";
+            public object Model { get; set; }
+            public Type ModelType { get; set; }
+            public AuthenticationOptions AuthenticationOptions { get; set; }
+            public Action<HttpRouteCollection> RouteConfig { get; set; } = DefaultRouteConfig;
+
+            public IWebPageControllerBuilder UseDefaultWebPage(string defaultWebPage)
+            {
+                DefaultWebPage = defaultWebPage;
+                return this;
+            }
+
+            public IWebPageControllerBuilder UseModel<T>(T model) =>
+                UseModel(model, typeof(T));
+
+            public IWebPageControllerBuilder UseModel(object model, Type modelType)
+            {
+                Model = model;
+                ModelType = modelType;
+                return this;
+            }
+
+            public IWebPageControllerBuilder UseAuthenticationOptions(AuthenticationOptions authenticationOptions)
+            {
+                AuthenticationOptions = authenticationOptions;
+                return this;
+            }
+
+            public IWebPageControllerBuilder UseCustomRoutes(Action<HttpRouteCollection> routeConfig)
+            {
+                RouteConfig = routeConfig ?? DefaultRouteConfig;
+                return this;
+            }
+
+            private static void DefaultRouteConfig(HttpRouteCollection _) { }
+        }
+
+        /// <summary>
+        /// Registers web page controller in web server pipeline.
+        /// </summary>
+        /// <param name="app">The app builder for the web server pipeline.</param>
+        /// <param name="webServer"><see cref="WebServer"/> instance to use for controller.</param>
+        /// <param name="webPageControllerConfig">Function used to configure the web page controller.</param>
+        public static void UseWebPageController(this IAppBuilder app, WebServer webServer, Action<IWebPageControllerBuilder> webPageControllerConfig)
+        {
+            WebPageControllerBuilder builder = new WebPageControllerBuilder();
+            webPageControllerConfig(builder);
+
+            HttpConfiguration httpConfig = new HttpConfiguration();
+            httpConfig.DependencyResolver = GetDependencyResolver(webServer, builder.Model, builder.ModelType);
+
+            AuthenticationOptions options = builder.AuthenticationOptions;
+
+            if (!(options is null))
+                httpConfig.EnableSessions(options);
+
+            builder.RouteConfig(httpConfig.Routes);
+
+            httpConfig.Routes.MapHttpRoute(
+                name: "WebPage",
+                routeTemplate: "{*pageName}",
+                defaults: new
+                {
+                    controller = "WebPage",
+                    action = "GetPage",
+                    pageName = builder.DefaultWebPage
+                }
+            );
+
+            app.UseWebApi(httpConfig);
+
+            httpConfig.IncludeErrorDetailPolicy = IncludeErrorDetailPolicy.Always;
+
+            // Check for configuration issues before first request
+            httpConfig.EnsureInitialized();
+        }
+
         /// <summary>
         /// Registers web page controller in web server pipeline.
         /// </summary>
@@ -246,29 +377,12 @@ namespace GSF.Web.Hosting
         /// <param name="options">Authentication options for enabling sessions.</param>
         public static void UseWebPageController(this IAppBuilder app, WebServer webServer, string defaultWebPage = "Index.html", object model = null, Type modelType = null, AuthenticationOptions options = null)
         {
-            HttpConfiguration httpConfig = new HttpConfiguration();
-            httpConfig.DependencyResolver = GetDependencyResolver(webServer, model, modelType);
+            void Configure(WebPageControllerBuilder builder) => builder
+                .UseModel(model, modelType)
+                .UseDefaultWebPage(defaultWebPage)
+                .UseAuthenticationOptions(options);
 
-            if (options != null)
-                httpConfig.EnableSessions(options);
-
-            httpConfig.Routes.MapHttpRoute(
-                name: "WebPage",
-                routeTemplate: "{*pageName}",
-                defaults: new
-                {
-                    controller = "WebPage",
-                    action = "GetPage",
-                    pageName = defaultWebPage
-                }
-            );
-
-            app.UseWebApi(httpConfig);
-
-            httpConfig.IncludeErrorDetailPolicy = IncludeErrorDetailPolicy.Always;
-
-            // Check for configuration issues before first request
-            httpConfig.EnsureInitialized();
+            app.UseWebPageController(webServer, builder => Configure((WebPageControllerBuilder)builder));
         }
 
         /// <summary>
