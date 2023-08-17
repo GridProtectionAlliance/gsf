@@ -1622,24 +1622,24 @@ namespace GSF.PhasorProtocols
                         return DeviceCommand.SendLatestConfigurationFrameVersion;
                     }
 
-                    // Attempt to parse configuration frame version as a DeviceCommand enum name
-                    if (Enum.TryParse(setting, true, out DeviceCommand command))
+                    // Try simple integer specification of version number first
+                    if (int.TryParse(setting, out int version))
                     {
-                        ConfigurationFrameVersion = command is DeviceCommand.SendConfigurationFrame1 or DeviceCommand.SendConfigurationFrame2 or DeviceCommand.SendConfigurationFrame3 ?
-                            command : UnsupportedConfigurationFrameVersion();
+                        ConfigurationFrameVersion = version switch
+                        {
+                            1 => DeviceCommand.SendConfigurationFrame1,
+                            2 => DeviceCommand.SendConfigurationFrame2,
+                            3 => DeviceCommand.SendConfigurationFrame3,
+                            _ => UnsupportedConfigurationFrameVersion()
+                        };
                     }
                     else
                     {
-                        // Also allow simple integer specification of version number
-                        if (int.TryParse(setting, out int version))
+                        // Attempt to parse configuration frame version as a DeviceCommand enum name
+                        if (Enum.TryParse(setting, true, out DeviceCommand command))
                         {
-                            ConfigurationFrameVersion = version switch
-                            {
-                                1 => DeviceCommand.SendConfigurationFrame1,
-                                2 => DeviceCommand.SendConfigurationFrame2,
-                                3 => DeviceCommand.SendConfigurationFrame3,
-                                _ => UnsupportedConfigurationFrameVersion()
-                            };
+                            ConfigurationFrameVersion = command is DeviceCommand.SendConfigurationFrame1 or DeviceCommand.SendConfigurationFrame2 or DeviceCommand.SendConfigurationFrame3 ?
+                                command : UnsupportedConfigurationFrameVersion();
                         }
                         else
                         {
@@ -2204,6 +2204,7 @@ namespace GSF.PhasorProtocols
                 status.AppendLine($"Allowed parsing exceptions: {AllowedParsingExceptions:N0}");
                 status.AppendLine($"  Parsing exception window: {ParsingExceptionWindow.ToSeconds():0.00} seconds");
                 status.AppendLine($"Using simulated timestamps: {(InjectSimulatedTimestamp ? "Yes" : "No")}");
+                status.AppendLine($"Configuration frame option: {ConfigurationFrameVersion}");
 
                 if (m_transportProtocol == TransportProtocol.File)
                 {
