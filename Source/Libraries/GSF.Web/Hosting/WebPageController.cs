@@ -342,7 +342,7 @@ namespace GSF.Web.Hosting
 
             AuthenticationOptions options = builder.AuthenticationOptions;
 
-            if (!(options is null))
+            if (options is not null)
                 httpConfig.EnableSessions(options);
 
             builder.RouteConfig(httpConfig.Routes);
