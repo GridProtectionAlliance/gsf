@@ -94,6 +94,7 @@ namespace GrafanaAdapters.GrafanaFunctions
                 List<DataSourceValue> values = dataSourceValues.Source.ToList();
                 double n = (dataSourceValues.Source.Count() - 1) * (percent / 100.0D) + 1.0D;
                 int k = (int)n;
+                if(k >= values.Count()) k = (values.Count() - 1);
                 DataSourceValue kData = values[k];
                 double d = n - k;
                 double k0 = values[k - 1].Value;
