@@ -56,18 +56,17 @@ namespace GrafanaAdapters.GrafanaFunctions
             DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
 
             // Compute
-            double previousTime = dataSourceValues.Source.First().Time;
+            double previousValue = dataSourceValues.Source.First().Value;
             IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source
                 .Skip(1)
-                .Select(pair =>
+                .Select(dataSourceValue =>
                 {
-                    DataSourceValue transformedValue = pair.Value;
-                    var previousValue = dataSourceValues.Source.ElementAt(pair.Index - 1).Value;
+                    DataSourceValue transformedValue = dataSourceValue;
+                    double tempVal = transformedValue.Value;
 
-                    transformedValue.Time = pair.Value.Time;
-                    transformedValue.Value = pair.Value.Value - previousValue;
+                    transformedValue.Value -= previousValue;
 
-                    previousTime = dataSourceValue.Time;
+                    previousValue = tempVal;
                     return transformedValue;
                 });
 
@@ -89,20 +88,22 @@ namespace GrafanaAdapters.GrafanaFunctions
             DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
 
             // Compute
-            double previousTime = dataSourceValues.Source.First().Time;
+            double previousMag = phasorValues.Source.First().Magnitude;
+            double previousAng = phasorValues.Source.First().Angle;
             IEnumerable<PhasorValue> transformedPhasorValues = phasorValues.Source
                 .Select((dataSourceValue, index) => new { Value = dataSourceValue, Index = index })
                 .Skip(1)
                 .Select(pair =>
                 {
                     PhasorValue transformedValue = pair.Value;
-                    var previousValue = phasorValues.Source.ElementAt(pair.Index - 1);
+                    double tempMag = transformedValue.Magnitude;
+                    double tempAng = transformedValue.Angle;
 
-                    transformedValue.Time = pair.Value.Time;
-                    transformedValue.Magnitude = pair.Value.Magnitude - previousValue.Magnitude;
-                    transformedValue.Angle = pair.Value.Angle - previousValue.Angle;
+                    transformedValue.Magnitude -= previousMag;
+                    transformedValue.Angle -= previousAng;
 
-                    previousTime = dataSourceValue.Time;
+                    previousMag = tempMag;
+                    previousAng = tempAng;
                     return transformedValue;
                 });
 

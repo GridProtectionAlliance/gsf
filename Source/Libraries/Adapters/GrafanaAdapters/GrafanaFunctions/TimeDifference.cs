@@ -99,7 +99,7 @@ namespace GrafanaAdapters.GrafanaFunctions
                 });
 
             // Set Values
-            dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
+            dataSourceValues.Target = $"{Name}({dataSourceValues.Target},{timeUnit.Unit})";
             dataSourceValues.Source = transformedDataSourceValues;
 
             return dataSourceValues;
@@ -123,6 +123,7 @@ namespace GrafanaAdapters.GrafanaFunctions
                 .Select(phasorValue =>
                 {
                     PhasorValue transformedValue = phasorValue;
+
                     double timeDifference = ToTimeUnits((phasorValue.Time - previousTime) * SI.Milli, timeUnit);
                     transformedValue.Magnitude = timeDifference;
                     transformedValue.Angle = timeDifference;
@@ -133,7 +134,7 @@ namespace GrafanaAdapters.GrafanaFunctions
 
             // Set Values
             string[] labels = phasorValues.Target.Split(';');
-            phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
+            phasorValues.Target = $"{Name}({labels[0]},{timeUnit.Unit});{Name}({labels[1]},{timeUnit.Unit})";
             phasorValues.Source = transformedPhasorValues;
 
             return phasorValues;
