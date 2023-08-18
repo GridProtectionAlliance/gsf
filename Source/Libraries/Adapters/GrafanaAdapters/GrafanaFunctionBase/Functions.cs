@@ -206,8 +206,9 @@ namespace GrafanaAdapters.GrafanaFunctions
                 //Convert datasource data to phasor data 
                 IEnumerable<PhasorValue> phasorValues = GeneratePhasorValues();
 
-                IEnumerable<PhasorValue> GeneratePhasorValues()
+                List<PhasorValue> GeneratePhasorValues()
                 {
+                    List<PhasorValue> phasorValues = new List<PhasorValue>();
                     int index = 0;
                     foreach (DataSourceValue mag in magValues)
                     {
@@ -222,9 +223,9 @@ namespace GrafanaAdapters.GrafanaFunctions
                         };
 
                         index++;
-
-                        yield return phasor;
+                        phasorValues.Add(phasor);
                     }
+                    return phasorValues;
                 }
 
                 DataSourceValueGroup<PhasorValue> dataSourceValueGroup = new DataSourceValueGroup<PhasorValue>

@@ -1,11 +1,15 @@
-﻿using GSF.Data;
+﻿using GrafanaAdapters.GrafanaFunctionBase;
+using GSF.Data;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Security.Cryptography;
 using System.ServiceModel.Description;
 using System.Text;
 using System.Threading;
+using GSF.Units;
+
 
 namespace GrafanaAdapters.GrafanaFunctions
 {
@@ -57,6 +61,20 @@ namespace GrafanaAdapters.GrafanaFunctions
             }
 
             string valueString = value.ToString();
+
+            // Time Unit
+            if (typeof(T) == typeof(TargetTimeUnit))
+            {
+                if (!TargetTimeUnit.TryParse(valueString, out TargetTimeUnit timeUnit))
+                    timeUnit = new TargetTimeUnit
+                    {
+                        Unit = TimeUnit.Seconds,
+                        Factor = SI.Nano
+                    };
+
+                Value = (T)(object)timeUnit;
+                return;
+            }
 
             // String
             if (typeof(T) == typeof(string))
