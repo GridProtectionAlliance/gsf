@@ -101,6 +101,7 @@
     <Compile Include="GrafanaFunctions\Divide.cs" />
     <Compile Include="GrafanaFunctions\First.cs" />
     <Compile Include="GrafanaFunctions\Floor.cs" />
+    <Compile Include="GrafanaFunctions\Interval.cs" />
     <Compile Include="GrafanaFunctions\Last.cs" />
     <Compile Include="GrafanaFunctions\Maximum.cs" />
     <Compile Include="GrafanaFunctions\Median.cs" />
@@ -116,6 +117,7 @@
     <Compile Include="GrafanaFunctions\StandardDeviation.cs" />
     <Compile Include="GrafanaFunctions\Subtract.cs" />
     <Compile Include="GrafanaFunctions\TimeDifference.cs" />
+    <Compile Include="GrafanaFunctions\TimeIntegration.cs" />
     <Compile Include="GrafanaFunctions\Top.cs" />
     <Compile Include="GrafanaFunctions\Total.cs" />
     <Compile Include="GrafanaFunctions\Truncate.cs" />
