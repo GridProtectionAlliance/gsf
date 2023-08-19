@@ -62,11 +62,10 @@ namespace GrafanaAdapters.GrafanaFunctions
                 .Select(dataSourceValue =>
                 {
                     DataSourceValue transformedValue = dataSourceValue;
-                    double tempVal = transformedValue.Value;
 
                     transformedValue.Value -= previousValue;
 
-                    previousValue = tempVal;
+                    previousValue = dataSourceValue.Value;
                     return transformedValue;
                 });
 
@@ -91,19 +90,16 @@ namespace GrafanaAdapters.GrafanaFunctions
             double previousMag = phasorValues.Source.First().Magnitude;
             double previousAng = phasorValues.Source.First().Angle;
             IEnumerable<PhasorValue> transformedPhasorValues = phasorValues.Source
-                .Select((dataSourceValue, index) => new { Value = dataSourceValue, Index = index })
                 .Skip(1)
-                .Select(pair =>
+                .Select(phasorValue =>
                 {
-                    PhasorValue transformedValue = pair.Value;
-                    double tempMag = transformedValue.Magnitude;
-                    double tempAng = transformedValue.Angle;
+                    PhasorValue transformedValue = phasorValue;
 
                     transformedValue.Magnitude -= previousMag;
                     transformedValue.Angle -= previousAng;
 
-                    previousMag = tempMag;
-                    previousAng = tempAng;
+                    previousMag = phasorValue.Magnitude;
+                    previousAng = phasorValue.Angle;
                     return transformedValue;
                 });
 
