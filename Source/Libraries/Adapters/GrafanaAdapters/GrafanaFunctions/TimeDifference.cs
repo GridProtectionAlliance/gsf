@@ -64,16 +64,6 @@ namespace GrafanaAdapters.GrafanaFunctions
                 }
             };
 
-        private static double ToTimeUnits(Time value, TargetTimeUnit target)
-        {
-            double time = value.ConvertTo(target.Unit);
-
-            if (!double.IsNaN(target.Factor))
-                time /= target.Factor;
-
-            return time;
-        }
-
         /// <summary>
         /// Computes based on type DataSourceValue
         /// </summary>
@@ -92,7 +82,7 @@ namespace GrafanaAdapters.GrafanaFunctions
                 .Select(dataSourceValue =>
                 {
                     DataSourceValue transformedValue = dataSourceValue;
-                    transformedValue.Value = ToTimeUnits((dataSourceValue.Time - previousTime) * SI.Milli, timeUnit);
+                    transformedValue.Value = TimeConversion.ToTimeUnits((dataSourceValue.Time - previousTime) * SI.Milli, timeUnit);
 
                     previousTime = dataSourceValue.Time;
                     return transformedValue;
@@ -124,7 +114,7 @@ namespace GrafanaAdapters.GrafanaFunctions
                 {
                     PhasorValue transformedValue = phasorValue;
 
-                    double timeDifference = ToTimeUnits((phasorValue.Time - previousTime) * SI.Milli, timeUnit);
+                    double timeDifference = TimeConversion.ToTimeUnits((phasorValue.Time - previousTime) * SI.Milli, timeUnit);
                     transformedValue.Magnitude = timeDifference;
                     transformedValue.Angle = timeDifference;
 
