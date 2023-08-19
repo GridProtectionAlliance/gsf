@@ -53,8 +53,7 @@ namespace GrafanaAdapters.GrafanaFunctions
                 {
                     Default = new TargetTimeUnit
                     {
-                        Unit = TimeUnit.Seconds,
-                        Factor = SI.Nano
+                        Unit = TimeUnit.Seconds
                     },
                     Description = "Specifies the type of time units and must be one of the following: Seconds, Nanoseconds, Microseconds, Milliseconds, " +
                                   "Minutes, Hours, Days, Weeks, Ke (i.e., traditional Chinese unit of decimal time), Ticks (i.e., 100-nanosecond intervals), PlanckTime or " +
