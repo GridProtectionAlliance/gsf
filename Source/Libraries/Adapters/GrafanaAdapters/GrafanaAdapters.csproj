@@ -88,12 +88,14 @@
     <Compile Include="GrafanaFunctionBase\FunctionsHelpers.cs" />
     <Compile Include="GrafanaFunctionBase\IGrafanaFunction.cs" />
     <Compile Include="GrafanaFunctionBase\TargetTimeUnit.cs" />
+    <Compile Include="GrafanaFunctionBase\TimeConversion.cs" />
     <Compile Include="GrafanaFunctions\AbsoluteValue.cs" />
     <Compile Include="GrafanaFunctions\Add.cs" />
     <Compile Include="GrafanaFunctions\Average.cs" />
     <Compile Include="GrafanaFunctions\Bottom.cs" />
     <Compile Include="GrafanaFunctions\Ceiling.cs" />
     <Compile Include="GrafanaFunctions\Count.cs" />
+    <Compile Include="GrafanaFunctions\Derivative.cs" />
     <Compile Include="GrafanaFunctions\Difference.cs" />
     <Compile Include="GrafanaFunctions\Distinct.cs" />
     <Compile Include="GrafanaFunctions\Divide.cs" />
