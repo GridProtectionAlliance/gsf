@@ -66,13 +66,21 @@ namespace GrafanaAdapters.GrafanaFunctions
             if (typeof(T) == typeof(TargetTimeUnit))
             {
                 if (!TargetTimeUnit.TryParse(valueString, out TargetTimeUnit timeUnit))
-                    timeUnit = new TargetTimeUnit
-                    {
-                        Unit = TimeUnit.Seconds,
-                        Factor = SI.Nano
-                    };
+                    Value = (T)(object)timeUnit;
+                else
+                    Value = this.Default;
 
-                Value = (T)(object)timeUnit;
+                return;
+            }
+
+            // Angle Unit
+            if (typeof(T) == typeof(AngleUnit))
+            {
+                if (Enum.TryParse(valueString, out AngleUnit angleUnit))
+                    Value = (T)(object)angleUnit;
+                else
+                    Value = this.Default;
+
                 return;
             }
 
