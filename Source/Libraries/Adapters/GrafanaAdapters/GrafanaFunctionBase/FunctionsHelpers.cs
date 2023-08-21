@@ -27,6 +27,49 @@ namespace GrafanaAdapters.GrafanaFunctions
         public Type ParameterType => typeof(T);
         public string ParameterTypeName { get; set; }
 
+        private (T Value, bool Success) LookupMetadata(GrafanaDataSourceBase dataSourceBase, Dictionary<string, string> metadata, string value, string target, bool isPhasor)
+        {
+            // Attempt to find in dictionary
+            if (metadata.Count != 0 && metadata.TryGetValue(value, out string metaValue))
+            {
+                // Found, attempt to convert
+                try
+                {
+                    return ((T)Convert.ChangeType(metaValue, typeof(T)), true);
+                }
+                catch 
+                {
+                    return (default(T), false);
+                }
+            }
+            // Not found, check ActiveMeasurements
+            else
+            {
+                DataRow[] rows;
+                if (isPhasor)
+                    rows = dataSourceBase?.Metadata.Tables["Phasor"].Select($"Label = '{target}'") ?? new DataRow[0];
+                else
+                    rows = dataSourceBase?.Metadata.Tables["ActiveMeasurements"].Select($"PointTag = '{target}'") ?? new DataRow[0];
+
+                //Not valid
+                if (!(rows.Length > 0 && rows[0].Table.Columns.Contains(value)))
+                {
+                    return (default(T), false);
+                }
+
+                // Found, attempt to convert
+                string foundValue = rows[0][value].ToString();
+                try
+                {
+                    return ((T)Convert.ChangeType(foundValue, typeof(T)), true);
+                }
+                catch 
+                {
+                    return (default(T), false);
+                }
+            }
+        }
+
         /*
          * This function is used to convert the value to the proper type
          * If the type of value provided and expected match, then it directly converts
@@ -60,7 +103,15 @@ namespace GrafanaAdapters.GrafanaFunctions
                 return;
             }
 
+            // Check if requested metadata
             string valueString = value.ToString();
+            if (valueString.StartsWith("{") && valueString.EndsWith("}"))
+            {
+                valueString = valueString.Substring(1, valueString.Length - 2);
+                var result = LookupMetadata(dataSourceBase, metadata, valueString, target, isPhasor);
+                if (result.Success)
+                    valueString = result.Value.ToString();
+            }
 
             // Time Unit
             if (typeof(T) == typeof(TargetTimeUnit))
@@ -100,45 +151,11 @@ namespace GrafanaAdapters.GrafanaFunctions
             // Not proper type, check metadata
             catch (Exception)
             {
-                // Attempt to find in dictionary
-                if (metadata.Count != 0 && metadata.TryGetValue(valueString, out string metaValue))
-                {
-                    // Found, attempt to convert
-                    try
-                    {
-                        Value = (T)Convert.ChangeType(metaValue, typeof(T));
-                    }
-                    catch (Exception ex)
-                    {
-                        //Value = this.Default;
-                        throw new Exception($"Error converting {valueString} to {typeof(T)} with found metadata of {metaValue} .", ex);
-                    }
-                }
-                // Not found, check ActiveMeasurements
+                var result = LookupMetadata(dataSourceBase, metadata, valueString, target, isPhasor);
+                if (result.Success)
+                    Value = result.Value;
                 else
-                {
-                    DataRow[] rows;
-                    if (isPhasor)
-                        rows = dataSourceBase?.Metadata.Tables["Phasor"].Select($"Label = '{target}'") ?? new DataRow[0];
-                    else
-                        rows = dataSourceBase?.Metadata.Tables["ActiveMeasurements"].Select($"PointTag = '{target}'") ?? new DataRow[0];
-                    //Not valid
-                    if (!(rows.Length > 0 && rows[0].Table.Columns.Contains(valueString)))
-                    {
-                        throw new ArgumentException($"Metadata '{valueString}' not found");
-                    }
-
-                    // Found, attempt to convert
-                    string foundValue = rows[0][valueString].ToString();
-                    try
-                    {
-                        Value = (T)Convert.ChangeType(foundValue, typeof(T));
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception($"Error converting {valueString} to {typeof(T)} with found metadata of {foundValue}.", ex);
-                    }
-                }    
+                    throw new Exception($"Unable convert or find corresponding metadata for {valueString}");
             }
         }
     }
