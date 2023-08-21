@@ -99,9 +99,13 @@
     <Compile Include="GrafanaFunctions\Difference.cs" />
     <Compile Include="GrafanaFunctions\Distinct.cs" />
     <Compile Include="GrafanaFunctions\Divide.cs" />
+    <Compile Include="GrafanaFunctions\ExcludeRange.cs" />
+    <Compile Include="GrafanaFunctions\FilterNaN.cs" />
     <Compile Include="GrafanaFunctions\First.cs" />
     <Compile Include="GrafanaFunctions\Floor.cs" />
+    <Compile Include="GrafanaFunctions\IncludeRange.cs" />
     <Compile Include="GrafanaFunctions\Interval.cs" />
+    <Compile Include="GrafanaFunctions\Label.cs" />
     <Compile Include="GrafanaFunctions\Last.cs" />
     <Compile Include="GrafanaFunctions\Maximum.cs" />
     <Compile Include="GrafanaFunctions\Median.cs" />
@@ -121,6 +125,8 @@
     <Compile Include="GrafanaFunctions\Top.cs" />
     <Compile Include="GrafanaFunctions\Total.cs" />
     <Compile Include="GrafanaFunctions\Truncate.cs" />
+    <Compile Include="GrafanaFunctions\UnwrapAngle.cs" />
+    <Compile Include="GrafanaFunctions\WrapAngle.cs" />
     <Compile Include="IGrafanaDataService.cs" />
     <Compile Include="IGrafanaDataService.NET.cs" />
     <Compile Include="IGrafanaDataServiceMono.cs" />
