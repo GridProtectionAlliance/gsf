@@ -118,6 +118,10 @@
     <Compile Include="GrafanaFunctions\Range.cs" />
     <Compile Include="GrafanaFunctions\Round.cs" />
     <Compile Include="GrafanaFunctions\SliceAdd.cs" />
+    <Compile Include="GrafanaFunctions\SliceAverage.cs" />
+    <Compile Include="GrafanaFunctions\SliceDivide.cs" />
+    <Compile Include="GrafanaFunctions\SliceMultiply.cs" />
+    <Compile Include="GrafanaFunctions\SliceSubtract.cs" />
     <Compile Include="GrafanaFunctions\StandardDeviation.cs" />
     <Compile Include="GrafanaFunctions\Subtract.cs" />
     <Compile Include="GrafanaFunctions\TimeDifference.cs" />

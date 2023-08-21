@@ -10,28 +10,28 @@ namespace GrafanaAdapters.GrafanaFunctions
 {
 
     /// <summary>
-    /// Returns a series of values that represent each of the values in the source series added with another series of values.
+    /// Returns a series of values that represent each of the values in the source series subtracted with another series of values.
     /// </summary>
     /// <remarks>
-    /// Signature: <c>SliceAdd(N, expression)</c><br/>
+    /// Signature: <c>SliceSubtract(N, expression)</c><br/>
     /// Returns: Series of values.<br/>
-    /// Example: <c>SliceAdd(FILTER ActiveMeasurements WHERE SignalType='ABC', FILTER ActiveMeasurements WHERE SignalType='CALC')</c><br/>
-    /// Variants: SliceAdd<br/>
+    /// Example: <c>SliceSubtract(0.033, FILTER ActiveMeasurements WHERE SignalType='ABC', FILTER ActiveMeasurements WHERE SignalType='CALC')</c><br/>
+    /// Variants: SliceSubtract<br/>
     /// Execution: Deferred enumeration.
     /// </remarks>
-    public class SliceAdd : IGrafanaFunction
+    public class SliceSubtract : IGrafanaFunction
     {
         /// <inheritdoc />
-        public string Name { get; } = "SliceAdd";
+        public string Name { get; } = "SliceSubtract";
 
         /// <inheritdoc />
-        public string Description { get; } = "Returns one series by combining two other series within an offset N.";
+        public string Description { get; } = "Returns a series of values that represent each of the values in the source series subtracted with another series of values.";
 
         /// <inheritdoc />
-        public Type Type { get; } = typeof(SliceAdd);
+        public Type Type { get; } = typeof(SliceSubtract);
 
         /// <inheritdoc />
-        public Regex Regex { get; } = new Regex(string.Format(FunctionsModelHelper.ExpressionFormat, "SliceAdd"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        public Regex Regex { get; } = new Regex(string.Format(FunctionsModelHelper.ExpressionFormat, "SliceSubtract"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         /// <inheritdoc />
         public List<IParameter> Parameters { get; } =
@@ -90,7 +90,9 @@ namespace GrafanaAdapters.GrafanaFunctions
 
                 //Compute & Set Values
                 DataSourceValue transformedValue = datapointGroups.Last();
-                transformedValue.Value = datapointGroups.Select(dataValue => { return dataValue.Value; }).Sum();
+
+                List<double> values = datapointGroups.Select(dataValue => { return dataValue.Value; }).ToList();
+                transformedValue.Value = values[0] - values[1];
                 transformedValue.Time = datapointGroups.Select(dataValue => { return dataValue.Time; }).Average();
                 combinedValuesList.Add(transformedValue);
             }
@@ -132,8 +134,11 @@ namespace GrafanaAdapters.GrafanaFunctions
                     continue;
 
                 PhasorValue transformedValue = datapointGroups.Last();
-                transformedValue.Magnitude = datapointGroups.Select(dataValue => { return dataValue.Magnitude; }).Sum();
-                transformedValue.Angle = datapointGroups.Select(dataValue => { return dataValue.Angle; }).Sum();
+                List<double> magnitudes = datapointGroups.Select(dataValue => { return dataValue.Magnitude; }).ToList();
+                List<double> angles = datapointGroups.Select(dataValue => { return dataValue.Angle; }).ToList();
+
+                transformedValue.Magnitude = magnitudes[0] - magnitudes[1];
+                transformedValue.Angle = angles[0] - angles[1];
                 transformedValue.Time = datapointGroups.Select(dataValue => { return dataValue.Time; }).Average();
                 combinedValuesList.Add(transformedValue);
             }
@@ -150,8 +155,8 @@ namespace GrafanaAdapters.GrafanaFunctions
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SliceAdd"/> class.
+        /// Initializes a new instance of the <see cref="SliceSubtract"/> class.
         /// </summary>
-        public SliceAdd() { }
+        public SliceSubtract() { }
     }
 }
