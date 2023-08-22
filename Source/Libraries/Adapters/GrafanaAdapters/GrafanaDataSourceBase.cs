@@ -149,10 +149,17 @@ namespace GrafanaAdapters
                 foreach (Target target in request.targets)
                 {
                     QueryDataHolder queryData = new QueryDataHolder(target, startTime, stopTime, request.interval, false, false, request.isPhasor, target.metadataSelection, cancellationToken);
-                    DataSourceValueGroup<T>[] groups = Functions.ParseFunction<T>(target.target, this, queryData);
+                    DataSourceValueGroup<T>[] groups = Functions.ParseFunction<T>(target.target, this, queryData, cancellationToken);
                     allGroups.AddRange(groups);  // adding each group to the overall list
                 }
-
+                if (cancellationToken.IsCancellationRequested == true)
+                {
+                    int a = 5;
+                }
+                else
+                {
+                    int b = 6;
+                }
                 DataSourceValueGroup<T>[] valueGroups = allGroups.ToArray();
 
                 //DataSourceValueGroup[] OLDvalueGroups = request.targets.Select(target => QueryTarget(target, target.target, startTime, stopTime, request.interval, false, false, null, cancellationToken)).SelectMany(groups => groups).ToArray();

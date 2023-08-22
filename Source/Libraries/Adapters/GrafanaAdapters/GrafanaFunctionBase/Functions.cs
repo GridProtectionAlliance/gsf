@@ -26,7 +26,7 @@ namespace GrafanaAdapters.GrafanaFunctions
 
             // Base Case
             if (function == null)
-            {
+            {                
                 if (queryData.IsPhasor)
                     return GetPhasor(parameterValue, dataSourceBase, queryData) as DataSourceValueGroup<T>[];
                 else
@@ -136,7 +136,7 @@ namespace GrafanaAdapters.GrafanaFunctions
                     foreach (DataRow row in dataSourceBase.Metadata.Tables[tableName].Select(exp, sortField).Take(takeCount))
                     {
                         int targetId = Convert.ToInt32(row["ID"]);
-                        phasorTargets[Convert.ToInt32(targetId)] = targetLabel;
+                        phasorTargets[Convert.ToInt32(targetId)] = row["Label"].ToString();
                     }
                     continue;
                 }
