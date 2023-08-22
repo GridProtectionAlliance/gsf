@@ -345,7 +345,7 @@ namespace PhasorWebUI
             try
             {
                 Device device = QueryDeviceByID(id);
-                File.Delete(PhasorConfigController.GetConfigurationCacheFileName(device.Acronym));
+                File.Delete(PhasorConfigController.GetJsonConfigurationFileName(device.Acronym));
             }
             catch (Exception ex)
             {

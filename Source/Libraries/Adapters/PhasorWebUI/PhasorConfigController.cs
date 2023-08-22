@@ -48,7 +48,7 @@ namespace PhasorWebUI
         [Authorize(Roles = "Administrator,Editor")]
         public void SaveDeviceConfiguration([FromUri(Name = "id")] string acronym, [FromBody] JToken configuration)
         {
-            File.WriteAllText(GetConfigurationCacheFileName(acronym), configuration.ToString(Formatting.Indented));
+            File.WriteAllText(GetJsonConfigurationFileName(acronym), configuration.ToString(Formatting.Indented));
         }
 
         /// <summary>
@@ -59,7 +59,7 @@ namespace PhasorWebUI
         [Authorize(Roles = "Administrator,Editor")]
         public string LoadDeviceConfiguration([FromUri(Name = "id")] string acronym)
         {
-            string fileName = GetConfigurationCacheFileName(acronym);
+            string fileName = GetJsonConfigurationFileName(acronym);
             return File.Exists(fileName) ? File.ReadAllText(fileName) : "";
         }
 
@@ -68,51 +68,51 @@ namespace PhasorWebUI
         #region [ Static ]
 
         // Static Fields
-        private static string s_configurationCachePath;
+        private static string s_jsonConfigurationPath;
 
         // Static Properties
-        private static string ConfigurationCachePath
+        private static string JsonConfigurationPath
         {
             get
             {
                 // This property will not change during system life-cycle so we cache if for future use
-                if (!string.IsNullOrEmpty(s_configurationCachePath))
-                    return s_configurationCachePath;
+                if (!string.IsNullOrEmpty(s_jsonConfigurationPath))
+                    return s_jsonConfigurationPath;
 
                 // Define default configuration cache directory relative to path of host application
-                s_configurationCachePath = string.Format("{0}{1}ConfigurationCache{1}", FilePath.GetAbsolutePath(""), Path.DirectorySeparatorChar);
+                s_jsonConfigurationPath = string.Format("{0}{1}ConfigurationCache{1}", FilePath.GetAbsolutePath(""), Path.DirectorySeparatorChar);
 
                 // Make sure configuration cache path setting exists within system settings section of config file
                 ConfigurationFile configFile = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection systemSettings = configFile.Settings["systemSettings"];
-                systemSettings.Add("ConfigurationCachePath", s_configurationCachePath, "Defines the path used to cache serialized phasor protocol configurations");
+                systemSettings.Add("JsonConfigurationPath", s_jsonConfigurationPath, "Defines the path used to store serialized JSON configuration files. Defaults to same location as 'ConfigurationCachePath'.");
 
                 // Retrieve configuration cache directory as defined in the config file
-                s_configurationCachePath = FilePath.AddPathSuffix(systemSettings["ConfigurationCachePath"].Value);
+                s_jsonConfigurationPath = FilePath.AddPathSuffix(systemSettings["JsonConfigurationPath"].Value);
 
                 // Make sure configuration cache directory exists
-                if (!Directory.Exists(s_configurationCachePath))
-                    Directory.CreateDirectory(s_configurationCachePath);
+                if (!Directory.Exists(s_jsonConfigurationPath))
+                    Directory.CreateDirectory(s_jsonConfigurationPath);
 
-                return s_configurationCachePath;
+                return s_jsonConfigurationPath;
             }
         }
 
         /// <summary>
-        /// Gets the file name of the configuration cache file for the device with the given acronym.
+        /// Gets the file name of the JSON configuration file for the device with the given acronym.
         /// </summary>
         /// <param name="acronym">Acronym of device.</param>
-        public static string GetConfigurationCacheFileName([FromUri(Name = "id")] string acronym)
+        public static string GetJsonConfigurationFileName([FromUri(Name = "id")] string acronym)
         {
             // Path traversal attacks are prevented by replacing invalid file name characters
-            return Path.Combine(ConfigurationCachePath, $"{acronym.ReplaceCharacters('_', c => Path.GetInvalidFileNameChars().Contains(c))}.json");
+            return Path.Combine(JsonConfigurationPath, $"{acronym.ReplaceCharacters('_', c => Path.GetInvalidFileNameChars().Contains(c))}.json");
         }
 
         /// <summary>
         /// Gets the path to the configuration cache directory.
         /// </summary>
-        public static string GetConfigurationCachePath() => 
-            ConfigurationCachePath;
+        public static string GetJsonConfigurationPath() => 
+            JsonConfigurationPath;
 
         #endregion
     }

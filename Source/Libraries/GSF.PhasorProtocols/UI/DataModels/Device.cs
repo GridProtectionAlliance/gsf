@@ -695,7 +695,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
         // Static Fields
         private static readonly string s_companyAcronym;
-        private static string s_configurationCachePath;
+        private static string s_jsonConfigurationPath;
 
         // Static Constructor
         static Device()
@@ -715,47 +715,47 @@ namespace GSF.PhasorProtocols.UI.DataModels
         }
 
         // Static Properties
-        private static string ConfigurationCachePath
+        private static string JsonConfigurationPath
         {
             get
             {
                 // This property will not change during system life-cycle so we cache if for future use
-                if (!string.IsNullOrEmpty(s_configurationCachePath))
-                    return s_configurationCachePath;
+                if (!string.IsNullOrEmpty(s_jsonConfigurationPath))
+                    return s_jsonConfigurationPath;
 
                 // Define default configuration cache directory relative to path of host application
-                s_configurationCachePath = string.Format("{0}{1}ConfigurationCache{1}", FilePath.GetAbsolutePath(""), Path.DirectorySeparatorChar);
+                s_jsonConfigurationPath = string.Format("{0}{1}ConfigurationCache{1}", FilePath.GetAbsolutePath(""), Path.DirectorySeparatorChar);
 
                 // Make sure configuration cache path setting exists within system settings section of config file
                 ConfigurationFile configFile = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection systemSettings = configFile.Settings["systemSettings"];
-                systemSettings.Add("ConfigurationCachePath", s_configurationCachePath, "Defines the path used to cache serialized phasor protocol configurations");
+                systemSettings.Add("JsonConfigurationPath", s_jsonConfigurationPath, "Defines the path used to store serialized JSON configuration files. Defaults to same location as 'ConfigurationCachePath'.");
 
                 // Retrieve configuration cache directory as defined in the config file
-                s_configurationCachePath = FilePath.AddPathSuffix(systemSettings["ConfigurationCachePath"].Value);
+                s_jsonConfigurationPath = FilePath.AddPathSuffix(systemSettings["JsonConfigurationPath"].Value);
 
                 // Make sure configuration cache directory exists
-                if (!Directory.Exists(s_configurationCachePath))
-                    Directory.CreateDirectory(s_configurationCachePath);
+                if (!Directory.Exists(s_jsonConfigurationPath))
+                    Directory.CreateDirectory(s_jsonConfigurationPath);
 
-                return s_configurationCachePath;
+                return s_jsonConfigurationPath;
             }
         }
 
         // Static Methods
 
         /// <summary>
-        /// Gets the file name of the configuration cache file for the device with the given acronym.
+        /// Gets the file name of the JSON configuration file for the device with the given acronym.
         /// </summary>
         /// <param name="acronym">Acronym of device.</param>
-        public static string GetConfigurationCacheFileName(string acronym) =>
-            Path.Combine(ConfigurationCachePath, $"{acronym}.json");
+        public static string GetJsonConfigurationFileName(string acronym) =>
+            Path.Combine(JsonConfigurationPath, $"{acronym}.json");
 
         /// <summary>
-        /// Gets the path to the configuration cache directory.
+        /// Gets the path to the JSON configuration directory.
         /// </summary>
-        public static string GetConfigurationCachePath() =>
-            ConfigurationCachePath;
+        public static string GetJsonConfigurationPath() =>
+            JsonConfigurationPath;
 
         /// <summary>
         /// LoadKeys <see cref="Phasor"/> information as an <see cref="ObservableCollection{T}"/> style list.
@@ -1406,14 +1406,14 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM Device WHERE ID = {0}", "deviceID"), DefaultTimeout, device.ID);
                 database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM OutputStreamDevice WHERE Acronym = {0}", "deviceAcronym"), DefaultTimeout, device.Acronym);
 
-                string configCacheFileName = GetConfigurationCacheFileName(device.Acronym);
+                string jsonConfigurationFileName = GetJsonConfigurationFileName(device.Acronym);
 
                 try
                 {
                     // File delete may fail if host application is running from
                     // protected "Program Files" folder and application is not
                     // running with elevated privileges
-                    File.Delete(configCacheFileName);
+                    File.Delete(jsonConfigurationFileName);
                 }
                 catch (Exception ex)
                 {
@@ -1423,7 +1423,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     try
                     {
                         // Fall back on asking service to delete config file (note that service may not be available)
-                        CommonFunctions.SendCommandToService($"INVOKE 0 RemoveFile \"{configCacheFileName}\"");
+                        CommonFunctions.SendCommandToService($"INVOKE 0 RemoveFile \"{jsonConfigurationFileName}\"");
                     }
                     catch (Exception ex2)
                     {
@@ -1653,8 +1653,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 settings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             }
 
-            return settings.ContainsKey("commandchannel") ? 
-                settings["commandchannel"].Replace("{", "").Replace("}", "") : 
+            return settings.TryGetValue("commandchannel", out string setting) ? 
+                setting.Replace("{", "").Replace("}", "") : 
                 string.Empty;
         }
 
