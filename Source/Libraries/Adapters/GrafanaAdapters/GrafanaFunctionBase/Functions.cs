@@ -195,8 +195,8 @@ namespace GrafanaAdapters.GrafanaFunctions
                 }
 
                 //Error check
-                if (magValues.Count != angValues.Count)
-                    throw new Exception($"Number of data points for mag or ang values do not match for {dataSourceNames[0]} and {dataSourceNames[1]}");
+                //if (magValues.Count != angValues.Count)
+                //    throw new Exception($"Number of data points for mag or ang values do not match for {dataSourceNames[0]} and {dataSourceNames[1]}");
 
                 if (dataSourceNames[0] == "")
                     throw new Exception($"Unable to find magnitude name for {phasorLabel}");
@@ -212,6 +212,9 @@ namespace GrafanaAdapters.GrafanaFunctions
                     int index = 0;
                     foreach (DataSourceValue mag in magValues)
                     {
+                        if (index >= angValues.Count())
+                            continue;
+
                         PhasorValue phasor = new()
                         {
                             MagnitudeTarget = dataSourceNames[0],
