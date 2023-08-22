@@ -15,6 +15,7 @@ using GSF.TimeSeries.Adapters;
 using System.ServiceModel.Description;
 using System.Reflection;
 using System.Security.Cryptography;
+using System.Threading.Tasks;
 
 namespace GrafanaAdapters.GrafanaFunctions
 {
@@ -22,6 +23,8 @@ namespace GrafanaAdapters.GrafanaFunctions
     {
         public static DataSourceValueGroup<T>[] ParseFunction<T>(string expression, GrafanaDataSourceBase dataSourceBase, QueryDataHolder queryData)
         {
+            if(queryData.CancellationToken.IsCancellationRequested) return null;
+
             (IGrafanaFunction function, string parameterValue) = MatchFunction<T>(expression);
 
             // Base Case
@@ -70,7 +73,12 @@ namespace GrafanaAdapters.GrafanaFunctions
 
             // Apply the function
             List<DataSourceValueGroup<T>> res = new List<DataSourceValueGroup<T>>();
-            foreach (DataSourceValueGroup<T>[] dataValues in regroupedDataValues)
+
+            // Initialize the list with placeholders to set capacity and enable index-based setting.
+            for (int i = 0; i < regroupedDataValues.Count(); i++) 
+                res.Add(null);
+
+            Parallel.ForEach(regroupedDataValues, (dataValues, loopState, index) =>
             {
                 List<IParameter> computeParameters = GenerateParameters(dataSourceBase, function, functionParameters, dataValues, queryData);
                 DataSourceValueGroup<T> computedValues;
@@ -87,8 +95,9 @@ namespace GrafanaAdapters.GrafanaFunctions
                     throw new InvalidOperationException($"Unsupported type parameter '{typeof(T)}' in Compute method");
                 }
 
-                res.Add(computedValues);
-            }
+                // Use the index to ensure the order is maintained.
+                res[(int)index] = computedValues;
+            });
 
             // Return the result to the previous call
             return res.ToArray();
@@ -123,7 +132,6 @@ namespace GrafanaAdapters.GrafanaFunctions
             }
 
             DataSet Metadata = dataSourceBase.Metadata;
-            List<DataSourceValueGroup<PhasorValue>> dataSourceValueGroups = new List<DataSourceValueGroup<PhasorValue>>();
             string[] allTargets = expression.Split(';');
             HashSet<string> targetSet = new HashSet<string>();
             Dictionary<int, string> phasorTargets = new Dictionary<int, string>();
@@ -153,7 +161,14 @@ namespace GrafanaAdapters.GrafanaFunctions
                 }
             }
 
-            foreach (KeyValuePair<int, string> item in phasorTargets)
+            List<DataSourceValueGroup<PhasorValue>> dataSourceValueGroups = new List<DataSourceValueGroup<PhasorValue>>();
+            // Preallocate with null or default values.
+            for (int i = 0; i < phasorTargets.Count; i++)
+            {
+                dataSourceValueGroups.Add(null);
+            }
+
+            Parallel.ForEach(phasorTargets, (item, loopState, index) =>
             {
                 int phasorId = item.Key;
                 string phasorLabel = item.Value;
@@ -242,8 +257,8 @@ namespace GrafanaAdapters.GrafanaFunctions
                     metadata = GetMetadata(dataSourceBase, phasorLabel, queryData.MetadataSelection, true)
                 };
 
-                dataSourceValueGroups.Add(dataSourceValueGroup);
-            }
+                dataSourceValueGroups[(int)index] = dataSourceValueGroup;
+            });
 
 
             return dataSourceValueGroups.ToArray();
