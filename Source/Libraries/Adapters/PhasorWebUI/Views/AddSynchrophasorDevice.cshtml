@@ -3709,6 +3709,8 @@
                 setTimeout(function () {
                     showInfoMessage("Loading existing configuration...");
                     loadDeviceConfiguration(device.Acronym).done(function (mapping) {
+                        // TODO: If loading from a mapping, need to determine which information from database should be
+                        // used to override the mapping - e.g., device name, longitude, latitude, etc.
                         if (mapping && mapping.length > 0)
                             viewModel.loadConfiguration(new Blob([mapping], { type: "application/json" }), false);
                         else
