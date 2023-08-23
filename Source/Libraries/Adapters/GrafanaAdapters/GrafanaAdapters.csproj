@@ -112,6 +112,7 @@
     <Compile Include="GrafanaFunctions\Minimum.cs" />
     <Compile Include="GrafanaFunctions\Mode.cs" />
     <Compile Include="GrafanaFunctions\Modulo.cs" />
+    <Compile Include="GrafanaFunctions\MovingAverage.cs" />
     <Compile Include="GrafanaFunctions\Multiply.cs" />
     <Compile Include="GrafanaFunctions\Percentile.cs" />
     <Compile Include="GrafanaFunctions\Random.cs" />
