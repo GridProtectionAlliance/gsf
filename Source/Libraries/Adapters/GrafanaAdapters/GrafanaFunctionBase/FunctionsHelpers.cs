@@ -116,7 +116,7 @@ namespace GrafanaAdapters.GrafanaFunctions
             // Time Unit
             if (typeof(T) == typeof(TargetTimeUnit))
             {
-                if (!TargetTimeUnit.TryParse(valueString, out TargetTimeUnit timeUnit))
+                if (TargetTimeUnit.TryParse(valueString, out TargetTimeUnit timeUnit))
                     Value = (T)(object)timeUnit;
                 else
                     Value = this.Default;
