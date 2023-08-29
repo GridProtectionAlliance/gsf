@@ -608,6 +608,7 @@ namespace GSF.TimeSeries.Statistics
             const string StatisticSelectFormat = "SELECT Source, SignalIndex, Arguments, Description FROM Statistic WHERE Enabled <> 0";
             const string StatisticMeasurementSelectFormat = "SELECT SignalReference FROM Measurement WHERE SignalReference IN ({0})";
             const string StatisticMeasurementInsertFormat = "INSERT INTO Measurement(HistorianID, DeviceID, PointTag, SignalTypeID, SignalReference, Description, Enabled) VALUES({0}, {1}, {2}, {3}, {4}, {5}, 1)";
+            const string StatisticMeasurementCountFormat = "SELECT COUNT(*) FROM Measurement WHERE SignalReference = {0}";
 
             StatisticSource[] sources;
             bool configurationChanged = false;
@@ -680,6 +681,15 @@ namespace GSF.TimeSeries.Statistics
 
                         // If a measurement already exists for this statistic, skip it
                         if (existingIndexes.Contains(helper.Index))
+                            continue;
+
+                        // It has been observed in field deployments that the statistic measurement may already exist, but
+                        // sometimes the above check will fail which creates duplicate measurements. To prevent duplicate
+                        // statistic measurements from being created, the following code is a secondary check to make sure
+                        // the statistic measurement does not already exist before attempting to insert it. Performance
+                        // impact will be limited to the first time the statistic is created for a given source or in the
+                        // rare cases when the above statistic measurement existing index check fails.
+                        if (helper.ExecuteScalar<int>(StatisticMeasurementCountFormat, helper.SignalReference) > 0)
                             continue;
 
                         // Insert the statistic measurement and mark configuration as changed

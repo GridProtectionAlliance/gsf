@@ -1316,6 +1316,9 @@ namespace PhasorProtocolAdapters
         /// <param name="processException">The delegate which will handle exception logging.</param>
         private static void ValidateStatistics(AdoDataConnection database, Action<string> statusMessage, Action<Exception> processException)
         {
+            // This function will allow augmentation of the Statistic table with new I/O stream statistics that are not already defined in the database.
+            // Note that these statistics functions are defined in the PhasorProtocolAdapters.CommonPhasorServices class below.
+
             // SELECT queries
             const string InputStreamStatCountFormat = "SELECT COUNT(*) FROM Statistic WHERE Source = 'InputStream' AND AssemblyName = 'PhasorProtocolAdapters.dll'";
             const string OutputStreamStatCountFormat = "SELECT COUNT(*) FROM Statistic WHERE Source = 'OutputStream' AND AssemblyName = 'PhasorProtocolAdapters.dll'";
@@ -1358,6 +1361,8 @@ namespace PhasorProtocolAdapters
             // Ensure that input stream statistics exist
             if (inputStreamStatCount < inputStreamStatNames.Length)
             {
+                statusMessage("Adding new input stream statistics...");
+
                 database.Connection.ExecuteNonQuery(string.Format(InputStreamStatisticDeleteFormat, inputStreamStatNames.Length));
 
                 for (int i = 0; i < inputStreamStatNames.Length; i++)
@@ -1376,6 +1381,8 @@ namespace PhasorProtocolAdapters
             // Ensure that output stream statistics exist
             if (outputStreamStatCount < outputStreamStatNames.Length)
             {
+                statusMessage("Adding new output stream statistics...");
+
                 database.Connection.ExecuteNonQuery(string.Format(OutputStreamStatisticDeleteFormat, outputStreamStatNames.Length));
 
                 for (int i = 0; i < outputStreamStatNames.Length; i++)
@@ -1389,6 +1396,35 @@ namespace PhasorProtocolAdapters
                     statLoadOrder = outputStreamLoadOrders[i];
                     database.Connection.ExecuteNonQuery(string.Format(OutputStreamStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix, statType, statFormat, signalIndex == 11 ? 1 : 0, statLoadOrder));
                 }
+            }
+
+            try
+            {
+                const string QueryDuplicateStatistics = "SELECT SignalReference, COUNT(SignalReference) AS Occurrences FROM Measurement WHERE SignalTypeID = {0} GROUP BY SignalReference HAVING COUNT(SignalReference) > 1";
+                const string DeleteDuplicateStatistics = "DELETE FROM Measurement WHERE SignalReference = {0} AND SignalTypeID = {1} AND PointID NOT IN (SELECT MIN(PointID) FROM Measurement WHERE SignalReference = {0} AND SignalTypeID = {1})";
+
+                int statisticsSignalTypeID = database.ExecuteScalar<int?>("SELECT ID FROM SignalType WHERE Acronym='STAT'") ?? 11;
+                bool statusMessageDisplayed = false;
+
+                foreach (DataRow measurement in database.RetrieveData(QueryDuplicateStatistics, statisticsSignalTypeID).Rows)
+                {
+                    string signalReference = measurement["SignalReference"].ToNonNullString();
+
+                    if (string.IsNullOrWhiteSpace(signalReference))
+                        continue;
+
+                    if (!statusMessageDisplayed)
+                    {
+                        statusMessage("Deleting duplicate output stream statistics...");
+                        statusMessageDisplayed = true;
+                    }
+
+                    database.ExecuteNonQuery(DeleteDuplicateStatistics, signalReference, statisticsSignalTypeID);
+                }
+            }
+            catch (Exception ex)
+            {
+                processException(new InvalidOperationException($"Failed during duplicate statistics operation: {ex.Message}", ex));
             }
         }
 
