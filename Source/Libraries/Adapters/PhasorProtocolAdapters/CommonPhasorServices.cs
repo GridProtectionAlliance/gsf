@@ -1403,13 +1403,10 @@ namespace PhasorProtocolAdapters
                 const string QueryDuplicateStatistics = "SELECT SignalReference, COUNT(SignalReference) AS Occurrences FROM Measurement WHERE SignalTypeID = {0} GROUP BY SignalReference HAVING COUNT(SignalReference) > 1";
                 const string DeleteDuplicateStatistics = "DELETE FROM Measurement WHERE SignalReference = {0} AND SignalTypeID = {1} AND PointID NOT IN (SELECT MIN(PointID) FROM Measurement WHERE SignalReference = {0} AND SignalTypeID = {1})";
 
-                string queryDuplicateStatistics = database.ParameterizedQueryString(QueryDuplicateStatistics, "signalReference");
-                string deleteDuplicateStatistics = database.ParameterizedQueryString(DeleteDuplicateStatistics, "signalReference", "signalTypeID");
-
-                int statisticsSignalTypeID = Convert.ToInt32(database.Connection.ExecuteScalar("SELECT ID FROM SignalType WHERE Acronym='STAT'") ?? 11);
+                int statisticsSignalTypeID = database.ExecuteScalar<int?>("SELECT ID FROM SignalType WHERE Acronym='STAT'") ?? 11;
                 bool statusMessageDisplayed = false;
 
-                foreach (DataRow measurement in database.Connection.RetrieveData(database.AdapterType, queryDuplicateStatistics, database.DefaultTimeout, statisticsSignalTypeID).Rows)
+                foreach (DataRow measurement in database.RetrieveData(QueryDuplicateStatistics, statisticsSignalTypeID).Rows)
                 {
                     string signalReference = measurement["SignalReference"].ToNonNullString();
 
@@ -1422,7 +1419,7 @@ namespace PhasorProtocolAdapters
                         statusMessageDisplayed = true;
                     }
 
-                    database.Connection.ExecuteNonQuery(deleteDuplicateStatistics, database.DefaultTimeout, signalReference, statisticsSignalTypeID);
+                    database.ExecuteNonQuery(DeleteDuplicateStatistics, signalReference, statisticsSignalTypeID);
                 }
             }
             catch (Exception ex)
