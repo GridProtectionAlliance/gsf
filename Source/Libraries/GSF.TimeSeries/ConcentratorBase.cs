@@ -1231,7 +1231,7 @@ namespace GSF.TimeSeries
                     status.AppendLine($" Latency of last discarded: {LastDiscardedMeasurementLatency.ToSeconds():0.0000} seconds");
                 }
 
-                status.AppendLine($"  Average publication time: {AveragePublicationTimePerFrame / SI.Milli:0.0000)} milliseconds");
+                status.AppendLine($"  Average publication time: {AveragePublicationTimePerFrame / SI.Milli:0.0000} milliseconds");
                 status.AppendLine($"  Pre-lag-time publication: {FramesAheadOfSchedule / (double)PublishedFrames:##0.0000%}");
                 status.AppendLine($" Down-sampling application: {DownsampledMeasurements / (double)ProcessedMeasurements:##0.0000%}");
 
