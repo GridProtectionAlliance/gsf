@@ -1721,7 +1721,7 @@ namespace GSF.ServiceProcess
         [StringFormatMethod("message")]
         public void UpdateStatusAppendLine(Guid client, UpdateType type, string message, params object[] args)
         {
-            UpdateStatus(type, $"{message}\r\n", args);
+            UpdateStatus(client, type, $"{message}\r\n", args);
         }
 
         /// <summary>
