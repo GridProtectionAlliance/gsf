@@ -503,17 +503,18 @@ namespace GSF.Web.Model
 
             string whereClause = string.Join(" AND ", searches.Select(search => {
                 bool isQuery = false;
-                if (search.SearchText == string.Empty) search.SearchText = "%";
-                else search.SearchText = search.SearchText.Replace("*", "%");
+                string searchText = search.SearchText;
+                if (searchText == string.Empty) searchText = "%";
+                else searchText = searchText.Replace("*", "%");
 
                 if (search.Type == "string" || search.Type == "datetime")
-                    search.SearchText = $"'{search.SearchText}'";
+                    searchText = $"'{searchText}'";
                 else if (Array.IndexOf(new[] { "integer", "number", "boolean", "query" }, search.Type) < 0)
                 {
-                    string text = search.SearchText.Replace("(", "").Replace(")", "");
+                    string text = searchText.Replace("(", "").Replace(")", "");
                     List<string> things = text.Split(',').ToList();
                     things = things.Select(t => $"'{t}'").ToList();
-                    search.SearchText = $"({string.Join(",", things)})";
+                    searchText = $"({string.Join(",", things)})";
                 }
                 else if (search.Type == "query")
                     isQuery = true;
@@ -521,7 +522,7 @@ namespace GSF.Web.Model
                 string escape = "ESCAPE '$'";
                 if(search.Operator != "LIKE")
                     escape = "";
-                return $"{(!isQuery ? "[" : "")}{(search.isPivotColumn ? "AFV_" : "") + search.FieldName}{(!isQuery ? "]" : "")} {search.Operator} {search.SearchText} {escape}";
+                return $"{(!isQuery ? "[" : "")}{(search.isPivotColumn ? "AFV_" : "") + search.FieldName}{(!isQuery ? "]" : "")} {search.Operator} {searchText} {escape}";
             }));
 
             if (searches.Any())
