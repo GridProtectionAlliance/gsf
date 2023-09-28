@@ -72,6 +72,11 @@ namespace CsvAdapters
         /// Default value for the <see cref="DownsampleInterval"/> property.
         /// </summary>
         public const double DefaultDownsampleInterval = 0.0D;
+
+        /// <summary>
+        /// Default value for the <see cref="FramesPerSecond"/> property.
+        /// </summary>
+        public const int DefaultFramesPerSecond = 30;
         
         /// <summary>
         /// Default value for the <see cref="EnableTimeReasonabilityValidation"/> property.
@@ -176,6 +181,14 @@ namespace CsvAdapters
         public double DownsampleInterval { get; set; }
 
         /// <summary>
+        /// Gets or sets the number of frames per second for incoming data used to normalize timestamps when downsampling interval is greater than 0.0, set to zero to skip time normalization.
+        /// </summary>
+        [ConnectionStringParameter]
+        [DefaultValue(DefaultFramesPerSecond)]
+        [Description("Defines the number of frames per second for incoming data used to normalize timestamps when downsampling interval is greater than 0.0, set to zero to skip time normalization")]
+        public int FramesPerSecond { get; set; }
+
+        /// <summary>
         /// Gets or sets the flag that determines if timestamps should be validated against local clock for reasonability.
         /// </summary>
         [ConnectionStringParameter]
@@ -278,6 +291,10 @@ namespace CsvAdapters
                 status.AppendLine($"           CSV Header Line: {HeaderLine.TrimWithEllipsisEnd(51)}");
                 status.AppendLine($"    CSV File Name Template: {FileNameTemplate.TrimWithEllipsisEnd(51)}");
                 status.AppendLine($"     Downsampling Interval: {(DownsampleInterval > 0.0D ? $"{DownsampleInterval:N4} seconds)" : "Disabled - Full Resolution Export")}");
+
+                if (DownsampleInterval > 0.0D)
+                    status.AppendLine($"         Frames Per Second: {FramesPerSecond:N0}");
+
                 status.AppendLine($" Time Reasonability Checks: {(EnableTimeReasonabilityValidation ? "Enabled" : "Disabled")}");
                 status.AppendLine($"          Allowed Lag Time: {LagTime:N4} seconds");
                 status.AppendLine($"         Allowed Lead Time: {LeadTime:N4} seconds");
@@ -334,15 +351,19 @@ namespace CsvAdapters
                 
                 foreach (IMeasurement measurement in measurements)
                 {
-                    // Get last measurement timestamp -- initial timestamp is from top of second
-                    long lastTimestamp = m_lastTimestamps.GetOrDefault(measurement.ID, _ =>
-                        measurement.Timestamp.BaselinedTimestamp(BaselineTimeInterval.Second).Value);
+                    IMeasurement timeNormalizedMeasurement = FramesPerSecond > 0 ? 
+                        Measurement.Clone(measurement, Ticks.RoundToSubsecondDistribution(measurement.Timestamp, FramesPerSecond)) : 
+                        measurement;
 
-                    if ((measurement.Timestamp - lastTimestamp).ToSeconds() < DownsampleInterval)
+                    // Get last measurement timestamp -- initial timestamp is from top of second
+                    long lastTimestamp = m_lastTimestamps.GetOrDefault(timeNormalizedMeasurement.ID, _ =>
+                        timeNormalizedMeasurement.Timestamp.BaselinedTimestamp(BaselineTimeInterval.Second).Value);
+
+                    if ((timeNormalizedMeasurement.Timestamp - lastTimestamp).ToSeconds() < DownsampleInterval)
                         continue;
 
-                    exportMeasurements.Add(measurement);
-                    m_lastTimestamps[measurement.ID] = measurement.Timestamp.Value;
+                    exportMeasurements.Add(timeNormalizedMeasurement);
+                    m_lastTimestamps[timeNormalizedMeasurement.ID] = timeNormalizedMeasurement.Timestamp.Value;
                 }
 
                 measurements = exportMeasurements;
