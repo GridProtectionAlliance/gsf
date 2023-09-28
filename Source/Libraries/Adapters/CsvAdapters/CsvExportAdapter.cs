@@ -100,6 +100,8 @@ namespace CsvAdapters
         private readonly object m_activeFileLock;
         private readonly ScheduleManager m_scheduleManager;
         private readonly Dictionary<Guid, long> m_lastTimestamps;
+        private double m_downsampleInterval;
+        private int m_downsampleMilliseconds;
         private long m_totalExports;
         private bool m_disposed;
 
@@ -178,7 +180,15 @@ namespace CsvAdapters
         [ConnectionStringParameter]
         [DefaultValue(DefaultDownsampleInterval)]
         [Description("Defines the downsampling interval, in seconds, set to 0.0 for no downsampling")]
-        public double DownsampleInterval { get; set; }
+        public double DownsampleInterval
+        {
+            get => m_downsampleInterval;
+            set
+            {
+                m_downsampleInterval = value;
+                m_downsampleMilliseconds = (int)(value * 1000.0D);
+            }
+        }
 
         /// <summary>
         /// Gets or sets the number of frames per second for incoming data used to normalize timestamps when downsampling interval is greater than 0.0, set to zero to skip time normalization.
@@ -233,6 +243,15 @@ namespace CsvAdapters
         {
             ConnectionStringParser<ConnectionStringParameterAttribute> parser = new ConnectionStringParser<ConnectionStringParameterAttribute>();
             parser.ParseConnectionString(ConnectionString, this);
+
+            // For normalized sub-second downsampling, align downsampling milliseconds to the nearest sub-second distribution
+            if (FramesPerSecond > 0 && m_downsampleMilliseconds > 0 && m_downsampleMilliseconds <= 1000)
+            {
+                if (m_downsampleMilliseconds < 1000)
+                    m_downsampleMilliseconds = (int)Ticks.RoundToSubsecondDistribution(Ticks.FromMilliseconds(m_downsampleMilliseconds), FramesPerSecond).ToMilliseconds();
+                else
+                    m_downsampleMilliseconds = 0;
+            }
 
             base.Initialize();
 
@@ -356,10 +375,21 @@ namespace CsvAdapters
                         measurement;
 
                     // Get last measurement timestamp -- initial timestamp is from top of second
-                    long lastTimestamp = m_lastTimestamps.GetOrDefault(timeNormalizedMeasurement.ID, _ =>
-                        timeNormalizedMeasurement.Timestamp.BaselinedTimestamp(BaselineTimeInterval.Second).Value);
+                    if (m_lastTimestamps.TryGetValue(timeNormalizedMeasurement.ID, out long lastTimestamp))
+                    {
+                        // If last measurement timestamp is greater than current measurement timestamp, then
+                        // we have a measurement that is out of order and should be ignored
+                        if (lastTimestamp > timeNormalizedMeasurement.Timestamp.Value)
+                            continue;
 
-                    if ((timeNormalizedMeasurement.Timestamp - lastTimestamp).ToSeconds() < DownsampleInterval)
+                        // If last measurement timestamp is within the downsampling interval, then we have
+                        // a measurement that is too close to the last measurement and should be ignored
+                        if ((timeNormalizedMeasurement.Timestamp - lastTimestamp).ToSeconds() < DownsampleInterval)
+                            continue;
+                    }
+
+                    // For normalized sub-second downsampling, only export measurements that fall on the downsampling interval
+                    if (FramesPerSecond > 0 && m_downsampleMilliseconds < 1000 & (int)timeNormalizedMeasurement.Timestamp.DistanceBeyondSecond().ToMilliseconds() % m_downsampleMilliseconds != 0)
                         continue;
 
                     exportMeasurements.Add(timeNormalizedMeasurement);
