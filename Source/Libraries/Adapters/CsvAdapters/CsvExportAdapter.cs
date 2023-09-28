@@ -100,8 +100,7 @@ namespace CsvAdapters
         private readonly object m_activeFileLock;
         private readonly ScheduleManager m_scheduleManager;
         private readonly Dictionary<Guid, long> m_lastTimestamps;
-        private double m_downsampleInterval;
-        private int m_downsampleMilliseconds;
+        private long m_downsampleFrameCount;
         private long m_totalExports;
         private bool m_disposed;
 
@@ -180,22 +179,14 @@ namespace CsvAdapters
         [ConnectionStringParameter]
         [DefaultValue(DefaultDownsampleInterval)]
         [Description("Defines the downsampling interval, in seconds, set to 0.0 for no downsampling")]
-        public double DownsampleInterval
-        {
-            get => m_downsampleInterval;
-            set
-            {
-                m_downsampleInterval = value;
-                m_downsampleMilliseconds = (int)(value * 1000.0D);
-            }
-        }
+        public double DownsampleInterval { get; set; }
 
         /// <summary>
-        /// Gets or sets the number of frames per second for incoming data used to normalize timestamps when downsampling interval is greater than 0.0, set to zero to skip time normalization.
+        /// Gets or sets the number of frames per second for incoming data used to align timestamps when downsampling interval is greater than 0.0, set to zero to skip time alignment.
         /// </summary>
         [ConnectionStringParameter]
         [DefaultValue(DefaultFramesPerSecond)]
-        [Description("Defines the number of frames per second for incoming data used to normalize timestamps when downsampling interval is greater than 0.0, set to zero to skip time normalization")]
+        [Description("Defines the number of frames per second for incoming data used to align timestamps when downsampling interval is greater than 0.0, set to zero to skip time alignment")]
         public int FramesPerSecond { get; set; }
 
         /// <summary>
@@ -244,13 +235,13 @@ namespace CsvAdapters
             ConnectionStringParser<ConnectionStringParameterAttribute> parser = new ConnectionStringParser<ConnectionStringParameterAttribute>();
             parser.ParseConnectionString(ConnectionString, this);
 
-            // For normalized sub-second downsampling, align downsampling milliseconds to the nearest sub-second distribution
-            if (FramesPerSecond > 0 && m_downsampleMilliseconds > 0 && m_downsampleMilliseconds <= 1000)
+            // For framerate-aligned downsampling, compute the exact number of frames represented
+            // by the interval to accurately determine which frames need to be exported
+            if (FramesPerSecond > 0 && DownsampleInterval > 0.0D)
             {
-                if (m_downsampleMilliseconds < 1000)
-                    m_downsampleMilliseconds = (int)Ticks.RoundToSubsecondDistribution(Ticks.FromMilliseconds(m_downsampleMilliseconds), FramesPerSecond).ToMilliseconds();
-                else
-                    m_downsampleMilliseconds = 0;
+                Ticks downsampleIntervalTicks = Ticks.FromSeconds(DownsampleInterval);
+                long computedFrameCount = ToFrameCount(downsampleIntervalTicks);
+                m_downsampleFrameCount = Math.Max(computedFrameCount, 1L);
             }
 
             base.Initialize();
@@ -370,30 +361,30 @@ namespace CsvAdapters
                 
                 foreach (IMeasurement measurement in measurements)
                 {
-                    IMeasurement timeNormalizedMeasurement = FramesPerSecond > 0 ? 
+                    IMeasurement timeAlignedMeasurement = FramesPerSecond > 0 ? 
                         Measurement.Clone(measurement, Ticks.RoundToSubsecondDistribution(measurement.Timestamp, FramesPerSecond)) : 
                         measurement;
 
                     // Get last measurement timestamp -- initial timestamp is from top of second
-                    if (m_lastTimestamps.TryGetValue(timeNormalizedMeasurement.ID, out long lastTimestamp))
+                    if (m_lastTimestamps.TryGetValue(timeAlignedMeasurement.ID, out long lastTimestamp))
                     {
                         // If last measurement timestamp is greater than current measurement timestamp, then
                         // we have a measurement that is out of order and should be ignored
-                        if (lastTimestamp > timeNormalizedMeasurement.Timestamp.Value)
+                        if (lastTimestamp >= timeAlignedMeasurement.Timestamp.Value)
                             continue;
 
                         // If last measurement timestamp is within the downsampling interval, then we have
                         // a measurement that is too close to the last measurement and should be ignored
-                        if ((timeNormalizedMeasurement.Timestamp - lastTimestamp).ToSeconds() < DownsampleInterval)
+                        if (FramesPerSecond <= 0 && (timeAlignedMeasurement.Timestamp - lastTimestamp).ToSeconds() < DownsampleInterval)
                             continue;
                     }
 
-                    // For normalized sub-second downsampling, only export measurements that fall on the downsampling interval
-                    if (FramesPerSecond > 0 && m_downsampleMilliseconds < 1000 & (int)timeNormalizedMeasurement.Timestamp.DistanceBeyondSecond().ToMilliseconds() % m_downsampleMilliseconds != 0)
+                    // For framerate-aligned downsampling, only export measurements that fall on the downsampling interval
+                    if (FramesPerSecond > 0 && ToFrameCount(timeAlignedMeasurement.Timestamp) % m_downsampleFrameCount != 0)
                         continue;
 
-                    exportMeasurements.Add(timeNormalizedMeasurement);
-                    m_lastTimestamps[timeNormalizedMeasurement.ID] = timeNormalizedMeasurement.Timestamp.Value;
+                    exportMeasurements.Add(timeAlignedMeasurement);
+                    m_lastTimestamps[timeAlignedMeasurement.ID] = timeAlignedMeasurement.Timestamp.Value;
                 }
 
                 measurements = exportMeasurements;
@@ -452,6 +443,18 @@ namespace CsvAdapters
                 m_disposed = true;          // Prevent duplicate dispose.
                 base.Dispose(disposing);    // Call base class Dispose().
             }
+        }
+
+        // Computes the number of frames represented by the given time interval.
+        private long ToFrameCount(Ticks ticks)
+        {
+            // Prevent overflow by splitting the computation into second and subsecond components
+            long baseFrameCount = ticks / Ticks.PerSecond * FramesPerSecond;
+            long subsecondTicks = ticks % Ticks.PerSecond;
+
+            // Perform rounding by adding half the denominator to the numerator
+            long subsecondFrameCount = (subsecondTicks * FramesPerSecond + Ticks.PerSecond / 2L) / Ticks.PerSecond;
+            return baseFrameCount + subsecondFrameCount;
         }
 
         // Converts the measurement to a row in CSV format.
