@@ -23,6 +23,7 @@
 
 
 using System;
+using System.Collections.Generic;
 
 namespace GSF.Data.Model
 {
@@ -51,7 +52,7 @@ namespace GSF.Data.Model
         /// <summary>
         /// Generates the Condition used in SQL
         /// </summary>
-        public Fuc<string,string> Condition
+        public Func<string,string> Condition
         {
             get;
         }
@@ -59,7 +60,7 @@ namespace GSF.Data.Model
         /// <summary>
         /// Generates the Query used in SQL
         /// </summary>
-        public Func<string,string,string> Query
+        public Func<string,string, string> Query
         {
             get;
         }
@@ -70,13 +71,14 @@ namespace GSF.Data.Model
         /// <param name="field">field used on the UI to trigegr this transformation.</param>
         /// <param name="sqlFieldName"> SQL field used in the query. Defaults to <see cref='Field' />.</param>
         /// <param name="condition"> Function that takes the  condition specified (=,>,<,<>,IN, NOT IN) and returns the condition used in the query.</param>
-        /// <param name="query"> Function that takes the  condition specified, the value specified and returns the query.</param>        
-        public SQLSearchFieldAttribute(string field, string sqlFieldName = null, Func<string,string> condition = (cond) => cond, Func<string,string,string> query = (cond,param) => param)
+        /// <param name="query"> Function that takes the  condition specified and the substitution that will be used for value e.g. {0} or ({1},{2}) etc.</param>        
+        public SQLSearchFieldAttribute(string field, string sqlFieldName = null, Func<string,string> condition = null, Func<string,string,string> query = null)
         {
             Field = field;
             SQLFieldName = sqlFieldName ?? field;
-            Condition = condition;
-            Query = query;
+            Condition = condition ?? ((c) => c);
+            Query = query ?? ((cond, val) => $"{val}");
+
         }
 
     }
