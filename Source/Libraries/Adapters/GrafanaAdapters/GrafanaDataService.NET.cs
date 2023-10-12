@@ -48,14 +48,16 @@ namespace GrafanaAdapters
             if (!Enabled || Archive is null)
                 return null;
 
-            if(request != null && request.isPhasor)
-            {
-                return await m_dataSource.Query<PhasorValue>(request, m_cancellationSource.Token);
-            }
-            else
-            {
-                return await m_dataSource.Query<DataSourceValue>(request, m_cancellationSource.Token);
-            }
+            return await m_dataSource.Query(request, m_cancellationSource.Token);
+
+            //if(request != null && request.isPhasor)
+            //{
+            //    return await m_dataSource.Query<PhasorValue>(request, m_cancellationSource.Token);
+            //}
+            //else
+            //{
+            //    return await m_dataSource.Query<DataSourceValue>(request, m_cancellationSource.Token);
+            //}
         }
 
         /// <summary>
@@ -169,7 +171,7 @@ namespace GrafanaAdapters
             if (!Enabled || Archive is null)
                 return null;
 
-            return await m_dataSource.Annotations<DataSourceValue>(request, m_cancellationSource.Token);
+            return await m_dataSource.Annotations(request, m_cancellationSource.Token);
         }
 
         /// <summary>

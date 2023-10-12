@@ -95,7 +95,7 @@ namespace GrafanaAdapters
         /// </summary>
         /// <param name="request">Query request.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
-        public Task<List<TimeSeriesValues>> Query<T>(QueryRequest request, CancellationToken cancellationToken)
+        public Task<List<TimeSeriesValues>> Query(QueryRequest request, CancellationToken cancellationToken)
         {
             bool isFilterMatch(string target, AdHocFilter filter)
             {
@@ -143,67 +143,72 @@ namespace GrafanaAdapters
                 foreach (Target target in request.targets)
                     target.target = target.target?.Trim() ?? "";
 
-
-                List<DataSourceValueGroup<T>> allGroups = new List<DataSourceValueGroup<T>>();
-
-                foreach (Target target in request.targets)
+                List<TimeSeriesValues> handleQuery<T>()
                 {
-                    QueryDataHolder queryData = new QueryDataHolder(target, startTime, stopTime, request.interval, false, false, request.isPhasor, target.metadataSelection, cancellationToken);
-                    DataSourceValueGroup<T>[] groups = Functions.ParseFunction<T>(target.target, this, queryData);
-                    allGroups.AddRange(groups);  // adding each group to the overall list
-                }
+                    List<DataSourceValueGroup<T>> allGroups = new List<DataSourceValueGroup<T>>();
 
-                DataSourceValueGroup<T>[] valueGroups = allGroups.ToArray();
-
-                //DataSourceValueGroup[] OLDvalueGroups = request.targets.Select(target => QueryTarget(target, target.target, startTime, stopTime, request.interval, false, false, null, cancellationToken)).SelectMany(groups => groups).ToArray();
-
-                // Establish result series sequentially so that order remains consistent between calls
-                List<TimeSeriesValues> result = valueGroups.Select(valueGroup => new TimeSeriesValues
-                {
-                    target = valueGroup.Target,
-                    rootTarget = valueGroup.RootTarget,
-                    meta = valueGroup.metadata,
-                    dropEmptySeries = valueGroup.DropEmptySeries,
-                    refId = valueGroup.refId
-                }).ToList();
-
-                // Apply any encountered ad-hoc filters
-                if (request.adhocFilters?.Count > 0)
-                {
-                    foreach (AdHocFilter filter in request.adhocFilters)
-                        result = result.Where(values => isFilterMatch(values.rootTarget, filter)).ToList();
-                }
-
-                // Process series data in parallel
-                Parallel.ForEach(result, new ParallelOptions { CancellationToken = cancellationToken }, series =>
-                {
-                    // For deferred enumerations, any work to be done is left till last moment - in this case "ToList()" invokes actual operation                    
-                    DataSourceValueGroup<T> valueGroup = valueGroups.First(group => group.Target.Equals(series.target));
-                    if (typeof(T) == typeof(DataSourceValue)) {
-                        IEnumerable<DataSourceValue> values = valueGroup.Source.Cast<DataSourceValue>();
-
-                        if (valueGroup.SourceTarget?.excludeNormalFlags ?? false)
-                            values = values.Where(value => value.Flags != MeasurementStateFlags.Normal);
-
-                        if (valueGroup.SourceTarget?.excludedFlags > uint.MinValue)
-                            values = values.Where(value => ((uint)value.Flags & valueGroup.SourceTarget.excludedFlags) == 0);
-
-                        series.datapoints = values.Select(dataValue => new[] { dataValue.Value, dataValue.Time }).ToList();
-                    }
-
-                    else if (typeof(T) == typeof(PhasorValue))
+                    foreach (Target target in request.targets)
                     {
-                        IEnumerable<PhasorValue> values = valueGroup.Source.Cast<PhasorValue>();
-
-                        if (valueGroup.SourceTarget?.excludeNormalFlags ?? false)
-                            values = values.Where(value => value.Flags != MeasurementStateFlags.Normal);
-
-                        if (valueGroup.SourceTarget?.excludedFlags > uint.MinValue)
-                            values = values.Where(value => ((uint)value.Flags & valueGroup.SourceTarget.excludedFlags) == 0);
-
-                        series.datapoints = values.Select(dataValue => new[] { dataValue.Magnitude, dataValue.Angle, dataValue.Time }).ToList();
+                        QueryDataHolder queryData = new QueryDataHolder(target, startTime, stopTime, request.interval, false, false, request.isPhasor, target.metadataSelection, cancellationToken);
+                        DataSourceValueGroup<T>[] groups = Functions.ParseFunction<T>(target.target, this, queryData);
+                        allGroups.AddRange(groups);  // adding each group to the overall list
                     }
-                });
+
+                    DataSourceValueGroup<T>[] valueGroups = allGroups.ToArray();
+
+                    //DataSourceValueGroup[] OLDvalueGroups = request.targets.Select(target => QueryTarget(target, target.target, startTime, stopTime, request.interval, false, false, null, cancellationToken)).SelectMany(groups => groups).ToArray();
+
+                    // Establish result series sequentially so that order remains consistent between calls
+                    List<TimeSeriesValues> result = valueGroups.Select(valueGroup => new TimeSeriesValues
+                    {
+                        target = valueGroup.Target,
+                        rootTarget = valueGroup.RootTarget,
+                        meta = valueGroup.metadata,
+                        dropEmptySeries = valueGroup.DropEmptySeries,
+                        refId = valueGroup.refId
+                    }).ToList();
+
+                    // Apply any encountered ad-hoc filters
+                    if (request.adhocFilters?.Count > 0)
+                    {
+                        foreach (AdHocFilter filter in request.adhocFilters)
+                            result = result.Where(values => isFilterMatch(values.rootTarget, filter)).ToList();
+                    }
+
+                    // Process series data in parallel
+                    Parallel.ForEach(result, new ParallelOptions { CancellationToken = cancellationToken }, series =>
+                    {
+                        // For deferred enumerations, any work to be done is left till last moment - in this case "ToList()" invokes actual operation                    
+                        DataSourceValueGroup<T> valueGroup = valueGroups.First(group => group.Target.Equals(series.target));
+                        if (typeof(T) == typeof(DataSourceValue))
+                        {
+                            IEnumerable<DataSourceValue> values = valueGroup.Source.Cast<DataSourceValue>();
+
+                            if (valueGroup.SourceTarget?.excludeNormalFlags ?? false)
+                                values = values.Where(value => value.Flags != MeasurementStateFlags.Normal);
+
+                            if (valueGroup.SourceTarget?.excludedFlags > uint.MinValue)
+                                values = values.Where(value => ((uint)value.Flags & valueGroup.SourceTarget.excludedFlags) == 0);
+
+                            series.datapoints = values.Select(dataValue => new[] { dataValue.Value, dataValue.Time }).ToList();
+                        }
+
+                        else if (typeof(T) == typeof(PhasorValue))
+                        {
+                            IEnumerable<PhasorValue> values = valueGroup.Source.Cast<PhasorValue>();
+
+                            if (valueGroup.SourceTarget?.excludeNormalFlags ?? false)
+                                values = values.Where(value => value.Flags != MeasurementStateFlags.Normal);
+
+                            if (valueGroup.SourceTarget?.excludedFlags > uint.MinValue)
+                                values = values.Where(value => ((uint)value.Flags & valueGroup.SourceTarget.excludedFlags) == 0);
+
+                            series.datapoints = values.Select(dataValue => new[] { dataValue.Magnitude, dataValue.Angle, dataValue.Time }).ToList();
+                        }
+                    });
+
+                    return result.Where(values => !values.dropEmptySeries || values.datapoints.Count > 0).ToList();
+                }
 
                 #region [ Original "request.maxDataPoints" Implementation ]
 
@@ -222,7 +227,9 @@ namespace GrafanaAdapters
 
                 #endregion
 
-                return result.Where(values => !values.dropEmptySeries || values.datapoints.Count > 0).ToList();
+                return (request is not null && request.isPhasor) ? 
+                    handleQuery<PhasorValue>() :
+                    handleQuery<DataSourceValue>();
             },
             cancellationToken);
         }
