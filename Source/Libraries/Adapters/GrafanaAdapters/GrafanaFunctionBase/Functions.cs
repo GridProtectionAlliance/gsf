@@ -191,7 +191,7 @@ namespace GrafanaAdapters.GrafanaFunctions
                     string pointTag = row["PointTag"].ToString();
                     targetMap[id] = pointTag;
 
-                    List<DataSourceValue> dataValues = dataSourceBase.QueryDataSourceValues<DataSourceValue>(queryData.StartTime, queryData.StopTime, queryData.Interval, queryData.IncludePeaks, targetMap)
+                    List<DataSourceValue> dataValues = dataSourceBase.QueryDataSourceValues(queryData.StartTime, queryData.StopTime, queryData.Interval, queryData.IncludePeaks, targetMap)
                         .TakeWhile(_ => !queryData.CancellationToken.IsCancellationRequested).ToList();
 
                     //Assign to proper values
@@ -330,7 +330,7 @@ namespace GrafanaAdapters.GrafanaFunctions
             }
 
             // Query underlying data source for each target - to prevent parallel read from data source we enumerate immediately
-            List<DataSourceValue> dataValues = dataSourceBase.QueryDataSourceValues<DataSourceValue>(queryData.StartTime, queryData.StopTime, queryData.Interval, queryData.IncludePeaks, targetMap)
+            List<DataSourceValue> dataValues = dataSourceBase.QueryDataSourceValues(queryData.StartTime, queryData.StopTime, queryData.Interval, queryData.IncludePeaks, targetMap)
                 .TakeWhile(_ => !queryData.CancellationToken.IsCancellationRequested).ToList();
 
             DataSourceValueGroup<DataSourceValue>[] dataResult = new DataSourceValueGroup<DataSourceValue>[targetMap.Count];

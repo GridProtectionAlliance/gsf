@@ -52,33 +52,41 @@ namespace GrafanaAdapters
                 m_baseTicks = UnixTimeTag.BaseTicks.Value;
             }
 
-            public override IEnumerable<T> QueryDataSourceValues<T>(DateTime startTime, DateTime stopTime, string interval, bool includePeaks, Dictionary<ulong, string> targetMap)
+            protected internal override IEnumerable<DataSourceValue> QueryDataSourceValues(DateTime startTime, DateTime stopTime, string interval, bool includePeaks, Dictionary<ulong, string> targetMap)
             {
-                if (typeof(T) == typeof(DataSourceValue))
+                return m_parent.Archive.ReadData(targetMap.Keys.Select(pointID => (int)pointID), startTime, stopTime, false).Select(dataPoint => new DataSourceValue
                 {
-                    return m_parent.Archive.ReadData(targetMap.Keys.Select(pointID => (int)pointID), startTime, stopTime, false).Select(dataPoint => new DataSourceValue
-                    {
-                        Target = targetMap[(ulong)dataPoint.HistorianID],
-                        Value = dataPoint.Value,
-                        Time = (dataPoint.Time.ToDateTime().Ticks - m_baseTicks) / (double)Ticks.PerMillisecond,
-                        Flags = dataPoint.Quality.MeasurementQuality()
-                    }).Cast<T>();
-                }
+                    Target = targetMap[(ulong)dataPoint.HistorianID],
+                    Value = dataPoint.Value,
+                    Time = (dataPoint.Time.ToDateTime().Ticks - m_baseTicks) / (double)Ticks.PerMillisecond,
+                    Flags = dataPoint.Quality.MeasurementQuality()
+                });
 
-                else if (typeof(T) == typeof(PhasorValue))
-                {
-                    return m_parent.Archive.ReadData(targetMap.Keys.Select(pointID => (int)pointID), startTime, stopTime, false).Select(dataPoint => new PhasorValue
-                    {
-                        MagnitudeTarget = targetMap[(ulong)dataPoint.HistorianID],
-                        AngleTarget = targetMap[(ulong)dataPoint.HistorianID],
-                        Magnitude = dataPoint.Value,
-                        Angle = dataPoint.Value,
-                        Time = (dataPoint.Time.ToDateTime().Ticks - m_baseTicks) / (double)Ticks.PerMillisecond,
-                        Flags = dataPoint.Quality.MeasurementQuality()
-                    }).Cast<T>();
-                }
+                //if (typeof(T) == typeof(DataSourceValue))
+                //{
+                //    return m_parent.Archive.ReadData(targetMap.Keys.Select(pointID => (int)pointID), startTime, stopTime, false).Select(dataPoint => new DataSourceValue
+                //    {
+                //        Target = targetMap[(ulong)dataPoint.HistorianID],
+                //        Value = dataPoint.Value,
+                //        Time = (dataPoint.Time.ToDateTime().Ticks - m_baseTicks) / (double)Ticks.PerMillisecond,
+                //        Flags = dataPoint.Quality.MeasurementQuality()
+                //    }).Cast<T>();
+                //}
 
-                return Enumerable.Empty<T>();
+                //else if (typeof(T) == typeof(PhasorValue))
+                //{
+                //    return m_parent.Archive.ReadData(targetMap.Keys.Select(pointID => (int)pointID), startTime, stopTime, false).Select(dataPoint => new PhasorValue
+                //    {
+                //        MagnitudeTarget = targetMap[(ulong)dataPoint.HistorianID],
+                //        AngleTarget = targetMap[(ulong)dataPoint.HistorianID],
+                //        Magnitude = dataPoint.Value,
+                //        Angle = dataPoint.Value,
+                //        Time = (dataPoint.Time.ToDateTime().Ticks - m_baseTicks) / (double)Ticks.PerMillisecond,
+                //        Flags = dataPoint.Quality.MeasurementQuality()
+                //    }).Cast<T>();
+                //}
+
+                //return Enumerable.Empty<DataSourceValue>();
             }
         }
 

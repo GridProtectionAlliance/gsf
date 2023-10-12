@@ -88,7 +88,7 @@ namespace GrafanaAdapters
         /// <param name="includePeaks">Flag that determines if decimated data should include min/max interval peaks over provided time range.</param>
         /// <param name="targetMap">Set of IDs with associated targets to query.</param>
         /// <returns>Queried data source data in terms of value and time.</returns>
-        public abstract IEnumerable<T> QueryDataSourceValues<T>(DateTime startTime, DateTime stopTime, string interval, bool includePeaks, Dictionary<ulong, string> targetMap);
+        protected internal abstract IEnumerable<DataSourceValue> QueryDataSourceValues(DateTime startTime, DateTime stopTime, string interval, bool includePeaks, Dictionary<ulong, string> targetMap);
 
         /// <summary>
         /// Queries data source returning data as Grafana time-series data set.
