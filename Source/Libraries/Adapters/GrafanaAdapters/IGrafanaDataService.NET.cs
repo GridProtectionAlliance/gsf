@@ -106,13 +106,6 @@ namespace GrafanaAdapters
         [OperationContract, WebInvoke(UriTemplate = "/annotations", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
         Task<List<AnnotationResponse>> Annotations(AnnotationRequest request);
 
-        /// <summary>
-        /// Queries openHistorian location data for Grafana offsetting duplicate coordinates using a radial distribution.
-        /// </summary>
-        /// <param name="request"> Query request.</param>
-        /// <returns>JSON serialized location metadata for specified targets.</returns>
-        [OperationContract, WebInvoke(UriTemplate = "/getlocationdata", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        Task<string> GetLocationData(LocationRequest request);
 
         /// <summary>
         /// Requests available tag keys.
@@ -127,6 +120,27 @@ namespace GrafanaAdapters
         /// <param name="request">Tag values request.</param>
         [OperationContract, WebInvoke(UriTemplate = "/tag-values", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
         Task<TagValuesResponse[]> TagValues(TagValuesRequest request);
+
+        /// <summary>
+        /// Requests Grafana Metadatas source for multiple targets.
+        /// </summary>
+        /// <param name="requests">Array of query requests.</param>
+        [OperationContract, WebInvoke(UriTemplate = "/getmetadatas", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+        Task<string> GetMetadatas(MetadataTargetRequest[] requests);
+
+        /// <summary>
+        /// Queries available MetaData Options.
+        /// </summary>
+        /// <param name="request">A boolean indicating whether the data is a phasor.</param>
+        [OperationContract, WebInvoke(UriTemplate = "/gettableoptions", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+        public Task<string[]> GetTableOptions(bool request);
+
+        /// <summary>
+        /// Queries description of available functions.
+        /// </summary>
+        [OperationContract, WebInvoke(UriTemplate = "/getfunctions", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+        public Task<FunctionDescription[]> GetFunctions();
+
     }
 }
 
