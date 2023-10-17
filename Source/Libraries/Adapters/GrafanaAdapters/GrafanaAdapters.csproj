@@ -67,11 +67,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AdHocFilter.cs" />
-    <Compile Include="Annotation.cs" />
-    <Compile Include="AnnotationExtensions.cs" />
-    <Compile Include="AnnotationRequest.cs" />
-    <Compile Include="AnnotationResponse.cs" />
-    <Compile Include="AnnotationType.cs" />
+    <Compile Include="Model\Annotations\Annotation.cs" />
+    <Compile Include="Model\Annotations\AnnotationExtensions.cs" />
+    <Compile Include="Model\Annotations\AnnotationRequest.cs" />
+    <Compile Include="Model\Annotations\AnnotationResponse.cs" />
+    <Compile Include="Model\Annotations\AnnotationType.cs" />
     <Compile Include="Column.cs" />
     <Compile Include="DataSourceValueGroup.cs" />
     <Compile Include="DeviceAlarmStateAdapter.cs" />
