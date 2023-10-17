@@ -137,6 +137,8 @@
     <Compile Include="IGrafanaDataServiceMono.cs" />
     <Compile Include="LocationData.cs" />
     <Compile Include="GrafanaAlarm.cs" />
+    <Compile Include="Model\Functions\ParameterDescription.cs" />
+    <Compile Include="Model\Functions\FunctionDescription.cs" />
     <Compile Include="Model\MetaData\MetaDataTargetRequest.cs" />
     <Compile Include="Model\MetaData\MetaDataOptionsRequest.cs" />
     <Compile Include="PhasorValue.cs" />
