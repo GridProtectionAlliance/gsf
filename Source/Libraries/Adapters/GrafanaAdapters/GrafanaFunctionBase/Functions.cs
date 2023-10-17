@@ -19,9 +19,17 @@ using System.Threading.Tasks;
 
 namespace GrafanaAdapters.GrafanaFunctions
 {
-    internal class Functions
+    internal static class FunctionParser
     {
-        public static DataSourceValueGroup<T>[] ParseFunction<T>(string expression, GrafanaDataSourceBase dataSourceBase, QueryDataHolder queryData)
+        /// <summary>
+        /// Parses an expresion using the available Grafana Functions
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="expression"> the Expresion to Parse</param>
+        /// <param name="dataSourceBase">The <see cref="GrafanaDataSourceBase"/></param>
+        /// <param name="queryData"> The Query information. </param>
+        /// <returns></returns>
+        public static DataSourceValueGroup<T>[] Parse<T>(string expression, GrafanaDataSourceBase dataSourceBase, QueryDataHolder queryData)
         {
             if(queryData.CancellationToken.IsCancellationRequested) return null;
 
@@ -62,7 +70,7 @@ namespace GrafanaAdapters.GrafanaFunctions
             List<DataSourceValueGroup<T>[]> groupedDataValues = new List<DataSourceValueGroup<T>[]>();
             foreach(string query in queryExpressions)
             {
-                DataSourceValueGroup<T>[] queryResult = ParseFunction<T>(query ?? "", dataSourceBase, queryData);
+                DataSourceValueGroup<T>[] queryResult = Parse<T>(query ?? "", dataSourceBase, queryData);
                 groupedDataValues.Add(queryResult);
             }
 
@@ -103,7 +111,8 @@ namespace GrafanaAdapters.GrafanaFunctions
             return res.ToArray();
         }
 
-        public static (IGrafanaFunction function, string parameterValue) MatchFunction<T>(string expression)
+
+        private static (IGrafanaFunction function, string parameterValue) MatchFunction<T>(string expression)
         {
             List<IGrafanaFunction> grafanaFunctions = GetGrafanaFunctions(); 
 
@@ -594,6 +603,28 @@ namespace GrafanaAdapters.GrafanaFunctions
 
             return result;
         }
+
+        /// <summary>
+        /// Gets the <see cref="FunctionDescription"/> for all available Functions.
+        /// </summary>
+        /// <returns> a <see cref="IEnumerable{FunctionDescription}"/> </returns>
+        public static IEnumerable<FunctionDescription> GetFunctionDescription()
+        {
+            return GetGrafanaFunctions().Select(type =>
+            {
+                return new FunctionDescription()
+                {
+                    Parameters = type.Parameters.Select(p => new ParameterDescription() { 
+                        Description = p.Description,
+                        ParameterTypeName = p.ParameterTypeName,
+                        Required = p.Required
+                    }).ToArray(),
+                    Name = type.Name,
+                    Description = type.Description
+                };
+            });
+        }
+
 
     }
 

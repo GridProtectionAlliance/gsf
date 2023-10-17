@@ -25,6 +25,8 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.ServiceModel.Web;
+using System.ServiceModel;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -34,6 +36,8 @@ using GSF.Data.Model;
 using GSF.Diagnostics;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
+using Newtonsoft.Json;
+using GrafanaAdapters.GrafanaFunctions;
 
 #pragma warning disable IDE0060 // Remove unused parameter
 
@@ -453,5 +457,101 @@ namespace GrafanaAdapters
             },
             cancellationToken);
         }
+
+        /// <summary>
+        /// Requests Grafana Metadata source for multiple targets.
+        /// </summary>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <param name="requests"> The targets and the meta data requested</param>
+        /// <returns> Queried metadata.</returns>
+        public Task<string> GetMetadatas(MetadataTargetRequest[] requests, CancellationToken cancellationToken)
+        {
+            return Task.Factory.StartNew(() =>
+            {
+                var targetDataDict = new Dictionary<string, Dictionary<string, DataTable>>();
+
+                foreach (var request in requests)
+                {
+                    if (string.IsNullOrWhiteSpace(request.Target))
+                        continue;
+                    var tableDataDict = new Dictionary<string, DataTable>();
+                    foreach (var table in request.Tables)
+                    {
+                        DataRow[] rows = Metadata.Tables[table].Select($"PointTag = '{request.Target}'") ?? new DataRow[0];
+                        if (rows.Length > 0)
+                            tableDataDict[table] = rows.CopyToDataTable();
+                        
+                    }
+                    targetDataDict[request.Target] = tableDataDict;
+                }
+                return JsonConvert.SerializeObject(targetDataDict);
+            },
+           cancellationToken);
+        }
+
+        /// <summary>
+        /// Queries available MetaData Options.
+        /// </summary>
+        /// <param name="isPhasor">A boolean indicating whether the data is a phasor.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns> Available MetaData Table options.</returns>
+        public Task<string[]> GetTableOptions(bool isPhasor, CancellationToken cancellationToken)
+        {
+            Func<DataTable, bool> hasCollumns = (tbl) => tbl.Columns.Contains("ID") &&
+                        tbl.Columns.Contains("SignalID") &&
+                        tbl.Columns.Contains("PointTag") &&
+                        tbl.Columns.Contains("Adder") &&
+                        tbl.Columns.Contains("Multiplier");
+
+            return Task.Factory.StartNew(() =>
+            {
+                // Phasor mode only has one table for now
+                if (isPhasor)
+                    return new string[1] { "Phasor" };
+
+                List<string> tables = new List<string>();    
+
+                foreach (DataTable table in Metadata.Tables)
+                {
+                    if (hasCollumns(table) && table.Rows.Count > 0)
+                        tables.Add(table.TableName); 
+                }
+                return tables.ToArray();
+            },
+          cancellationToken);
+        }
+
+        private static int ParseInt(string parameter, bool includeZero = true)
+        {
+            parameter = parameter.Trim();
+
+            if (!int.TryParse(parameter, out int value))
+                throw new FormatException($"Could not parse '{parameter}' as an integer value.");
+
+            if (includeZero)
+            {
+                if (value < 0)
+                    throw new ArgumentOutOfRangeException($"Value '{parameter}' is less than zero.");
+            }
+            else
+            {
+                if (value <= 0)
+                    throw new ArgumentOutOfRangeException($"Value '{parameter}' is less than or equal to zero.");
+            }
+
+            return value;
+        }
+
+        /// <summary>
+        /// Queries description of available functions.
+        /// </summary>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        public Task<FunctionDescription[]> GetFunctionDescription(CancellationToken cancellationToken)
+        {
+            return Task.Factory.StartNew(() => FunctionParser.GetFunctionDescription().ToArray(),            
+          cancellationToken);
+            
+        }
+
     }
 }

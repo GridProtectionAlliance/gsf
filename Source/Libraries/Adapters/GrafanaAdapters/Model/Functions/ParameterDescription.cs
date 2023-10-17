@@ -31,19 +31,17 @@ namespace GrafanaAdapters
         /// <summary>
         /// The Description of the Parameter
         /// </summary>
-        public string Description { get; }
+        public string Description { get; set; }
 
         /// <summary>
         /// Indicates if this Parameter is required 
         /// </summary>
-        public bool Required { get; }
+        public bool Required { get; set; }
 
         /// <summary>
         /// Derscribes the type of the parameter.
         /// </summary>
-        public string ParameterTypeName { get; }
-
-        public string Name { get; }
+        public string ParameterTypeName { get; set; }
 
     }
 }

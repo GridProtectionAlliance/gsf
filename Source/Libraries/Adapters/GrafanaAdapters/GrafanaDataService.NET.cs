@@ -26,6 +26,8 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.ServiceModel.Web;
+using System.ServiceModel;
 using System.Threading.Tasks;
 using GSF.Historian.DataServices;
 using Newtonsoft.Json;
@@ -49,15 +51,6 @@ namespace GrafanaAdapters
                 return null;
 
             return await m_dataSource.Query(request, m_cancellationSource.Token);
-
-            //if(request != null && request.isPhasor)
-            //{
-            //    return await m_dataSource.Query<PhasorValue>(request, m_cancellationSource.Token);
-            //}
-            //else
-            //{
-            //    return await m_dataSource.Query<DataSourceValue>(request, m_cancellationSource.Token);
-            //}
         }
 
         /// <summary>
@@ -200,6 +193,26 @@ namespace GrafanaAdapters
         /// <param name="request">Tag values request.</param>
         public async Task<TagValuesResponse[]> TagValues(TagValuesRequest request) => 
             await m_dataSource.TagValues(request, m_cancellationSource.Token);
+
+        /// <summary>
+        /// Queries available MetaData Options.
+        /// </summary>
+        /// <param name="request">A boolean indicating whether the data is a phasor.</param>
+        public async Task<string[]> GetTableOptions(bool request) => 
+            await m_dataSource.GetTableOptions(request, m_cancellationSource.Token);
+
+        /// <summary>
+        /// Requests Grafana Metadatas source for multiple targets.
+        /// </summary>
+        /// <param name="requests">Array of query requests.</param>
+        public async Task<string> GetMetadatas(MetadataTargetRequest[] requests) => 
+            await m_dataSource.GetMetadatas(requests, m_cancellationSource.Token);
+
+        /// <summary>
+        /// Queries description of available functions.
+        /// </summary>
+        public async Task<FunctionDescription[]> GetFunctions() =>
+            await m_dataSource.GetFunctionDescription(m_cancellationSource.Token);
     }
 }
 

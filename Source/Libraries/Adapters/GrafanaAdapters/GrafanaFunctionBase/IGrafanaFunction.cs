@@ -59,12 +59,12 @@ namespace GrafanaAdapters.GrafanaFunctions
         /// <summary>
         /// Gets or sets the description of the parameter.
         /// </summary>
-        string Description { get; set; }
+        string Description { get; }
 
         /// <summary>
         /// Gets or sets a value indicating whether the parameter is required.
         /// </summary>
-        bool Required { get; set; }
+        bool Required { get; }
 
         /// <summary>
         /// Gets the type of the parameter.
@@ -74,7 +74,7 @@ namespace GrafanaAdapters.GrafanaFunctions
         /// <summary>
         /// Gets or sets the type name of the parameter.
         /// </summary>
-        string ParameterTypeName { get; set; }
+        string ParameterTypeName { get; }
         /// <summary>
         /// Sets the value of the parameter.
         /// </summary>
@@ -88,14 +88,14 @@ namespace GrafanaAdapters.GrafanaFunctions
     public interface IParameter<T> : IParameter
     {
         /// <summary>
-        /// Gets or sets the default value of the parameter.
+        /// Gets default value of the parameter.
         /// </summary>
-        T Default { get; set; }
+        T Default { get; }
 
         /// <summary>
         /// Gets or sets the actual value of the parameter.
         /// </summary>
-        T Value { get; set;  }
+        T Value { get; }
         
     }
 

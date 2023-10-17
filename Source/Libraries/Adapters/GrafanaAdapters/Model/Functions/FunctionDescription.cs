@@ -31,16 +31,16 @@ namespace GrafanaAdapters
         /// <summary>
         /// gets the Name of the Function
         /// </summary>
-        string Name { get; }
+        public string Name { get; set; }
 
         /// <summary>
         /// Gets the Description of the Function
         /// </summary>
-        string Description { get; }
+        public string Description { get; set; }
 
         /// <summary>
         /// gets the Descritpion for the available Parameters.
         /// </summary>
-        public ParameterDescription[] Parameters { get; }
+        public ParameterDescription[] Parameters { get; set; }
     }
 }

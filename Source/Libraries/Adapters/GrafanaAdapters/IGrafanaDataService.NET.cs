@@ -133,13 +133,13 @@ namespace GrafanaAdapters
         /// </summary>
         /// <param name="request">A boolean indicating whether the data is a phasor.</param>
         [OperationContract, WebInvoke(UriTemplate = "/gettableoptions", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        public Task<string[]> GetTableOptions(bool request);
+        Task<string[]> GetTableOptions(bool request);
 
         /// <summary>
         /// Queries description of available functions.
         /// </summary>
         [OperationContract, WebInvoke(UriTemplate = "/getfunctions", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        public Task<FunctionDescription[]> GetFunctions();
+        Task<FunctionDescription[]> GetFunctions();
 
     }
 }

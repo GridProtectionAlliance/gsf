@@ -150,7 +150,7 @@ namespace GrafanaAdapters
                     foreach (Target target in request.targets)
                     {
                         QueryDataHolder queryData = new QueryDataHolder(target, startTime, stopTime, request.interval, false, false, request.isPhasor, target.metadataSelection, cancellationToken);
-                        DataSourceValueGroup<T>[] groups = Functions.ParseFunction<T>(target.target, this, queryData);
+                        DataSourceValueGroup<T>[] groups = FunctionParser.Parse<T>(target.target, this, queryData);
                         allGroups.AddRange(groups);  // adding each group to the overall list
                     }
 
@@ -234,155 +234,6 @@ namespace GrafanaAdapters
             cancellationToken);
         }
 
-        /*
-        private IEnumerable<DataSourceValueGroup> QueryTarget(Target sourceTarget, string queryExpression, DateTime startTime, DateTime stopTime, string interval, bool includePeaks, bool dropEmptySeries, string imports, CancellationToken cancellationToken)
-        {
-            // Handle query commands
-            if (queryExpression.ToLowerInvariant().Contains(DropEmptySeriesCommand))
-            {
-                dropEmptySeries = true;
-                queryExpression = queryExpression.ReplaceCaseInsensitive(DropEmptySeriesCommand, "");
-            }
-
-            if (queryExpression.ToLowerInvariant().Contains(IncludePeaksCommand))
-            {
-                includePeaks = true;
-                queryExpression = queryExpression.ReplaceCaseInsensitive(IncludePeaksCommand, "");
-            }
-
-            Match importsCommandMatch = s_importsCommand.Match(queryExpression);
-
-            if (importsCommandMatch.Success)
-            {
-                string result = importsCommandMatch.Result("${Expression}");
-                imports = result.Trim();
-                queryExpression = queryExpression.Replace(result, "");
-            }
-
-            // A single target might look like the following:
-            // PPA:15; STAT:20; SETSUM(COUNT(PPA:8; PPA:9; PPA:10)); FILTER ActiveMeasurements WHERE SignalType IN ('IPHA', 'VPHA'); RANGE(PPA:99; SUM(FILTER ActiveMeasurements WHERE SignalType = 'FREQ'; STAT:12))
-
-            HashSet<string> targetSet = new(new[] { queryExpression }, StringComparer.OrdinalIgnoreCase); // Targets include user provided input, so casing should be ignored
-            HashSet<string> reducedTargetSet = new(StringComparer.OrdinalIgnoreCase);
-            List<Match> seriesFunctions = new();
-
-            foreach (string target in targetSet)
-            {
-                // Find any series functions in target
-                Match[] matchedFunctions = TargetCache<Match[]>.GetOrAdd(target, () =>
-                    s_seriesFunctions.Matches(target).Cast<Match>().ToArray());
-
-                if (matchedFunctions.Length > 0)
-                {
-                    seriesFunctions.AddRange(matchedFunctions);
-
-                    // Reduce target to non-function expressions - important so later split on ';' succeeds properly
-                    string reducedTarget = target;
-
-                    foreach (string expression in matchedFunctions.Select(match => match.Value))
-                        reducedTarget = reducedTarget.Replace(expression, "");
-
-                    if (!string.IsNullOrWhiteSpace(reducedTarget))
-                        reducedTargetSet.Add(reducedTarget);
-                }
-                else
-                {
-                    reducedTargetSet.Add(target);
-                }
-            }
-
-            if (seriesFunctions.Count > 0)
-            {
-                // Execute series functions
-                foreach (ParsedFunction parsedFunction in seriesFunctions.Select(match => ParseSeriesFunction(match, imports)))
-                    foreach (DataSourceValueGroup valueGroup in ExecuteSeriesFunction(sourceTarget, parsedFunction, startTime, stopTime, interval, includePeaks, dropEmptySeries, cancellationToken))
-                        yield return valueGroup;
-
-                // Use reduced target set that excludes any series functions
-                targetSet = reducedTargetSet;
-            }
-
-            // Query any remaining targets
-            if (targetSet.Count == 0)
-                yield break;
-
-            // Split remaining targets on semi-colon, this way even multiple filter expressions can be used as inputs to functions
-            string[] allTargets = targetSet.Select(target => target.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)).SelectMany(currentTargets => currentTargets).ToArray();
-
-            Dictionary<ulong, string> targetMap = new();
-
-            // Expand target set to include point tags for all parsed inputs
-            foreach (string target in allTargets)
-            {
-                targetSet.UnionWith(TargetCache<string[]>.GetOrAdd(target, () =>
-                {
-                    MeasurementKey[] results = AdapterBase.ParseInputMeasurementKeys(Metadata, false, target.SplitAlias(out string alias));
-
-                    if (!string.IsNullOrWhiteSpace(alias) && results.Length == 1)
-                        return new[] { $"{alias}={results[0].TagFromKey(Metadata)}" };
-
-                    return results.Select(key => key.TagFromKey(Metadata)).ToArray();
-                }));
-            }
-
-            //FILTER EXPRESSION IS HERE
-            // Target set now contains both original expressions and newly parsed individual point tags - to create final point list we
-            // are only interested in the point tags, provided either by direct user entry or derived by parsing filter expressions
-            foreach (string target in targetSet)
-            {
-                // Reduce all targets down to a dictionary of point ID's mapped to point tags
-                MeasurementKey key = TargetCache<MeasurementKey>.GetOrAdd(target, () => target.KeyFromTag(Metadata));
-
-                if (key == MeasurementKey.Undefined)
-                {
-                    Tuple<MeasurementKey, string> result = TargetCache<Tuple<MeasurementKey, string>>.GetOrAdd($"signalID@{target}", () => target.KeyAndTagFromSignalID(Metadata));
-
-                    key = result.Item1;
-                    string pointTag = result.Item2;
-
-                    if (key == MeasurementKey.Undefined)
-                    {
-                        result = TargetCache<Tuple<MeasurementKey, string>>.GetOrAdd($"key@{target}", () =>
-                        {
-                            MeasurementKey.TryParse(target, out MeasurementKey parsedKey);
-
-                            return new Tuple<MeasurementKey, string>(parsedKey, parsedKey.TagFromKey(Metadata));
-                        });
-
-                        key = result.Item1;
-                        pointTag = result.Item2;
-
-                        if (key != MeasurementKey.Undefined)
-                            targetMap[key.ID] = pointTag;
-                    }
-                    else
-                    {
-                        targetMap[key.ID] = pointTag;
-                    }
-                }
-                else
-                {
-                    targetMap[key.ID] = target;
-                }
-            }
-
-            // Query underlying data source for each target - to prevent parallel read from data source we enumerate immediately
-            List<DataSourceValue> dataValues = QueryDataSourceValues(startTime, stopTime, interval, includePeaks, targetMap)
-                .TakeWhile(_ => !cancellationToken.IsCancellationRequested).ToList();
-
-            foreach (KeyValuePair<ulong, string> target in targetMap)
-                yield return new DataSourceValueGroup
-                {
-                    Target = target.Value,
-                    RootTarget = target.Value,
-                    SourceTarget = sourceTarget,
-                    Source = dataValues.Where(dataValue => dataValue.Target.Equals(target.Value)),
-                    DropEmptySeries = dropEmptySeries,
-                    refId = sourceTarget.refId
-                };
-        }
-        */
-
         private DataRow LookupTargetMetadata(string target)
         {
             return TargetCache<DataRow>.GetOrAdd(target, () =>
@@ -397,6 +248,7 @@ namespace GrafanaAdapters
                 }
             });
         }
+
 
         #endregion
     }
