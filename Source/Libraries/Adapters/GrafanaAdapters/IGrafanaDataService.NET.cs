@@ -141,6 +141,11 @@ namespace GrafanaAdapters
         [OperationContract, WebInvoke(UriTemplate = "/getfunctions", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
         Task<FunctionDescription[]> GetFunctions();
 
+        /// <summary>
+        /// Queries svailable metaDataFields for a given source.
+        /// </summary>
+        [OperationContract, WebInvoke(UriTemplate = "/getmetadataoptions", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+        Task<Dictionary<string, string[]>> GetMetadataOptions(MetadataOptionsRequest request);
     }
 }
 

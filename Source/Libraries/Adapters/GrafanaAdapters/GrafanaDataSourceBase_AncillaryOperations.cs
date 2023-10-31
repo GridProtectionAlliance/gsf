@@ -553,5 +553,39 @@ namespace GrafanaAdapters
             
         }
 
+        /// <summary>
+        /// Requests Grafana Metadata source for multiple targets.
+        /// </summary>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <param name="requests"> The targets and the meta data requested</param>
+        /// <returns> Queried metadata.</returns>
+        public Task<Dictionary<string, string[]>> GetMetadataOptions(MetadataOptionsRequest request, CancellationToken cancellationToken)
+        {
+            return Task.Factory.StartNew(() =>
+            {
+                Dictionary<string, string[]> tableColumnNames = new Dictionary<string, string[]>();
+
+                foreach (string table in request.Tables)
+                {
+                    if (Metadata.Tables.Contains(table))
+                    {
+                        DataColumnCollection columns = Metadata.Tables[table].Columns;
+
+                        List<string> columnNames = new List<string>();
+
+                        for (int i = 0; i < columns.Count; i++)
+                        {
+                            columnNames.Add(columns[i].ColumnName);
+                        }
+
+                        tableColumnNames[table] = columnNames.ToArray();
+                    }
+                }
+                return tableColumnNames;
+
+            },
+           cancellationToken);
+        }
+
     }
 }

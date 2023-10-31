@@ -213,6 +213,12 @@ namespace GrafanaAdapters
         /// </summary>
         public async Task<FunctionDescription[]> GetFunctions() =>
             await m_dataSource.GetFunctionDescription(m_cancellationSource.Token);
+
+        /// <summary>
+        /// Queries svailable metaDataFields for a given source.
+        /// </summary>
+        public async Task<Dictionary<string, string[]>> GetMetadataOptions(MetadataOptionsRequest request) => 
+            await m_dataSource.GetMetadataOptions(request,m_cancellationSource.Token);
     }
 }
 
