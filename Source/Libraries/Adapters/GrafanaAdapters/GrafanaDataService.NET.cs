@@ -197,9 +197,9 @@ namespace GrafanaAdapters
         /// <summary>
         /// Queries available MetaData Options.
         /// </summary>
-        /// <param name="request">A boolean indicating whether the data is a phasor.</param>
-        public async Task<string[]> GetTableOptions(bool request) => 
-            await m_dataSource.GetTableOptions(request, m_cancellationSource.Token);
+        /// <param name="isPhasor">A boolean indicating whether the data is a phasor.</param>
+        public async Task<string[]> GetTableOptions(bool isPhasor) => 
+            await m_dataSource.GetTableOptions(isPhasor, m_cancellationSource.Token);
 
         /// <summary>
         /// Requests Grafana Metadatas source for multiple targets.

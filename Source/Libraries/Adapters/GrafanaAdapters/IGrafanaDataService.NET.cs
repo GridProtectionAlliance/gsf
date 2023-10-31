@@ -133,7 +133,7 @@ namespace GrafanaAdapters
         /// </summary>
         /// <param name="request">A boolean indicating whether the data is a phasor.</param>
         [OperationContract, WebInvoke(UriTemplate = "/gettableoptions", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        Task<string[]> GetTableOptions(bool request);
+        Task<string[]> GetTableOptions(bool isPhasor);
 
         /// <summary>
         /// Queries description of available functions.
@@ -142,7 +142,7 @@ namespace GrafanaAdapters
         Task<FunctionDescription[]> GetFunctions();
 
         /// <summary>
-        /// Queries svailable metaDataFields for a given source.
+        /// Queries available metaDataFields for a given source.
         /// </summary>
         [OperationContract, WebInvoke(UriTemplate = "/getmetadataoptions", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
         Task<Dictionary<string, string[]>> GetMetadataOptions(MetadataOptionsRequest request);
