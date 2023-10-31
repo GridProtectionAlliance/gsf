@@ -25,7 +25,7 @@ namespace GrafanaAdapters.GrafanaFunctions
         public string Description { get; set; }
         public bool Required { get; set; }
         public Type ParameterType => typeof(T);
-        public string ParameterTypeName { get; set; }
+        public string ParameterTypeName => ParameterType.Name;
 
         private (T Value, bool Success) LookupMetadata(GrafanaDataSourceBase dataSourceBase, Dictionary<string, string> metadata, string value, string target, bool isPhasor)
         {

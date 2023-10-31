@@ -40,15 +40,13 @@ namespace GrafanaAdapters.GrafanaFunctions
                 {
                     Default = new DataSourceValueGroup<DataSourceValue>(),
                     Description = "Data Points",
-                    Required = true,
-                    ParameterTypeName = "data"
+                    Required = true
                 },
                 new Parameter<bool>
                 {
                     Default = true,
                     Description = "A boolean flag that determines if infinite values should also be excluded - defaults to true",
-                    Required = false,
-                    ParameterTypeName = "boolean"
+                    Required = false
                 },
             };
 

@@ -44,22 +44,19 @@ namespace GrafanaAdapters.GrafanaFunctions
                 {
                     Default = "1",
                     Description = "A integer value or percent representing number of % of elements to take.",
-                    Required = true,
-                    ParameterTypeName = "string"
+                    Required = true
                 },
                 new Parameter<IDataSourceValueGroup>
                 {
                     Default = new DataSourceValueGroup<DataSourceValue>(),
                     Description = "Data Points",
-                    Required = true,
-                    ParameterTypeName = "data"
+                    Required = true              
                 },
                 new Parameter<bool>
                 {
                     Default = true,
                     Description = "A boolean flag which representing if time in dataset should be normalized.",
-                    Required = false,
-                    ParameterTypeName = "boolean"
+                    Required = false
                 },
             };
 

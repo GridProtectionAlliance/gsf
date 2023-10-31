@@ -41,22 +41,19 @@ namespace GrafanaAdapters.GrafanaFunctions
                 {
                     Default = 0.033,
                     Description = "The level of tolerance.",
-                    Required = true,
-                    ParameterTypeName = "string"
+                    Required = true
                 },
                 new Parameter<IDataSourceValueGroup>
                 {
                     Default = new DataSourceValueGroup<DataSourceValue>(),
                     Description = "First datapoint",
-                    Required = true,
-                    ParameterTypeName = "data"
+                    Required = true
                 },
                 new Parameter<IDataSourceValueGroup>
                 {
                     Default = new DataSourceValueGroup<DataSourceValue>(),
                     Description = "Second datapoint",
-                    Required = true,
-                    ParameterTypeName = "data"
+                    Required = true
                 }
             };
 

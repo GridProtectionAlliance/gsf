@@ -44,15 +44,13 @@ namespace GrafanaAdapters.GrafanaFunctions
                 {
                     Default = new DataSourceValueGroup<DataSourceValue>(),
                     Description = "Data Points",
-                    Required = true,
-                    ParameterTypeName = "data"
+                    Required = true
                 },
                 new Parameter<bool>
                 {
                     Default = false,
                     Description = "A boolean flag representing if the sample based calculation should be used.",
-                    Required = false,
-                    ParameterTypeName = "boolean"
+                    Required = false
                 },
             };
 

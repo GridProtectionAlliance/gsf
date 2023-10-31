@@ -40,15 +40,13 @@ namespace GrafanaAdapters.GrafanaFunctions
                 {
                     Default = new DataSourceValueGroup<DataSourceValue>(),
                     Description = "Data Points",
-                    Required = true,
-                    ParameterTypeName = "data"
+                    Required = true
                 },
                 new Parameter<int>
                 {
                     Default = 0,
                     Description = "A positive integer value representing the number of decimal places in the return value - defaults to 0.",
-                    Required = false,
-                    ParameterTypeName = "int"
+                    Required = false
                 },
             };
 

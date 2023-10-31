@@ -39,8 +39,7 @@ namespace GrafanaAdapters.GrafanaFunctions
                 {
                     Default = new DataSourceValueGroup<DataSourceValue>(),
                     Description = "Data Points",
-                    Required = true,
-                    ParameterTypeName = "data"
+                    Required = true
                 }
             };
 

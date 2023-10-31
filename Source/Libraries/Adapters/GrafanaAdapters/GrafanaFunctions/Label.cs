@@ -44,15 +44,13 @@ namespace GrafanaAdapters.GrafanaFunctions
                 {
                     Default = "",
                     Description = "Specifies label to be renamed to.",
-                    Required = true,
-                    ParameterTypeName = "string"
+                    Required = true
                 },
                 new Parameter<IDataSourceValueGroup>
                 {
                     Default = new DataSourceValueGroup<DataSourceValue>(),
                     Description = "Data Points",
-                    Required = true,
-                    ParameterTypeName = "data"
+                    Required = true
                 }
             };
 

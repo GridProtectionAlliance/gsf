@@ -41,15 +41,13 @@ namespace GrafanaAdapters.GrafanaFunctions
                 {
                     Default = "100",
                     Description = "A floating point value, representing a percentage, that must range from 0 to 100.",
-                    Required = true,
-                    ParameterTypeName = "string"
+                    Required = true
                 },
                 new Parameter<IDataSourceValueGroup>
                 {
                     Default = new DataSourceValueGroup<DataSourceValue>(),
                     Description = "Data Points",
-                    Required = true,
-                    ParameterTypeName = "data"
+                    Required = true
                 },
             };
 

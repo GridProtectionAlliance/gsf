@@ -42,14 +42,12 @@ namespace GrafanaAdapters.GrafanaFunctions
                     Default = 0,
                     Description = "A floating point value representing an additive offset to be applied to each value the source series.",
                     Required = true,
-                    ParameterTypeName = "string"
                 },
                 new Parameter<IDataSourceValueGroup>
                 {
                     Default = new DataSourceValueGroup<DataSourceValue>(),
                     Description = "Data Points",
-                    Required = true,
-                    ParameterTypeName = "data"
+                    Required = true
                 }
             };
 

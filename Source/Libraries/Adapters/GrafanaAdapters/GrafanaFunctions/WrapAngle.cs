@@ -44,14 +44,12 @@ namespace GrafanaAdapters.GrafanaFunctions
                     Default = new DataSourceValueGroup<DataSourceValue>(),
                     Description = "Data Points",
                     Required = true,
-                    ParameterTypeName = "data"
                 },
                 new Parameter<AngleUnit>
                 {
                     Default = AngleUnit.Degrees,
                     Description = "Specifies the type of angle units and must be one of the following: Degrees, Radians, Grads, ArcMinutes, ArcSeconds or AngularMil",
                     Required = false,
-                    ParameterTypeName = "angle"
                 }
             };
 

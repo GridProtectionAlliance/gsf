@@ -44,36 +44,31 @@ namespace GrafanaAdapters.GrafanaFunctions
                 {
                     Default = 0,
                     Description = "A floating point value representing the low end of the range allowed in the return series.",
-                    Required = true,
-                    ParameterTypeName = "string"
+                    Required = true
                 },
                 new Parameter<double>
                 {
                     Default = 0,
                     Description = "A floating point value representing the high end of the range allowed in the return series.",
-                    Required = true,
-                    ParameterTypeName = "string"
+                    Required = true
                 },
                 new Parameter<IDataSourceValueGroup>
                 {
                     Default = new DataSourceValueGroup<DataSourceValue>(),
                     Description = "Data Points",
-                    Required = true,
-                    ParameterTypeName = "data"
+                    Required = true
                 },
                 new Parameter<bool>
                 {
                     Default = false,
                     Description = "A boolean flag which determines if low value is inclusive.",
-                    Required = false,
-                    ParameterTypeName = "boolean"
+                    Required = false
                 },
                 new Parameter<bool>
                 {
                     Default = false,
                     Description = "A boolean flag which determines if high value is inclusive.",
-                    Required = false,
-                    ParameterTypeName = "boolean"
+                    Required = false
                 },
             };
 

@@ -41,15 +41,13 @@ namespace GrafanaAdapters.GrafanaFunctions
                 {
                     Default = 0,
                     Description = "A floating point value representing an divisive offset to be applied to each value the source series.",
-                    Required = true,
-                    ParameterTypeName = "string"
+                    Required = true
                 },
                 new Parameter<IDataSourceValueGroup>
                 {
                     Default = new DataSourceValueGroup<DataSourceValue>(),
                     Description = "Data Points",
-                    Required = true,
-                    ParameterTypeName = "data"
+                    Required = true
                 }
             };
 
