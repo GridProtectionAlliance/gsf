@@ -39,11 +39,7 @@ namespace GrafanaAdapters
         /// Target point/tag name.
         /// </summary>
         public string target { get; set; }
-
-        /// <summary>
-        /// Target type, can be "timeseries" or "table".
-        /// </summary>
-        public string type { get; set; }
+       
         /// <summary>
         /// Target method, can either be phasor or not
         /// </summary>
