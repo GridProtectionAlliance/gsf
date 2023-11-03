@@ -16,11 +16,74 @@ using System.ServiceModel.Description;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
-
 namespace GrafanaAdapters.GrafanaFunctions
 {
+
     internal static class FunctionParser
     {
+        internal class ParsedTarget<T>
+        {
+            private string[] PointTargets;
+
+            public IGrafanaFunction Function { get; }
+            public string[] DataTargets 
+            { 
+                get
+                {
+                    if (Function is null) return PointTargets;
+                    return TargetParameter.SelectMany(e => e.SelectMany(f => f.DataTargets)).ToArray();
+                } 
+            }
+            public List<ParsedTarget<T>[]> TargetParameter { get; }
+            public List<string> BaseParameter { get; }
+
+            public ParsedTarget(string expression)
+            {
+                TargetParameter = new List<ParsedTarget<T>[]>();
+                BaseParameter = new List<string>();
+                PointTargets = new string[0];
+
+                (Function, string parameterValue) = FunctionParser.MatchFunction<T>(expression);
+
+                if (Function is null)
+                {
+                    PointTargets = expression.Split(';');
+                    return;
+                }
+
+
+                int paramIndex = 0;
+
+                // Seperate datapoints from params
+                foreach (string parameter in SplitWithPrenteses(parameterValue, ','))
+                {
+                    // Datapoint
+                    if (Function.Parameters[paramIndex] is IParameter<IDataSourceValueGroup>)
+                    {
+                        TargetParameter.Add(ParseTargets(parameter));
+                    }
+                    // Other Parameter
+                    else
+                    {
+                        BaseParameter.Add(parameter);
+                    }
+                    paramIndex++;
+                }
+
+            }
+
+            /// <summary>
+            /// Parses an expresion like Func1(X,Y,Z);FUNC2(D,E,F) into sepperate ParsedTargets
+            /// </summary>
+            /// <param name="expression"></param>
+            /// <returns></returns>
+            public static ParsedTarget<T>[] ParseTargets(string expression)
+            {
+                if (string.IsNullOrWhiteSpace(expression)) return new ParsedTarget<T>[0];
+                return SplitWithPrenteses(expression, ';').Select(e => new ParsedTarget<T>(e)).ToArray();
+            }
+        }
+
         /// <summary>
         /// Parses an expresion using the available Grafana Functions
         /// </summary>
@@ -31,46 +94,48 @@ namespace GrafanaAdapters.GrafanaFunctions
         /// <returns></returns>
         public static DataSourceValueGroup<T>[] Parse<T>(string expression, GrafanaDataSourceBase dataSourceBase, QueryDataHolder queryData)
         {
-            if(queryData.CancellationToken.IsCancellationRequested) return null;
+            if (queryData.CancellationToken.IsCancellationRequested) return null;
 
-            (IGrafanaFunction function, string parameterValue) = MatchFunction<T>(expression);
+            // take the initial expression appart.... 
+            IEnumerable<ParsedTarget<T>> targets = ParsedTarget<T>.ParseTargets(expression);
 
-            // Base Case
-            if (function == null)
-            {                
-                if (queryData.IsPhasor)
-                    return GetPhasor(parameterValue, dataSourceBase, queryData) as DataSourceValueGroup<T>[];
-                else
-                    return GetDataSource(parameterValue, dataSourceBase, queryData) as DataSourceValueGroup<T>[];
-            }
+            //Get a Dictionary of PointTags and Data
+            Dictionary<string, DataSourceValueGroup<T>> pointData;
 
-            //Split Parameters
-            string[] parsedParameters = ParseParameters(parameterValue);
-            List<string> functionParameters = new List<string>(); //Other params
-            List<string> queryExpressions = new List<string>(); //Datapoints
-            int paramIndex = 0;
+            if (queryData.IsPhasor)
+                pointData = GetTargetPhasorData(targets.SelectMany(t => t.DataTargets).ToArray(), dataSourceBase, queryData) as Dictionary<string, DataSourceValueGroup<T>>;
+            else
+                pointData = GetTargetValueData(targets.SelectMany(t => t.DataTargets).ToArray(), dataSourceBase, queryData) as Dictionary<string, DataSourceValueGroup<T>>;
 
-            // Seperate datapoints from params
-            foreach (string parameter in parsedParameters)
+            // Apply the function
+            List<DataSourceValueGroup<T>[]> result = new List<DataSourceValueGroup<T>[]>();
+
+            // Initialize the list with placeholders to set capacity and enable index-based setting.
+            for (int i = 0; i < targets.Count(); i++)
+                result.Add(new DataSourceValueGroup<T>[0]);
+
+            // Walk through targets and save in order
+            Parallel.ForEach(targets, (target, loopState, index) =>
             {
-                // Datapoint
-                if (function.Parameters[paramIndex] is IParameter<IDataSourceValueGroup>)
-                {
-                    queryExpressions.Add(parameter);
-                }
-                // Other Parameter
-                else
-                {
-                    functionParameters.Add(parameter);
-                }
-                paramIndex++;
+                result[(int)index] = ProcessTarget<T>(target, pointData, dataSourceBase, queryData);
+            });
+
+            return result.SelectMany(e => e).ToArray();
+        }
+
+        private static DataSourceValueGroup<T>[] ProcessTarget<T>(ParsedTarget<T> target, Dictionary<string, DataSourceValueGroup<T>> pointData, GrafanaDataSourceBase dataSourceBase, QueryDataHolder queryOptions)
+        {
+            if (target.Function is null)
+            {
+                return target.DataTargets.SelectMany(t => GetPointTags(t, dataSourceBase))
+                .Select(t => pointData[t]).ToArray();
             }
 
             //Fetch datapoints query
             List<DataSourceValueGroup<T>[]> groupedDataValues = new List<DataSourceValueGroup<T>[]>();
-            foreach(string query in queryExpressions)
+            foreach (ParsedTarget<T>[] query in target.TargetParameter)
             {
-                DataSourceValueGroup<T>[] queryResult = Parse<T>(query ?? "", dataSourceBase, queryData);
+                DataSourceValueGroup<T>[] queryResult = query.SelectMany(q => ProcessTarget<T>(q, pointData, dataSourceBase, queryOptions)).ToArray();
                 groupedDataValues.Add(queryResult);
             }
 
@@ -83,20 +148,20 @@ namespace GrafanaAdapters.GrafanaFunctions
             List<DataSourceValueGroup<T>> res = new List<DataSourceValueGroup<T>>();
 
             // Initialize the list with placeholders to set capacity and enable index-based setting.
-            for (int i = 0; i < regroupedDataValues.Count(); i++) 
+            for (int i = 0; i < regroupedDataValues.Count(); i++)
                 res.Add(null);
 
             Parallel.ForEach(regroupedDataValues, (dataValues, loopState, index) =>
             {
-                List<IParameter> computeParameters = GenerateParameters(dataSourceBase, function, functionParameters, dataValues, queryData);
+                List<IParameter> computeParameters = GenerateParameters(dataSourceBase, target.Function, target.BaseParameter, dataValues, queryOptions);
                 DataSourceValueGroup<T> computedValues;
                 if (typeof(T) == typeof(DataSourceValue))
                 {
-                    computedValues = (DataSourceValueGroup<T>)(object)function.Compute(computeParameters);
+                    computedValues = (DataSourceValueGroup<T>)(object)target.Function.Compute(computeParameters);
                 }
                 else if (typeof(T) == typeof(PhasorValue))
                 {
-                    computedValues = (DataSourceValueGroup<T>)(object)function.ComputePhasor(computeParameters);
+                    computedValues = (DataSourceValueGroup<T>)(object)target.Function.ComputePhasor(computeParameters);
                 }
                 else
                 {
@@ -107,14 +172,11 @@ namespace GrafanaAdapters.GrafanaFunctions
                 res[(int)index] = computedValues;
             });
 
-            // Return the result to the previous call
             return res.ToArray();
         }
-
-
         private static (IGrafanaFunction function, string parameterValue) MatchFunction<T>(string expression)
         {
-            List<IGrafanaFunction> grafanaFunctions = GetGrafanaFunctions(); 
+            List<IGrafanaFunction> grafanaFunctions = GetGrafanaFunctions();
 
             foreach (IGrafanaFunction function in grafanaFunctions)
             {
@@ -133,171 +195,36 @@ namespace GrafanaAdapters.GrafanaFunctions
             return (null, expression);
         }
 
-        public static DataSourceValueGroup<PhasorValue>[] GetPhasor(string expression, GrafanaDataSourceBase dataSourceBase, QueryDataHolder queryData)
+        /// <summary>
+        /// Turns an expression Target into PointTags (e.g. Filter, PPA:123)
+        /// </summary>
+        /// <param name="expression"></param>
+        /// <param name="dataSourceBase"></param>
+        /// <returns></returns>
+        private static string[] GetPointTags(string expression, GrafanaDataSourceBase dataSourceBase)
         {
-            if (expression == "" || expression == null)
-            {
-                return new DataSourceValueGroup<PhasorValue>[0];
-            }
-
             DataSet Metadata = dataSourceBase.Metadata;
-            string[] allTargets = expression.Split(';');
-            HashSet<string> targetSet = new HashSet<string>();
-            Dictionary<int, string> phasorTargets = new Dictionary<int, string>();
+            MeasurementKey[] results = AdapterBase.ParseInputMeasurementKeys(Metadata, false, expression.SplitAlias(out string alias));
 
-            //Loop through all targets
-            foreach(string targetLabel in allTargets)
-            {
-                if (targetLabel.StartsWith("FILTER ", StringComparison.OrdinalIgnoreCase) && AdapterBase.ParseFilterExpression(targetLabel.SplitAlias(out string alias), out string tableName, out string exp, out string sortField, out int takeCount))
-                {
-                    foreach (DataRow row in dataSourceBase.Metadata.Tables[tableName].Select(exp, sortField).Take(takeCount))
-                    {
-                        int targetId = Convert.ToInt32(row["ID"]);
-                        phasorTargets[Convert.ToInt32(targetId)] = row["Label"].ToString();
-                    }
-                    continue;
-                }
+                if (!string.IsNullOrWhiteSpace(alias) && results.Length == 1)
+                    return new[] { $"{alias}={results[0].TagFromKey(Metadata)}" };
 
-                //Get phasor id
-                DataRow[] phasorRows = Metadata.Tables["Phasor"].Select($"Label = '{targetLabel}'");
-                if (phasorRows.Length == 0)
-                    throw new Exception($"Unable to find label {targetLabel}");
-
-                foreach (DataRow row in phasorRows)
-                {
-                    int targetId = Convert.ToInt32(phasorRows[0]["ID"]);
-                    phasorTargets[targetId] = targetLabel;
-                }
-            }
-
-            List<DataSourceValueGroup<PhasorValue>> dataSourceValueGroups = new List<DataSourceValueGroup<PhasorValue>>();
-            // Preallocate with null or default values.
-            for (int i = 0; i < phasorTargets.Count; i++)
-            {
-                dataSourceValueGroups.Add(null);
-            }
-
-            Parallel.ForEach(phasorTargets, (item, loopState, index) =>
-            {
-                int phasorId = item.Key;
-                string phasorLabel = item.Value;
-                //Match phasor id to measurements
-                DataRow[] measurementRows = Metadata.Tables["ActiveMeasurements"].Select($"PhasorID = '{phasorId}'");
-
-                if (measurementRows.Length < 2)
-                {
-                    throw new Exception($"Did not locate both magnitude and longitude for {phasorLabel} with {phasorId} id");
-                }
-
-                //Get data
-                List<DataSourceValue> magValues = new();
-                List<DataSourceValue> angValues = new();
-                string[] dataSourceNames = { "", "" };
-                foreach (DataRow row in measurementRows)
-                {
-                    Dictionary<ulong, string> targetMap = new();
-                    ulong id = Convert.ToUInt64(row["ID"].ToString().Split(':')[1]);
-                    string pointTag = row["PointTag"].ToString();
-                    targetMap[id] = pointTag;
-
-                    List<DataSourceValue> dataValues = dataSourceBase.QueryDataSourceValues(queryData.StartTime, queryData.StopTime, queryData.Interval, queryData.IncludePeaks, targetMap)
-                        .TakeWhile(_ => !queryData.CancellationToken.IsCancellationRequested).ToList();
-
-                    //Assign to proper values
-                    if (pointTag.EndsWith(".MAG"))
-                    {
-                        magValues = dataValues;
-                        dataSourceNames[0] = pointTag;
-                    }
-                    else if (pointTag.EndsWith(".ANG"))
-                    {
-                        angValues = dataValues;
-                        dataSourceNames[1] = pointTag;
-                    }
-                    else
-                        throw new Exception($"Point format for {pointTag} is neither .MAG nor .ANG");
-                }
-
-                //Error check
-                //if (magValues.Count != angValues.Count)
-                //    throw new Exception($"Number of data points for mag or ang values do not match for {dataSourceNames[0]} and {dataSourceNames[1]}");
-
-                if (dataSourceNames[0] == "")
-                    throw new Exception($"Unable to find magnitude name for {phasorLabel}");
-                else if (dataSourceNames[1] == "")
-                    throw new Exception($"Unable to find angle name for {phasorLabel}");
-
-                //Convert datasource data to phasor data 
-                IEnumerable<PhasorValue> phasorValues = GeneratePhasorValues();
-
-                List<PhasorValue> GeneratePhasorValues()
-                {
-                    List<PhasorValue> phasorValues = new List<PhasorValue>();
-                    int index = 0;
-                    foreach (DataSourceValue mag in magValues)
-                    {
-                        if (index >= angValues.Count())
-                            continue;
-
-                        PhasorValue phasor = new()
-                        {
-                            MagnitudeTarget = dataSourceNames[0],
-                            AngleTarget = dataSourceNames[1],
-                            Flags = mag.Flags,
-                            Time = mag.Time,
-                            Magnitude = mag.Value,
-                            Angle = angValues[index].Value
-                        };
-
-                        index++;
-                        phasorValues.Add(phasor);
-                    }
-                    return phasorValues;
-                }
-
-                DataSourceValueGroup<PhasorValue> dataSourceValueGroup = new DataSourceValueGroup<PhasorValue>
-                {
-                    Target = $"{dataSourceNames[0]};{dataSourceNames[1]}",
-                    RootTarget = phasorLabel,
-                    SourceTarget = queryData.SourceTarget,
-                    Source = phasorValues,
-                    DropEmptySeries = queryData.DropEmptySeries,
-                    refId = queryData.SourceTarget.refId,
-                    metadata = GetMetadata(dataSourceBase, phasorLabel, queryData.MetadataSelection, true)
-                };
-
-                dataSourceValueGroups[(int)index] = dataSourceValueGroup;
-            });
-
-
-            return dataSourceValueGroups.ToArray();
+                return results.Select(key => key.TagFromKey(Metadata)).ToArray();
         }
-
-        public static DataSourceValueGroup<DataSourceValue>[] GetDataSource(string expression, GrafanaDataSourceBase dataSourceBase, QueryDataHolder queryData)
+        private static Dictionary<string, DataSourceValueGroup<DataSourceValue>> GetTargetValueData(string[] targets, GrafanaDataSourceBase dataSourceBase, QueryDataHolder queryData)
         {
-            if(expression == "" || expression == null)
-            {
-                return new DataSourceValueGroup<DataSourceValue>[0];
-            }
+            if (targets.Length == 0)
+                return new Dictionary<string, DataSourceValueGroup<DataSourceValue>>();
 
             DataSet Metadata = dataSourceBase.Metadata;
-
             Dictionary<ulong, string> targetMap = new();
-            string[] allTargets = expression.Split(';');
 
             // Expand target set to include point tags for all parsed inputs
             HashSet<string> targetSet = new HashSet<string>();
-            foreach (string target in allTargets)
+
+            foreach (string target in targets)
             {
-                targetSet.UnionWith(TargetCache<string[]>.GetOrAdd(target, () =>
-                {
-                    MeasurementKey[] results = AdapterBase.ParseInputMeasurementKeys(Metadata, false, target.SplitAlias(out string alias));
-
-                    if (!string.IsNullOrWhiteSpace(alias) && results.Length == 1)
-                        return new[] { $"{alias}={results[0].TagFromKey(Metadata)}" };
-
-                    return results.Select(key => key.TagFromKey(Metadata)).ToArray();
-                }));
+                targetSet.UnionWith(TargetCache<string[]>.GetOrAdd(target, () => GetPointTags(target, dataSourceBase)));
             }
 
             // Reduce all targets down to a dictionary of point ID's mapped to point tags
@@ -342,33 +269,160 @@ namespace GrafanaAdapters.GrafanaFunctions
             List<DataSourceValue> dataValues = dataSourceBase.QueryDataSourceValues(queryData.StartTime, queryData.StopTime, queryData.Interval, queryData.IncludePeaks, targetMap)
                 .TakeWhile(_ => !queryData.CancellationToken.IsCancellationRequested).ToList();
 
-            DataSourceValueGroup<DataSourceValue>[] dataResult = new DataSourceValueGroup<DataSourceValue>[targetMap.Count];
-            int index = 0;
-
-            foreach (KeyValuePair<ulong, string> target in targetMap)
-            {
+            return targetMap.ToDictionary(kvp => kvp.Value, kvp => {
                 IEnumerable<DataSourceValue> filteredValues = (IEnumerable<DataSourceValue>)dataValues.OfType<DataSourceValue>()
-                        .Where(dataValue => dataValue.Target.Equals(target.Value));
+                            .Where(dataValue => dataValue.Target.Equals(kvp.Value));
 
-                DataSourceValueGroup<DataSourceValue> dataSourceValueGroup = new DataSourceValueGroup<DataSourceValue>
+                return new DataSourceValueGroup<DataSourceValue>
                 {
-                    Target = target.Value,
-                    RootTarget = target.Value,
+                    Target = kvp.Value,
+                    RootTarget = kvp.Value,
                     SourceTarget = queryData.SourceTarget,
                     Source = filteredValues,
                     DropEmptySeries = queryData.DropEmptySeries,
                     refId = queryData.SourceTarget.refId,
-                    metadata = GetMetadata(dataSourceBase, target.Value, queryData.MetadataSelection, false)
+                    metadata = GetMetadata(dataSourceBase, kvp.Value, queryData.MetadataSelection, false)
                 };
-
-                dataResult[index] = dataSourceValueGroup;
-                index++;
-            }
-
-            
-            return dataResult;
+            });            
         }
 
+        private struct PhasorInfo
+        {
+            public string Label;
+            public string Magnitude;
+            public string Phase;
+        };
+
+        //Cleanup Neccesarry
+        private static Dictionary<string, DataSourceValueGroup<PhasorValue>> GetTargetPhasorData(string[] targets, GrafanaDataSourceBase dataSourceBase, QueryDataHolder queryData)
+        {
+            if (targets.Length == 0)
+                return new Dictionary<string, DataSourceValueGroup<PhasorValue>>();
+
+            DataSet Metadata = dataSourceBase.Metadata;
+
+            
+
+            HashSet<string> targetSet = new HashSet<string>();
+            Dictionary<int, PhasorInfo> phasorTargets = new ();
+
+            Dictionary<ulong, string> targetMap = new();
+
+            foreach (string targetLabel in targets)
+            {
+                if (targetLabel.StartsWith("FILTER ", StringComparison.OrdinalIgnoreCase) && AdapterBase.ParseFilterExpression(targetLabel.SplitAlias(out string alias), out string tableName, out string exp, out string sortField, out int takeCount))
+                {
+                    foreach (DataRow row in dataSourceBase.Metadata.Tables[tableName].Select(exp, sortField).Take(takeCount))
+                    {
+                        int targetId = Convert.ToInt32(row["ID"]);
+                        phasorTargets[Convert.ToInt32(targetId)] = new() 
+                        {
+                            Label = row["Label"].ToString(),
+                            Phase = "",
+                            Magnitude = ""
+                        };
+                    }
+                    continue;
+                }
+
+                //Get phasor id
+                DataRow[] phasorRows = Metadata.Tables["Phasor"].Select($"Label = '{targetLabel}'");
+                if (phasorRows.Length == 0)
+                    throw new Exception($"Unable to find label {targetLabel}");
+
+                foreach (DataRow row in phasorRows)
+                {
+                    int targetId = Convert.ToInt32(phasorRows[0]["ID"]);
+                    phasorTargets[targetId] = new()
+                    {
+                        Label = row["Label"].ToString(),
+                        Phase = "",
+                        Magnitude = ""
+                    };
+                    DataRow[] measurementRows = Metadata.Tables["ActiveMeasurements"].Select($"PhasorID = '{targetId}'");
+                    if(measurementRows.Length < 2)
+                    {
+                        throw new Exception($"Did not locate both magnitude and phase for {phasorTargets[targetId].Label} with {targetId} id");
+                    }
+                    foreach (DataRow pointRow in measurementRows)
+                    {
+
+                        ulong id = Convert.ToUInt64(pointRow["ID"].ToString().Split(':')[1]);
+                        string pointTag = pointRow["PointTag"].ToString();
+                        targetMap[id] = pointTag;
+                        if (pointRow["SignalType"].ToString().EndsWith("PH")) 
+                        {
+                            phasorTargets[targetId] = new()
+                            {
+                                Label = phasorTargets[targetId].Label,
+                                Phase = pointTag,
+                                Magnitude = phasorTargets[targetId].Magnitude,
+                            };
+                        }
+                        if (pointRow["SignalType"].ToString().EndsWith("PM"))
+                        {
+                            phasorTargets[targetId] = new()
+                            {
+                                Label = phasorTargets[targetId].Label,
+                                Magnitude = pointTag,
+                                Phase = phasorTargets[targetId].Phase,
+                            };
+                        }
+                    }
+                }
+            }
+
+            List<DataSourceValue> dataValues = dataSourceBase.QueryDataSourceValues(queryData.StartTime, queryData.StopTime, queryData.Interval, queryData.IncludePeaks, targetMap)
+                        .TakeWhile(_ => !queryData.CancellationToken.IsCancellationRequested).ToList();
+
+            return phasorTargets.ToDictionary((target) => target.Value.Label,(target) =>
+            {
+
+                IEnumerable<DataSourceValue> filteredMagnitudes = (IEnumerable<DataSourceValue>)dataValues.OfType<DataSourceValue>()
+                            .Where(dataValue => dataValue.Target.Equals(target.Value.Magnitude));
+                List<DataSourceValue> filteredPhases = dataValues.OfType<DataSourceValue>()
+                            .Where(dataValue => dataValue.Target.Equals(target.Value.Phase)).ToList();
+
+                IEnumerable<PhasorValue> phasorValues = GeneratePhasorValues();
+
+                List<PhasorValue> GeneratePhasorValues()
+                {
+                    List<PhasorValue> phasorValues = new List<PhasorValue>();
+                    int index = 0;
+                    foreach (DataSourceValue mag in filteredMagnitudes)
+                    {
+                        if (index >= filteredPhases.Count())
+                            continue;
+
+                        PhasorValue phasor = new()
+                        {
+                            MagnitudeTarget = target.Value.Magnitude,
+                            AngleTarget = target.Value.Phase,
+                            Flags = mag.Flags,
+                            Time = mag.Time,
+                            Magnitude = mag.Value,
+                            Angle = filteredPhases[index].Value
+                        };
+
+                        index++;
+                        phasorValues.Add(phasor);
+                    }
+                    return phasorValues;
+                }
+
+                return new DataSourceValueGroup<PhasorValue>
+                {
+                    Target = $"{target.Value.Magnitude};{target.Value.Phase}",
+                    RootTarget = target.Value.Label,
+                    SourceTarget = queryData.SourceTarget,
+                    Source = phasorValues,
+                    DropEmptySeries = queryData.DropEmptySeries,
+                    refId = queryData.SourceTarget.refId,
+                    metadata = GetMetadata(dataSourceBase, target.Value.Label, queryData.MetadataSelection, true)
+                };
+            });
+        }
+      
         public static Dictionary<string, string> GetMetadata(GrafanaDataSourceBase dataSourceBase, 
             string rootTarget, Dictionary<string, List<string>> metadataSelection, bool isPhasor = false)
         {
@@ -404,7 +458,7 @@ namespace GrafanaAdapters.GrafanaFunctions
         }
 
 
-        public static List<IParameter> GenerateParameters<T>(GrafanaDataSourceBase dataSourceBase, IGrafanaFunction function, 
+        private static List<IParameter> GenerateParameters<T>(GrafanaDataSourceBase dataSourceBase, IGrafanaFunction function, 
             List<string> parsedParameters, DataSourceValueGroup<T>[] dataValues, QueryDataHolder queryData)
         {
             List<IParameter> parameters = function.Parameters;
@@ -492,55 +546,7 @@ namespace GrafanaAdapters.GrafanaFunctions
             }
             return parameters;
         }
-
-        public static string[] ParseParameters(string expression)
-        {
-            if (expression == null)
-            {
-                return new string[0];
-            }
-
-            List<string> parameters = new List<string>();
-            StringBuilder currentParameter = new StringBuilder();
-            int nestedParenthesesCount = 0;
-
-            for (int i = 0; i < expression.Length; i++)
-            {
-                char currentChar = expression[i];
-
-                //Count parenthesis
-                if (currentChar == '(')
-                {
-                    nestedParenthesesCount++;
-                }
-                else if (currentChar == ')')
-                {
-                    nestedParenthesesCount--;
-                }
-
-                //Not inside (), store
-                if (currentChar == ',' && nestedParenthesesCount == 0)
-                {
-                    parameters.Add(currentParameter.ToString().Trim());
-                    currentParameter.Clear();
-                }
-                //Inside (), append for next part
-                else
-                {
-                    currentParameter.Append(currentChar);
-                }
-            }
-
-            if (currentParameter.Length > 0)
-            {
-                parameters.Add(currentParameter.ToString().Trim());
-            }
-
-            return parameters.ToArray();
-        }
-
-
-
+        
         public static List<IGrafanaFunction> GetGrafanaFunctions()
         {
             List<Type> implementationTypes = typeof(IGrafanaFunction).LoadImplementations(FilePath.GetAbsolutePath("").EnsureEnd(Path.DirectorySeparatorChar), true, false).ToList();
@@ -625,7 +631,52 @@ namespace GrafanaAdapters.GrafanaFunctions
             });
         }
 
+        /// <summary>
+        /// Splits a string by a character accounting for Prenteses not being split up
+        /// </summary>
+        /// <param name="expression"></param>
+        /// <param name="splitChar"></param>
+        /// <returns></returns>
+        private static string[] SplitWithPrenteses(string expression, char splitChar)
+        {
+            List<string> result = new List<string>();
+            StringBuilder currentParameter = new StringBuilder();
+            int nestedParenthesesCount = 0;
 
+            for (int i = 0; i < expression.Length; i++)
+            {
+                char currentChar = expression[i];
+
+                //Count parenthesis
+                if (currentChar == '(')
+                {
+                    nestedParenthesesCount++;
+                }
+                else if (currentChar == ')')
+                {
+                    nestedParenthesesCount--;
+                }
+
+                //Not inside (), store
+                if (currentChar == splitChar && nestedParenthesesCount == 0)
+                {
+                    result.Add(currentParameter.ToString().Trim());
+                    currentParameter.Clear();
+                }
+                //Inside (), append for next part
+                else
+                {
+                    currentParameter.Append(currentChar);
+                }
+            }
+
+            if (currentParameter.Length > 0)
+            {
+                result.Add(currentParameter.ToString().Trim());
+            }
+
+            return result.ToArray();
+        }
     }
 
 }
