@@ -37,6 +37,11 @@
 //       Added common case array parameter validation extensions
 //  12/14/2012 - Starlynn Danyelle Gilliam
 //       Modified Header.
+//  11/02/2023 - AJ Stadlin
+//       Added CountOfSequence methods
+//       CountOfSequence(T[], T[])
+//       CountOfSequence(T[], T[], int)
+//       CountOfSequence(T[], T[], int, int)
 //
 //******************************************************************************************************
 
@@ -474,6 +479,124 @@ namespace GSF
             }
 
             return index;
+        }
+
+        /// <summary>
+        /// Searches for the specified <paramref name="sequenceToCount"/> and returns the occurrence count within the <paramref name="array"/>.
+        /// </summary>
+        /// <param name="array">Array to search.</param>
+        /// <param name="sequenceToCount">Sequence of items to search for.</param>
+        /// <returns>The occurrence count of the <paramref name="sequenceToCount"/> in the <paramref name="array"/>, if found; otherwise, -1.</returns>
+        /// <typeparam name="T"><see cref="Type"/> of array.</typeparam>
+        public static int CountOfSequence<T>(this T[] array, T[] sequenceToCount) where T : IComparable<T>
+        {
+            if (array is null)
+                throw new ArgumentNullException(nameof(array));
+
+            if (sequenceToCount is null)
+                throw new ArgumentNullException(nameof(sequenceToCount));
+
+            return array.CountOfSequence(sequenceToCount, 0, array.Length);
+        }
+
+        /// <summary>
+        /// Searches for the specified <paramref name="sequenceToCount"/> and returns the occurence count within the range of elements in the <paramref name="array"/>
+        /// that starts at the specified index.
+        /// </summary>
+        /// <param name="array">Array to search.</param>
+        /// <param name="sequenceToCount">Sequence of items to search for.</param>
+        /// <param name="startIndex">Start index in the <paramref name="array"/> to start searching.</param>
+        /// <returns>The occurrence count of the <paramref name="sequenceToCount"/> in the <paramref name="array"/>, if found; otherwise, -1.</returns>
+        /// <typeparam name="T"><see cref="Type"/> of array.</typeparam>
+        public static int CountOfSequence<T>(this T[] array, T[] sequenceToCount, int startIndex) where T : IComparable<T>
+        {
+            if (array is null)
+                throw new ArgumentNullException(nameof(array));
+
+            if (sequenceToCount is null)
+                throw new ArgumentNullException(nameof(sequenceToCount));
+
+            return array.CountOfSequence(sequenceToCount, startIndex, array.Length - startIndex);
+        }
+
+        /// <summary>
+        /// Searches for the specified <paramref name="sequenceToCount"/> and returns the occurrence count within the range of elements in the <paramref name="array"/>
+        /// that starts at the specified index and contains the specified number of elements.
+        /// </summary>
+        /// <param name="array">Array to search.</param>
+        /// <param name="sequenceToCount">Sequence of items to search for.</param>
+        /// <param name="startIndex">Start index in the <paramref name="array"/> to start searching.</param>
+        /// <param name="length">Number of bytes in the <paramref name="array"/> to search through.</param>
+        /// <returns>The occurrence count of the <paramref name="sequenceToCount"/> in the <paramref name="array"/>, if found; otherwise, -1.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="sequenceToCount"/> is null or has zero length.
+        /// </exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// <paramref name="startIndex"/> is outside the range of valid indexes for the source array -or-
+        /// <paramref name="length"/> is less than 0.
+        /// </exception>
+        /// <typeparam name="T"><see cref="Type"/> of array.</typeparam>
+        public static int CountOfSequence<T>(this T[] array, T[] sequenceToCount, int startIndex, int length) where T : IComparable<T>
+        {
+            if (array is null)
+                throw new ArgumentNullException(nameof(array));
+
+            if (sequenceToCount is null || sequenceToCount.Length == 0)
+                throw new ArgumentNullException(nameof(sequenceToCount));
+
+            if (startIndex < 0)
+                throw new ArgumentOutOfRangeException(nameof(startIndex), "cannot be negative");
+
+            if (length < 0)
+                throw new ArgumentOutOfRangeException(nameof(length), "cannot be negative");
+
+            if (startIndex >= array.Length)
+                throw new ArgumentOutOfRangeException(nameof(startIndex), "not a valid index into source array");
+
+            if (startIndex + length > array.Length)
+                throw new ArgumentOutOfRangeException(nameof(length), "exceeds array size");
+
+            // Overflow is possible, but unlikely.  Therefore, this is omitted for performance
+            // if ((int.MaxValue - startIndex - length) < 0)
+            //    throw new ArgumentOutOfRangeException("startIndex + length", "exceeds maximum array size");            
+
+            // Search for first item in the sequence, if this doesn't exist then sequence doesn't exist
+            int index = Array.IndexOf(array, sequenceToCount[0], startIndex, length);
+
+            // Occurances counter
+            int foundSequenceCount = 0;
+
+            if (sequenceToCount.Length > 0)
+            {
+                while (index > -1)
+                {
+                    // See if next bytes in sequence match
+                    for (int x = 1; x < sequenceToCount.Length; x++)
+                    {
+                        // Make sure there's enough array remaining to accommodate this item
+                        if (index + x < startIndex + length)
+                        {
+                            // If sequence doesn't match, search for next first-item
+                            if (array[index + x].CompareTo(sequenceToCount[x]) != 0)
+                            {
+                                index = Array.IndexOf(array, sequenceToCount[0], index + 1, startIndex + length - (index + 1));
+                                break;
+                            }
+
+                            // If each item to find matched, we found the sequence
+                            if (x == sequenceToCount.Length - 1)
+                                foundSequenceCount++;
+                        }
+                        else
+                        {
+                            // Ran out of array, return -1
+                            index = -1;
+                        }
+                    }
+                }
+            }
+
+            return foundSequenceCount;
         }
 
         /// <summary>Returns comparison results of two binary arrays.</summary>
