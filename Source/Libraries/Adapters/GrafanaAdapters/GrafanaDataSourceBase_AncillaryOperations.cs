@@ -262,8 +262,8 @@ namespace GrafanaAdapters
 
                     AnnotationResponse response = new()
                     {
-                        annotation = request.annotation,
-                        time = datapoint[TimeSeriesValues.Time]
+                        time = datapoint[TimeSeriesValues.Time],
+                        endTime = datapoint[TimeSeriesValues.Time],
                     };
 
                     type.PopulateResponse(response, target, definition, datapoint, Metadata);

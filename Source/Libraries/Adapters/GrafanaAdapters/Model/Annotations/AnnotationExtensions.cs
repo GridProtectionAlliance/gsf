@@ -36,11 +36,11 @@ using GSF.TimeSeries.Adapters;
 namespace GrafanaAdapters
 {
     /// <summary>
-    /// Grafana <see cref="Annotation"/> extensions class.
+    /// Grafana <see cref="AnnotationRequest"/> extensions class.
     /// </summary>
-    public static class AnnotationExtensions
+    public static class AnnotationRequestExtensions
     {
-        private static readonly LogPublisher s_log = Logger.CreatePublisher(typeof(AnnotationExtensions), MessageClass.Component);
+        private static readonly LogPublisher s_log = Logger.CreatePublisher(typeof(AnnotationRequestExtensions), MessageClass.Component);
         private static readonly Regex s_aliasedTagExpression = new(@"^\s*(?<Identifier>[A-Z_][A-Z0-9_]*)\s*\=\s*(?<Expression>.+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         /// <summary>
@@ -172,15 +172,15 @@ namespace GrafanaAdapters
         /// <summary>
         /// Parses query expression from annotation for annotation type.
         /// </summary>
-        /// <param name="annotation">Grafana annotation.</param>
+        /// <param name="request">Grafana annotation.</param>
         /// <param name="useFilterExpression">Determines if query is using a filter expression.</param>
         /// <returns>Parsed annotation type for query expression from <paramref name="annotation"/>.</returns>
-        public static AnnotationType ParseQueryType(this Annotation annotation, out bool useFilterExpression)
+        public static AnnotationType ParseQueryType(this AnnotationRequest request, out bool useFilterExpression)
         {
-            if (annotation is null)
-                throw new ArgumentNullException(nameof(annotation));
+            if (request is null)
+                throw new ArgumentNullException(nameof(request));
 
-            string query = annotation.query ?? "";
+            string query = request.annotationQuery ?? "";
 
             Tuple<AnnotationType, bool> result = TargetCache<Tuple<AnnotationType, bool>>.GetOrAdd(query, () =>
             {
@@ -218,32 +218,20 @@ namespace GrafanaAdapters
             return result.Item1;
         }
 
-        /// <summary>
-        /// Parses query expression from annotation request for annotation type.
-        /// </summary>
-        /// <param name="request">Grafana annotation request.</param>
-        /// <param name="useFilterExpression">Determines if query is using a filter expression.</param>
-        /// <returns>Parsed annotation type for query expression from annotation <paramref name="request"/>.</returns>
-        public static AnnotationType ParseQueryType(this AnnotationRequest request, out bool useFilterExpression)
-        {
-            if (request is null)
-                throw new ArgumentNullException(nameof(request));
-
-            return request.annotation.ParseQueryType(out useFilterExpression);
-        }
+       
 
         /// <summary>
         /// Parses source definitions for an annotation query.
         /// </summary>
-        /// <param name="annotation">Grafana annotation.</param>
+        /// <param name="request">Grafana annotation request.</param>
         /// <param name="type">Annotation type.</param>
         /// <param name="source">Metadata of source definitions.</param>
         /// <param name="useFilterExpression">Determines if query is using a filter expression.</param>
-        /// <returns>Parsed source definitions from <paramref name="annotation"/>.</returns>
-        public static Dictionary<string, DataRow> ParseSourceDefinitions(this Annotation annotation, AnnotationType type, DataSet source, bool useFilterExpression)
+        /// <returns>Parsed source definitions from <paramref name="request"/>.</returns>
+        public static Dictionary<string, DataRow> ParseSourceDefinitions(this AnnotationRequest request, AnnotationType type, DataSet source, bool useFilterExpression)
         {
-            if (annotation is null)
-                throw new ArgumentNullException(nameof(annotation));
+            if (request is null)
+                throw new ArgumentNullException(nameof(request));
 
             if (source is null)
                 throw new ArgumentNullException(nameof(source));
@@ -251,7 +239,7 @@ namespace GrafanaAdapters
             if (type == AnnotationType.Undefined)
                 throw new InvalidOperationException("Unrecognized type or syntax for annotation query expression.");
 
-            string query = annotation.query ?? "";
+            string query = request.annotationQuery ?? "";
 
             return TargetCache<Dictionary<string, DataRow>>.GetOrAdd(query, () =>
             {
@@ -284,22 +272,7 @@ namespace GrafanaAdapters
             });
         }
 
-        /// <summary>
-        /// Parses source definitions for an annotation query.
-        /// </summary>
-        /// <param name="request">Grafana annotation request.</param>
-        /// <param name="type">Annotation type.</param>
-        /// <param name="source">Metadata of source definitions.</param>
-        /// <param name="useFilterExpression">Determines if query is using a filter expression.</param>
-        /// <returns>Parsed source definitions from annotation <paramref name="request"/>.</returns>
-        public static Dictionary<string, DataRow> ParseSourceDefinitions(this AnnotationRequest request, AnnotationType type, DataSet source, bool useFilterExpression)
-        {
-            if (request is null)
-                throw new ArgumentNullException(nameof(request));
-
-            return request.annotation.ParseSourceDefinitions(type, source, useFilterExpression);
-        }
-
+        
         /// <summary>
         /// Looks up point tag from measurement <paramref name="key"/> value.
         /// </summary>

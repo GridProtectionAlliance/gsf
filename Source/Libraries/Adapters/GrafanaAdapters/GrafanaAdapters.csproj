@@ -67,7 +67,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AdHocFilter.cs" />
-    <Compile Include="Model\Annotations\Annotation.cs" />
     <Compile Include="Model\Annotations\AnnotationExtensions.cs" />
     <Compile Include="Model\Annotations\AnnotationRequest.cs" />
     <Compile Include="Model\Annotations\AnnotationResponse.cs" />

@@ -29,11 +29,6 @@ namespace GrafanaAdapters
     public class AnnotationResponse
     {
         /// <summary>
-        /// Annotation in-response-to request.
-        /// </summary>
-        public Annotation annotation { get; set; }
-
-        /// <summary>
         /// Annotation title.
         /// </summary>
         public string title { get; set; }
@@ -42,6 +37,11 @@ namespace GrafanaAdapters
         /// Annotation time.
         /// </summary>
         public double time { get; set; }
+
+        /// <summary>
+        /// Annotation end time.
+        /// </summary>
+        public double endTime { get; set; }
 
         /// <summary>
         /// Annotation text.

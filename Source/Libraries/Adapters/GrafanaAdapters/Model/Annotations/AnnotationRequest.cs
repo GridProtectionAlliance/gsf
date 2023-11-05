@@ -31,7 +31,7 @@ namespace GrafanaAdapters
         /// <summary>
         /// Annotation request details.
         /// </summary>
-        public Annotation annotation { get; set; }
+        public string annotationQuery { get; set; }
 
         /// <summary>
         /// Request range.
