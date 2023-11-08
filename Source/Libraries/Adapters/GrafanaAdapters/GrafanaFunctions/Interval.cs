@@ -101,7 +101,7 @@ namespace GrafanaAdapters.GrafanaFunctions
             }
 
             // Set Values
-            dataSourceValues.Target = $"{Name}({dataSourceValues.Target},{timeUnit.Unit})";
+            dataSourceValues.Target = $"{Name}({value},{dataSourceValues.Target},{timeUnit.Unit})";
             dataSourceValues.Source = transformedDataSourceValues;
 
             return dataSourceValues;
