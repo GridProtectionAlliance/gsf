@@ -134,27 +134,6 @@ namespace GrafanaAdapters
             await m_dataSource.Search(request, m_cancellationSource.Token);
 
         /// <summary>
-        /// Search data source for a list of columns from a specific table.
-        /// </summary>
-        /// <param name="request">Table Name.</param>
-        public async Task<string[]> SearchFields(Target request) => 
-            await m_dataSource.SearchFields(request, m_cancellationSource.Token);
-
-        /// <summary>
-        /// Search data source for a list of tables.
-        /// </summary>
-        /// <param name="request">Request.</param>
-        public async Task<string[]> SearchFilters(Target request) => 
-            await m_dataSource.SearchFilters(request, m_cancellationSource.Token);
-
-        /// <summary>
-        /// Search data source for a list of columns from a specific table.
-        /// </summary>
-        /// <param name="request">Table Name.</param>
-        public async Task<string[]> SearchOrderBys(Target request) => 
-            await m_dataSource.SearchOrderBys(request, m_cancellationSource.Token);
-
-        /// <summary>
         /// Queries openHistorian for annotations in a time-range (e.g., Alarms).
         /// </summary>
         /// <param name="request">Annotation request.</param>
@@ -166,47 +145,13 @@ namespace GrafanaAdapters
 
             return await m_dataSource.Annotations(request, m_cancellationSource.Token);
         }
-
-        /// <summary>
-        /// Queries openHistorian location data for Grafana offsetting duplicate coordinates using a radial distribution.
-        /// </summary>
-        /// <param name="request"> Query request.</param>
-        /// <returns>JSON serialized location metadata for specified targets.</returns>
-        public async Task<string> GetLocationData(LocationRequest request)
-        {
-            if (request.zoom is null || request.radius is null)
-                return await LocationData.GetLocationData(request.request, m_cancellationSource.Token);
-
-            return await LocationData.GetLocationData((double)request.radius, (double)request.zoom, request.request, m_cancellationSource.Token);
-        }
-
-        /// <summary>
-        /// Requests available tag keys.
-        /// </summary>
-        /// <param name="_">Tag keys request.</param>
-        public async Task<TagKeysResponse[]> TagKeys(TagKeysRequest _) => 
-            await m_dataSource.TagKeys(_, m_cancellationSource.Token);
-
-        /// <summary>
-        /// Requests available tag values.
-        /// </summary>
-        /// <param name="request">Tag values request.</param>
-        public async Task<TagValuesResponse[]> TagValues(TagValuesRequest request) => 
-            await m_dataSource.TagValues(request, m_cancellationSource.Token);
-
+       
         /// <summary>
         /// Queries available MetaData Options.
         /// </summary>
         /// <param name="isPhasor">A boolean indicating whether the data is a phasor.</param>
         public async Task<string[]> GetTableOptions(bool isPhasor) => 
             await m_dataSource.GetTableOptions(isPhasor, m_cancellationSource.Token);
-
-        /// <summary>
-        /// Requests Grafana Metadatas source for multiple targets.
-        /// </summary>
-        /// <param name="requests">Array of query requests.</param>
-        public async Task<string> GetMetadatas(MetadataTargetRequest[] requests) => 
-            await m_dataSource.GetMetadatas(requests, m_cancellationSource.Token);
 
         /// <summary>
         /// Queries description of available functions.

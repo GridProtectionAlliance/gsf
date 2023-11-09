@@ -78,26 +78,6 @@ namespace GrafanaAdapters
         [OperationContract, WebInvoke(UriTemplate = "/search", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
         Task<string[]> Search(Target request);
 
-        /// <summary>
-        /// Search data source for a list of columns from a specific table.
-        /// </summary>
-        /// <param name="request">Table Name.</param>
-        [OperationContract, WebInvoke(UriTemplate = "/searchfields", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        Task<string[]> SearchFields(Target request);
-
-        /// <summary>
-        /// Search data source for a list of tables.
-        /// </summary>
-        /// <param name="request">Request.</param>
-        [OperationContract, WebInvoke(UriTemplate = "/searchfilters", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        Task<string[]> SearchFilters(Target request);
-
-        /// <summary>
-        /// Search data source for a list of columns from a specific table to use for ORDER BY expression.
-        /// </summary>
-        /// <param name="request">Table Name.</param>
-        [OperationContract, WebInvoke(UriTemplate = "/searchorderbys", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        Task<string[]> SearchOrderBys(Target request);
 
         /// <summary>
         /// Queries openHistorian for annotations in a time-range (e.g., Alarms).
@@ -106,32 +86,10 @@ namespace GrafanaAdapters
         [OperationContract, WebInvoke(UriTemplate = "/annotations", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
         Task<List<AnnotationResponse>> Annotations(AnnotationRequest request);
 
-
-        /// <summary>
-        /// Requests available tag keys.
-        /// </summary>
-        /// <param name="_">Tag keys request.</param>
-        [OperationContract, WebInvoke(UriTemplate = "/tag-keys", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        Task<TagKeysResponse[]> TagKeys(TagKeysRequest _);
-
-        /// <summary>
-        /// Requests available tag values.
-        /// </summary>
-        /// <param name="request">Tag values request.</param>
-        [OperationContract, WebInvoke(UriTemplate = "/tag-values", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        Task<TagValuesResponse[]> TagValues(TagValuesRequest request);
-
-        /// <summary>
-        /// Requests Grafana Metadatas source for multiple targets.
-        /// </summary>
-        /// <param name="requests">Array of query requests.</param>
-        [OperationContract, WebInvoke(UriTemplate = "/getmetadatas", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        Task<string> GetMetadatas(MetadataTargetRequest[] requests);
-
         /// <summary>
         /// Queries available MetaData Options.
         /// </summary>
-        /// <param name="request">A boolean indicating whether the data is a phasor.</param>
+        /// <param name="isPhasor">A boolean indicating whether the data is a phasor.</param>
         [OperationContract, WebInvoke(UriTemplate = "/gettableoptions", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
         Task<string[]> GetTableOptions(bool isPhasor);
 
@@ -142,8 +100,9 @@ namespace GrafanaAdapters
         Task<FunctionDescription[]> GetFunctions();
 
         /// <summary>
-        /// Queries available metaDataFields for a given source.
+        /// Queries available metaDataFields for a given set of tables.
         /// </summary>
+        /// <param name="request"> the set of Tables to be queried. </param>
         [OperationContract, WebInvoke(UriTemplate = "/getmetadataoptions", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
         Task<Dictionary<string, string[]>> GetMetadataOptions(MetadataOptionsRequest request);
     }

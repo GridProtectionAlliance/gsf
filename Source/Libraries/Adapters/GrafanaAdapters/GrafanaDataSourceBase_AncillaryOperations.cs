@@ -180,50 +180,6 @@ namespace GrafanaAdapters
         }
 
         /// <summary>
-        /// Search data source meta-data for a list of columns from a specific table.
-        /// </summary>
-        /// <param name="request">Table Name.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        public virtual Task<string[]> SearchFields(Target request, CancellationToken cancellationToken)
-        {
-            return Task.Factory.StartNew(() =>
-            {
-                return TargetCache<string[]>.GetOrAdd($"search!fields!{request.target}", () => Metadata.Tables[request.target].Columns.Cast<DataColumn>().Select(column => column.ColumnName).ToArray());
-            },
-            cancellationToken);
-        }
-
-        /// <summary>
-        /// Search data source meta-data for a list of tables.
-        /// </summary>
-        /// <param name="request">Request - ignored.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        public virtual Task<string[]> SearchFilters(Target request, CancellationToken cancellationToken)
-        {
-            return Task.Factory.StartNew(() =>
-            {
-                // Any table that includes columns for ID, SignalID, PointTag, Adder and Multiplier can be used as measurement sources for filter expressions
-                return TargetCache<string[]>.GetOrAdd("search!filters!{63F7E9F6B334}", () => Metadata.Tables.Cast<DataTable>().Where(table => new[] { "ID", "SignalID", "PointTag", "Adder", "Multiplier" }.All(fieldName => table.Columns.Contains(fieldName))).Select(table => table.TableName).ToArray());
-            },
-            cancellationToken);
-        }
-
-        /// <summary>
-        /// Search data source meta-data for a list of columns from a specific table to use for ORDER BY expression.
-        /// </summary>
-        /// <param name="request">Table Name.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        public virtual Task<string[]> SearchOrderBys(Target request, CancellationToken cancellationToken)
-        {
-            return Task.Factory.StartNew(() =>
-            {
-                // Result will typically be the same list as SearchFields but allows ability to deviate in case certain fields are not suitable for ORDER BY expression
-                return TargetCache<string[]>.GetOrAdd($"search!orderbys!{request.target}", () => Metadata.Tables[request.target].Columns.Cast<DataColumn>().Select(column => column.ColumnName).ToArray());
-            },
-            cancellationToken);
-        }
-
-        /// <summary>
         /// Queries data source for annotations in a time-range (e.g., Alarms).
         /// </summary>
         /// <param name="request">Annotation request.</param>
@@ -289,51 +245,6 @@ namespace GrafanaAdapters
             return responses;
         }
 
-        /// <summary>
-        /// Requests available tag keys.
-        /// </summary>
-        /// <param name="_">Tag keys request.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        public Task<TagKeysResponse[]> TagKeys(TagKeysRequest _, CancellationToken cancellationToken)
-        {
-            static string getType(Type type) =>
-                type == typeof(bool) ? "boolean" : type.IsNumeric() ? "number" : "string";
-
-            return Task.Factory.StartNew(() =>
-            {
-                return TargetCache<TagKeysResponse[]>.GetOrAdd("tagkeys", () =>
-                    Metadata.Tables["ActiveMeasurements"].Columns.Cast<DataColumn>().Select(column =>
-                        new TagKeysResponse
-                        {
-                            type = getType(column.DataType),
-                            text = column.ColumnName
-                        }).ToArray());
-            },
-            cancellationToken);
-        }
-
-        /// <summary>
-        /// Requests available tag values.
-        /// </summary>
-        /// <param name="request">Tag values request.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        public Task<TagValuesResponse[]> TagValues(TagValuesRequest request, CancellationToken cancellationToken)
-        {
-            return Task.Factory.StartNew(() =>
-            {
-                return TargetCache<TagValuesResponse[]>.GetOrAdd($"tagvalues!{request.key}", () =>
-                {
-                    DataTable table = Metadata.Tables["ActiveMeasurements"];
-                    int columnIndex = table.Columns[request.key].Ordinal;
-                    return table.AsEnumerable().Select(row =>
-                        new TagValuesResponse
-                        {
-                            text = row[columnIndex].ToString()
-                        }).ToArray();
-                });
-            },
-            cancellationToken);
-        }
 
         /// <summary>
         /// Queries current alarm device state.
@@ -470,37 +381,6 @@ namespace GrafanaAdapters
                 return new TableOperations<GrafanaAlarm>(connection).QueryRecordsWhere($"SignalID IN ({string.Join(",", signalIDs)})").ToList();
             },
             cancellationToken);
-        }
-
-        /// <summary>
-        /// Requests Grafana Metadata source for multiple targets.
-        /// </summary>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <param name="requests"> The targets and the meta data requested</param>
-        /// <returns> Queried metadata.</returns>
-        public Task<string> GetMetadatas(MetadataTargetRequest[] requests, CancellationToken cancellationToken)
-        {
-            return Task.Factory.StartNew(() =>
-            {
-                var targetDataDict = new Dictionary<string, Dictionary<string, DataTable>>();
-
-                foreach (var request in requests)
-                {
-                    if (string.IsNullOrWhiteSpace(request.Target))
-                        continue;
-                    var tableDataDict = new Dictionary<string, DataTable>();
-                    foreach (var table in request.Tables)
-                    {
-                        DataRow[] rows = Metadata.Tables[table].Select($"PointTag = '{request.Target}'") ?? new DataRow[0];
-                        if (rows.Length > 0)
-                            tableDataDict[table] = rows.CopyToDataTable();
-                        
-                    }
-                    targetDataDict[request.Target] = tableDataDict;
-                }
-                return JsonConvert.SerializeObject(targetDataDict);
-            },
-           cancellationToken);
         }
 
         /// <summary>
