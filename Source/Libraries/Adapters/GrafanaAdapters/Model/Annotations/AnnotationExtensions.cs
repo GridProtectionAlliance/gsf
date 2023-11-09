@@ -54,6 +54,7 @@ namespace GrafanaAdapters
             {
                 AnnotationType.RaisedAlarms  => "RaisedAlarms",
                 AnnotationType.ClearedAlarms => "ClearedAlarms",
+                AnnotationType.Alarms => "Alarms",
                 _                            => "Undefined"
             };
         }
@@ -65,6 +66,9 @@ namespace GrafanaAdapters
                 return "Alarms";
 
             if (tableName.Equals("ClearedAlarms", StringComparison.OrdinalIgnoreCase))
+                return "Alarms";
+
+            if (tableName.Equals("Alarms", StringComparison.OrdinalIgnoreCase))
                 return "Alarms";
 
             return tableName;
@@ -81,6 +85,7 @@ namespace GrafanaAdapters
             {
                 AnnotationType.RaisedAlarms  => "AssociatedMeasurementID",
                 AnnotationType.ClearedAlarms => "AssociatedMeasurementID",
+                AnnotationType.Alarms => "AssociatedMeasurementID",
                 _                            => throw new InvalidOperationException("Cannot extract target for specified annotation type.")
             };
         }
@@ -102,6 +107,7 @@ namespace GrafanaAdapters
             {
                 AnnotationType.RaisedAlarms  => value != 0.0D,
                 AnnotationType.ClearedAlarms => value == 0.0D,
+                AnnotationType.Alarms => value == 0.0D,
                 _                            => throw new InvalidOperationException("Cannot determine data point applicability for specified annotation type.")
             };
         }
@@ -130,12 +136,20 @@ namespace GrafanaAdapters
             if (datapoint is null)
                 throw new ArgumentNullException(nameof(datapoint));
 
+            DataRow metadata;
             switch (type)
             {
                 case AnnotationType.RaisedAlarms:
                 case AnnotationType.ClearedAlarms:
-                    DataRow metadata = GetTargetMetaData(source, definition["SignalID"]);
+                    metadata = GetTargetMetaData(source, definition["SignalID"]);
                     response.title = $"Alarm {(type == AnnotationType.RaisedAlarms ? "Raised" : "Cleared")}";
+                    response.text = $"{definition["Description"]}<br/>Condition:&nbsp;{GetAlarmCondition(definition)}<br/>Severity:&nbsp;{definition["Severity"]}<br/>[{metadata["ID"]}]:&nbsp;{metadata["SignalReference"]}";
+                    response.tags = $"{metadata["PointTag"]},{target}";
+                    response.endTime = response.time;
+                    break;
+                case AnnotationType.Alarms:
+                    metadata = GetTargetMetaData(source, definition["SignalID"]);
+                    response.title = $"Alarm";
                     response.text = $"{definition["Description"]}<br/>Condition:&nbsp;{GetAlarmCondition(definition)}<br/>Severity:&nbsp;{definition["Severity"]}<br/>[{metadata["ID"]}]:&nbsp;{metadata["SignalReference"]}";
                     response.tags = $"{metadata["PointTag"]},{target}";
                     break;
@@ -195,6 +209,8 @@ namespace GrafanaAdapters
                     {
                         "RAISEDALARMS"  => AnnotationType.RaisedAlarms,
                         "CLEAREDALARMS" => AnnotationType.ClearedAlarms,
+                        "EVENTS" => AnnotationType.Events,
+                        "ALARMS" => AnnotationType.Alarms,
                         _               => throw new InvalidOperationException("Invalid FILTER table for annotation query expression.")
                     };
                 }
@@ -206,7 +222,14 @@ namespace GrafanaAdapters
                 {
                     type = AnnotationType.ClearedAlarms;
                 }
-
+                else if (query.StartsWith("#Alarms", StringComparison.OrdinalIgnoreCase))
+                {
+                    type = AnnotationType.Alarms;
+                }
+                else if (query.StartsWith("#Events", StringComparison.OrdinalIgnoreCase))
+                {
+                    type = AnnotationType.Events;
+                }
                 if (type == AnnotationType.Undefined)
                     throw new InvalidOperationException("Unrecognized type or syntax for annotation query expression.");
 

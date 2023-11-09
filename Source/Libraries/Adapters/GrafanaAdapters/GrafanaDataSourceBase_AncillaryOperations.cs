@@ -245,7 +245,7 @@ namespace GrafanaAdapters
                 if (parts.Length > 1)
                 {
                     target = parts[1].Trim();
-                    target = target.Length > 1 ? target.Substring(0, target.Length - 1).Trim() : parts[0].Trim();
+                    target = target.Length > 1 ? target.Trim() : parts[0].Trim();
                 }
                 else
                 {
@@ -255,20 +255,34 @@ namespace GrafanaAdapters
                 if (!definitions.TryGetValue(target, out DataRow definition))
                     continue;
 
+                int index = 0;
                 foreach (double[] datapoint in values.datapoints)
                 {
-                    if (!type.IsApplicable(datapoint))
-                        continue;
 
-                    AnnotationResponse response = new()
+                    if (!type.IsApplicable(datapoint))
                     {
-                        time = datapoint[TimeSeriesValues.Time],
-                        endTime = datapoint[TimeSeriesValues.Time],
-                    };
+                        index++;
+                        continue;
+                    }
+
+                    AnnotationResponse response;
+                    if (index == values.datapoints.Count()-1 )
+                        response = new()
+                        {
+                            time = datapoint[TimeSeriesValues.Time],
+                            endTime = datapoint[TimeSeriesValues.Time],
+                        };
+                    else
+                        response = new()
+                        {
+                            time = datapoint[TimeSeriesValues.Time],
+                            endTime = values.datapoints[index + 1][TimeSeriesValues.Time],
+                        };
 
                     type.PopulateResponse(response, target, definition, datapoint, Metadata);
 
                     responses.Add(response);
+                    index++;
                 }
             }
 

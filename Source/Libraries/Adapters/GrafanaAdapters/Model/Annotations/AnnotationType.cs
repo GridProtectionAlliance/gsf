@@ -39,6 +39,16 @@ namespace GrafanaAdapters
         ClearedAlarms,
 
         /// <summary>
+        /// Manual event annotation.
+        /// </summary>
+        Events,
+
+        /// <summary>
+        /// All alarm annotation.
+        /// </summary>
+        Alarms,
+
+        /// <summary>
         /// Undefined annotation.
         /// </summary>
         Undefined
