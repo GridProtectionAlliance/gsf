@@ -38,6 +38,7 @@ using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using Newtonsoft.Json;
 using GrafanaAdapters.GrafanaFunctions;
+using static GrafanaAdapters.GrafanaFunctions.FunctionParser;
 
 #pragma warning disable IDE0060 // Remove unused parameter
 
@@ -314,76 +315,6 @@ namespace GrafanaAdapters
         }
 
         /// <summary>
-        /// Query current alarms based on point list.
-        /// </summary>
-        /// <param name="request">Alarm request.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns> Queried alarm states.</returns>
-        public Task<List<GrafanaAlarm>> GetAlarms(QueryRequest request, CancellationToken cancellationToken)
-        {
-            HashSet<string> removeSeriesFunctions(string queryExpression)
-            {
-                // Targets include user provided input, so casing should be ignored
-                HashSet<string> targetSet = new(new[] { queryExpression }, StringComparer.OrdinalIgnoreCase);
-                HashSet<string> reducedTargetSet = new(StringComparer.OrdinalIgnoreCase);
-
-                foreach (string target in targetSet)
-                {
-                    // Find any series functions in target
-                    Match[] matchedFunctions = TargetCache<Match[]>.GetOrAdd(target, () =>
-                        s_seriesFunctions.Matches(target).Cast<Match>().ToArray());
-
-                    if (matchedFunctions.Length > 0)
-                    {
-                        // Reduce target to non-function expressions - important so later split on ';' succeeds properly
-                        string reducedTarget = target;
-
-                        foreach (string expression in matchedFunctions.Select(match => match.Value))
-                            reducedTarget = reducedTarget.Replace(expression, "");
-
-                        if (!string.IsNullOrWhiteSpace(reducedTarget))
-                            reducedTargetSet.Add(reducedTarget);
-                    }
-                    else
-                    {
-                        reducedTargetSet.Add(target);
-                    }
-                }
-
-                return reducedTargetSet;
-            }
-
-            return Task.Factory.StartNew(() =>
-            {
-                foreach (Target target in request.targets)
-                    target.target = target.target?.Trim() ?? "";
-
-                List<string> signalIDs = removeSeriesFunctions(request.targets[0].target)
-                    .SelectMany(item => item.Split(';'))
-                    .SelectMany(targetQuery =>
-                    {
-                        try
-                        {
-                            return AdapterBase.ParseInputMeasurementKeys(Metadata, false, targetQuery);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.SwallowException(ex);
-                            return Array.Empty<MeasurementKey>();
-                        }
-                    })
-                    .Select(key => $"'{key.SignalID}'").ToList();
-
-                if (signalIDs.Count == 0)
-                    return new List<GrafanaAlarm>();
-
-                using AdoDataConnection connection = new("systemSettings");
-                return new TableOperations<GrafanaAlarm>(connection).QueryRecordsWhere($"SignalID IN ({string.Join(",", signalIDs)})").ToList();
-            },
-            cancellationToken);
-        }
-
-        /// <summary>
         /// Queries available MetaData Options.
         /// </summary>
         /// <param name="isPhasor">A boolean indicating whether the data is a phasor.</param>
@@ -451,7 +382,7 @@ namespace GrafanaAdapters
         /// Requests Grafana Metadata source for multiple targets.
         /// </summary>
         /// <param name="cancellationToken">Cancellation token.</param>
-        /// <param name="requests"> The targets and the meta data requested</param>
+        /// <param name="request"> The targets and the meta data requested</param>
         /// <returns> Queried metadata.</returns>
         public Task<Dictionary<string, string[]>> GetMetadataOptions(MetadataOptionsRequest request, CancellationToken cancellationToken)
         {
@@ -479,6 +410,45 @@ namespace GrafanaAdapters
 
             },
            cancellationToken);
+        }
+
+        /// <summary>
+        /// Queries openHistorian as a Grafana Metadata source.
+        /// </summary>
+        /// <param name="request">Query request.</param>
+        public Task<string> GetMetadata(Target request)
+        {
+            return Task.Factory.StartNew(() =>
+            {
+                HashSet<string> result = new();
+
+                if (string.IsNullOrWhiteSpace(request.target))
+                {
+
+                    string table = request.metadataSelection.FirstOrDefault().Key;
+                    string field = request.metadataSelection.FirstOrDefault().Value.FirstOrDefault();
+
+                    DataRow[] rows = Metadata.Tables[table].Select() ?? new DataRow[0];
+                    foreach (DataRow row in rows)
+                    {
+                        result.Add(row[field].ToString());
+                    }
+                    return JsonConvert.SerializeObject(result);
+                }
+
+                IEnumerable<ParsedTarget<DataSourceValue>> targets = ParsedTarget<DataSourceValue>.ParseTargets(request.target.Trim());
+                string[] rootTargets = targets.SelectMany(pt => pt.DataTargets).ToArray();
+
+                foreach (string t in rootTargets)
+                {
+                    KeyValuePair<string, string> data = FunctionParser
+                    .GetMetadata(this, t, request.metadataSelection)
+                    .FirstOrDefault();
+                    result.Add(data.Value);
+                }
+
+                return JsonConvert.SerializeObject(result);
+            });
         }
 
     }

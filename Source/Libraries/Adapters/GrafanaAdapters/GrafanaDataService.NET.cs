@@ -31,6 +31,11 @@ using System.ServiceModel;
 using System.Threading.Tasks;
 using GSF.Historian.DataServices;
 using Newtonsoft.Json;
+using static GrafanaAdapters.GrafanaFunctions.FunctionParser;
+using GSF.Web;
+using System.Linq;
+using System.ServiceModel.Description;
+using GrafanaAdapters.GrafanaFunctions;
 
 namespace GrafanaAdapters
 {
@@ -90,40 +95,15 @@ namespace GrafanaAdapters
                 return null;
 
             return await m_dataSource.GetDeviceGroups(request, m_cancellationSource.Token);
-        }
-
-        /// <summary>
-        /// Queries openPDC Alarms as a Grafana alarm data source.
-        /// </summary>
-        /// <param name="request">Query request.</param>
-        public async Task<IEnumerable<GrafanaAlarm>> GetAlarms(QueryRequest request)
-        {
-            // Abort if services are not enabled
-            if (!Enabled || Archive is null)
-                return null;
-
-            return await m_dataSource.GetAlarms(request, m_cancellationSource.Token);
-        }
+        }       
 
         /// <summary>
         /// Queries openHistorian as a Grafana Metadata source.
         /// </summary>
         /// <param name="request">Query request.</param>
-        public Task<string> GetMetadata(Target request)
+        public async Task<string> GetMetadata(Target request)
         {
-            return Task.Factory.StartNew(() =>
-            {
-                if (string.IsNullOrWhiteSpace(request.target))
-                    return string.Empty;
-
-                DataTable table = new();
-                DataRow[] rows = m_dataSource?.Metadata.Tables["ActiveMeasurements"].Select($"PointTag IN ({request.target})") ?? Array.Empty<DataRow>();
-
-                if (rows.Length > 0)
-                    table = rows.CopyToDataTable();
-
-                return JsonConvert.SerializeObject(table);
-            });
+            return await m_dataSource.GetMetadata(request);
         }
 
         /// <summary>

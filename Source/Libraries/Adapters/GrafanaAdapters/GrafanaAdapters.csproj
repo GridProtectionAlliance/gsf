@@ -81,7 +81,6 @@
     <Compile Include="GrafanaDataServiceMono.cs" />
     <Compile Include="GrafanaDataSourceBase.cs" />
     <Compile Include="GrafanaDataSourceBase_AncillaryOperations.cs" />
-    <Compile Include="GrafanaDataSourceBase_FunctionParsing.cs" />
     <Compile Include="GrafanaFunctionBase\Functions.cs" />
     <Compile Include="GrafanaFunctionBase\FunctionsHelpers.cs" />
     <Compile Include="GrafanaFunctionBase\IGrafanaFunction.cs" />

@@ -33,7 +33,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using ParsedFunction = System.Tuple<GrafanaAdapters.SeriesFunction, string, GrafanaAdapters.GroupOperation, string>;
 using GrafanaAdapters.GrafanaFunctions;
 
 
@@ -156,8 +155,7 @@ namespace GrafanaAdapters
 
                     DataSourceValueGroup<T>[] valueGroups = allGroups.ToArray();
 
-                    //DataSourceValueGroup[] OLDvalueGroups = request.targets.Select(target => QueryTarget(target, target.target, startTime, stopTime, request.interval, false, false, null, cancellationToken)).SelectMany(groups => groups).ToArray();
-
+                   
                     // Establish result series sequentially so that order remains consistent between calls
                     List<TimeSeriesValues> result = valueGroups.Select(valueGroup => new TimeSeriesValues
                     {
@@ -209,23 +207,6 @@ namespace GrafanaAdapters
 
                     return result.Where(values => !values.dropEmptySeries || values.datapoints.Count > 0).ToList();
                 }
-
-                #region [ Original "request.maxDataPoints" Implementation ]
-
-                //int maxDataPoints = (int)(request.maxDataPoints * 1.1D);
-
-                //// Make a final pass through data to decimate returned point volume (for graphing purposes), if needed
-
-                //foreach (TimeSeriesValues series in result)
-                //{
-                //    if (series.datapoints.Count > maxDataPoints)
-                //    {
-                //        double indexFactor = series.datapoints.Count / (double)request.maxDataPoints;
-                //        series.datapoints = Enumerable.Range(0, request.maxDataPoints).Select(index => series.datapoints[(int)(index * indexFactor)]).ToList();
-                //    }
-                //}
-
-                #endregion
 
                 return (request is not null && request.isPhasor) ? 
                     handleQuery<PhasorValue>() :

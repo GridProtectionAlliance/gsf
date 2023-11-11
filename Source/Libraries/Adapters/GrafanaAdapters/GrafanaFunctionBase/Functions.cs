@@ -293,7 +293,6 @@ namespace GrafanaAdapters.GrafanaFunctions
             public string Phase;
         };
 
-        //Cleanup Neccesarry
         private static Dictionary<string, DataSourceValueGroup<PhasorValue>> GetTargetPhasorData(string[] targets, GrafanaDataSourceBase dataSourceBase, QueryDataHolder queryData)
         {
             if (targets.Length == 0)
