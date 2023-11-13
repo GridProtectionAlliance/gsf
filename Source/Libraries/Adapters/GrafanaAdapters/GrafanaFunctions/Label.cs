@@ -83,8 +83,7 @@ namespace GrafanaAdapters.GrafanaFunctions
             DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
 
             // Set Values
-            string[] labels = phasorValues.Target.Split(';');
-            phasorValues.Target = $"{label}.MAG;{label}.ANG";
+            phasorValues.Target = $"{label}";
 
             return phasorValues;
         }
