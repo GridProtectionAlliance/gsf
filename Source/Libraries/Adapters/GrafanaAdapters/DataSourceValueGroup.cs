@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using GSF.TimeSeries.Model;
+using System;
 using System.Collections.Generic;
 
 namespace GrafanaAdapters
@@ -32,7 +33,7 @@ namespace GrafanaAdapters
     /// <remarks>
     /// This is a group construct keyed on <see cref="Target"/> for data source value enumerations.
     /// </remarks>
-    interface IDataSourceValueGroup
+    public interface IDataSourceValueGroup
     {
         /// <summary>
         /// Query target, e.g., a point-tag, representative of all Source/> values.
@@ -107,5 +108,23 @@ namespace GrafanaAdapters
         /// Defines a refID for a specific Grafana Query.
         /// </summary>
         public Dictionary<string, string> metadata { get; set; }
+
+        /// <summary>
+        /// Creates a new <see cref="DataSourceValueGroup{T}"/> from this instance.
+        /// </summary>
+        /// <returns></returns>
+        public DataSourceValueGroup<T> Clone()
+        {
+            return new DataSourceValueGroup<T>()
+            {
+                Target = Target,
+                RootTarget = RootTarget,
+                SourceTarget = SourceTarget,
+                Source = Source,
+                DropEmptySeries = DropEmptySeries,
+                refId = refId,
+                metadata = metadata
+            };
+        }
     }
 }
