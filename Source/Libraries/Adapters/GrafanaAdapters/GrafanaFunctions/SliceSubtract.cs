@@ -96,7 +96,7 @@ namespace GrafanaAdapters.GrafanaFunctions
 
             IEnumerable<DataSourceValue> combinedValuesEnumerable = combinedValuesList;
 
-            firstData.Target = $"{firstData.Target}+{secondData.Target}";
+            firstData.Target = $"SliceSubtract({tolerance},{firstData.Target},{secondData.Target})";
             firstData.Source = combinedValuesEnumerable;
 
             return firstData;
@@ -142,10 +142,7 @@ namespace GrafanaAdapters.GrafanaFunctions
 
             IEnumerable<PhasorValue> combinedValuesEnumerable = combinedValuesList;
 
-            string[] firstNames = firstData.Target.Split(';');
-            string[] secondNames = secondData.Target.Split(';');
-
-            firstData.Target = $"{firstNames[0]}+{secondNames[0]};{firstNames[1]}+{secondNames[1]}";
+            firstData.Target = $"SliceSubtract({tolerance},{firstData.Target},{secondData.Target})";
             firstData.Source = combinedValuesEnumerable;
 
             return firstData;
