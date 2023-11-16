@@ -74,10 +74,11 @@ namespace GrafanaAdapters.GrafanaFunctions
             });
 
             // Set Values
-            dataSourceValues.Target = $"{Name}({dataSourceValues.Target},{angleUnit})";
-            dataSourceValues.Source = transformedDataSourceValues;
+            DataSourceValueGroup<DataSourceValue> result = dataSourceValues.Clone();
+            result.Target = $"{Name}({dataSourceValues.Target},{angleUnit})";
+            result.Source = transformedDataSourceValues;
 
-            return dataSourceValues;
+            return result;
         }
 
         /// <summary>
@@ -101,11 +102,11 @@ namespace GrafanaAdapters.GrafanaFunctions
             });
 
             // Set Values
-            string[] labels = phasorValues.Target.Split(';');
-            phasorValues.Target = $"{Name}({labels[0]},{angleUnit});{Name}({labels[1]},{angleUnit})";
-            phasorValues.Source = transformedPhasorValues;
+            DataSourceValueGroup<PhasorValue> result = phasorValues.Clone();
+            result.Target = $"{Name}({phasorValues.Target},{angleUnit})";
+            result.Source = transformedPhasorValues;
 
-            return phasorValues;
+            return result;
         }
 
         /// <summary>
