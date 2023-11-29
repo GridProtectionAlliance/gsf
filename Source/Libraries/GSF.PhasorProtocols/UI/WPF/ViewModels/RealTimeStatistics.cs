@@ -122,48 +122,48 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
         private void m_unsynchronizedSubscriber_NewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e)
         {
-            if (0 != Interlocked.Exchange(ref m_processingUnsynchronizedMeasurements, 1))
+            if (Interlocked.Exchange(ref m_processingUnsynchronizedMeasurements, 1) != 0)
                 return;
 
             try
             {
                 foreach (IMeasurement newMeasurement in e.Argument)
                 {
-                    if (RealTimeStatistic.StatisticMeasurements.TryGetValue(newMeasurement.ID, out StatisticMeasurement measurement))
-                    {
-                        if (!string.IsNullOrEmpty(measurement.DisplayFormat) && !string.IsNullOrEmpty(measurement.DataType))
-                        {
-                            measurement.Quality = newMeasurement.ValueQualityIsGood() ? "GOOD" : "BAD";
-                            measurement.Value = string.Format(measurement.DisplayFormat, ConvertValueToType(newMeasurement.AdjustedValue, measurement.DataType));
-                            measurement.TimeTag = newMeasurement.Timestamp.ToString("HH:mm:ss.fff");
+                    if (!RealTimeStatistic.StatisticMeasurements.TryGetValue(newMeasurement.ID, out StatisticMeasurement measurement))
+                        continue;
 
-                            if (measurement.ConnectedState) //if measurement defines connection state.
-                            {
-                                if ((measurement.Source == "System" && RealTimeStatistic.SystemStatistics.TryGetValue(measurement.DeviceID, out StreamStatistic streamStatistic)) ||
-                                    (measurement.Source == "InputStream" && RealTimeStatistic.InputStreamStatistics.TryGetValue(measurement.DeviceID, out streamStatistic)) ||
-                                    (measurement.Source == "OutputStream" && RealTimeStatistic.OutputStreamStatistics.TryGetValue(measurement.DeviceID, out streamStatistic)) ||
-                                    (measurement.Source == "Publisher" && RealTimeStatistic.DataPublisherStatistics.TryGetValue(measurement.DeviceID, out streamStatistic)) ||
-                                    (measurement.Source == "Subscriber" && RealTimeStatistic.InputStreamStatistics.TryGetValue(measurement.DeviceID, out streamStatistic)))
-                                {
-                                    streamStatistic.StatusColor = Convert.ToBoolean(newMeasurement.AdjustedValue) ? "Green" : "Red";
+                    if (string.IsNullOrEmpty(measurement.DisplayFormat) || string.IsNullOrEmpty(measurement.DataType))
+                        continue;
+                    
+                    measurement.Quality = newMeasurement.ValueQualityIsGood() ? "GOOD" : "BAD";
+                    measurement.Value = string.Format(measurement.DisplayFormat, ConvertValueToType(newMeasurement.AdjustedValue, measurement.DataType));
+                    measurement.TimeTag = newMeasurement.Timestamp.ToString("HH:mm:ss.fff");
 
-                                    // We do extra validation on the input stream since devices can be technically connected and not receiving data (e.g., UDP)
-                                    if (measurement.Source == "InputStream")
-                                    {
-                                        StatisticMeasurement totalFramesStat = RealTimeStatistic.StatisticMeasurements.Values.FirstOrDefault(stat => string.Compare(stat.SignalReference.ToNonNullString().Trim(), $"{streamStatistic.Acronym.ToNonNullString().Trim()}!IS-ST1", StringComparison.OrdinalIgnoreCase) == 0);
+                    if (!measurement.ConnectedState) //if measurement defines connection state.
+                        continue;
 
-                                        if (totalFramesStat != null)
-                                        {
-                                            IMeasurement totalFramesStatMeasurement = e.Argument.FirstOrDefault(m => m.ID == totalFramesStat.SignalID);
+                    if ((measurement.Source != "System" || !RealTimeStatistic.SystemStatistics.TryGetValue(measurement.DeviceID, out StreamStatistic streamStatistic)) && 
+                        (measurement.Source != "InputStream" || !RealTimeStatistic.InputStreamStatistics.TryGetValue(measurement.DeviceID, out streamStatistic)) && 
+                        (measurement.Source != "OutputStream" || !RealTimeStatistic.OutputStreamStatistics.TryGetValue(measurement.DeviceID, out streamStatistic)) && 
+                        (measurement.Source != "Publisher" || !RealTimeStatistic.DataPublisherStatistics.TryGetValue(measurement.DeviceID, out streamStatistic)) && 
+                        (measurement.Source != "Subscriber" || !RealTimeStatistic.InputStreamStatistics.TryGetValue(measurement.DeviceID, out streamStatistic)))
+                        continue;
+                    
+                    streamStatistic.StatusColor = Convert.ToBoolean(newMeasurement.AdjustedValue) ? "Green" : "Red";
 
-                                            if (totalFramesStatMeasurement != null && totalFramesStatMeasurement.AdjustedValue <= 0.0D)
-                                                streamStatistic.StatusColor = "Red";
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    // We do extra validation on the input stream since devices can be technically connected and not receiving data (e.g., UDP)
+                    if (measurement.Source != "InputStream")
+                        continue;
+                    
+                    StatisticMeasurement totalFramesStat = RealTimeStatistic.StatisticMeasurements.Values.FirstOrDefault(stat => string.Compare(stat.SignalReference.ToNonNullString().Trim(), $"{streamStatistic.Acronym.ToNonNullString().Trim()}!IS-ST1", StringComparison.OrdinalIgnoreCase) == 0);
+
+                    if (totalFramesStat is null)
+                        continue;
+                    
+                    IMeasurement totalFramesStatMeasurement = e.Argument.FirstOrDefault(m => m.ID == totalFramesStat.SignalID);
+
+                    if (totalFramesStatMeasurement is { AdjustedValue: <= 0.0D })
+                        streamStatistic.StatusColor = "Red";
                 }
 
                 LastRefresh = "Last Refresh: " + DateTime.UtcNow.ToString("HH:mm:ss.fff");
@@ -185,19 +185,18 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         {
             try
             {
-                using (AdoDataConnection database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory))
-                {
-                    m_unsynchronizedSubscriber = new DataSubscriber();
-                    m_unsynchronizedSubscriber.ConnectionEstablished += m_unsynchronizedSubscriber_ConnectionEstablished;
-                    m_unsynchronizedSubscriber.NewMeasurements += m_unsynchronizedSubscriber_NewMeasurements;
-                    m_unsynchronizedSubscriber.ConnectionTerminated += m_unsynchronizedSubscriber_ConnectionTerminated;
+                using AdoDataConnection database = new(CommonFunctions.DefaultSettingsCategory);
 
-                    // Statistics move slowly, typically every 10 seconds, so we reduce data loss interval to every 20 seconds
-                    m_unsynchronizedSubscriber.ConnectionString = "dataLossInterval = 20.0; " + database.DataPublisherConnectionString();
+                m_unsynchronizedSubscriber = new DataSubscriber();
+                m_unsynchronizedSubscriber.ConnectionEstablished += m_unsynchronizedSubscriber_ConnectionEstablished;
+                m_unsynchronizedSubscriber.NewMeasurements += m_unsynchronizedSubscriber_NewMeasurements;
+                m_unsynchronizedSubscriber.ConnectionTerminated += m_unsynchronizedSubscriber_ConnectionTerminated;
 
-                    m_unsynchronizedSubscriber.Initialize();
-                    m_unsynchronizedSubscriber.Start();
-                }
+                // Statistics move slowly, typically every 10 seconds, so we reduce data loss interval to every 20 seconds
+                m_unsynchronizedSubscriber.ConnectionString = "dataLossInterval = 20.0; " + database.DataPublisherConnectionString();
+
+                m_unsynchronizedSubscriber.Initialize();
+                m_unsynchronizedSubscriber.Start();
             }
             catch (Exception ex)
             {
@@ -207,39 +206,38 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
         private void StopUnsynchronizedSubscription()
         {
-            if (m_unsynchronizedSubscriber != null)
-            {
-                m_unsynchronizedSubscriber.ConnectionEstablished -= m_unsynchronizedSubscriber_ConnectionEstablished;
-                m_unsynchronizedSubscriber.NewMeasurements -= m_unsynchronizedSubscriber_NewMeasurements;
-                m_unsynchronizedSubscriber.ConnectionTerminated -= m_unsynchronizedSubscriber_ConnectionTerminated;
-                m_unsynchronizedSubscriber.Stop();
-                m_unsynchronizedSubscriber.Dispose();
-                m_unsynchronizedSubscriber = null;
-            }
+            if (m_unsynchronizedSubscriber is null)
+                return;
+            
+            m_unsynchronizedSubscriber.ConnectionEstablished -= m_unsynchronizedSubscriber_ConnectionEstablished;
+            m_unsynchronizedSubscriber.NewMeasurements -= m_unsynchronizedSubscriber_NewMeasurements;
+            m_unsynchronizedSubscriber.ConnectionTerminated -= m_unsynchronizedSubscriber_ConnectionTerminated;
+            m_unsynchronizedSubscriber.Stop();
+            m_unsynchronizedSubscriber.Dispose();
+            
+            m_unsynchronizedSubscriber = null;
         }
 
         private void SubscribeUnsynchronizedData()
         {
-            UnsynchronizedSubscriptionInfo info;
-
-            if (m_unsynchronizedSubscriber == null)
+            if (m_unsynchronizedSubscriber is null)
                 InitializeUnsynchronizedSubscription();
 
-            if (m_subscribedUnsynchronized && !string.IsNullOrEmpty(m_allSignalIDs))
+            if (!m_subscribedUnsynchronized || string.IsNullOrEmpty(m_allSignalIDs))
+                return;
+            
+            UnsynchronizedSubscriptionInfo info = new(false)
             {
-                info = new UnsynchronizedSubscriptionInfo(false)
-                {
-                    UseCompactMeasurementFormat = true,
-                    FilterExpression = m_allSignalIDs,
-                    IncludeTime = true,
-                    LagTime = 60.0D,
-                    LeadTime = 60.0D,
-                    PublishInterval = m_statisticDataRefreshInterval
-                };
+                UseCompactMeasurementFormat = true,
+                FilterExpression = m_allSignalIDs,
+                IncludeTime = true,
+                LagTime = 60.0D,
+                LeadTime = 60.0D,
+                PublishInterval = m_statisticDataRefreshInterval
+            };
 
 
-                m_unsynchronizedSubscriber.UnsynchronizedSubscribe(info);
-            }
+            m_unsynchronizedSubscriber?.UnsynchronizedSubscribe(info);
         }
 
         /// <summary>
@@ -249,11 +247,11 @@ namespace GSF.PhasorProtocols.UI.ViewModels
         {
             try
             {
-                if (m_unsynchronizedSubscriber != null)
-                {
-                    m_unsynchronizedSubscriber.Unsubscribe();
-                    StopUnsynchronizedSubscription();
-                }
+                if (m_unsynchronizedSubscriber is null)
+                    return;
+                
+                m_unsynchronizedSubscriber.Unsubscribe();
+                StopUnsynchronizedSubscription();
             }
             catch
             {
@@ -281,7 +279,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             {
                 base.Load();
 
-                StringBuilder sb = new StringBuilder();
+                StringBuilder sb = new();
 
                 foreach (KeyValuePair<Guid, StatisticMeasurement> measurement in RealTimeStatistic.StatisticMeasurements)
                 {
@@ -298,7 +296,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             }
             catch (Exception ex)
             {
-                if (ex.InnerException != null)
+                if (ex.InnerException is not null)
                 {
                     Popup(ex.Message + Environment.NewLine + "Inner Exception: " + ex.InnerException.Message, "Load " + DataModelName + " Exception:", MessageBoxImage.Error);
                     CommonFunctions.LogException(null, "Load " + DataModelName, ex.InnerException);
@@ -313,17 +311,13 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
         private static object ConvertValueToType(double value, string dataType)
         {
-            switch (dataType)
+            return dataType switch
             {
-                case "System.Double":
-                    return value;
-                case "System.DateTime":
-                    return new DateTime((long)value);
-                case "GSF.UnixTimeTag":
-                    return new UnixTimeTag((decimal)value);
-                default:
-                    return Convert.ChangeType(value, Type.GetType(dataType) ?? typeof(double));
-            }
+                "System.Double" => value,
+                "System.DateTime" => new DateTime((long)value),
+                "GSF.UnixTimeTag" => new UnixTimeTag((decimal)value),
+                _ => Convert.ChangeType(value, Type.GetType(dataType) ?? typeof(double))
+            };
         }
 
         public void Stop() => 
