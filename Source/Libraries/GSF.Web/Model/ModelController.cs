@@ -108,10 +108,20 @@ namespace GSF.Web.Model
             {
                 SecurityType = "Claims";
 
-                IEnumerable<ClaimAttribute> claimAttributes = typeof(T).GetCustomAttributes<ClaimAttribute>();
+                IEnumerable<ClaimAttribute> claimViewAttributes = typeof(T).GetCustomAttributes<ClaimAttribute>();
+                IEnumerable<ClaimAttribute> claimEditAttributes = typeof(U).GetCustomAttributes<ClaimAttribute>();
 
-                foreach (ClaimAttribute claimAttribute in claimAttributes)
+                foreach (ClaimAttribute claimAttribute in claimViewAttributes)
                 {
+                    if (claimAttribute.Verb != "GET") continue;
+                    if (Claims.ContainsKey(claimAttribute.Verb))
+                        Claims[claimAttribute.Verb].Add(claimAttribute.Claim);
+                    else
+                        Claims.Add(claimAttribute.Verb, new List<Claim>() { claimAttribute.Claim });
+                }
+                foreach (ClaimAttribute claimAttribute in claimEditAttributes)
+                {
+                    if (claimAttribute.Verb == "GET") continue;
                     if (Claims.ContainsKey(claimAttribute.Verb))
                         Claims[claimAttribute.Verb].Add(claimAttribute.Claim);
                     else
