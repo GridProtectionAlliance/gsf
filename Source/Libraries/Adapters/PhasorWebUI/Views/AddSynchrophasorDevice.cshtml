@@ -3649,8 +3649,10 @@
                                 return saveDeviceRecords(deviceID).then(function () {
                                     enableUIButtons("Save complete.");
 
-                                    serviceHub.sendCommand("initialize " + deviceID).done(function () {
-                                        window.location = "GraphMeasurements.cshtml";
+                                    return phasorHub.markConfigurationAsSynchronized(device.Acronym).then(function () {
+                                        return serviceHub.sendCommand("initialize " + deviceID).done(function () {
+                                            window.location = "GraphMeasurements.cshtml";
+                                        });
                                     });
                                 });
                             })
@@ -3671,10 +3673,12 @@
                             return saveDeviceRecords(device.ID).then(function () {
                                 enableUIButtons("Save complete.");
 
-                                const connectionID = device.ParentID ? device.ParentID : device.ID;
+                                return phasorHub.markConfigurationAsSynchronized(device.Acronym).then(function () {
+                                    const connectionID = device.ParentID ? device.ParentID : device.ID;
 
-                                serviceHub.sendCommand("initialize " + connectionID).done(function () {
-                                    window.location = "GraphMeasurements.cshtml";
+                                    return serviceHub.sendCommand("initialize " + connectionID).done(function () {
+                                        window.location = "GraphMeasurements.cshtml";
+                                    });
                                 });
                             });
                         })
