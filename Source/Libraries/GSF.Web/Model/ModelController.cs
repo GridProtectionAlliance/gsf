@@ -32,6 +32,7 @@ using System.Security.Claims;
 using System.Web.Http;
 using GSF.Data;
 using GSF.Data.Model;
+using GSF.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -43,7 +44,16 @@ namespace GSF.Web.Model
     /// Base Class for A Webcontroller that provides common Model endpoints such as Edit, Delete, Search.
     /// </summary>
     /// <typeparam name="T">The corresponding Model.</typeparam>
-    public class ModelController<T> : ApiController where T : class, new()
+    public class ModelController<T> : ModelController<T, T> where T : class, new() { }
+
+    /// <summary>
+    /// Base Class for A Webcontroller that provides common Model endpoints such as Edit, Delete, Search.
+    /// </summary>
+    /// <typeparam name="T">The corresponding Model for Search/Fetch Results.</typeparam>
+    /// <typeparam name="U">The corresponding Model for database editing.</typeparam>
+    public class ModelController<T,U> : ApiController 
+        where T : class, new() 
+        where U : class, new()
     {
         #region [ Members ]
 
@@ -79,11 +89,12 @@ namespace GSF.Web.Model
         #region [ Constructor ]
 
         /// <summary>
-        /// Creates a new <see cref="ModelController{T}"/>
+        /// Creates a new <see cref="ModelController{T,U}"/>
         /// </summary>
         public ModelController()
         {
-            PrimaryKeyField = typeof(T).GetProperties().FirstOrDefault(p => p.GetCustomAttributes<PrimaryKeyAttribute>().Any())?.Name ?? "ID";
+            SearchPrimaryKeyField = typeof(T).GetProperties().FirstOrDefault(p => p.GetCustomAttributes<PrimaryKeyAttribute>().Any())?.Name ?? "ID";
+            EditPrimaryKeyField = typeof(U).GetProperties().FirstOrDefault(p => p.GetCustomAttributes<PrimaryKeyAttribute>().Any())?.Name ?? "ID";
 
             ParentKey = typeof(T).GetProperties().FirstOrDefault(p => p.GetCustomAttributes<ParentKeyAttribute>().Any())?.Name ?? "";
             Connection = typeof(T).GetCustomAttribute<SettingsCategoryAttribute>()?.SettingsCategory ?? "systemSettings";
@@ -121,18 +132,18 @@ namespace GSF.Web.Model
                 SecurityType = "Roles";
                 PostRoles = typeof(T).GetCustomAttribute<PostRolesAttribute>()?.Roles ?? "Administrator";
                 GetRoles = typeof(T).GetCustomAttribute<GetRolesAttribute>()?.Roles ?? "";
-                PatchRoles = typeof(T).GetCustomAttribute<PatchRolesAttribute>()?.Roles ?? "Administrator";
-                DeleteRoles = typeof(T).GetCustomAttribute<DeleteRolesAttribute>()?.Roles ?? "Administrator";
+                PatchRoles = typeof(U).GetCustomAttribute<PatchRolesAttribute>()?.Roles ?? "Administrator";
+                DeleteRoles = typeof(U).GetCustomAttribute<DeleteRolesAttribute>()?.Roles ?? "Administrator";
             }
             CustomView = typeof(T).GetCustomAttribute<CustomViewAttribute>()?.CustomView ?? "";
-            ViewOnly = typeof(T).GetCustomAttribute<ViewOnlyAttribute>()?.ViewOnly ?? false;
             AllowSearch = typeof(T).GetCustomAttribute<AllowSearchAttribute>()?.AllowSearch ?? false;
 
             SearchSettings = typeof(T).GetCustomAttribute<AdditionalFieldSearchAttribute>();
             Take = typeof(T).GetCustomAttribute<ReturnLimitAttribute>()?.Limit ?? null;
 
             // Custom View Models are ViewOnly.
-            ViewOnly = ViewOnly || CustomView != String.Empty;
+            ViewOnly = (typeof(U).GetCustomAttribute<ViewOnlyAttribute>()?.ViewOnly ?? false) ||
+                (typeof(U).GetCustomAttribute<CustomViewAttribute>()?.CustomView ?? "") != "";
 
             RootQueryRestrictionAttribute rqra = typeof(T).GetCustomAttribute<RootQueryRestrictionAttribute>();
             if (rqra != null)
@@ -145,7 +156,8 @@ namespace GSF.Web.Model
         protected bool ViewOnly { get; } = false;
         protected bool AllowSearch { get; } = false;
         protected string CustomView { get; } = "";
-        protected string PrimaryKeyField { get; set; } = "ID";
+        protected string SearchPrimaryKeyField { get; set; } = "ID";
+        protected string EditPrimaryKeyField { get; set; } = "ID";
         protected string ParentKey { get; set; } = "";
         protected string Connection { get; } = "systemSettings";
         protected string DefaultSort { get; } = null;
@@ -177,7 +189,7 @@ namespace GSF.Web.Model
 
             using (AdoDataConnection connection = new AdoDataConnection(Connection))
             {
-                return Ok(new TableOperations<T>(connection).NewRecord());
+                return Ok(new TableOperations<U>(connection).NewRecord());
             }
         }
 
@@ -222,18 +234,18 @@ namespace GSF.Web.Model
                 return Unauthorized();
             
             T result;
-            PropertyInfo primaryKey = typeof(T).GetProperty(PrimaryKeyField);
+            PropertyInfo primaryKey = typeof(T).GetProperty(SearchPrimaryKeyField);
             if (primaryKey.PropertyType == typeof(int))
-                result = QueryRecordWhere(PrimaryKeyField + " = {0}", int.Parse(id));
+                result = QueryRecordWhere(SearchPrimaryKeyField + " = {0}", int.Parse(id));
             else if (primaryKey.PropertyType == typeof(Guid))
-                result = QueryRecordWhere(PrimaryKeyField + " = {0}", Guid.Parse(id));
+                result = QueryRecordWhere(SearchPrimaryKeyField + " = {0}", Guid.Parse(id));
             else
-                result = QueryRecordWhere(PrimaryKeyField + " = {0}", id);
+                result = QueryRecordWhere(SearchPrimaryKeyField + " = {0}", id);
 
             if (result == null)
             {
                 string tableName = TableOperations<T>.GetTableName();
-                return BadRequest(string.Format(PrimaryKeyField + " provided does not exist in '{0}'.", tableName));
+                return BadRequest(string.Format(SearchPrimaryKeyField + " provided does not exist in '{0}'.", tableName));
             }
             else
                 return Ok(result);   
@@ -289,7 +301,7 @@ namespace GSF.Web.Model
         /// <summary>
         /// Adds a new Record.
         /// </summary>
-        /// <param name="record"> The <typeparamref name="T"/> record to be added.</param>
+        /// <param name="record"> The <typeparamref name="U"/> record to be added.</param>
         /// <returns><see cref="IHttpActionResult"/> containing the added record or <see cref="Exception"/> </returns>
         [HttpPost, Route("Add")]
         public virtual IHttpActionResult Post([FromBody] JObject record)
@@ -299,8 +311,8 @@ namespace GSF.Web.Model
                 
             using (AdoDataConnection connection = new AdoDataConnection(Connection))
             {
-                T newRecord = record.ToObject<T>();
-                int result = new TableOperations<T>(connection).AddNewRecord(newRecord);
+                U newRecord = record.ToObject<U>();
+                int result = new TableOperations<U>(connection).AddNewRecord(newRecord);
                 return Ok(result);
             }
         }
@@ -308,27 +320,27 @@ namespace GSF.Web.Model
         /// <summary>
         /// Updates an existing Record.
         /// </summary>
-        /// <param name="record"> The <typeparamref name="T"/> record to be updated.</param>
+        /// <param name="record"> The <typeparamref name="U"/> record to be updated.</param>
         /// <returns><see cref="IHttpActionResult"/> containing the updated record or <see cref="Exception"/> </returns>
 
         [HttpPatch, Route("Update")]
-        public virtual IHttpActionResult Patch([FromBody] T record)
+        public virtual IHttpActionResult Patch([FromBody] U record)
         {
             if (!PatchAuthCheck() || ViewOnly)
                 return Unauthorized();
 
             using (AdoDataConnection connection = new AdoDataConnection(Connection))
             {
-                int result = new TableOperations<T>(connection).AddNewOrUpdateRecord(record);
+                int result = new TableOperations<U>(connection).AddNewOrUpdateRecord(record);
 
-                if (PrimaryKeyField != string.Empty)
+                if (EditPrimaryKeyField != string.Empty)
                 {
-                    T newRecord = record;
-                    PropertyInfo prop = typeof(T).GetProperty(PrimaryKeyField);
+                    U newRecord = record;
+                    PropertyInfo prop = typeof(U).GetProperty(EditPrimaryKeyField);
                     if (prop != null)
                     {
                         object uniqueKey = prop.GetValue(newRecord);
-                        newRecord = new TableOperations<T>(connection).QueryRecordWhere(PrimaryKeyField + " = {0}", uniqueKey);
+                        newRecord = new TableOperations<U>(connection).QueryRecordWhere(EditPrimaryKeyField + " = {0}", uniqueKey);
                         return Ok(newRecord);
                     }
                 }
@@ -340,39 +352,39 @@ namespace GSF.Web.Model
         /// <summary>
         /// Deletes an existing Record.
         /// </summary>
-        /// <param name="record"> The <typeparamref name="T"/> record to be deleted.</param>
+        /// <param name="record"> The <typeparamref name="U"/> record to be deleted.</param>
         /// <returns><see cref="IHttpActionResult"/> containing the number of records deleted or <see cref="Exception"/> </returns>
 
         [HttpDelete, Route("Delete")]
-        public virtual IHttpActionResult Delete(T record)
+        public virtual IHttpActionResult Delete(U record)
         {
             if (!DeleteAuthCheck() || ViewOnly)
                 return Unauthorized();
 
             using (AdoDataConnection connection = new AdoDataConnection(Connection))
             {
-                string tableName = new TableOperations<T>(connection).TableName;
+                string tableName = new TableOperations<U>(connection).TableName;
 
-                PropertyInfo idProp = typeof(T).GetProperty(PrimaryKeyField);
+                PropertyInfo idProp = typeof(U).GetProperty(EditPrimaryKeyField);
                 int result;
 
                 if (idProp.PropertyType == typeof(int))
                 {
                     int id = (int)idProp.GetValue(record);
-                    result = connection.ExecuteNonQuery($"EXEC UniversalCascadeDelete {tableName}, '{PrimaryKeyField} = {id}'");
+                    result = connection.ExecuteNonQuery($"EXEC UniversalCascadeDelete {tableName}, '{EditPrimaryKeyField} = {id}'");
                 }
                 else if (idProp.PropertyType == typeof(Guid))
                 {
                     Guid id = (Guid)idProp.GetValue(record);
-                    result = connection.ExecuteNonQuery($"EXEC UniversalCascadeDelete {tableName}, '{PrimaryKeyField} = ''{id}'''");
+                    result = connection.ExecuteNonQuery($"EXEC UniversalCascadeDelete {tableName}, '{EditPrimaryKeyField} = ''{id}'''");
                 }
                 else if (idProp.PropertyType == typeof(string))
                 {
                     string id = (string)idProp.GetValue(record);
-                    result = connection.ExecuteNonQuery($"EXEC UniversalCascadeDelete {tableName}, '{PrimaryKeyField} = ''{id}'''");
+                    result = connection.ExecuteNonQuery($"EXEC UniversalCascadeDelete {tableName}, '{EditPrimaryKeyField} = ''{id}'''");
                 }
                 else
-                    result = new TableOperations<T>(connection).DeleteRecord(record);
+                    result = new TableOperations<U>(connection).DeleteRecord(record);
                 
                 return Ok(result);
             }
@@ -789,7 +801,7 @@ namespace GSF.Web.Model
                     joinCondition = joinCondition + searchSettingConditions;
                     if (SearchSettings.Condition != String.Empty)
                         joinCondition = $"{joinCondition} AND ";
-                    joinCondition = joinCondition + $"SRC.{PrimaryKeyField} = AF.{SearchSettings.PrimaryKeyField}";
+                    joinCondition = joinCondition + $"SRC.{SearchPrimaryKeyField} = AF.{SearchSettings.SearchPrimaryKeyField}";
 
                     string sqlPivotColumns = $@"
                         SELECT '[AFV_' + [Key] + ']'
@@ -875,7 +887,7 @@ namespace GSF.Web.Model
                 joinCondition += searchSettingConditions;
                 if (SearchSettings.Condition != string.Empty)
                     joinCondition = $"{joinCondition} AND ";
-                joinCondition += $"SRC.{PrimaryKeyField} = AF.{SearchSettings.PrimaryKeyField}";
+                joinCondition += $"SRC.{SearchPrimaryKeyField} = AF.{SearchSettings.SearchPrimaryKeyField}";
 
                 string sqlPivotColumns = $@"
                         SELECT '[AFV_' + [Key] + ']'
