@@ -2870,14 +2870,14 @@ namespace PhasorProtocolAdapters
         /// Persists flag that determines if device configuration has changed since last update in host system.
         /// </summary>
         /// <param name="configurationName">Name of configuration for assignment.</param>
-        /// <param name="changed">Changed marker to apply.</param>
-        public static void SaveConfigurationOutOfSyncMarker(string configurationName, bool changed)
+        /// <param name="outOfSync">Out of sync marker to apply.</param>
+        public static void SaveConfigurationOutOfSyncMarker(string configurationName, bool outOfSync)
         {
-            SetConfigurationStateValue(configurationName, LastConfigStateSection, OutOfSyncEntry, changed.ToString());
+            SetConfigurationStateValue(configurationName, LastConfigStateSection, OutOfSyncEntry, outOfSync.ToString());
 
             // Update flag in active instance so value can be reflected in statistics
             if (s_instances.TryGetValue(configurationName, out PhasorMeasurementMapper mapper))
-                mapper.ConfigurationOutOfSync = changed;
+                mapper.ConfigurationOutOfSync = outOfSync;
         }
 
         private static string GetConfigurationStateValue(string configurationName, string section, string entry, string defaultValue)
