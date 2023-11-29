@@ -2279,6 +2279,7 @@ namespace GSF.Data.Model
 
                 property.TryGetAttribute(out PrimaryKeyAttribute primaryKeyAttribute);
                 property.TryGetAttribute(out SearchableAttribute searchableAttribute);
+                bool isViewOnlny = property.AttributeExists<PropertyInfo, ViewOnlyFieldAttribute>();
 
                 if (property.TryGetAttribute(out EncryptDataAttribute encryptDataAttribute) && property.PropertyType == typeof(string))
                 {
@@ -2316,7 +2317,7 @@ namespace GSF.Data.Model
                     {
                         s_hasPrimaryKeyIdentityField = true;
                     }
-                    else
+                    else if (!isViewOnlny)
                     {
                         addNewFields.Append($"{(addNewFields.Length > 0 ? ", " : "")}{fieldName}");
                         addNewFormat.Append($"{(addNewFormat.Length > 0 ? ", " : "")}{{{addNewFieldIndex++}}}");
@@ -2327,7 +2328,7 @@ namespace GSF.Data.Model
                     primaryKeyFields.Append($"{(primaryKeyFields.Length > 0 ? ", " : "")}{fieldName}");
                     primaryKeyProperties.Add(property);
                 }
-                else
+                else if (!isViewOnlny)
                 {
                     addNewFields.Append($"{(addNewFields.Length > 0 ? ", " : "")}{fieldName}");
                     addNewFormat.Append($"{(addNewFormat.Length > 0 ? ", " : "")}{{{addNewFieldIndex++}}}");
