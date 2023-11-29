@@ -271,10 +271,14 @@ namespace GSF.PhasorProtocols.Anonymous
         /// Gets the file name with path of the specified <paramref name="configurationName"/>.
         /// </summary>
         /// <param name="configurationName">Name of the configuration to get file name for.</param>
+        /// <param name="extension">Extension of the configuration file.</param>
         /// <returns>File name with path of the specified <paramref name="configurationName"/>.</returns>
-        public static string GetConfigurationCacheFileName(string configurationName)
+        public static string GetConfigurationCacheFileName(string configurationName, string extension = "configuration.xml")
         {
-            return $"{ConfigurationCachePath}{configurationName.ReplaceCharacters('_', c => Path.GetInvalidFileNameChars().Contains(c))}.configuration.xml";
+            return $"{ConfigurationCachePath}{RemoveInvalidCharacters(configurationName)}.{RemoveInvalidCharacters(extension)}";
+
+            static string RemoveInvalidCharacters(string name) => 
+                name.ReplaceCharacters('_', c => Path.GetInvalidFileNameChars().Contains(c));
         }
 
         /// <summary>
