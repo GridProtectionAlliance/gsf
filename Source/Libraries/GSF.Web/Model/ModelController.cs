@@ -811,7 +811,7 @@ namespace GSF.Web.Model
                     joinCondition = joinCondition + searchSettingConditions;
                     if (SearchSettings.Condition != String.Empty)
                         joinCondition = $"{joinCondition} AND ";
-                    joinCondition = joinCondition + $"SRC.{SearchPrimaryKeyField} = AF.{SearchSettings.SearchPrimaryKeyField}";
+                    joinCondition = joinCondition + $"SRC.{SearchPrimaryKeyField} = AF.{SearchSettings.PrimaryKeyField}";
 
                     string sqlPivotColumns = $@"
                         SELECT '[AFV_' + [Key] + ']'
@@ -897,7 +897,7 @@ namespace GSF.Web.Model
                 joinCondition += searchSettingConditions;
                 if (SearchSettings.Condition != string.Empty)
                     joinCondition = $"{joinCondition} AND ";
-                joinCondition += $"SRC.{SearchPrimaryKeyField} = AF.{SearchSettings.SearchPrimaryKeyField}";
+                joinCondition += $"SRC.{SearchPrimaryKeyField} = AF.{SearchSettings.PrimaryKeyField}";
 
                 string sqlPivotColumns = $@"
                         SELECT '[AFV_' + [Key] + ']'
