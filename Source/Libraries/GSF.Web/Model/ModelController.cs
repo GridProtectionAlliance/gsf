@@ -32,6 +32,7 @@ using System.Security.Claims;
 using System.Web.Http;
 using GSF.Data;
 using GSF.Data.Model;
+using GSF.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -131,8 +132,12 @@ namespace GSF.Web.Model
             SearchSettings = typeof(T).GetCustomAttribute<AdditionalFieldSearchAttribute>();
             Take = typeof(T).GetCustomAttribute<ReturnLimitAttribute>()?.Limit ?? null;
 
-            // Custom View Models are ViewOnly.
-            ViewOnly = ViewOnly || CustomView != String.Empty;
+            // Custom View Models are ViewOnly, unless there exists view only properties,
+            // then the assumption is made that those models have their view properties marked
+            bool hasViewOnlyProperties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(property => property.CanRead && property.CanWrite)
+                .Any(property => property.AttributeExists<PropertyInfo, ViewOnlyFieldAttribute>());
+            ViewOnly = ViewOnly || (CustomView != string.Empty && !hasViewOnlyProperties);
 
             RootQueryRestrictionAttribute rqra = typeof(T).GetCustomAttribute<RootQueryRestrictionAttribute>();
             if (rqra != null)
