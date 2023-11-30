@@ -42,6 +42,7 @@ using GSF.Communication;
 using GSF.Data;
 using GSF.Data.Model;
 using GSF.Diagnostics;
+using GSF.Interop;
 using GSF.IO;
 using GSF.Parsing;
 using GSF.PhasorProtocols;
@@ -139,6 +140,10 @@ namespace PhasorProtocolAdapters
             #endregion
         }
 
+        // Constants
+        private const string LastConfigStateSection = "LastConfigState";
+        private const string OutOfSyncEntry = "OutOfSync";
+
         // Fields
         private MultiProtocolFrameParser m_frameParser;
         private IServer m_publishChannel;
@@ -187,6 +192,7 @@ namespace PhasorProtocolAdapters
         private long m_lifetimeLatencyFrames;
         private MeasurementKey m_qualityFlagsKey;
         private int m_lastMeasurementMappedCount = 4;
+        private bool? m_configurationOutOfSync;
         private bool m_disposed;
 
         #endregion
@@ -374,6 +380,15 @@ namespace PhasorProtocolAdapters
         /// Gets the actual data rate.
         /// </summary>
         public double ActualDataRate => m_frameParser?.ByteRate ?? 0.0D;
+
+        /// <summary>
+        /// Gets flag that determines if host configuration is out of sync with connected device.
+        /// </summary>
+        public bool ConfigurationOutOfSync
+        {
+            get => m_configurationOutOfSync ??= LoadConfigurationOutOfSyncMarker(Name);
+            private set => m_configurationOutOfSync = value;
+        }
 
         /// <summary>
         /// Gets or sets acronym of other device for which to assume a shared mapping.
@@ -714,60 +729,37 @@ namespace PhasorProtocolAdapters
         {
             get
             {
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
 
                 status.Append(base.Status);
 
-                status.AppendFormat("    Source is concentrator: {0}", IsConcentrator);
-                status.AppendLine();
-                status.AppendFormat("Forwarding only connection: {0}", m_forwardOnly);
-                status.AppendLine();
+                status.AppendLine($"    Source is concentrator: {IsConcentrator}");
+                status.AppendLine($"Forwarding only connection: {m_forwardOnly}");
 
                 if (!string.IsNullOrWhiteSpace(SharedMapping))
-                {
-                    status.AppendFormat("     Shared mapping source: {0}", SharedMapping);
-                    status.AppendLine();
-                }
+                    status.AppendLine($"     Shared mapping source: {SharedMapping}");
 
-                status.AppendFormat(" Source connection ID code: {0:N0} (index {1:N0} / {2:N0})", AccessID, ServerIndex, m_accessIDList?.Length ?? 1);
-                status.AppendLine();
-                status.AppendFormat("     Forcing label mapping: {0}", m_forceLabelMapping);
-                status.AppendLine();
-                status.AppendFormat("      Label mapped devices: {0:N0}", m_labelDefinedDevices?.Count ?? 0);
-                status.AppendLine();
-                status.AppendFormat("          Target time zone: {0}", TimeZone.Id);
-                status.AppendLine();
-                status.AppendFormat("    Manual time adjustment: {0:0.000} seconds", TimeAdjustmentTicks.ToSeconds());
-                status.AppendLine();
-                status.AppendFormat("Allow use of cached config: {0}", AllowUseOfCachedConfiguration);
-                status.AppendLine();
-                status.AppendFormat("No data reconnect interval: {0:0.000} seconds", Ticks.FromMilliseconds(m_dataStreamMonitor.Interval).ToSeconds());
-                status.AppendLine();
+                status.AppendLine($" Source connection ID code: {AccessID:N0} (index {ServerIndex:N0} / {m_accessIDList?.Length ?? 1:N0})");
+                status.AppendLine($"     Forcing label mapping: {m_forceLabelMapping}");
+                status.AppendLine($"      Label mapped devices: {m_labelDefinedDevices?.Count ?? 0:N0}");
+                status.AppendLine($"          Target time zone: {TimeZone.Id}");
+                status.AppendLine($"    Manual time adjustment: {TimeAdjustmentTicks.ToSeconds():0.000} seconds");
+                status.AppendLine($"Allow use of cached config: {AllowUseOfCachedConfiguration}");
+                status.AppendLine($"No data reconnect interval: {Ticks.FromMilliseconds(m_dataStreamMonitor.Interval).ToSeconds():0.000} seconds");
 
                 if (m_injectBadData)
                     status.AppendLine("   Injecting bad data flag: Yes - WARNING: Test mode enabled to override bad data flag");
 
                 if (AllowUseOfCachedConfiguration)
-                {
-                    //                   123456789012345678901234567890
-                    status.AppendFormat("   Cached config file name: {0}", FilePath.TrimFileName(ConfigurationCacheFileName, 51));
-                    status.AppendLine();
-                }
+                    status.AppendLine($"   Cached config file name: {FilePath.TrimFileName(ConfigurationCacheFileName, 51)}");
 
-                status.AppendFormat("       Out of order frames: {0:N0}", OutOfOrderFrames);
-                status.AppendLine();
-                status.AppendFormat("           Minimum latency: {0:N0}ms over {1} tests", MinimumLatency, m_latencyFrames);
-                status.AppendLine();
-                status.AppendFormat("           Maximum latency: {0:N0}ms over {1} tests", MaximumLatency, m_latencyFrames);
-                status.AppendLine();
-                status.AppendFormat("           Average latency: {0:N0}ms over {1} tests", AverageLatency, m_latencyFrames);
-                status.AppendLine();
+                status.AppendLine($"       Out of order frames: {OutOfOrderFrames:N0}");
+                status.AppendLine($"           Minimum latency: {MinimumLatency:N0}ms over {m_latencyFrames:N0} tests");
+                status.AppendLine($"           Maximum latency: {MaximumLatency:N0}ms over {m_latencyFrames:N0} tests");
+                status.AppendLine($"           Average latency: {AverageLatency:N0}ms over {m_latencyFrames:N0} tests");
 
                 if (m_configurationFrame is not null)
-                {
-                    status.AppendFormat("  Configuration frame size: {0:N0} bytes", m_configurationFrame.BinaryLength);
-                    status.AppendLine();
-                }
+                    status.AppendLine($"  Configuration frame size: {m_configurationFrame.BinaryLength:N0} bytes");
 
                 if (m_frameParser is not null)
                     status.Append(m_frameParser.Status);
@@ -786,10 +778,11 @@ namespace PhasorProtocolAdapters
                         if (clientIDs is not null && clientIDs.Length > 0)
                         {
                             status.AppendLine();
-                            status.AppendFormat("TCP publish channel has {0} connected clients:\r\n\r\n", clientIDs.Length);
+                            status.AppendLine($"TCP publish channel has {clientIDs.Length:N0} connected clients:");
+                            status.AppendLine();
 
                             for (int i = 0; i < clientIDs.Length; i++)
-                                status.AppendFormat("    {0}) {1}\r\n", i + 1, GetConnectionID(tcpPublishChannel, clientIDs[i]));
+                                status.AppendLine($"    {i + 1}) {GetConnectionID(tcpPublishChannel, clientIDs[i])}");
 
                             status.AppendLine();
                         }
@@ -805,33 +798,28 @@ namespace PhasorProtocolAdapters
                 }
 
                 status.AppendLine();
-                status.Append("Parsed Frame Quality Statistics".CenterText(78));
-                status.AppendLine();
-                status.AppendLine();
-                //                      1         2         3         4         5         6         7
-                //             123456789012345678901234567890123456789012345678901234567890123456789012345678
-                status.Append("Device                  Bad Data   Bad Time    Frame      Total    Last Report");
-                status.AppendLine();
-                status.Append(" Name                    Frames     Frames     Errors     Frames      Time");
-                status.AppendLine();
-                //                      1         2            1          1          1          1          1
-                //             1234567890123456789012 1234567890 1234567890 1234567890 1234567890 123456789012
-                status.Append("---------------------- ---------- ---------- ---------- ---------- ------------");
+                status.AppendLine("Parsed Frame Quality Statistics".CenterText(78));
                 status.AppendLine();
 
-                IConfigurationCell parsedDevice;
-                string stationName;
+                //                          1         2         3         4         5         6         7
+                //                 123456789012345678901234567890123456789012345678901234567890123456789012345678
+                status.AppendLine("Device                  Bad Data   Bad Time    Frame      Total    Last Report");
+                status.AppendLine(" Name                    Frames     Frames     Errors     Frames      Time");
+
+                //                          1         2            1          1          1          1          1
+                //                 1234567890123456789012 1234567890 1234567890 1234567890 1234567890 123456789012
+                status.AppendLine("---------------------- ---------- ---------- ---------- ---------- ------------");
 
                 foreach (ConfigurationCell definedDevice in DefinedDevices)
                 {
-                    stationName = null;
+                    string stationName = null;
 
                     // Attempt to lookup station name in configuration frame of connected device
                     if (m_frameParser?.ConfigurationFrame is not null)
                     {
                         // Attempt to lookup by label (if defined), then by ID code
                         if (m_labelDefinedDevices is not null && !string.IsNullOrWhiteSpace(definedDevice.StationName) &&
-                            m_frameParser.ConfigurationFrame.Cells.TryGetByStationName(definedDevice.StationName, out parsedDevice) ||
+                            m_frameParser.ConfigurationFrame.Cells.TryGetByStationName(definedDevice.StationName, out IConfigurationCell parsedDevice) ||
                             m_frameParser.ConfigurationFrame.Cells.TryGetByIDCode(definedDevice.IDCode, out parsedDevice))
                             stationName = parsedDevice.StationName;
                     }
@@ -855,18 +843,10 @@ namespace PhasorProtocolAdapters
                 }
 
                 status.AppendLine();
-                status.AppendFormat("Undefined devices encountered: {0:N0}", m_undefinedDevices.Count);
-                status.AppendLine();
+                status.AppendLine($"Undefined devices encountered: {m_undefinedDevices.Count:N0}");
 
                 foreach (KeyValuePair<string, long> item in m_undefinedDevices)
-                {
-                    status.Append("    Device \"");
-                    status.Append(item.Key);
-                    status.Append("\" encountered ");
-                    status.Append(item.Value);
-                    status.Append(" times");
-                    status.AppendLine();
-                }
+                    status.AppendLine($"    Device \"{item.Key}\" encountered {item.Value:N0} times");
 
                 return status.ToString();
             }
@@ -924,6 +904,8 @@ namespace PhasorProtocolAdapters
                     m_missingDataMonitor.Dispose();
                     m_missingDataMonitor = null;
                 }
+
+                s_instances.TryRemove(Name, out _);
             }
             finally
             {
@@ -951,8 +933,8 @@ namespace PhasorProtocolAdapters
             // Parse any defined access IDs from server list, this assumes TCP connection since this is currently the only connection type that supports multiple end points
             if (settings.TryGetValue("server", out setting) && !string.IsNullOrWhiteSpace(setting))
             {
-                List<string> serverList = new List<string>();
-                List<ushort> accessIDList = new List<ushort>();
+                List<string> serverList = new();
+                List<ushort> accessIDList = new();
                 string[] servers = setting.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 
                 foreach (string server in servers)
@@ -1066,7 +1048,7 @@ namespace PhasorProtocolAdapters
             m_countOnlyMappedMeasurements = settings.TryGetValue("countOnlyMappedMeasurements", out setting) && setting.ParseBoolean();
 
             // Create a new phasor protocol frame parser for non-virtual connections
-            MultiProtocolFrameParser frameParser = new MultiProtocolFrameParser
+            MultiProtocolFrameParser frameParser = new()
             {
                 // Most of the parameters in the connection string will be for the data source in the frame parser
                 // so we provide all of them, other parameters will simply be ignored
@@ -1167,6 +1149,8 @@ namespace PhasorProtocolAdapters
             // Load active device measurements associated with this connection
             LoadDeviceMeasurements();
 
+            s_instances.TryAdd(Name, this);
+
             // Register with the statistics engine
             StatisticsEngine.Register(this, "InputStream", "IS");
             StatisticsEngine.Calculated += (_, _) => ResetLatencyCounters();
@@ -1190,7 +1174,7 @@ namespace PhasorProtocolAdapters
 
             if (IsConcentrator)
             {
-                StringBuilder deviceStatus = new StringBuilder();
+                StringBuilder deviceStatus = new();
                 int index = 0;
 
                 deviceStatus.AppendLine();
@@ -1216,8 +1200,7 @@ namespace PhasorProtocolAdapters
                     if (m_forceLabelMapping)
                     {
                         // When forcing label mapping we always try to use label for unique lookup
-                        if (m_labelDefinedDevices is null)
-                            m_labelDefinedDevices = new ConcurrentDictionary<string, DeviceStatisticsHelper<ConfigurationCell>>(StringComparer.OrdinalIgnoreCase);
+                        m_labelDefinedDevices ??= new ConcurrentDictionary<string, DeviceStatisticsHelper<ConfigurationCell>>(StringComparer.OrdinalIgnoreCase);
 
                         // See if label already exists in this collection
                         if (m_labelDefinedDevices.ContainsKey(definedDevice.StationName))
@@ -1247,8 +1230,7 @@ namespace PhasorProtocolAdapters
                         if (m_definedDevices.ContainsKey(definedDevice.IDCode))
                         {
                             // For devices that do not have unique ID codes, we fall back on its label for unique lookup
-                            if (m_labelDefinedDevices is null)
-                                m_labelDefinedDevices = new ConcurrentDictionary<string, DeviceStatisticsHelper<ConfigurationCell>>(StringComparer.OrdinalIgnoreCase);
+                            m_labelDefinedDevices ??= new ConcurrentDictionary<string, DeviceStatisticsHelper<ConfigurationCell>>(StringComparer.OrdinalIgnoreCase);
 
                             if (m_labelDefinedDevices.ContainsKey(definedDevice.StationName))
                             {
@@ -1287,10 +1269,10 @@ namespace PhasorProtocolAdapters
 
                 if (m_labelDefinedDevices is not null)
                 {
-                    if (m_forceLabelMapping)
-                        OnStatusMessage(MessageLevel.Info, $"{Name} has {m_labelDefinedDevices.Count:N0} defined input devices that are using the device label for identification since connection has been forced to use label mapping. This is not the optimal configuration.", flags: MessageFlags.UsageIssue);
-                    else
-                        OnStatusMessage(MessageLevel.Info, $"{Name} has {m_labelDefinedDevices.Count:N0} defined input devices that do not have unique ID codes (i.e., the AccessID), as a result system will use the device label for identification. This is not the optimal configuration.", flags: MessageFlags.UsageIssue);
+                    OnStatusMessage(MessageLevel.Info, m_forceLabelMapping ? 
+                        $"{Name} has {m_labelDefinedDevices.Count:N0} defined input devices that are using the device label for identification since connection has been forced to use label mapping. This is not the optimal configuration." : 
+                        $"{Name} has {m_labelDefinedDevices.Count:N0} defined input devices that do not have unique ID codes (i.e., the AccessID), as a result system will use the device label for identification. This is not the optimal configuration.", 
+                        flags: MessageFlags.UsageIssue);
                 }
             }
             else
@@ -1321,8 +1303,7 @@ namespace PhasorProtocolAdapters
                     // When forcing label mapping we always try to use label for unique lookup instead of ID code
                     if (m_forceLabelMapping)
                     {
-                        if (m_labelDefinedDevices is null)
-                            m_labelDefinedDevices = new ConcurrentDictionary<string, DeviceStatisticsHelper<ConfigurationCell>>(StringComparer.OrdinalIgnoreCase);
+                        m_labelDefinedDevices ??= new ConcurrentDictionary<string, DeviceStatisticsHelper<ConfigurationCell>>(StringComparer.OrdinalIgnoreCase);
 
                         m_labelDefinedDevices.TryAdd(definedDevice.StationName, new DeviceStatisticsHelper<ConfigurationCell>(definedDevice));
                         RegisterStatistics(definedDevice, definedDevice.IDLabel, "Device", "PMU");
@@ -1341,7 +1322,7 @@ namespace PhasorProtocolAdapters
         // Load active device measurements for this mapper connection
         private void LoadDeviceMeasurements()
         {
-            Dictionary<string, MeasurementKey> definedMeasurements = new Dictionary<string, MeasurementKey>();
+            Dictionary<string, MeasurementKey> definedMeasurements = new();
 
             foreach (DataRow row in DataSourceLookups.GetLookupCache(DataSource).ActiveMeasurements.LookupByDeviceID(SharedMappingID))
             {
@@ -1355,7 +1336,7 @@ namespace PhasorProtocolAdapters
                 try
                 {
                     // Get measurement's signal ID
-                    Guid signalID = new Guid(row["SignalID"].ToNonNullString(Guid.NewGuid().ToString()));
+                    Guid signalID = new(row["SignalID"].ToNonNullString(Guid.NewGuid().ToString()));
 
                     MeasurementKey key = MeasurementKey.LookUpOrCreate(signalID, row["ID"].ToString());
 
@@ -1555,7 +1536,7 @@ namespace PhasorProtocolAdapters
                         m_receivedConfigFrame = true;
 
                         StartMeasurementCounter();
-                        CheckForConfigurationChanges();
+                        CheckForReceivedConfigurationChanges();
                     }
                 }
                 catch (Exception ex)
@@ -1615,7 +1596,7 @@ namespace PhasorProtocolAdapters
                         }
 
                         StartMeasurementCounter();
-                        CheckForConfigurationChanges();
+                        CheckForReceivedConfigurationChanges();
                     }
                 }
                 catch (Exception ex)
@@ -1632,7 +1613,7 @@ namespace PhasorProtocolAdapters
         /// <returns>A short one-line summary of the current status of this <see cref="PhasorMeasurementMapper"/>.</returns>
         public override string GetShortStatus(int maxLength)
         {
-            StringBuilder status = new StringBuilder();
+            StringBuilder status = new();
 
             if (m_frameParser is not null && m_frameParser.IsConnected)
             {
@@ -1657,12 +1638,12 @@ namespace PhasorProtocolAdapters
                         upTime = $"{connectionTime.ToDays():0.00} days";
                     }
 
-                    string uptimeStats = $"Up for {upTime}, {totalDataErrors} errors";
+                    string upTimeStats = $"Up for {upTime}, {totalDataErrors} errors";
                     string runtimeStats = $" {LastReportTime:MM/dd/yyyy HH:mm:ss.fff} {m_frameParser.CalculatedFrameRate:0.00} fps";
 
-                    uptimeStats = uptimeStats.TruncateRight(maxLength - runtimeStats.Length).PadLeft(maxLength - runtimeStats.Length, '\xA0');
+                    upTimeStats = upTimeStats.TruncateRight(maxLength - runtimeStats.Length).PadLeft(maxLength - runtimeStats.Length, '\xA0');
 
-                    status.Append(uptimeStats);
+                    status.Append(upTimeStats);
                     status.Append(runtimeStats);
                 }
                 else if (m_frameParser.ConfigurationFrame is null)
@@ -1754,8 +1735,8 @@ namespace PhasorProtocolAdapters
             const int FrequencyIndex = (int)CompositeFrequencyValue.Frequency;
             const int DfDtIndex = (int)CompositeFrequencyValue.DfDt;
 
-            List<IMeasurement> mappedMeasurements = new List<IMeasurement>(m_lastMeasurementMappedCount);
-            List<IMeasurement> deviceMappedMeasurements = new List<IMeasurement>();
+            List<IMeasurement> mappedMeasurements = new(m_lastMeasurementMappedCount);
+            List<IMeasurement> deviceMappedMeasurements = new();
 
             // Adjust time to UTC based on source time zone
             if (!TimeZone.Equals(TimeZoneInfo.Utc))
@@ -2279,7 +2260,7 @@ namespace PhasorProtocolAdapters
                     case DeviceCommand.EnableRealTimeData:
                     case DeviceCommand.DisableRealTimeData:
                         // We ignore these commands without message, these commands are normally sent by synchrophasor devices
-                        // but we do not allow stream control in a proxy situation
+                        // but we do not allow stream control in a proxy / data forwarding situation
                         break;
                     default:
                         OnStatusMessage(MessageLevel.Info, $"Request for \"{commandFrame.Command}\" from \"{connectionID}\" was ignored - device command is unsupported for data forwarding.");
@@ -2348,8 +2329,8 @@ namespace PhasorProtocolAdapters
                 StatisticsEngine.Register(source, sourceName, sourceCategory, sourceAcronym);
         }
 
-        // Compare last configuration to new received configuration frame to see if there have been any changes
-        private bool CheckForConfigurationChanges()
+        // Compare last received configuration frame to new received configuration frame to see if there have been any changes
+        private bool CheckForReceivedConfigurationChanges()
         {
             IConfigurationFrame newConfigurationFrame = m_frameParser?.ConfigurationFrame;
             bool configurationChanged = false;
@@ -2413,6 +2394,38 @@ namespace PhasorProtocolAdapters
             return configurationChanged;
         }
 
+        // Compare last cached configuration frame to new received configuration frame to see if there have been any changes,
+        // this can be used to indicate that device configuration has changed and may need to be updated in the host system.
+        private void CheckForCachedConfigurationChanges(IConfigurationFrame currentConfigurationFrame)
+        {
+            // If we haven't received a configuration frame, we can't compare against it
+            if (currentConfigurationFrame is null)
+                return;
+
+            IConfigurationFrame cachedConfigurationFrame = ConfigurationFrame.GetCachedConfiguration(Name, true);
+
+            // If we don't have a cached configuration yet, we can't compare against it
+            if (cachedConfigurationFrame is null)
+                return;
+
+            // Make sure timestamps are identical since this should not count against comparison
+            cachedConfigurationFrame.Timestamp = currentConfigurationFrame.Timestamp;
+
+            // Generate binary images for the configuration frames
+            byte[] currentConfigFrameBuffer = new byte[currentConfigurationFrame.BinaryLength];
+            byte[] cachedConfigFrameBuffer = new byte[cachedConfigurationFrame.BinaryLength];
+
+            currentConfigurationFrame.GenerateBinaryImage(currentConfigFrameBuffer, 0);
+            cachedConfigurationFrame.GenerateBinaryImage(cachedConfigFrameBuffer, 0);
+
+            // Compare the binary images - if they are different, this counts as a configuration change
+            if (currentConfigFrameBuffer.SequenceEqual(cachedConfigFrameBuffer))
+                return;
+
+            // Persist marker indicating that configuration is out of sync
+            SaveConfigurationOutOfSyncMarker(Name, true);
+        }
+
         private void ReassignInternalFlags(bool @internal)
         {
             try
@@ -2440,11 +2453,11 @@ namespace PhasorProtocolAdapters
                     updateCount++;
                 }
 
-                if (updateCount > 0)
-                {
-                    OnStatusMessage(MessageLevel.Info, $"Reassigned \"Internal\" flag to \"{@internal}\" for {updateCount:N0} measurement records associated with device \"{Name}\".", nameof(ReassignInternalFlags));
-                    OnConfigurationChanged();
-                }
+                if (updateCount <= 0)
+                    return;
+                
+                OnStatusMessage(MessageLevel.Info, $"Reassigned \"Internal\" flag to \"{@internal}\" for {updateCount:N0} measurement records associated with device \"{Name}\".", nameof(ReassignInternalFlags));
+                OnConfigurationChanged();
             }
             catch (Exception ex)
             {
@@ -2541,23 +2554,20 @@ namespace PhasorProtocolAdapters
             ExtractFrameMeasurements(e.Argument);
             TotalDataFrames++;
 
-            if (m_frameParser.RedundantFramesPerPacket > 0)
+            if (m_frameParser.RedundantFramesPerPacket <= 0)
+                return;
+            
+            m_missingDataMonitor ??= new MissingDataMonitor
             {
-                if (m_missingDataMonitor is null)
-                {
-                    m_missingDataMonitor = new MissingDataMonitor
-                    {
-                        LagTime = m_lagTime,
-                        LeadTime = m_leadTime,
-                        FramesPerSecond = m_frameParser.DefinedFrameRate,
-                        TimeResolution = m_timeResolution,
-                        UsePrecisionTimer = false
-                    };
-                }
+                LagTime = m_lagTime,
+                LeadTime = m_leadTime,
+                FramesPerSecond = m_frameParser.DefinedFrameRate,
+                TimeResolution = m_timeResolution,
+                UsePrecisionTimer = false
+            };
 
-                m_missingDataMonitor.RedundantFramesPerPacket = m_frameParser.RedundantFramesPerPacket;
-                m_missingDataMonitor.SortMeasurements(e.Argument.Cells.Select(cell => cell.GetStatusFlagsMeasurement()));
-            }
+            m_missingDataMonitor.RedundantFramesPerPacket = m_frameParser.RedundantFramesPerPacket;
+            m_missingDataMonitor.SortMeasurements(e.Argument.Cells.Select(cell => cell.GetStatusFlagsMeasurement()));
         }
 
         private void m_frameParser_ReceivedConfigurationFrame(object sender, EventArgs<IConfigurationFrame> e)
@@ -2567,23 +2577,40 @@ namespace PhasorProtocolAdapters
 
             lock (m_configurationOperationLock)
             {
-                bool configurationChanged = CheckForConfigurationChanges();
+                bool configurationChanged = CheckForReceivedConfigurationChanges();
 
                 if (!m_receivedConfigFrame || configurationChanged)
                 {
                     OnStatusMessage(MessageLevel.Info, $"Received {(m_receivedConfigFrame ? "updated" : "initial")} configuration frame at {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss.fff}");
                     m_receivedConfigFrame = true;
 
-                    try
+                    // Queue work for cached configuration operations to minimize time in the lock and allow event call to return quickly
+                    ThreadPool.QueueUserWorkItem(state =>
                     {
-                        // Cache configuration on an independent thread in case this takes some time
-                        ConfigurationFrame.Cache(e.Argument, ex => OnProcessException(MessageLevel.Info, ex), Name);
-                    }
-                    catch (Exception ex)
-                    {
-                        // Process exception for logging
-                        OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to queue caching of config frame due to exception: {ex.Message}", ex));
-                    }
+                        if (state is not IConfigurationFrame configFrame)
+                            return;
+
+                        try
+                        {
+                            // Any time a configuration frame is received, we check to see if there are any changes from last cached config
+                            CheckForCachedConfigurationChanges(configFrame);
+                        }
+                        catch (Exception ex)
+                        {
+                            OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed while checking for changes in device configuration: {ex.Message}", ex));
+                        }
+
+                        try
+                        {
+                            // Update cached configuration after comparison
+                            ConfigurationFrame.Cache(configFrame, ex => OnProcessException(MessageLevel.Info, ex), Name);
+                        }
+                        catch (Exception ex)
+                        {
+                            OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to queue caching of config frame due to exception: {ex.Message}", ex));
+                        }
+                    },
+                    e.Argument);
 
                     StartMeasurementCounter();
                 }
@@ -2709,10 +2736,9 @@ namespace PhasorProtocolAdapters
         {
             Exception ex = e.Argument2;
 
-            if (ex is SocketException)
-                OnProcessException(MessageLevel.Error, new InvalidOperationException($"Socket exception occurred on the UDP publication channel while attempting to send client data to \"{GetConnectionID(m_publishChannel, e.Argument1)}\": {ex.Message}", ex));
-            else
-                OnProcessException(MessageLevel.Error, new InvalidOperationException($"UDP publication channel exception occurred while sending client data to \"{GetConnectionID(m_publishChannel, e.Argument1)}\": {ex.Message}", ex));
+            OnProcessException(MessageLevel.Error, ex is SocketException ? 
+                new InvalidOperationException($"Socket exception occurred on the UDP publication channel while attempting to send client data to \"{GetConnectionID(m_publishChannel, e.Argument1)}\": {ex.Message}", ex) : 
+                new InvalidOperationException($"UDP publication channel exception occurred while sending client data to \"{GetConnectionID(m_publishChannel, e.Argument1)}\": {ex.Message}", ex));
         }
 
         private void udpPublishChannel_ServerStarted(object sender, EventArgs e)
@@ -2758,10 +2784,9 @@ namespace PhasorProtocolAdapters
         {
             Exception ex = e.Argument2;
 
-            if (ex is SocketException)
-                OnProcessException(MessageLevel.Error, new InvalidOperationException($"Socket exception occurred on the TCP publication channel while attempting to send client data to \"{GetConnectionID(m_publishChannel, e.Argument1)}\": {ex.Message}", ex));
-            else
-                OnProcessException(MessageLevel.Error, new InvalidOperationException($"TCP publication channel exception occurred while sending client data to \"{GetConnectionID(m_publishChannel, e.Argument1)}\": {ex.Message}", ex));
+            OnProcessException(MessageLevel.Error, ex is SocketException ? 
+                new InvalidOperationException($"Socket exception occurred on the TCP publication channel while attempting to send client data to \"{GetConnectionID(m_publishChannel, e.Argument1)}\": {ex.Message}", ex) : 
+                new InvalidOperationException($"TCP publication channel exception occurred while sending client data to \"{GetConnectionID(m_publishChannel, e.Argument1)}\": {ex.Message}", ex));
         }
 
         private void tcpPublishChannel_ServerStarted(object sender, EventArgs e)
@@ -2815,14 +2840,63 @@ namespace PhasorProtocolAdapters
         {
             Exception ex = e.Argument;
 
-            if (ex is SocketException)
-                OnProcessException(MessageLevel.Error, new InvalidOperationException($"Socket exception occurred on the TCP publication client channel while attempting to send client data to TCP listening server \"{m_clientBasedPublishChannel.ServerUri}\": {ex.Message}", ex));
-            else
-                OnProcessException(MessageLevel.Error, new InvalidOperationException($"TCP publication client channel exception occurred while sending client data to TCP listening server \"{m_clientBasedPublishChannel.ServerUri}\": {ex.Message}", ex));
+            OnProcessException(MessageLevel.Error, ex is SocketException ? 
+                new InvalidOperationException($"Socket exception occurred on the TCP publication client channel while attempting to send client data to TCP listening server \"{m_clientBasedPublishChannel.ServerUri}\": {ex.Message}", ex) : 
+                new InvalidOperationException($"TCP publication client channel exception occurred while sending client data to TCP listening server \"{m_clientBasedPublishChannel.ServerUri}\": {ex.Message}", ex));
         }
 
         #endregion
 
         #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static readonly ConcurrentDictionary<string, PhasorMeasurementMapper> s_instances = new(StringComparer.OrdinalIgnoreCase);
+
+        // Static Methods
+
+        /// <summary>
+        /// Loads flag that determines if device configuration has changed since last update in host system.
+        /// </summary>
+        /// <param name="configurationName">Name of configuration to check.</param>
+        /// <returns><c>true</c> if device configuration has changed since last update in host system; otherwise, <c>false</c>.</returns>
+        public static bool LoadConfigurationOutOfSyncMarker(string configurationName)
+        {
+            return bool.TryParse(GetConfigurationStateValue(configurationName, LastConfigStateSection, OutOfSyncEntry, "false"), out bool changed) && changed;
+        }
+
+        /// <summary>
+        /// Persists flag that determines if device configuration has changed since last update in host system.
+        /// </summary>
+        /// <param name="configurationName">Name of configuration for assignment.</param>
+        /// <param name="outOfSync">Out of sync marker to apply.</param>
+        public static void SaveConfigurationOutOfSyncMarker(string configurationName, bool outOfSync)
+        {
+            SetConfigurationStateValue(configurationName, LastConfigStateSection, OutOfSyncEntry, outOfSync.ToString());
+
+            // Update flag in active instance so value can be reflected in statistics
+            if (s_instances.TryGetValue(configurationName, out PhasorMeasurementMapper mapper))
+                mapper.ConfigurationOutOfSync = outOfSync;
+        }
+
+        private static string GetConfigurationStateValue(string configurationName, string section, string entry, string defaultValue)
+        {
+            IniFile iniFile = new(GetConfigurationStateFile(configurationName));
+            return iniFile[section, entry, defaultValue];
+        }
+
+        private static void SetConfigurationStateValue(string configurationName, string section, string entry, string value)
+        {
+            IniFile _ = new(GetConfigurationStateFile(configurationName)) { [section, entry] = value };
+        }
+
+        private static string GetConfigurationStateFile(string configurationName)
+        {
+            return ConfigurationFrame.GetConfigurationCacheFileName(configurationName, "state");
+        }
+
+        #endregion
+
     }
 }

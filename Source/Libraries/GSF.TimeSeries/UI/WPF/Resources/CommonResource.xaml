@@ -101,7 +101,9 @@
 
     <ControlTemplate x:Key="HyperlinkStyleButtonTemplate" TargetType="Button">
         <TextBlock Text="{TemplateBinding Content}" TextDecorations="Underline" Cursor="Hand" 
-                   HorizontalAlignment="Center" Width="Auto" Height="Auto" Foreground="{TemplateBinding Foreground}"/>
+                   HorizontalAlignment="Center" Width="Auto" Height="Auto"
+                   Foreground="{TemplateBinding Foreground}"
+                   FontWeight="{TemplateBinding FontWeight}"/>
     </ControlTemplate>
 
     <ControlTemplate x:Key="ImageButtonTemplate" TargetType="Button">

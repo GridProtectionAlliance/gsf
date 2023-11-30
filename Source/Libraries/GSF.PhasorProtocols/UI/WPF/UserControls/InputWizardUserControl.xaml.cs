@@ -64,38 +64,38 @@ namespace GSF.PhasorProtocols.UI.UserControls
         public InputWizardUserControl(Device device)
             : this()
         {
-            if (device != null)
+            if (device is null)
+                return;
+            
+            m_dataContext.SkipDisableRealTimeData = device.SkipDisableRealTimeData;
+            m_dataContext.ConnectionString = device.ConnectionString;
+            m_dataContext.AlternateCommandChannel = device.AlternateCommandChannel;
+            m_dataContext.AccessID = device.AccessID;
+            m_dataContext.ProtocolID = device.ProtocolID ?? 0;
+            m_dataContext.CompanyID = device.CompanyID ?? 0;
+            m_dataContext.HistorianID = device.HistorianID ?? 0;
+            m_dataContext.InterconnectionID = device.InterconnectionID ?? 0;
+
+            if (device.IsConcentrator)
             {
-                m_dataContext.SkipDisableRealTimeData = device.SkipDisableRealTimeData;
-                m_dataContext.ConnectionString = device.ConnectionString;
-                m_dataContext.AlternateCommandChannel = device.AlternateCommandChannel;
-                m_dataContext.AccessID = device.AccessID;
-                m_dataContext.ProtocolID = device.ProtocolID ?? 0;
-                m_dataContext.CompanyID = device.CompanyID ?? 0;
-                m_dataContext.HistorianID = device.HistorianID ?? 0;
-                m_dataContext.InterconnectionID = device.InterconnectionID ?? 0;
+                m_dataContext.ConnectToConcentrator = true;
+                m_dataContext.PdcAcronym = device.Acronym;
+                m_dataContext.PdcName = device.Name;
+                m_dataContext.PdcVendorDeviceID = device.VendorDeviceID ?? 0;
 
-                if (device.IsConcentrator)
-                {
-                    m_dataContext.ConnectToConcentrator = true;
-                    m_dataContext.PdcAcronym = device.Acronym;
-                    m_dataContext.PdcName = device.Name;
-                    m_dataContext.PdcVendorDeviceID = device.VendorDeviceID ?? 0;
-
-                    ObservableCollection<Device> devices = Device.GetDevices(null, "WHERE ParentID = " + device.ID);
-                    m_dataContext.DeviceIDs = devices.Select(childDevice => childDevice.ID).ToArray();
-                    m_dataContext.DeviceAcronyms = devices.Select(childDevice => childDevice.Acronym).ToArray();
-                }
-                else
-                {
-                    m_dataContext.DeviceIDs = new[] { device.ID };
-                    m_dataContext.DeviceAcronyms = new[] { device.Acronym };
-                }
-
-                m_dataContext.StepTwoExpanded = true;
-                m_dataContext.CurrentDeviceRuntimeID = Convert.ToInt32(CommonFunctions.GetRuntimeID("Device", device.ID));
-                m_dataContext.NewDeviceConfiguration = false;
+                ObservableCollection<Device> devices = Device.GetDevices(null, "WHERE ParentID = " + device.ID);
+                m_dataContext.DeviceIDs = devices.Select(childDevice => childDevice.ID).ToArray();
+                m_dataContext.DeviceAcronyms = devices.Select(childDevice => childDevice.Acronym).ToArray();
             }
+            else
+            {
+                m_dataContext.DeviceIDs = new[] { device.ID };
+                m_dataContext.DeviceAcronyms = new[] { device.Acronym };
+            }
+
+            m_dataContext.StepTwoExpanded = true;
+            m_dataContext.CurrentDeviceRuntimeID = Convert.ToInt32(CommonFunctions.GetRuntimeID("Device", device.ID));
+            m_dataContext.NewDeviceConfiguration = false;
         }
 
         #endregion
@@ -140,6 +140,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
             foreach (InputWizardDevice device in m_dataContext.ItemsSource)
             {
                 device.Include = true;
+
                 foreach (InputWizardDevicePhasor phasor in device.PhasorList)
                     phasor.Include = true;
             }
@@ -155,6 +156,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
             foreach (InputWizardDevice device in m_dataContext.ItemsSource)
             {
                 device.Include = false;
+
                 foreach (InputWizardDevicePhasor phasor in device.PhasorList)
                     phasor.Include = false;
             }
@@ -230,27 +232,20 @@ namespace GSF.PhasorProtocols.UI.UserControls
         private bool ValidatePMUNames()
         {
             string pdcAcronym = m_dataContext.PdcAcronym.Trim();
-
-            foreach (InputWizardDevice device in m_dataContext.ItemsSource)
-            {
-                if (device.Acronym.Trim().Equals(pdcAcronym, StringComparison.OrdinalIgnoreCase))
-                    return false;
-            }
-
-            return true;
+            return m_dataContext.ItemsSource.All(device => !device.Acronym.Trim().Equals(pdcAcronym, StringComparison.OrdinalIgnoreCase));
         }
 
         private void ExpanderStep1_Expanded(object sender, RoutedEventArgs e)
         {
-            if (IsLoaded)
-            {
-                m_dataContext.StepTwoExpanded = false;
-                m_dataContext.StepThreeExpanded = false;
+            if (!IsLoaded)
+                return;
+            
+            m_dataContext.StepTwoExpanded = false;
+            m_dataContext.StepThreeExpanded = false;
 
-                ButtonNext.Content = "Next";
-                ButtonPrevious.IsEnabled = false;
-                ButtonAccept.Visibility = Visibility.Hidden;
-            }
+            ButtonNext.Content = "Next";
+            ButtonPrevious.IsEnabled = false;
+            ButtonAccept.Visibility = Visibility.Hidden;
         }
 
         private void ExpanderStep2_Expanded(object sender, RoutedEventArgs e)
@@ -289,34 +284,25 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
         private void RowDetailsDataGrid_Initialized(object sender, EventArgs e)
         {
-            DataGrid grid = sender as DataGrid;
-
-            if ((object)grid != null)
-                grid.Visibility = (grid.Items.Count > 0) ? Visibility.Visible : Visibility.Collapsed;
+            if (sender is DataGrid grid)
+                grid.Visibility = grid.Items.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private void RowDetailsDataGrid_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            DataGrid grid;
-            ScrollViewer scrollViewer;
+            if (e.PreviousSize == e.NewSize)
+                return;
 
-            if (e.PreviousSize != e.NewSize)
-            {
-                grid = sender as DataGrid;
+            if (sender is not DataGrid grid)
+                return;
 
-                if ((object)grid != null)
-                {
-                    scrollViewer = grid.Template.FindName("DG_ScrollViewer", grid) as ScrollViewer;
-
-                    if ((object)scrollViewer != null)
-                    {
-                        scrollViewer.Width = double.NaN;
-                        scrollViewer.UpdateLayout();
-                        scrollViewer.Width = scrollViewer.ActualWidth;
-                        scrollViewer.UpdateLayout();
-                    }
-                }
-            }
+            if (grid.Template.FindName("DG_ScrollViewer", grid) is not ScrollViewer scrollViewer)
+                return;
+            
+            scrollViewer.Width = double.NaN;
+            scrollViewer.UpdateLayout();
+            scrollViewer.Width = scrollViewer.ActualWidth;
+            scrollViewer.UpdateLayout();
         }
 
         private void PdcAcronymTextBox_TextChanged(object sender, TextChangedEventArgs e)

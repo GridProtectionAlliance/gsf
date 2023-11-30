@@ -35,7 +35,7 @@ namespace GSF.TimeSeries.UI
     /// </summary>
     public static class IsolatedStorageManager
     {
-        private static readonly object s_userStoreLock = new object();
+        private static readonly object s_userStoreLock = new();
 
         /// <summary>
         /// Writes collection values by converting collection to semi-colon separated string to IsolatedStorage.
@@ -46,18 +46,15 @@ namespace GSF.TimeSeries.UI
         {
             lock (s_userStoreLock)
             {
-                using (IsolatedStorageFile userStore = IsolatedStorageFile.GetUserStoreForAssembly())
-                using (StreamWriter writer = new StreamWriter(new IsolatedStorageFileStream(key, FileMode.Create, userStore)))
-                {
-                    StringBuilder sb = new StringBuilder();
+                using IsolatedStorageFile userStore = IsolatedStorageFile.GetUserStoreForAssembly();
+                using StreamWriter writer = new(new IsolatedStorageFileStream(key, FileMode.Create, userStore));
+                StringBuilder sb = new();
 
-                    foreach (object value in valueList)
-                        sb.Append(value + ";");
+                foreach (object value in valueList)
+                    sb.Append(value + ";");
 
-                    writer.Write(sb.ToString());
-                    writer.Flush();
-                }
-
+                writer.Write(sb.ToString());
+                writer.Flush();
             }
         }
 
@@ -70,12 +67,10 @@ namespace GSF.TimeSeries.UI
         {
             lock (s_userStoreLock)
             {
-                using (IsolatedStorageFile userStore = IsolatedStorageFile.GetUserStoreForAssembly())
-                using (StreamWriter writer = new StreamWriter(new IsolatedStorageFileStream(key, FileMode.Create, userStore)))
-                {
-                    writer.Write(value.ToString());
-                    writer.Flush();
-                }
+                using IsolatedStorageFile userStore = IsolatedStorageFile.GetUserStoreForAssembly();
+                using StreamWriter writer = new(new IsolatedStorageFileStream(key, FileMode.Create, userStore));
+                writer.Write(value.ToString());
+                writer.Flush();
             }
         }
 
@@ -88,11 +83,9 @@ namespace GSF.TimeSeries.UI
         {
             lock (s_userStoreLock)
             {
-                using (IsolatedStorageFile userStore = IsolatedStorageFile.GetUserStoreForAssembly())
-                using (StreamReader reader = new StreamReader(new IsolatedStorageFileStream(key, FileMode.OpenOrCreate, userStore)))
-                {
-                    return reader.ReadToEnd();
-                }
+                using IsolatedStorageFile userStore = IsolatedStorageFile.GetUserStoreForAssembly();
+                using StreamReader reader = new(new IsolatedStorageFileStream(key, FileMode.OpenOrCreate, userStore));
+                return reader.ReadToEnd();
             }
         }
 
@@ -105,8 +98,8 @@ namespace GSF.TimeSeries.UI
         {
             lock (s_userStoreLock)
             {
-                using (IsolatedStorageFile userStore = IsolatedStorageFile.GetUserStoreForAssembly())
-                    return userStore.FileExists(setting);
+                using IsolatedStorageFile userStore = IsolatedStorageFile.GetUserStoreForAssembly();
+                return userStore.FileExists(setting);
             }
         }
 
