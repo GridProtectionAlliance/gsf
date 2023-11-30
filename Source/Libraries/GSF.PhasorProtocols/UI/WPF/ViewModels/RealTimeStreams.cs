@@ -309,6 +309,8 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                                 // If a stream is disconnected,
                                 // its devices are also disconnected
                                 device.StatusColor = "Red";
+
+                                device.ConfigurationOutOfSync = stream.ConfigurationOutOfSync = false;
                             }
                             else if (RealTimeStatistic.InputStreamStatistics.TryGetValue((int)device.ID, out streamStatistic))
                             {
@@ -316,6 +318,9 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                                 // statistics that determine its connectivity state
                                 if (streamStatistic.StatusColor == "Red")
                                     device.StatusColor = "Red";
+
+                                // Pass along configuration out of sync state
+                                device.ConfigurationOutOfSync = stream.ConfigurationOutOfSync = streamStatistic.ConfigurationOutOfSync;
                             }
                         }
                         else
