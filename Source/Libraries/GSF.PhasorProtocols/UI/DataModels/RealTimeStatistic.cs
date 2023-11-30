@@ -614,6 +614,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 OnPropertyChanged("ConfigurationOutOfSync");
             }
         }
+
         /// <summary>
         /// Gets or sets <see cref="StreamStatistic"/>'s DeviceStatisticList.
         /// </summary>

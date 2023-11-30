@@ -295,6 +295,9 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                         // that determine its connectivity state
                         if (streamStatistic.StatusColor == "Red")
                             stream.StatusColor = "Red";
+
+                        // Pass along configuration out of sync state
+                        stream.ConfigurationOutOfSync = streamStatistic.ConfigurationOutOfSync;
                     }
 
                     foreach (RealTimeDevice device in stream.DeviceList)

@@ -51,6 +51,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         private bool m_enabled;
         private bool m_expanded;
         private string m_statusColor;
+        private bool m_configurationOutOfSync;
         private ObservableCollection<RealTimeDevice> m_deviceList;
 
         #endregion
@@ -144,6 +145,19 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 m_statusColor = value;
                 OnPropertyChanged(nameof(StatusColor));
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines if the input stream configuration is out of sync.
+        /// </summary>
+        public bool ConfigurationOutOfSync
+        {
+            get => m_configurationOutOfSync;
+            set
+            {
+                m_configurationOutOfSync = value;
+                OnPropertyChanged("ConfigurationOutOfSync");
             }
         }
 
@@ -504,13 +518,13 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
         private static string GetSourceName(string signalReference)
         {
-            // Try to parse source name based on properly formatted signal reference (SOURCENAME-XX#)
+            // Try to parse source name based on properly formatted signal reference (SOURCE-ID)
             int hyphenIndex = signalReference.LastIndexOf('-');
 
             if (hyphenIndex >= 0)
                 return signalReference.Substring(0, hyphenIndex);
 
-            // Try to parse source name from signal reference formatted like point tag (SOURCENAME:XXXY#).
+            // Try to parse source name from signal reference formatted like point tag (SOURCE:ID).
             // This format may include company name, but should be the same for all points from the same device
             int colonIndex = signalReference.LastIndexOf(':');
 
@@ -538,7 +552,6 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Fields        
         private int? m_id;
         private string m_acronym;
-        private string m_acronymTruncated;
         private string m_name;
         private string m_protocolName;
         private string m_vendorDeviceName;
@@ -597,11 +610,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// <summary>
         /// Gets truncated acronym, i.e. removed parent device prefix. This is only for display purpose.
         /// </summary>
-        public string AcronymTruncated
-        {
-            get => m_acronymTruncated;
-            set => m_acronymTruncated = value;
-        }
+        public string AcronymTruncated { get; set; }
 
         /// <summary>
         /// Gets or sets Name of the <see cref="RealTimeDevice"/>
@@ -834,7 +843,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 double width = m_parent.MaximumSignalReferenceWidth;
 
-                return double.IsNaN(width) ? "Auto" : width.ToString();
+                return double.IsNaN(width) ? "Auto" : width.ToString(CultureInfo.InvariantCulture);
             }
             // ReSharper disable once ValueParameterNotUsed
             set
@@ -854,7 +863,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 double width = m_parent.MaximumShortSignalReferenceWidth;
 
-                return double.IsNaN(width) ? "Auto" : width.ToString();
+                return double.IsNaN(width) ? "Auto" : width.ToString(CultureInfo.InvariantCulture);
             }
             // ReSharper disable once ValueParameterNotUsed
             set
