@@ -51,9 +51,9 @@ namespace GSF.Web.Model
     /// </summary>
     /// <typeparam name="T">The corresponding Model for Search/Fetch Results.</typeparam>
     /// <typeparam name="U">The corresponding Model for database editing.</typeparam>
-    public class ModelController<T,U> : ApiController 
-        where T : class, new() 
+    public class ModelController<T,U> : ApiController
         where U : class, new()
+        where T: class, U, new()
     {
         #region [ Members ]
 
@@ -93,8 +93,7 @@ namespace GSF.Web.Model
         /// </summary>
         public ModelController()
         {
-            SearchPrimaryKeyField = typeof(T).GetProperties().FirstOrDefault(p => p.GetCustomAttributes<PrimaryKeyAttribute>().Any())?.Name ?? "ID";
-            EditPrimaryKeyField = typeof(U).GetProperties().FirstOrDefault(p => p.GetCustomAttributes<PrimaryKeyAttribute>().Any())?.Name ?? "ID";
+            PrimaryKeyField = typeof(T).GetProperties().FirstOrDefault(p => p.GetCustomAttributes<PrimaryKeyAttribute>().Any())?.Name ?? "ID";
 
             ParentKey = typeof(T).GetProperties().FirstOrDefault(p => p.GetCustomAttributes<ParentKeyAttribute>().Any())?.Name ?? "";
             Connection = typeof(T).GetCustomAttribute<SettingsCategoryAttribute>()?.SettingsCategory ?? "systemSettings";
@@ -166,8 +165,7 @@ namespace GSF.Web.Model
         protected bool ViewOnly { get; } = false;
         protected bool AllowSearch { get; } = false;
         protected string CustomView { get; } = "";
-        protected string SearchPrimaryKeyField { get; set; } = "ID";
-        protected string EditPrimaryKeyField { get; set; } = "ID";
+        protected string PrimaryKeyField { get; set; } = "ID";
         protected string ParentKey { get; set; } = "";
         protected string Connection { get; } = "systemSettings";
         protected string DefaultSort { get; } = null;
@@ -244,18 +242,18 @@ namespace GSF.Web.Model
                 return Unauthorized();
             
             T result;
-            PropertyInfo primaryKey = typeof(T).GetProperty(SearchPrimaryKeyField);
+            PropertyInfo primaryKey = typeof(T).GetProperty(PrimaryKeyField);
             if (primaryKey.PropertyType == typeof(int))
-                result = QueryRecordWhere(SearchPrimaryKeyField + " = {0}", int.Parse(id));
+                result = QueryRecordWhere(PrimaryKeyField + " = {0}", int.Parse(id));
             else if (primaryKey.PropertyType == typeof(Guid))
-                result = QueryRecordWhere(SearchPrimaryKeyField + " = {0}", Guid.Parse(id));
+                result = QueryRecordWhere(PrimaryKeyField + " = {0}", Guid.Parse(id));
             else
-                result = QueryRecordWhere(SearchPrimaryKeyField + " = {0}", id);
+                result = QueryRecordWhere(PrimaryKeyField + " = {0}", id);
 
             if (result == null)
             {
                 string tableName = TableOperations<T>.GetTableName();
-                return BadRequest(string.Format(SearchPrimaryKeyField + " provided does not exist in '{0}'.", tableName));
+                return BadRequest(string.Format(PrimaryKeyField + " provided does not exist in '{0}'.", tableName));
             }
             else
                 return Ok(result);   
@@ -343,14 +341,14 @@ namespace GSF.Web.Model
             {
                 int result = new TableOperations<U>(connection).AddNewOrUpdateRecord(record);
 
-                if (EditPrimaryKeyField != string.Empty)
+                if (PrimaryKeyField != string.Empty)
                 {
                     U newRecord = record;
-                    PropertyInfo prop = typeof(U).GetProperty(EditPrimaryKeyField);
+                    PropertyInfo prop = typeof(U).GetProperty(PrimaryKeyField);
                     if (prop != null)
                     {
                         object uniqueKey = prop.GetValue(newRecord);
-                        newRecord = new TableOperations<U>(connection).QueryRecordWhere(EditPrimaryKeyField + " = {0}", uniqueKey);
+                        newRecord = new TableOperations<U>(connection).QueryRecordWhere(PrimaryKeyField + " = {0}", uniqueKey);
                         return Ok(newRecord);
                     }
                 }
@@ -375,23 +373,23 @@ namespace GSF.Web.Model
             {
                 string tableName = new TableOperations<U>(connection).TableName;
 
-                PropertyInfo idProp = typeof(U).GetProperty(EditPrimaryKeyField);
+                PropertyInfo idProp = typeof(U).GetProperty(PrimaryKeyField);
                 int result;
 
                 if (idProp.PropertyType == typeof(int))
                 {
                     int id = (int)idProp.GetValue(record);
-                    result = connection.ExecuteNonQuery($"EXEC UniversalCascadeDelete {tableName}, '{EditPrimaryKeyField} = {id}'");
+                    result = connection.ExecuteNonQuery($"EXEC UniversalCascadeDelete {tableName}, '{PrimaryKeyField} = {id}'");
                 }
                 else if (idProp.PropertyType == typeof(Guid))
                 {
                     Guid id = (Guid)idProp.GetValue(record);
-                    result = connection.ExecuteNonQuery($"EXEC UniversalCascadeDelete {tableName}, '{EditPrimaryKeyField} = ''{id}'''");
+                    result = connection.ExecuteNonQuery($"EXEC UniversalCascadeDelete {tableName}, '{PrimaryKeyField} = ''{id}'''");
                 }
                 else if (idProp.PropertyType == typeof(string))
                 {
                     string id = (string)idProp.GetValue(record);
-                    result = connection.ExecuteNonQuery($"EXEC UniversalCascadeDelete {tableName}, '{EditPrimaryKeyField} = ''{id}'''");
+                    result = connection.ExecuteNonQuery($"EXEC UniversalCascadeDelete {tableName}, '{PrimaryKeyField} = ''{id}'''");
                 }
                 else
                     result = new TableOperations<U>(connection).DeleteRecord(record);
@@ -811,7 +809,7 @@ namespace GSF.Web.Model
                     joinCondition = joinCondition + searchSettingConditions;
                     if (SearchSettings.Condition != String.Empty)
                         joinCondition = $"{joinCondition} AND ";
-                    joinCondition = joinCondition + $"SRC.{SearchPrimaryKeyField} = AF.{SearchSettings.PrimaryKeyField}";
+                    joinCondition = joinCondition + $"SRC.{PrimaryKeyField} = AF.{SearchSettings.PrimaryKeyField}";
 
                     string sqlPivotColumns = $@"
                         SELECT '[AFV_' + [Key] + ']'
@@ -897,7 +895,7 @@ namespace GSF.Web.Model
                 joinCondition += searchSettingConditions;
                 if (SearchSettings.Condition != string.Empty)
                     joinCondition = $"{joinCondition} AND ";
-                joinCondition += $"SRC.{SearchPrimaryKeyField} = AF.{SearchSettings.PrimaryKeyField}";
+                joinCondition += $"SRC.{PrimaryKeyField} = AF.{SearchSettings.PrimaryKeyField}";
 
                 string sqlPivotColumns = $@"
                         SELECT '[AFV_' + [Key] + ']'
