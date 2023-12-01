@@ -32,6 +32,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -39,6 +40,7 @@ using System.Text;
 using System.Threading;
 using GSF;
 using GSF.Communication;
+using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
 using GSF.Diagnostics;
@@ -2853,6 +2855,42 @@ namespace PhasorProtocolAdapters
 
         // Static Fields
         private static readonly ConcurrentDictionary<string, PhasorMeasurementMapper> s_instances = new(StringComparer.OrdinalIgnoreCase);
+        private static string s_jsonConfigurationPath;
+
+        // Static Properties
+        
+        /// <summary>
+        /// Gets the path to the configuration cache directory.
+        /// </summary>
+        public static string JsonConfigurationPath
+        {
+            get
+            {
+                // This property will not change during system life-cycle so we cache if for future use
+                if (!string.IsNullOrEmpty(s_jsonConfigurationPath))
+                    return s_jsonConfigurationPath;
+
+                // Make sure configuration cache path setting exists within system settings section of config file
+                ConfigurationFile configFile = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection systemSettings = configFile.Settings["systemSettings"];
+                systemSettings.Add("JsonConfigurationPath", $"Eval(systemSettings.${nameof(ConfigurationFrame.ConfigurationCachePath)})", "Defines the path used to store serialized JSON device configuration and state files which may need to be shared across multiple host instances. Defaults to same location as 'ConfigurationCachePath'.");
+
+                // Retrieve configuration cache directory as defined in the config file
+                s_jsonConfigurationPath = systemSettings["JsonConfigurationPath"].Value;
+
+                // If undefined, set default JSON configuration cache directory relative to path of host application
+                if (string.IsNullOrWhiteSpace(s_jsonConfigurationPath))
+                    s_jsonConfigurationPath = $"{FilePath.GetAbsolutePath("")}{Path.DirectorySeparatorChar}ConfigurationCache{Path.DirectorySeparatorChar}";
+
+                s_jsonConfigurationPath = FilePath.AddPathSuffix(s_jsonConfigurationPath);
+
+                // Make sure configuration cache directory exists
+                if (!Directory.Exists(s_jsonConfigurationPath))
+                    Directory.CreateDirectory(s_jsonConfigurationPath);
+
+                return s_jsonConfigurationPath;
+            }
+        }
 
         // Static Methods
 
@@ -2893,10 +2931,9 @@ namespace PhasorProtocolAdapters
 
         private static string GetConfigurationStateFile(string configurationName)
         {
-            return ConfigurationFrame.GetConfigurationCacheFileName(configurationName, "state");
+            return ConfigurationFrame.GetConfigurationCacheFileName(configurationName, "state", JsonConfigurationPath);
         }
 
         #endregion
-
     }
 }
