@@ -31,6 +31,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Configuration;
 using System.Data;
 using System.IO;
 using System.Linq;
@@ -2873,7 +2874,8 @@ namespace PhasorProtocolAdapters
                 // Make sure configuration cache path setting exists within system settings section of config file
                 ConfigurationFile configFile = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection systemSettings = configFile.Settings["systemSettings"];
-                systemSettings.Add("JsonConfigurationPath", $"Eval(systemSettings.${nameof(ConfigurationFrame.ConfigurationCachePath)})", "Defines the path used to store serialized JSON device configuration and state files which may need to be shared across multiple host instances. Defaults to same location as 'ConfigurationCachePath'.");
+                systemSettings.Add("JsonConfigurationPath", $"Eval(systemSettings.{nameof(ConfigurationFrame.ConfigurationCachePath)})", "Defines the path used to store serialized JSON device configuration and state files which may need to be shared across multiple host instances. Defaults to same location as 'ConfigurationCachePath'.");
+                configFile.Save(ConfigurationSaveMode.Modified);
 
                 // Retrieve configuration cache directory as defined in the config file
                 s_jsonConfigurationPath = systemSettings["JsonConfigurationPath"].Value;
@@ -2901,7 +2903,15 @@ namespace PhasorProtocolAdapters
         /// <returns><c>true</c> if device configuration has changed since last update in host system; otherwise, <c>false</c>.</returns>
         public static bool LoadConfigurationOutOfSyncMarker(string configurationName)
         {
-            return bool.TryParse(GetConfigurationStateValue(configurationName, LastConfigStateSection, OutOfSyncEntry, "false"), out bool changed) && changed;
+            try
+            {
+                return bool.TryParse(GetConfigurationStateValue(configurationName, LastConfigStateSection, OutOfSyncEntry, "false"), out bool changed) && changed;
+            }
+            catch (Exception ex)
+            {
+                Logger.SwallowException(ex, "Failed to load configuration out of sync marker");
+                return false;
+            }
         }
 
         /// <summary>
@@ -2911,11 +2921,18 @@ namespace PhasorProtocolAdapters
         /// <param name="outOfSync">Out of sync marker to apply.</param>
         public static void SaveConfigurationOutOfSyncMarker(string configurationName, bool outOfSync)
         {
-            SetConfigurationStateValue(configurationName, LastConfigStateSection, OutOfSyncEntry, outOfSync.ToString());
+            try
+            {
+                SetConfigurationStateValue(configurationName, LastConfigStateSection, OutOfSyncEntry, outOfSync.ToString());
 
-            // Update flag in active instance so value can be reflected in statistics
-            if (s_instances.TryGetValue(configurationName, out PhasorMeasurementMapper mapper))
-                mapper.ConfigurationOutOfSync = outOfSync;
+                // Update flag in active instance so value can be reflected in statistics
+                if (s_instances.TryGetValue(configurationName, out PhasorMeasurementMapper mapper))
+                    mapper.ConfigurationOutOfSync = outOfSync;
+            }
+            catch (Exception ex)
+            {
+                Logger.SwallowException(ex, "Failed to save configuration out of sync marker");
+            }
         }
 
         private static string GetConfigurationStateValue(string configurationName, string section, string entry, string defaultValue)
