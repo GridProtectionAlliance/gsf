@@ -131,6 +131,20 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         }
 
         /// <summary>
+        /// Gets or sets the ID code.
+        /// </summary>
+        public override ushort IDCode
+        {
+            get => CommonHeader.IDCode;
+            set
+            {
+                // Keep ID code updates synchronized...
+                CommonHeader.IDCode = value;
+                base.IDCode = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets current <see cref="CommonFrameHeader"/>.
         /// </summary>
         public CommonFrameHeader CommonHeader

@@ -51,11 +51,6 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         // Fields
         private CommonFrameHeader m_frameHeader;
 
-        /// <summary>
-        /// Represents the TimeBase of the configuration frame.
-        /// </summary>
-        protected uint m_timebase;
-
         #endregion
 
         #region [ Constructors ]
@@ -98,7 +93,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         {
             // Deserialize configuration frame
             m_frameHeader = (CommonFrameHeader)info.GetValue("frameHeader", typeof(CommonFrameHeader));
-            m_timebase = info.GetUInt32("timebase");
+            
         }
 
         #endregion
@@ -138,6 +133,20 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         }
 
         /// <summary>
+        /// Gets or sets the ID code.
+        /// </summary>
+        public override ushort IDCode
+        {
+            get => CommonHeader.IDCode;
+            set
+            {
+                // Keep ID code updates synchronized...
+                CommonHeader.IDCode = value;
+                base.IDCode = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets current <see cref="CommonFrameHeader"/>.
         /// </summary>
         public CommonFrameHeader CommonHeader
@@ -154,7 +163,6 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                 State = m_frameHeader.State as IConfigurationFrameParsingState;
                 base.IDCode = m_frameHeader.IDCode;
                 base.Timestamp = m_frameHeader.Timestamp;
-                m_timebase = m_frameHeader.Timebase;
             }
         }
 
@@ -179,12 +187,8 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// </summary>
         public uint Timebase
         {
-            get => m_timebase;
-            set
-            {
-                m_timebase = value & ~Common.TimeQualityFlagsMask;
-                CommonHeader.Timebase = m_timebase;
-            }
+            get => CommonHeader.Timebase;
+            set => CommonHeader.Timebase = value & ~Common.TimeQualityFlagsMask;
         }
 
         /// <summary>
@@ -227,7 +231,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                 int index = 0;
 
                 CommonHeader.BinaryImage.CopyImage(buffer, ref index, CommonFrameHeader.FixedLength);
-                BigEndian.CopyBytes(m_timebase, buffer, index);
+                BigEndian.CopyBytes(CommonHeader.Timebase, buffer, index);
                 BigEndian.CopyBytes((ushort)Cells.Count, buffer, index + 4);
 
                 return buffer;
@@ -298,8 +302,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             // Skip past header that was already parsed...
             startIndex += CommonFrameHeader.FixedLength;
 
-            m_timebase = BigEndian.ToUInt32(buffer, startIndex) & ~Common.TimeQualityFlagsMask;
-            CommonHeader.Timebase = m_timebase;
+            CommonHeader.Timebase = BigEndian.ToUInt32(buffer, startIndex) & ~Common.TimeQualityFlagsMask;
             State.CellCount = BigEndian.ToUInt16(buffer, startIndex + 4);
 
             return FixedHeaderLength;
@@ -342,7 +345,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
 
             // Serialize configuration frame
             info.AddValue("frameHeader", m_frameHeader, typeof(CommonFrameHeader));
-            info.AddValue("timebase", m_timebase);
+            info.AddValue("timebase", m_frameHeader.Timebase);
         }
 
         #endregion

@@ -176,6 +176,20 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         }
 
         /// <summary>
+        /// Gets or sets the ID code.
+        /// </summary>
+        public override ushort IDCode
+        {
+            get => CommonHeader.IDCode;
+            set
+            {
+                // Keep ID code updates synchronized...
+                CommonHeader.IDCode = value;
+                base.IDCode = value;
+            }
+        }
+
+        /// <summary>
         /// Gets the identifier that is used to identify the IEC 61850-90-5 frame.
         /// </summary>
         public FrameType TypeID => IEC61850_90_5.FrameType.DataFrame;
