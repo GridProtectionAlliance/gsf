@@ -31,7 +31,9 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Configuration;
 using System.Data;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -39,6 +41,7 @@ using System.Text;
 using System.Threading;
 using GSF;
 using GSF.Communication;
+using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
 using GSF.Diagnostics;
@@ -2411,6 +2414,9 @@ namespace PhasorProtocolAdapters
             // Make sure timestamps are identical since this should not count against comparison
             cachedConfigurationFrame.Timestamp = currentConfigurationFrame.Timestamp;
 
+            // Also make sure IDCodes are identical since deserialization can skip this value
+            cachedConfigurationFrame.IDCode = currentConfigurationFrame.IDCode;
+
             // Generate binary images for the configuration frames
             byte[] currentConfigFrameBuffer = new byte[currentConfigurationFrame.BinaryLength];
             byte[] cachedConfigFrameBuffer = new byte[cachedConfigurationFrame.BinaryLength];
@@ -2853,6 +2859,43 @@ namespace PhasorProtocolAdapters
 
         // Static Fields
         private static readonly ConcurrentDictionary<string, PhasorMeasurementMapper> s_instances = new(StringComparer.OrdinalIgnoreCase);
+        private static string s_jsonConfigurationPath;
+
+        // Static Properties
+        
+        /// <summary>
+        /// Gets the path to the configuration cache directory.
+        /// </summary>
+        public static string JsonConfigurationPath
+        {
+            get
+            {
+                // This property will not change during system life-cycle so we cache if for future use
+                if (!string.IsNullOrEmpty(s_jsonConfigurationPath))
+                    return s_jsonConfigurationPath;
+
+                // Make sure configuration cache path setting exists within system settings section of config file
+                ConfigurationFile configFile = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection systemSettings = configFile.Settings["systemSettings"];
+                systemSettings.Add("JsonConfigurationPath", $"Eval(systemSettings.{nameof(ConfigurationFrame.ConfigurationCachePath)})", "Defines the path used to store serialized JSON device configuration and state files which may need to be shared across multiple host instances. Defaults to same location as 'ConfigurationCachePath'.");
+                configFile.Save(ConfigurationSaveMode.Modified);
+
+                // Retrieve configuration cache directory as defined in the config file
+                s_jsonConfigurationPath = systemSettings["JsonConfigurationPath"].Value;
+
+                // If undefined, set default JSON configuration cache directory relative to path of host application
+                if (string.IsNullOrWhiteSpace(s_jsonConfigurationPath))
+                    s_jsonConfigurationPath = $"{FilePath.GetAbsolutePath("")}{Path.DirectorySeparatorChar}ConfigurationCache{Path.DirectorySeparatorChar}";
+
+                s_jsonConfigurationPath = FilePath.AddPathSuffix(s_jsonConfigurationPath);
+
+                // Make sure configuration cache directory exists
+                if (!Directory.Exists(s_jsonConfigurationPath))
+                    Directory.CreateDirectory(s_jsonConfigurationPath);
+
+                return s_jsonConfigurationPath;
+            }
+        }
 
         // Static Methods
 
@@ -2863,7 +2906,15 @@ namespace PhasorProtocolAdapters
         /// <returns><c>true</c> if device configuration has changed since last update in host system; otherwise, <c>false</c>.</returns>
         public static bool LoadConfigurationOutOfSyncMarker(string configurationName)
         {
-            return bool.TryParse(GetConfigurationStateValue(configurationName, LastConfigStateSection, OutOfSyncEntry, "false"), out bool changed) && changed;
+            try
+            {
+                return bool.TryParse(GetConfigurationStateValue(configurationName, LastConfigStateSection, OutOfSyncEntry, "false"), out bool changed) && changed;
+            }
+            catch (Exception ex)
+            {
+                Logger.SwallowException(ex, "Failed to load configuration out of sync marker");
+                return false;
+            }
         }
 
         /// <summary>
@@ -2873,11 +2924,18 @@ namespace PhasorProtocolAdapters
         /// <param name="outOfSync">Out of sync marker to apply.</param>
         public static void SaveConfigurationOutOfSyncMarker(string configurationName, bool outOfSync)
         {
-            SetConfigurationStateValue(configurationName, LastConfigStateSection, OutOfSyncEntry, outOfSync.ToString());
+            try
+            {
+                SetConfigurationStateValue(configurationName, LastConfigStateSection, OutOfSyncEntry, outOfSync.ToString());
 
-            // Update flag in active instance so value can be reflected in statistics
-            if (s_instances.TryGetValue(configurationName, out PhasorMeasurementMapper mapper))
-                mapper.ConfigurationOutOfSync = outOfSync;
+                // Update flag in active instance so value can be reflected in statistics
+                if (s_instances.TryGetValue(configurationName, out PhasorMeasurementMapper mapper))
+                    mapper.ConfigurationOutOfSync = outOfSync;
+            }
+            catch (Exception ex)
+            {
+                Logger.SwallowException(ex, "Failed to save configuration out of sync marker");
+            }
         }
 
         private static string GetConfigurationStateValue(string configurationName, string section, string entry, string defaultValue)
@@ -2893,10 +2951,9 @@ namespace PhasorProtocolAdapters
 
         private static string GetConfigurationStateFile(string configurationName)
         {
-            return ConfigurationFrame.GetConfigurationCacheFileName(configurationName, "state");
+            return ConfigurationFrame.GetConfigurationCacheFileName(configurationName, "state", JsonConfigurationPath);
         }
 
         #endregion
-
     }
 }
