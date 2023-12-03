@@ -2414,6 +2414,9 @@ namespace PhasorProtocolAdapters
             // Make sure timestamps are identical since this should not count against comparison
             cachedConfigurationFrame.Timestamp = currentConfigurationFrame.Timestamp;
 
+            // Also make sure IDCodes are identical since deserialization can skip this value
+            cachedConfigurationFrame.IDCode = currentConfigurationFrame.IDCode;
+
             // Generate binary images for the configuration frames
             byte[] currentConfigFrameBuffer = new byte[currentConfigurationFrame.BinaryLength];
             byte[] cachedConfigFrameBuffer = new byte[cachedConfigurationFrame.BinaryLength];
