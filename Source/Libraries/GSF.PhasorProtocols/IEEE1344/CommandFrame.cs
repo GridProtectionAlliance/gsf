@@ -98,7 +98,7 @@ namespace GSF.PhasorProtocols.IEEE1344
         public CommandFrame(ulong idCode, DeviceCommand command)
             : base(new CommandCellCollection(0), command)
         {
-            m_idCode = idCode;
+            IDCode = idCode;
             Timestamp = DateTime.UtcNow.Ticks;
         }
 
@@ -111,7 +111,7 @@ namespace GSF.PhasorProtocols.IEEE1344
             : base(info, context)
         {
             // Deserialize command frame
-            m_idCode = info.GetUInt64("idCode64Bit");
+            IDCode = info.GetUInt64("idCode64Bit");
         }
 
         #endregion

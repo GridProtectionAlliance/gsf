@@ -138,6 +138,10 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             m_configurationRevision = info.GetUInt32("configurationRevision");
             SampleSynchronization = info.GetByte("sampleSynchronization");
             m_sampleRate = info.GetUInt16("sampleRate");
+
+            // Copy in associated properties from base class deserialization that are proxied for use by CommonFrameHeader
+            m_frameHeader.Timestamp = base.Timestamp;
+            m_frameHeader.IDCode = base.IDCode;
         }
 
         #endregion
@@ -231,6 +235,7 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                     return;
 
                 State = m_frameHeader.State as IDataFrameParsingState;
+                base.IDCode = m_frameHeader.IDCode;
                 base.Timestamp = m_frameHeader.Timestamp;
                 m_qualityFlags = (uint)m_frameHeader.TimeQualityFlags | (uint)m_frameHeader.TimeQualityIndicatorCode;
 

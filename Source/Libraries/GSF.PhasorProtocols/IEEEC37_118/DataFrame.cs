@@ -88,6 +88,10 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         {
             // Deserialize data frame
             m_frameHeader = (CommonFrameHeader)info.GetValue("frameHeader", typeof(CommonFrameHeader));
+
+            // Copy in associated properties from base class deserialization that are proxied for use by CommonFrameHeader
+            m_frameHeader.Timestamp = base.Timestamp;
+            m_frameHeader.IDCode = base.IDCode;
         }
 
         #endregion
@@ -160,6 +164,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                     return;
 
                 State = m_frameHeader.State as DataFrameParsingState;
+                base.IDCode = m_frameHeader.IDCode;
                 base.Timestamp = m_frameHeader.Timestamp;
                 m_qualityFlags = (uint)m_frameHeader.TimeQualityFlags | (uint)m_frameHeader.TimeQualityIndicatorCode;
             }
