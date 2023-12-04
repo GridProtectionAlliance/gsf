@@ -26,6 +26,8 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Runtime.Serialization;
 
 namespace GSF.PhasorProtocols.IEEEC37_118
@@ -89,6 +91,39 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         {
             get => base.Definition as AnalogDefinition;
             set => base.Definition = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="AnalogDefinition3"/> associated with this <see cref="AnalogValue"/>.
+        /// </summary>
+        public virtual AnalogDefinition3 Definition3
+        {
+            get => base.Definition as AnalogDefinition3;
+            set => base.Definition = value;
+        }
+
+        #endregion
+
+        #region [ Methods]
+        
+        /// <summary>
+        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="AnalogValueBase"/> object.
+        /// </summary>
+        public override Dictionary<string, string> Attributes
+        {
+            get
+            {
+                AnalogDefinition3 definition3 = Definition3;
+
+                if (definition3 is null)
+                    return base.Attributes;
+
+                Dictionary<string, string> baseAttributes = base.Attributes;
+
+                baseAttributes.Add("Analog Value Scaled", $"{Value * definition3.Multiplier + definition3.Adder}");
+
+                return baseAttributes;
+            }
         }
 
         #endregion
