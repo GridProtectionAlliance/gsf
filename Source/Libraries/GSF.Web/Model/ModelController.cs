@@ -138,7 +138,7 @@ namespace GSF.Web.Model
             {
 
                 SecurityType = "Roles";
-                PostRoles = typeof(T).GetCustomAttribute<PostRolesAttribute>()?.Roles ?? "Administrator";
+                PostRoles = typeof(U).GetCustomAttribute<PostRolesAttribute>()?.Roles ?? "Administrator";
                 GetRoles = typeof(T).GetCustomAttribute<GetRolesAttribute>()?.Roles ?? "";
                 PatchRoles = typeof(U).GetCustomAttribute<PatchRolesAttribute>()?.Roles ?? "Administrator";
                 DeleteRoles = typeof(U).GetCustomAttribute<DeleteRolesAttribute>()?.Roles ?? "Administrator";
