@@ -143,13 +143,13 @@
                     <div class="col-md-8">
                         <div class="row">
                             <div class="col-md-4">
-                                <label class="radio-inline"><input type="radio" name="radioAuthenticationOption" value="AD" data-bind="checked: AuthOption, attr: {'disabled': ($root.recordMode()===RecordMode.View ? true : undefined)}">&nbsp;Active&nbsp;Directory&nbsp;User</label>
+                                <label class="radio-inline"><input type="radio" name="radioAuthenticationOption" value="AD" data-bind="checked: AuthOption, attr: {'disabled': ($root.recordMode()===RecordMode.View ? true : undefined)}">&nbsp;Active&nbsp;Directory&nbsp;Group</label>
                             </div>
                             <div class="col-md-4" @Raw(azureADEnabled ? "" : " style=\"display: none\"")>
-                                <label class="radio-inline"><input type="radio" name="radioAuthenticationOption" value="AzureAD" data-bind="checked: AuthOption, attr: {'disabled': ($root.recordMode()===RecordMode.View ? true : undefined)}">&nbsp;Azure&nbsp;AD&nbsp;User</label>
+                                <label class="radio-inline"><input type="radio" name="radioAuthenticationOption" value="AzureAD" data-bind="checked: AuthOption, attr: {'disabled': ($root.recordMode()===RecordMode.View ? true : undefined)}">&nbsp;Azure&nbsp;AD&nbsp;Group</label>
                             </div>
                             <div class="col-md-4">
-                                <label class="radio-inline"><input type="radio" name="radioAuthenticationOption" value="DB" data-bind="checked: AuthOption, attr: {'disabled': ($root.recordMode()===RecordMode.View ? true : undefined)}">&nbsp;Database&nbsp;User</label>
+                                <label class="radio-inline"><input type="radio" name="radioAuthenticationOption" value="DB" data-bind="checked: AuthOption, attr: {'disabled': ($root.recordMode()===RecordMode.View ? true : undefined)}">&nbsp;Database&nbsp;Group</label>
                             </div>
                         </div>
                     </div>
@@ -366,7 +366,7 @@
             // Create backing field for virtual UseAzureADAuthentication computed property
             observableRecord._useAzureADAuthentication = ko.observable(!observableRecord.UseADAuthentication() && (azureADEnabled && observableRecord.AccountName().includes("@@")));
 
-            // Create a virtual UseDBAuthentication computed propery
+            // Create a virtual UseDBAuthentication computed property
             observableRecord.UseDBAuthentication = ko.pureComputed({
                 read: observableRecord._useDBAuthentication,
                 write: function (value) {

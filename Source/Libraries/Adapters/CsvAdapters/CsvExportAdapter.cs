@@ -72,6 +72,11 @@ namespace CsvAdapters
         /// Default value for the <see cref="DownsampleInterval"/> property.
         /// </summary>
         public const double DefaultDownsampleInterval = 0.0D;
+
+        /// <summary>
+        /// Default value for the <see cref="FramesPerSecond"/> property.
+        /// </summary>
+        public const int DefaultFramesPerSecond = 30;
         
         /// <summary>
         /// Default value for the <see cref="EnableTimeReasonabilityValidation"/> property.
@@ -95,6 +100,7 @@ namespace CsvAdapters
         private readonly object m_activeFileLock;
         private readonly ScheduleManager m_scheduleManager;
         private readonly Dictionary<Guid, long> m_lastTimestamps;
+        private long m_downsampleFrameCount;
         private long m_totalExports;
         private bool m_disposed;
 
@@ -176,6 +182,14 @@ namespace CsvAdapters
         public double DownsampleInterval { get; set; }
 
         /// <summary>
+        /// Gets or sets the number of frames per second for incoming data used to align timestamps when downsampling interval is greater than 0.0, set to zero to skip time alignment.
+        /// </summary>
+        [ConnectionStringParameter]
+        [DefaultValue(DefaultFramesPerSecond)]
+        [Description("Defines the number of frames per second for incoming data used to align timestamps when downsampling interval is greater than 0.0, set to zero to skip time alignment")]
+        public int FramesPerSecond { get; set; }
+
+        /// <summary>
         /// Gets or sets the flag that determines if timestamps should be validated against local clock for reasonability.
         /// </summary>
         [ConnectionStringParameter]
@@ -220,6 +234,15 @@ namespace CsvAdapters
         {
             ConnectionStringParser<ConnectionStringParameterAttribute> parser = new ConnectionStringParser<ConnectionStringParameterAttribute>();
             parser.ParseConnectionString(ConnectionString, this);
+
+            // For framerate-aligned downsampling, compute the exact number of frames represented
+            // by the interval to accurately determine which frames need to be exported
+            if (FramesPerSecond > 0 && DownsampleInterval > 0.0D)
+            {
+                Ticks downsampleIntervalTicks = Ticks.FromSeconds(DownsampleInterval);
+                long computedFrameCount = ToFrameCount(downsampleIntervalTicks);
+                m_downsampleFrameCount = Math.Max(computedFrameCount, 1L);
+            }
 
             base.Initialize();
 
@@ -278,6 +301,10 @@ namespace CsvAdapters
                 status.AppendLine($"           CSV Header Line: {HeaderLine.TrimWithEllipsisEnd(51)}");
                 status.AppendLine($"    CSV File Name Template: {FileNameTemplate.TrimWithEllipsisEnd(51)}");
                 status.AppendLine($"     Downsampling Interval: {(DownsampleInterval > 0.0D ? $"{DownsampleInterval:N4} seconds)" : "Disabled - Full Resolution Export")}");
+
+                if (DownsampleInterval > 0.0D)
+                    status.AppendLine($"         Frames Per Second: {FramesPerSecond:N0}");
+
                 status.AppendLine($" Time Reasonability Checks: {(EnableTimeReasonabilityValidation ? "Enabled" : "Disabled")}");
                 status.AppendLine($"          Allowed Lag Time: {LagTime:N4} seconds");
                 status.AppendLine($"         Allowed Lead Time: {LeadTime:N4} seconds");
@@ -334,15 +361,30 @@ namespace CsvAdapters
                 
                 foreach (IMeasurement measurement in measurements)
                 {
-                    // Get last measurement timestamp -- initial timestamp is from top of second
-                    long lastTimestamp = m_lastTimestamps.GetOrDefault(measurement.ID, _ =>
-                        measurement.Timestamp.BaselinedTimestamp(BaselineTimeInterval.Second).Value);
+                    IMeasurement timeAlignedMeasurement = FramesPerSecond > 0 ? 
+                        Measurement.Clone(measurement, Ticks.RoundToSubsecondDistribution(measurement.Timestamp, FramesPerSecond)) : 
+                        measurement;
 
-                    if ((measurement.Timestamp - lastTimestamp).ToSeconds() < DownsampleInterval)
+                    // Get last measurement timestamp -- initial timestamp is from top of second
+                    if (m_lastTimestamps.TryGetValue(timeAlignedMeasurement.ID, out long lastTimestamp))
+                    {
+                        // If last measurement timestamp is greater than current measurement timestamp, then
+                        // we have a measurement that is out of order and should be ignored
+                        if (lastTimestamp >= timeAlignedMeasurement.Timestamp.Value)
+                            continue;
+
+                        // If last measurement timestamp is within the downsampling interval, then we have
+                        // a measurement that is too close to the last measurement and should be ignored
+                        if (FramesPerSecond <= 0 && (timeAlignedMeasurement.Timestamp - lastTimestamp).ToSeconds() < DownsampleInterval)
+                            continue;
+                    }
+
+                    // For framerate-aligned downsampling, only export measurements that fall on the downsampling interval
+                    if (FramesPerSecond > 0 && ToFrameCount(timeAlignedMeasurement.Timestamp) % m_downsampleFrameCount != 0)
                         continue;
 
-                    exportMeasurements.Add(measurement);
-                    m_lastTimestamps[measurement.ID] = measurement.Timestamp.Value;
+                    exportMeasurements.Add(timeAlignedMeasurement);
+                    m_lastTimestamps[timeAlignedMeasurement.ID] = timeAlignedMeasurement.Timestamp.Value;
                 }
 
                 measurements = exportMeasurements;
@@ -401,6 +443,18 @@ namespace CsvAdapters
                 m_disposed = true;          // Prevent duplicate dispose.
                 base.Dispose(disposing);    // Call base class Dispose().
             }
+        }
+
+        // Computes the number of frames represented by the given time interval.
+        private long ToFrameCount(Ticks ticks)
+        {
+            // Prevent overflow by splitting the computation into second and subsecond components
+            long baseFrameCount = ticks / Ticks.PerSecond * FramesPerSecond;
+            long subsecondTicks = ticks % Ticks.PerSecond;
+
+            // Perform rounding by adding half the denominator to the numerator
+            long subsecondFrameCount = (subsecondTicks * FramesPerSecond + Ticks.PerSecond / 2L) / Ticks.PerSecond;
+            return baseFrameCount + subsecondFrameCount;
         }
 
         // Converts the measurement to a row in CSV format.

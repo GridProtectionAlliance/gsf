@@ -866,6 +866,12 @@ namespace PhasorWebUI
             return derivedFrame;
         }
 
+        public void MarkConfigurationAsSynchronized(string configurationName)
+        {
+            // Remove marker that indicates device configuration is out of sync with host system
+            PhasorMeasurementMapper.SaveConfigurationOutOfSyncMarker(configurationName, false);
+        }
+
         private static PhasorDefinition GetPhasorDefinition(Phasor phasor) => new()
         { 
             ID = phasor.ID, 
@@ -1196,29 +1202,19 @@ namespace PhasorWebUI
 
         private static string GetOldProtocolName(PhasorProtocol protocol)
         {
-            switch (protocol)
+            return protocol switch
             {
-                case PhasorProtocol.IEEEC37_118V2:
-                    return "IeeeC37_118V2";
-                case PhasorProtocol.IEEEC37_118V1:
-                    return "IeeeC37_118V1";
-                case PhasorProtocol.IEEEC37_118D6:
-                    return "IeeeC37_118D6";
-                case PhasorProtocol.IEEE1344:
-                    return "Ieee1344";
-                case PhasorProtocol.BPAPDCstream:
-                    return "BpaPdcStream";
-                case PhasorProtocol.FNET:
-                    return "FNet";
-                case PhasorProtocol.SelFastMessage:
-                    return "SelFastMessage";
-                case PhasorProtocol.Macrodyne:
-                    return "Macrodyne";
-                case PhasorProtocol.IEC61850_90_5:
-                    return "Iec61850_90_5";
-                default:
-                    return protocol.ToString();
-            }
+                PhasorProtocol.IEEEC37_118V2 => "IeeeC37_118V2",
+                PhasorProtocol.IEEEC37_118V1 => "IeeeC37_118V1",
+                PhasorProtocol.IEEEC37_118D6 => "IeeeC37_118D6",
+                PhasorProtocol.IEEE1344 => "Ieee1344",
+                PhasorProtocol.BPAPDCstream => "BpaPdcStream",
+                PhasorProtocol.FNET => "FNet",
+                PhasorProtocol.SelFastMessage => "SelFastMessage",
+                PhasorProtocol.Macrodyne => "Macrodyne",
+                PhasorProtocol.IEC61850_90_5 => "Iec61850_90_5",
+                _ => protocol.ToString()
+            };
         }
 
         public string GetProtocolCategory(int protocolID)

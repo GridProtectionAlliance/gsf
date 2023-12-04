@@ -25,10 +25,9 @@ using System.IO;
 using System.Linq;
 using System.Web.Http;
 using GSF;
-using GSF.Configuration;
-using GSF.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using static PhasorProtocolAdapters.PhasorMeasurementMapper;
 
 namespace PhasorWebUI
 {
@@ -67,42 +66,11 @@ namespace PhasorWebUI
 
         #region [ Static ]
 
-        // Static Fields
-        private static string s_jsonConfigurationPath;
-
-        // Static Properties
-        private static string JsonConfigurationPath
-        {
-            get
-            {
-                // This property will not change during system life-cycle so we cache if for future use
-                if (!string.IsNullOrEmpty(s_jsonConfigurationPath))
-                    return s_jsonConfigurationPath;
-
-                // Define default configuration cache directory relative to path of host application
-                s_jsonConfigurationPath = string.Format("{0}{1}ConfigurationCache{1}", FilePath.GetAbsolutePath(""), Path.DirectorySeparatorChar);
-
-                // Make sure configuration cache path setting exists within system settings section of config file
-                ConfigurationFile configFile = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection systemSettings = configFile.Settings["systemSettings"];
-                systemSettings.Add("JsonConfigurationPath", s_jsonConfigurationPath, "Defines the path used to store serialized JSON configuration files. Defaults to same location as 'ConfigurationCachePath'.");
-
-                // Retrieve configuration cache directory as defined in the config file
-                s_jsonConfigurationPath = FilePath.AddPathSuffix(systemSettings["JsonConfigurationPath"].Value);
-
-                // Make sure configuration cache directory exists
-                if (!Directory.Exists(s_jsonConfigurationPath))
-                    Directory.CreateDirectory(s_jsonConfigurationPath);
-
-                return s_jsonConfigurationPath;
-            }
-        }
-
         /// <summary>
         /// Gets the file name of the JSON configuration file for the device with the given acronym.
         /// </summary>
         /// <param name="acronym">Acronym of device.</param>
-        public static string GetJsonConfigurationFileName([FromUri(Name = "id")] string acronym)
+        public static string GetJsonConfigurationFileName(string acronym)
         {
             // Path traversal attacks are prevented by replacing invalid file name characters
             return Path.Combine(JsonConfigurationPath, $"{acronym.ReplaceCharacters('_', c => Path.GetInvalidFileNameChars().Contains(c))}.json");
