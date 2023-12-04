@@ -27,7 +27,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Runtime.Serialization;
 
 namespace GSF.PhasorProtocols.IEEEC37_118
@@ -102,10 +101,6 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             set => base.Definition = value;
         }
 
-        #endregion
-
-        #region [ Methods]
-        
         /// <summary>
         /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="AnalogValueBase"/> object.
         /// </summary>

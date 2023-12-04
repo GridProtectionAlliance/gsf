@@ -27,7 +27,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Runtime.Serialization;
 using GSF.Units;
 
@@ -146,10 +145,6 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             }
         }
 
-        #endregion
-
-        #region [ Methods]
-
         /// <summary>
         /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="AnalogValueBase"/> object.
         /// </summary>
@@ -172,6 +167,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         }
 
         #endregion
+
         #region [ Static ]
 
         // Static Methods
