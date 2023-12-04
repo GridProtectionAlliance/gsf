@@ -32,7 +32,6 @@ using System.Security.Claims;
 using System.Web.Http;
 using GSF.Data;
 using GSF.Data.Model;
-using GSF.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
