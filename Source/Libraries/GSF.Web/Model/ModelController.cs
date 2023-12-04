@@ -50,9 +50,9 @@ namespace GSF.Web.Model
     /// </summary>
     /// <typeparam name="T">The corresponding Model for Search/Fetch Results.</typeparam>
     /// <typeparam name="U">The corresponding Model for database editing.</typeparam>
-    public class ModelController<T,U> : ApiController
+    public class ModelController<T, U> : ApiController
+        where T : class, U, new()
         where U : class, new()
-        where T: class, U, new()
     {
         #region [ Members ]
 
