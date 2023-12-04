@@ -188,11 +188,6 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         public float AngleAdder { get; set; }
 
         /// <summary>
-        /// Gets the conversion factor used for scaling phasor magnitude values.
-        /// </summary>
-        public override double ConversionFactor => MagnitudeMultiplier;
-
-        /// <summary>
         /// Gets a <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for this <see cref="PhasorDefinition3"/> object.
         /// </summary>
         public override Dictionary<string, string> Attributes
