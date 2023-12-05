@@ -409,23 +409,32 @@ namespace DeviceStatAdapters
 
                     foreach (DataRow device in devices)
                     {
-                        Device statDevice = deviceTable.QueryRecordWhere("Acronym = {0}", device["Acronym"]) ?? deviceTable.NewRecord();
-                      
-                        statDevice.UniqueID = device.ConvertField<Guid>("UniqueID");
-                        statDevice.Acronym = device.ConvertField<string>("Acronym");
-                        statDevice.Name = device.ConvertField<string>("Name");
-                        statDevice.ParentAcronym = gsfConnection.ExecuteScalar<string>("SELECT Acronym FROM Device WHERE ID = {0}", device.ConvertField<int>("ParentID"));
-                        statDevice.Protocol = gsfConnection.ExecuteScalar<string>("SELECT Acronym FROM Protocol WHERE ID = {0}", device.ConvertField<int>("ProtocolID"));
-                        statDevice.Longitude = device.ConvertField<decimal>("Longitude");
-                        statDevice.Latitude = device.ConvertField<decimal>("Latitude");
-                        statDevice.FramesPerSecond = device.ConvertField<int>("FramesPerSecond");
+                        string acronym = device["Acronym"].ToString();
 
-                        deviceTable.AddNewOrUpdateRecord(statDevice);
+                        if (string.IsNullOrWhiteSpace(acronym))
+                            continue;
 
-                        if (statDevice.ID == 0)
-                            statDevice = deviceTable.QueryRecordWhere("Acronym = {0}", device["Acronym"]);
+                        Device statDevice = deviceTable.QueryRecordWhere("Acronym = {0}", acronym) ?? deviceTable.NewRecord();
 
-                        DataRow row = gsfConnection.RetrieveRow("SELECT SignalID, ID FROM MeasurementDetail WHERE DeviceAcronym = {0} AND SignalAcronym = 'FREQ'", statDevice.Acronym);
+                        // If using local database, skip Device table synchronization
+                        if (!string.IsNullOrWhiteSpace(DatabaseConnnectionString))
+                        {
+                            statDevice.UniqueID = device.ConvertField<Guid>("UniqueID");
+                            statDevice.Acronym = device.ConvertField<string>("Acronym");
+                            statDevice.Name = device.ConvertField<string>("Name");
+                            statDevice.ParentAcronym = gsfConnection.ExecuteScalar<string>("SELECT Acronym FROM Device WHERE ID = {0}", device.ConvertField<int>("ParentID"));
+                            statDevice.Protocol = gsfConnection.ExecuteScalar<string>("SELECT Acronym FROM Protocol WHERE ID = {0}", device.ConvertField<int>("ProtocolID"));
+                            statDevice.Longitude = device.ConvertField<decimal>("Longitude");
+                            statDevice.Latitude = device.ConvertField<decimal>("Latitude");
+                            statDevice.FramesPerSecond = device.ConvertField<int>("FramesPerSecond");
+
+                            deviceTable.AddNewOrUpdateRecord(statDevice);
+
+                            if (statDevice.ID == 0)
+                                statDevice = deviceTable.QueryRecordWhere("Acronym = {0}", acronym);
+                        }
+
+                        DataRow row = gsfConnection.RetrieveRow("SELECT SignalID, ID FROM MeasurementDetail WHERE DeviceAcronym = {0} AND SignalAcronym = 'FREQ'", acronym);
 
                         if (!string.IsNullOrEmpty(row.ConvertField<string>("ID")))
                         {
