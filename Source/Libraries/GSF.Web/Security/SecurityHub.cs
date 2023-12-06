@@ -450,10 +450,7 @@ namespace GSF.Web.Security
                 return false;
 
             // Load user data - note that external users need to be looked up by userPrincipalName
-            User user = userName.Contains("#EXT#") ? 
-                (await graphClient.Users.Request().Filter($"userPrincipalName eq '{userName}'").GetAsync()).FirstOrDefault() :
-                await graphClient.Users[userName].Request().GetAsync();
-
+            User user = (await graphClient.Users.Request().Filter($"mail eq '{userName}'").GetAsync()).FirstOrDefault();
             return user is not null;
         }
 
