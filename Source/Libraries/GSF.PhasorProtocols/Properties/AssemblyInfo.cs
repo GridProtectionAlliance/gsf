@@ -48,8 +48,8 @@ using System.Runtime.InteropServices;
 [assembly: Guid("6d59b0ed-1991-4f12-a739-2cf8543dd9b2")]
 
 // Assembly identity attributes.
-[assembly: AssemblyVersion("2.4.160.0")]
-[assembly: AssemblyFileVersion("2.4.160.0")]
+[assembly: AssemblyVersion("2.4.161.0")]
+[assembly: AssemblyFileVersion("2.4.161.0")]
 
 [assembly: SuppressMessage("Microsoft.Usage", "CA2243:AttributeStringLiteralsShouldParseCorrectly")]
-[assembly: AssemblyInformationalVersion("2.4.160-beta")]
+[assembly: AssemblyInformationalVersion("2.4.161-beta")]
