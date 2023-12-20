@@ -23,19 +23,9 @@
 
 #if !MONO
 
-using System;
 using System.Collections.Generic;
-using System.Data;
-using System.ServiceModel.Web;
-using System.ServiceModel;
 using System.Threading.Tasks;
 using GSF.Historian.DataServices;
-using Newtonsoft.Json;
-using static GrafanaAdapters.GrafanaFunctions.FunctionParser;
-using GSF.Web;
-using System.Linq;
-using System.ServiceModel.Description;
-using GrafanaAdapters.GrafanaFunctions;
 
 namespace GrafanaAdapters
 {
@@ -110,8 +100,10 @@ namespace GrafanaAdapters
         /// Search openHistorian for a target.
         /// </summary>
         /// <param name="request">Search target.</param>
-        public async Task<string[]> Search(Target request) => 
-            await m_dataSource.Search(request, m_cancellationSource.Token);
+        public async Task<string[]> Search(Target request)
+        {
+            return await m_dataSource.Search(request, m_cancellationSource.Token);
+        }
 
         /// <summary>
         /// Queries openHistorian for annotations in a time-range (e.g., Alarms).
@@ -127,23 +119,29 @@ namespace GrafanaAdapters
         }
        
         /// <summary>
-        /// Queries available MetaData Options.
+        /// Queries available metadata options.
         /// </summary>
         /// <param name="isPhasor">A boolean indicating whether the data is a phasor.</param>
-        public async Task<string[]> GetTableOptions(bool isPhasor) => 
-            await m_dataSource.GetTableOptions(isPhasor, m_cancellationSource.Token);
+        public async Task<string[]> GetTableOptions(bool isPhasor)
+        {
+            return await m_dataSource.GetTableOptions(isPhasor, m_cancellationSource.Token);
+        }
 
         /// <summary>
         /// Queries description of available functions.
         /// </summary>
-        public async Task<FunctionDescription[]> GetFunctions() =>
-            await m_dataSource.GetFunctionDescription(m_cancellationSource.Token);
+        public async Task<FunctionDescription[]> GetFunctions()
+        {
+            return await m_dataSource.GetFunctionDescription(m_cancellationSource.Token);
+        }
 
         /// <summary>
-        /// Queries svailable metaDataFields for a given source.
+        /// Queries available metadata fields for a given source.
         /// </summary>
-        public async Task<Dictionary<string, string[]>> GetMetadataOptions(MetadataOptionsRequest request) => 
-            await m_dataSource.GetMetadataOptions(request,m_cancellationSource.Token);
+        public async Task<Dictionary<string, string[]>> GetMetadataOptions(MetadataOptionsRequest request)
+        {
+            return await m_dataSource.GetMetadataOptions(request, m_cancellationSource.Token);
+        }
     }
 }
 

@@ -79,26 +79,6 @@ namespace GrafanaAdapters
         [OperationContract, WebInvoke(UriTemplate = "/search", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
         string[] Search(Target request);
 
-        /// <summary>
-        /// Search data source for a list of columns from a specific table.
-        /// </summary>
-        /// <param name="request">Table Name.</param>
-        [OperationContract, WebInvoke(UriTemplate = "/searchfields", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        string[] SearchFields(Target request);
-
-        /// <summary>
-        /// Search data source for a list of tables.
-        /// </summary>
-        /// <param name="request">Request.</param>
-        [OperationContract, WebInvoke(UriTemplate = "/searchfilters", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        string[] SearchFilters(Target request);
-
-        /// <summary>
-        /// Search data source for a list of columns from a specific table to use for ORDER BY expression.
-        /// </summary>
-        /// <param name="request">Table Name.</param>
-        [OperationContract, WebInvoke(UriTemplate = "/searchorderbys", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        string[] SearchOrderBys(Target request);
 
         /// <summary>
         /// Queries openHistorian for annotations in a time-range (e.g., Alarms).
@@ -108,26 +88,24 @@ namespace GrafanaAdapters
         List<AnnotationResponse> Annotations(AnnotationRequest request);
 
         /// <summary>
-        /// Queries openHistorian location data for Grafana offsetting duplicate coordinates using a radial distribution.
+        /// Queries available MetaData Options.
         /// </summary>
-        /// <param name="request"> Query request.</param>
-        /// <returns>JSON serialized location metadata for specified targets.</returns>
-        [OperationContract, WebInvoke(UriTemplate = "/getlocationdata", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        string GetLocationData(LocationRequest request);
+        /// <param name="isPhasor">A boolean indicating whether the data is a phasor.</param>
+        [OperationContract, WebInvoke(UriTemplate = "/gettableoptions", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+        string[] GetTableOptions(bool isPhasor);
 
         /// <summary>
-        /// Requests available tag keys.
+        /// Queries description of available functions.
         /// </summary>
-        /// <param name="_">Tag keys request.</param>
-        [OperationContract, WebInvoke(UriTemplate = "/tag-keys", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        TagKeysResponse[] TagKeys(TagKeysRequest _);
+        [OperationContract, WebInvoke(UriTemplate = "/getfunctions", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+        FunctionDescription[] GetFunctions();
 
         /// <summary>
-        /// Requests available tag values.
+        /// Queries available metaDataFields for a given set of tables.
         /// </summary>
-        /// <param name="request">Tag values request.</param>
-        [OperationContract, WebInvoke(UriTemplate = "/tag-values", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        TagValuesResponse[] TagValues(TagValuesRequest request);
+        /// <param name="request"> the set of Tables to be queried. </param>
+        [OperationContract, WebInvoke(UriTemplate = "/getmetadataoptions", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+        Dictionary<string, string[]> GetMetadataOptions(MetadataOptionsRequest request);
     }
 }
 

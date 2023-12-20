@@ -25,11 +25,8 @@
 // so async implementations of this service are skipped for Mono
 #if MONO
 
-using System;
 using System.Collections.Generic;
-using System.Data;
 using GSF.Historian.DataServices;
-using Newtonsoft.Json;
 
 namespace GrafanaAdapters
 {
@@ -92,63 +89,22 @@ namespace GrafanaAdapters
         }
 
         /// <summary>
-        /// Queries openPDC Alarms as a Grafana alarm data source.
-        /// </summary>
-        /// <param name="request">Query request.</param>
-        public IEnumerable<GrafanaAlarm> GetAlarms(QueryRequest request)
-        {
-            // Abort if services are not enabled
-            if (!Enabled || Archive is null)
-                return null;
-
-            return m_dataSource.GetAlarms(request, m_cancellationSource.Token).Result;
-        }
-
-        /// <summary>
         /// Queries openHistorian as a Grafana Metadata source.
         /// </summary>
         /// <param name="request">Query request.</param>
         public string GetMetadata(Target request)
         {
-            if (string.IsNullOrWhiteSpace(request.target))
-                return string.Empty;
-
-            DataTable table = new();
-                DataRow[] rows = m_dataSource?.Metadata.Tables["ActiveMeasurements"].Select($"PointTag IN ({request.target})") ?? Array.Empty<DataRow>();
-
-            if (rows.Length > 0)
-                table = rows.CopyToDataTable();
-
-            return JsonConvert.SerializeObject(table);
+            return m_dataSource.GetMetadata(request).Result;
         }
 
         /// <summary>
         /// Search openHistorian for a target.
         /// </summary>
         /// <param name="request">Search target.</param>
-        public string[] Search(Target request) => 
-            m_dataSource.Search(request, m_cancellationSource.Token).Result;
-
-        /// <summary>
-        /// Search data source for a list of columns from a specific table.
-        /// </summary>
-        /// <param name="request">Table Name.</param>
-        public string[] SearchFields(Target request) => 
-            m_dataSource.SearchFields(request, m_cancellationSource.Token).Result;
-
-        /// <summary>
-        /// Search data source for a list of tables.
-        /// </summary>
-        /// <param name="request">Request.</param>
-        public string[] SearchFilters(Target request) => 
-            m_dataSource.SearchFilters(request, m_cancellationSource.Token).Result;
-
-        /// <summary>
-        /// Search data source for a list of columns from a specific table.
-        /// </summary>
-        /// <param name="request">Table Name.</param>
-        public string[] SearchOrderBys(Target request) => 
-            m_dataSource.SearchOrderBys(request, m_cancellationSource.Token).Result;
+        public string[] Search(Target request)
+        {
+            return m_dataSource.Search(request, m_cancellationSource.Token).Result;
+        }
 
         /// <summary>
         /// Queries openHistorian for annotations in a time-range (e.g., Alarms).
@@ -164,31 +120,29 @@ namespace GrafanaAdapters
         }
 
         /// <summary>
-        /// Queries openHistorian location data for Grafana offsetting duplicate coordinates using a radial distribution.
+        /// Queries available metadata options.
         /// </summary>
-        /// <param name="request"> Query request.</param>
-        /// <returns>JSON serialized location metadata for specified targets.</returns>
-        public string GetLocationData(LocationRequest request)
+        /// <param name="isPhasor">A boolean indicating whether the data is a phasor.</param>
+        public string[] GetTableOptions(bool isPhasor)
         {
-            if (request.zoom is null || request.radius is null)
-                return LocationData.GetLocationData(request.request, m_cancellationSource.Token).Result;
-
-            return LocationData.GetLocationData((double)request.radius, (double)request.zoom, request.request, m_cancellationSource.Token).Result;
+            return m_dataSource.GetTableOptions(isPhasor, m_cancellationSource.Token).Result;
         }
 
         /// <summary>
-        /// Requests available tag keys.
+        /// Queries description of available functions.
         /// </summary>
-        /// <param name="_">Tag keys request.</param>
-        public TagKeysResponse[] TagKeys(TagKeysRequest _) => 
-            m_dataSource.TagKeys(_, m_cancellationSource.Token).Result;
+        public FunctionDescription[] GetFunctions()
+        {
+            return m_dataSource.GetFunctionDescription(m_cancellationSource.Token).Result;
+        }
 
         /// <summary>
-        /// Requests available tag values.
+        /// Queries available metadata fields for a given source.
         /// </summary>
-        /// <param name="request">Tag values request.</param>
-        public TagValuesResponse[] TagValues(TagValuesRequest request) => 
-            m_dataSource.TagValues(request, m_cancellationSource.Token).Result;
+        public Dictionary<string, string[]> GetMetadataOptions(MetadataOptionsRequest request)
+        {
+            return m_dataSource.GetMetadataOptions(request, m_cancellationSource.Token).Result;
+        }
     }
 }
 
