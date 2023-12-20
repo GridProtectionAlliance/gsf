@@ -45,6 +45,7 @@ using GSF.Parsing;
 using GSF.Scheduling;
 using ConnectionStringParser = GSF.Configuration.ConnectionStringParser<GSF.TimeSeries.Adapters.ConnectionStringParameterAttribute>;
 
+// ReSharper disable IdentifierTypo
 // ReSharper disable UnusedMember.Global
 // ReSharper disable InheritdocConsiderUsage
 namespace DeviceStatAdapters
@@ -62,7 +63,7 @@ namespace DeviceStatAdapters
         /// <summary>
         /// Defines the default value for <see cref="DatabaseConnnectionString"/>.
         /// </summary>
-        public const string DefaultDatabaseConnnectionString = "";
+        public const string DefaultDatabaseConnectionString = "";
 
         /// <summary>
         /// Defines the default value for <see cref="DatabaseProviderString"/>.
@@ -163,7 +164,7 @@ namespace DeviceStatAdapters
         /// </summary>
         [ConnectionStringParameter]
         [Description("Defines the database connection string used for saving device stats. Leave empty to use current configured host database connection.")]
-        [DefaultValue(DefaultDatabaseConnnectionString)]
+        [DefaultValue(DefaultDatabaseConnectionString)]
         public string DatabaseConnnectionString { get; set; }
 
         /// <summary>
@@ -319,7 +320,7 @@ namespace DeviceStatAdapters
         {
             get
             {
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
 
                 status.Append(base.Status);
                 status.AppendLine($"    Monitored Device Count: {InputMeasurementKeys?.Length ?? 0:N0}");
@@ -392,40 +393,57 @@ namespace DeviceStatAdapters
             
             base.Initialize();
 
-            ConnectionStringParser parser = new ConnectionStringParser();
+            ConnectionStringParser parser = new();
             parser.ParseConnectionString(ConnectionString, this);
 
             // Define synchronized monitoring operation
             m_deviceSyncOperation = new ShortSynchronizedOperation(() =>
             {
-                List<MeasurementKey> inputMeasurementKeys = new List<MeasurementKey>();
+                List<MeasurementKey> inputMeasurementKeys = new();
 
                 using (AdoDataConnection statConnection = GetDatabaseConnection())
-                using (AdoDataConnection gsfConnection = new AdoDataConnection("systemSettings"))
+                using (AdoDataConnection gsfConnection = new("systemSettings"))
                 {
                     // Load any newly defined devices into the statistics device table
-                    TableOperations<Device> deviceTable = new TableOperations<Device>(statConnection);
+                    TableOperations<Device> deviceTable = new(statConnection);
                     DataRow[] devices = gsfConnection.RetrieveData($"SELECT * FROM Device WHERE IsConcentrator = 0 AND AccessID <> {DeviceGroupAccessID}").Select();
 
                     foreach (DataRow device in devices)
                     {
-                        Device statDevice = deviceTable.QueryRecordWhere("Acronym = {0}", device["Acronym"]) ?? deviceTable.NewRecord();
-                      
-                        statDevice.UniqueID = device.ConvertField<Guid>("UniqueID");
-                        statDevice.Acronym = device.ConvertField<string>("Acronym");
-                        statDevice.Name = device.ConvertField<string>("Name");
-                        statDevice.ParentAcronym = gsfConnection.ExecuteScalar<string>("SELECT Acronym FROM Device WHERE ID = {0}", device.ConvertField<int>("ParentID"));
-                        statDevice.Protocol = gsfConnection.ExecuteScalar<string>("SELECT Acronym FROM Protocol WHERE ID = {0}", device.ConvertField<int>("ProtocolID"));
-                        statDevice.Longitude = device.ConvertField<decimal>("Longitude");
-                        statDevice.Latitude = device.ConvertField<decimal>("Latitude");
-                        statDevice.FramesPerSecond = device.ConvertField<int>("FramesPerSecond");
+                        string acronym = device["Acronym"].ToString();
 
-                        deviceTable.AddNewOrUpdateRecord(statDevice);
+                        if (string.IsNullOrWhiteSpace(acronym))
+                            continue;
 
-                        if (statDevice.ID == 0)
-                            statDevice = deviceTable.QueryRecordWhere("Acronym = {0}", device["Acronym"]);
+                        int deviceID;
 
-                        DataRow row = gsfConnection.RetrieveRow("SELECT SignalID, ID FROM MeasurementDetail WHERE DeviceAcronym = {0} AND SignalAcronym = 'FREQ'", statDevice.Acronym);
+                        // If using local database, skip Device table synchronization
+                        if (!string.IsNullOrWhiteSpace(DatabaseConnnectionString))
+                        {
+                            Device statDevice = deviceTable.QueryRecordWhere("Acronym = {0}", acronym) ?? deviceTable.NewRecord();
+
+                            statDevice.UniqueID = device.ConvertField<Guid>("UniqueID");
+                            statDevice.Acronym = device.ConvertField<string>("Acronym");
+                            statDevice.Name = device.ConvertField<string>("Name");
+                            statDevice.ParentAcronym = gsfConnection.ExecuteScalar<string>("SELECT Acronym FROM Device WHERE ID = {0}", device.ConvertField<int>("ParentID"));
+                            statDevice.Protocol = gsfConnection.ExecuteScalar<string>("SELECT Acronym FROM Protocol WHERE ID = {0}", device.ConvertField<int>("ProtocolID"));
+                            statDevice.Longitude = device.ConvertField<decimal>("Longitude");
+                            statDevice.Latitude = device.ConvertField<decimal>("Latitude");
+                            statDevice.FramesPerSecond = device.ConvertField<int>("FramesPerSecond");
+
+                            deviceTable.AddNewOrUpdateRecord(statDevice);
+
+                            if (statDevice.ID == 0)
+                                statDevice = deviceTable.QueryRecordWhere("Acronym = {0}", acronym);
+
+                            deviceID = statDevice.ID;
+                        }
+                        else
+                        {
+                            deviceID = device.ConvertField<int>("ID");
+                        }
+
+                        DataRow row = gsfConnection.RetrieveRow("SELECT SignalID, ID FROM MeasurementDetail WHERE DeviceAcronym = {0} AND SignalAcronym = 'FREQ'", acronym);
 
                         if (!string.IsNullOrEmpty(row.ConvertField<string>("ID")))
                         {
@@ -435,9 +453,9 @@ namespace DeviceStatAdapters
                             inputMeasurementKeys.Add(key);
 
                             // Update device minute maps
-                            m_measurementDevice.GetOrAdd(key.SignalID, statDevice.ID);
-                            m_deviceMinuteTime.GetOrAdd(statDevice.ID, 0L);
-                            m_deviceMinuteCounts.GetOrAdd(statDevice.ID, new MinuteCounts());
+                            m_measurementDevice.GetOrAdd(key.SignalID, deviceID);
+                            m_deviceMinuteTime.GetOrAdd(deviceID, 0L);
+                            m_deviceMinuteCounts.GetOrAdd(deviceID, new MinuteCounts());
                         }
                     }
                 }
@@ -457,56 +475,54 @@ namespace DeviceStatAdapters
             {
                 OnStatusMessage(MessageLevel.Info, $"Executing scheduled database operation \"{DatabaseCommand}\"...");
 
-                using (AdoDataConnection connection = GetDatabaseConnection())
+                using AdoDataConnection connection = GetDatabaseConnection();
+                List<object> parameters = new();
+
+                if (!string.IsNullOrWhiteSpace(DatabaseCommandParameters))
                 {
-                    List<object> parameters = new List<object>();
-
-                    if (!string.IsNullOrWhiteSpace(DatabaseCommandParameters))
+                    TemplatedExpressionParser parameterTemplate = new()
                     {
-                        TemplatedExpressionParser parameterTemplate = new TemplatedExpressionParser
-                        {
-                            TemplatedExpression = DatabaseCommandParameters
-                        };
+                        TemplatedExpression = DatabaseCommandParameters
+                    };
 
-                        Dictionary<string, string> substitutions = new Dictionary<string, string>
-                        {
-                            ["{Acronym}"] = Name,
-                            ["{Timestamp}"] = RealTime.ToString(TimeTagBase.DefaultFormat)
-                        };
-
-                        string[] commandParameters = parameterTemplate.Execute(substitutions).Split(',');
-
-                        // Do some basic typing on command parameters
-                        foreach (string commandParameter in commandParameters)
-                        {
-                            string parameter = commandParameter.Trim();
-
-                            if (parameter.StartsWith("'") && parameter.EndsWith("'"))
-                                parameters.Add(parameter.Length > 2 ? parameter.Substring(1, parameter.Length - 2) : "");
-                            else if (int.TryParse(parameter, out int ival))
-                                parameters.Add(ival);
-                            else if (double.TryParse(parameter, out double dval))
-                                parameters.Add(dval);
-                            else if (bool.TryParse(parameter, out bool bval))
-                                parameters.Add(bval);
-                            else if (DateTime.TryParseExact(parameter, TimeTagBase.DefaultFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out DateTime dtval))
-                                parameters.Add(dtval);
-                            else if (DateTime.TryParse(parameter, out dtval))
-                                parameters.Add(dtval);
-                            else
-                                parameters.Add(parameter);
-                        }
-                    }
-
-                    try
+                    Dictionary<string, string> substitutions = new()
                     {
-                        m_lastDatabaseOperationResult = connection.ExecuteScalar(DatabaseCommandTimeout, DatabaseCommand, parameters.ToArray());
-                        m_totalDatabaseOperations++;
-                    }
-                    catch (Exception ex)
+                        ["{Acronym}"] = Name,
+                        ["{Timestamp}"] = RealTime.ToString(TimeTagBase.DefaultFormat)
+                    };
+
+                    string[] commandParameters = parameterTemplate.Execute(substitutions).Split(',');
+
+                    // Do some basic typing on command parameters
+                    foreach (string commandParameter in commandParameters)
                     {
-                        m_lastDatabaseOperationResult = $"ERROR: {ex.Message}";
+                        string parameter = commandParameter.Trim();
+
+                        if (parameter.StartsWith("'") && parameter.EndsWith("'"))
+                            parameters.Add(parameter.Length > 2 ? parameter.Substring(1, parameter.Length - 2) : "");
+                        else if (int.TryParse(parameter, out int ival))
+                            parameters.Add(ival);
+                        else if (double.TryParse(parameter, out double dval))
+                            parameters.Add(dval);
+                        else if (bool.TryParse(parameter, out bool bval))
+                            parameters.Add(bval);
+                        else if (DateTime.TryParseExact(parameter, TimeTagBase.DefaultFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out DateTime dtval))
+                            parameters.Add(dtval);
+                        else if (DateTime.TryParse(parameter, out dtval))
+                            parameters.Add(dtval);
+                        else
+                            parameters.Add(parameter);
                     }
+                }
+
+                try
+                {
+                    m_lastDatabaseOperationResult = connection.ExecuteScalar(DatabaseCommandTimeout, DatabaseCommand, parameters.ToArray());
+                    m_totalDatabaseOperations++;
+                }
+                catch (Exception ex)
+                {
+                    m_lastDatabaseOperationResult = $"ERROR: {ex.Message}";
                 }
             },
             ex => OnProcessException(MessageLevel.Warning, ex));
@@ -581,27 +597,27 @@ namespace DeviceStatAdapters
                     m_deviceMinuteCounts[deviceID] = new MinuteCounts();
                 }
 
-                if (m_deviceMinuteCounts.TryGetValue(deviceID, out MinuteCounts counts))
-                {
-                    // Increment counts
-                    counts.ReceivedCount++;
-                    counts.DataErrorCount += measurement.ValueQualityIsGood() ? 0L : 1L;
-                    counts.TimeErrorCount += measurement.TimestampQualityIsGood() ? 0L : 1L;
+                if (!m_deviceMinuteCounts.TryGetValue(deviceID, out MinuteCounts counts))
+                    continue;
+                
+                // Increment counts
+                counts.ReceivedCount++;
+                counts.DataErrorCount += measurement.ValueQualityIsGood() ? 0L : 1L;
+                counts.TimeErrorCount += measurement.TimestampQualityIsGood() ? 0L : 1L;
 
-                    // Track latency statistics
-                    double latency = (currentTime - measurement.Timestamp).ToMilliseconds();
+                // Track latency statistics
+                double latency = (currentTime - measurement.Timestamp).ToMilliseconds();
 
-                    if (double.IsNaN(counts.MinLatency) || latency < counts.MinLatency)
-                        counts.MinLatency = latency;
+                if (double.IsNaN(counts.MinLatency) || latency < counts.MinLatency)
+                    counts.MinLatency = latency;
 
-                    if (double.IsNaN(counts.MaxLatency) || latency > counts.MaxLatency)
-                        counts.MaxLatency = latency;
+                if (double.IsNaN(counts.MaxLatency) || latency > counts.MaxLatency)
+                    counts.MaxLatency = latency;
 
-                    counts.AvgLatencyTotal += latency;
-                    counts.LatencyCount++;
+                counts.AvgLatencyTotal += latency;
+                counts.LatencyCount++;
 
-                    m_measurementTests++;
-                }
+                m_measurementTests++;
             }
         }
 
@@ -609,26 +625,23 @@ namespace DeviceStatAdapters
         {
             try
             {
-                using (AdoDataConnection connection = GetDatabaseConnection(MinuteStatsInsertTimeout))
-                {
-                    TableOperations<MinuteStats> minuteStatsTable = new TableOperations<MinuteStats>(connection);
+                using AdoDataConnection connection = GetDatabaseConnection(MinuteStatsInsertTimeout);
+                TableOperations<MinuteStats> minuteStatsTable = new(connection);
+                MinuteStats record = minuteStatsTable.NewRecord();
 
-                    MinuteStats record = minuteStatsTable.NewRecord();
+                record.DeviceID = deviceID;
+                record.Timestamp = minuteTime;
+                record.ReceivedCount = counts.ReceivedCount;
+                record.DataErrorCount = counts.DataErrorCount;
+                record.TimeErrorCount = counts.TimeErrorCount;
+                record.MinLatency = (int)Math.Round(counts.MinLatency);
+                record.MaxLatency = (int)Math.Round(counts.MaxLatency);
+                record.AvgLatency = (int)Math.Round(counts.AvgLatencyTotal / counts.LatencyCount);
 
-                    record.DeviceID = deviceID;
-                    record.Timestamp = minuteTime;
-                    record.ReceivedCount = counts.ReceivedCount;
-                    record.DataErrorCount = counts.DataErrorCount;
-                    record.TimeErrorCount = counts.TimeErrorCount;
-                    record.MinLatency = (int)Math.Round(counts.MinLatency);
-                    record.MaxLatency = (int)Math.Round(counts.MaxLatency);
-                    record.AvgLatency = (int)Math.Round(counts.AvgLatencyTotal / counts.LatencyCount);
+                minuteStatsTable.AddNewRecord(record);
 
-                    minuteStatsTable.AddNewRecord(record);
-
-                    m_databaseWrites++;
-                    m_lastDatabaseResult = "Success";
-                }
+                m_databaseWrites++;
+                m_lastDatabaseResult = "Success";
             }
             catch (Exception ex)
             {
@@ -667,50 +680,51 @@ namespace DeviceStatAdapters
             // This simple file restoration assumes embedded resources to restore are in root namespace
             foreach (string name in executingAssembly.GetManifestResourceNames().Where(name => name.EndsWith(".sql")))
             {
-                using (Stream resourceStream = executingAssembly.GetManifestResourceStream(name))
+                using Stream resourceStream = executingAssembly.GetManifestResourceStream(name);
+                
+                if (resourceStream is null)
+                    continue;
+
+                const string sourceNamespace = $"{nameof(DeviceStatAdapters)}.";
+                string filePath = name;
+
+                // Remove namespace prefix from resource file name
+                if (filePath.StartsWith(sourceNamespace))
+                    filePath = filePath.Substring(sourceNamespace.Length);
+
+                string targetFileName = Path.Combine(targetPath, filePath);
+                bool restoreFile = true;
+
+                if (File.Exists(targetFileName))
                 {
-                    if (resourceStream is null)
-                        continue;
-
-                    string sourceNamespace = $"{nameof(DeviceStatAdapters)}.";
-                    string filePath = name;
-
-                    // Remove namespace prefix from resource file name
-                    if (filePath.StartsWith(sourceNamespace))
-                        filePath = filePath.Substring(sourceNamespace.Length);
-
-                    string targetFileName = Path.Combine(targetPath, filePath);
-                    bool restoreFile = true;
-
-                    if (File.Exists(targetFileName))
-                    {
-                        string resourceMD5 = GetMD5HashFromStream(resourceStream);
-                        resourceStream.Seek(0, SeekOrigin.Begin);
-                        restoreFile = !resourceMD5.Equals(GetMD5HashFromFile(targetFileName));
-                    }
-
-                    if (!restoreFile)
-                        continue;
-
-                    byte[] buffer = new byte[resourceStream.Length];
-                    resourceStream.Read(buffer, 0, (int)resourceStream.Length);
-
-                    using (StreamWriter writer = File.CreateText(targetFileName))
-                        writer.Write(Encoding.UTF8.GetString(buffer, 0, buffer.Length));
+                    string resourceMD5 = GetMD5HashFromStream(resourceStream);
+                    resourceStream.Seek(0, SeekOrigin.Begin);
+                    restoreFile = !resourceMD5.Equals(GetMD5HashFromFile(targetFileName));
                 }
+
+                if (!restoreFile)
+                    continue;
+
+                byte[] buffer = new byte[resourceStream.Length];
+
+                // ReSharper disable once MustUseReturnValue
+                resourceStream.Read(buffer, 0, (int)resourceStream.Length);
+
+                using StreamWriter writer = File.CreateText(targetFileName);
+                writer.Write(Encoding.UTF8.GetString(buffer, 0, buffer.Length));
             }
         }
 
         private static string GetMD5HashFromFile(string fileName)
         {
-            using (FileStream stream = File.OpenRead(fileName))
-                return GetMD5HashFromStream(stream);
+            using FileStream stream = File.OpenRead(fileName);
+            return GetMD5HashFromStream(stream);
         }
 
         private static string GetMD5HashFromStream(Stream stream)
         {
-            using (MD5 md5 = MD5.Create())
-                return BitConverter.ToString(md5.ComputeHash(stream)).Replace("-", string.Empty);
+            using MD5 md5 = MD5.Create();
+            return BitConverter.ToString(md5.ComputeHash(stream)).Replace("-", string.Empty);
         }
         
         #endregion
