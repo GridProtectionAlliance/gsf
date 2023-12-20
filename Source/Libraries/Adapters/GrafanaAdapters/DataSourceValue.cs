@@ -53,7 +53,7 @@ namespace GrafanaAdapters
     }
 
     /// <summary>
-    /// Helper class to compare two datasources
+    /// Helper class to compare two data sources
     /// </summary>
     public class DataSourceValueComparer : IComparer<DataSourceValue>
     {

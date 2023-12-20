@@ -28,7 +28,7 @@ using System.Collections.Generic;
 namespace GrafanaAdapters
 {
     /// <summary>
-    /// Defines a interace that represents an enumeration of T for a given target.
+    /// Defines a interface that represents an enumeration of T for a given target.
     /// </summary>
     /// <remarks>
     /// This is a group construct keyed on <see cref="Target"/> for data source value enumerations.

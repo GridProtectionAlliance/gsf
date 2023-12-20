@@ -190,7 +190,7 @@ namespace GrafanaAdapters
         [ConnectionStringParameter]
         [Description("Defines the external database connection string used for synchronization of alarm states. Leave blank to use local configuration database defined in \"systemSettings\".")]
         [DefaultValue("")]
-        public string ExternalDatabaseConnnectionString { get; set; }
+        public string ExternalDatabaseConnectionString { get; set; }
 
         /// <summary>
         /// Gets or sets the external database provider string used for synchronization of alarm states.
@@ -662,7 +662,7 @@ namespace GrafanaAdapters
                     foreach (KeyValuePair<AlarmState, int> stateCount in stateCounts)
                         substitutions[$"{{{stateCount.Key}StateCount}}"] = stateCount.Value.ToString();
 
-                    using AdoDataConnection connection = string.IsNullOrWhiteSpace(ExternalDatabaseConnnectionString) ? new AdoDataConnection("systemSettings") : new AdoDataConnection(ExternalDatabaseConnnectionString, ExternalDatabaseProviderString);
+                    using AdoDataConnection connection = string.IsNullOrWhiteSpace(ExternalDatabaseConnectionString) ? new AdoDataConnection("systemSettings") : new AdoDataConnection(ExternalDatabaseConnectionString, ExternalDatabaseProviderString);
 
                     foreach (AlarmDevice alarmDevice in alarmDeviceUpdates)
                     {
