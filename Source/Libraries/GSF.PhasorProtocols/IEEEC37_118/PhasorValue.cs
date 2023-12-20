@@ -109,7 +109,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         /// <summary>
         /// Gets or sets the <see cref="PhasorDefinition3"/> associated with this <see cref="PhasorValue"/>.
         /// </summary>
-        public new virtual PhasorDefinition3 Definition3
+        public virtual PhasorDefinition3 Definition3
         {
             get => base.Definition as PhasorDefinition3;
             set => base.Definition = value;

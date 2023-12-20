@@ -389,7 +389,25 @@ namespace PhasorProtocolAdapters
         /// </summary>
         public bool ConfigurationOutOfSync
         {
-            get => m_configurationOutOfSync ??= LoadConfigurationOutOfSyncMarker(Name);
+            get
+            {
+                if (m_configurationOutOfSync is not null)
+                    return m_configurationOutOfSync.GetValueOrDefault();
+
+                // Load cached configuration out of sync marker on thread pool
+                // to ensure call to ConfigurationOutOfSync proceeds quickly
+                // for statistic operations on a large system. Property will
+                // return false in the meantime.
+                ThreadPool.QueueUserWorkItem(_ =>
+                {
+                    if (m_configurationOutOfSync is not null)
+                        return;
+                        
+                    m_configurationOutOfSync = LoadConfigurationOutOfSyncMarker(Name);
+                });
+
+                return false;
+            }
             private set => m_configurationOutOfSync = value;
         }
 

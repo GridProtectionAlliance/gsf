@@ -441,9 +441,7 @@ namespace GSF.Security
                         try
                         {
                             // Load user data - note that external users need to be looked up by userPrincipalName
-                            User user = userData.Username.Contains("#EXT#") ? 
-                                graphClient.Users.Request().Filter($"userPrincipalName eq '{userData.Username}'").GetAsync().Result.FirstOrDefault() : 
-                                graphClient.Users[userData.Username].Request().GetAsync().Result;
+                            User user = graphClient.Users.Request().Filter($"mail eq '{userData.Username}'").GetAsync().Result.FirstOrDefault();
 
                             if (user is null)
                                 throw new SecurityException($"Failed to load user \"{userData.Username}\" from Azure AD application \"{config.ClientID}\".");
@@ -792,9 +790,7 @@ namespace GSF.Security
                                     try
                                     {
                                         // Load user data in application context - note that external users need to be looked up by userPrincipalName
-                                        User user = username.Contains("#EXT#") ?
-                                            graphClient.Users.Request().Filter($"userPrincipalName eq '{username}'").GetAsync().Result.FirstOrDefault() :
-                                            graphClient.Users[username].Request().GetAsync().Result;
+                                        User user = graphClient.Users.Request().Filter($"mail eq '{username}'").GetAsync().Result.FirstOrDefault();
 
                                         isAuthenticated = user is not null;
                                     }

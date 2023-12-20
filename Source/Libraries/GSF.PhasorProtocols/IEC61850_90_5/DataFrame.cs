@@ -185,12 +185,8 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
         public override ushort IDCode
         {
             get => CommonHeader.IDCode;
-            set
-            {
-                // Keep ID code updates synchronized...
-                CommonHeader.IDCode = value;
-                base.IDCode = value;
-            }
+            // Keep ID code updates synchronized...
+            set => CommonHeader.IDCode = value;
         }
 
         /// <summary>
@@ -235,7 +231,6 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                     return;
 
                 State = m_frameHeader.State as IDataFrameParsingState;
-                base.IDCode = m_frameHeader.IDCode;
                 base.Timestamp = m_frameHeader.Timestamp;
                 m_qualityFlags = (uint)m_frameHeader.TimeQualityFlags | (uint)m_frameHeader.TimeQualityIndicatorCode;
 
