@@ -35,8 +35,6 @@ namespace GSF.TimeSeries.UI.Converters
     /// </summary>
     public class ObjectToVisibilityConverter : IValueConverter
     {
-        #region [ IValueConverter Members ]
-
         /// <summary>
         /// Converts object value to <see cref="System.Windows.Visibility"/> enumeration.
         /// </summary>
@@ -47,35 +45,24 @@ namespace GSF.TimeSeries.UI.Converters
         /// <returns><see cref="System.Windows.Visibility"/> enumeration.</returns>
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if ((object)value != null)
+            // If value is int, any value greater than zero resolves to true; otherwise, false
+            // Once we have boolean value instead of integer, next step will handle visibility
+            if (value is int)
             {
-                // if value is int, then if it is greater than zero then, set it to true otherwise false.
-                // Once we set value to boolean instead of integer, next code will take care of visibility.
-                if (value is int)
-                {
-                    int temp;
-                    if (int.TryParse(value.ToString(), out temp))
-                    {
-                        if (temp > 0)
-                            value = true;
-                        else
-                            value = false;
-                    }
-                }
+                if (int.TryParse(value.ToString(), out int intVal))
+                    value = intVal > 0;
+            }
 
-                // Hanlde boolean to visibility conversion here.
-                if (value is bool)
-                {
-                    // if boolean parameter is provided and is true then invert original boolean value.
-                    if (parameter != null && parameter is bool)
-                    {
-                        if ((bool)parameter)
-                            value = !(bool)value;
-                    }
+            // Handle boolean to visibility conversion
+            if (value is bool boolVal)
+            {
+                // If parameter is provided and is 'true' boolean, invert original boolean value
+                if (parameter is true)
+                    boolVal = !boolVal;
 
-                    if (!(bool)value)
-                        return Visibility.Collapsed;
-                }
+                // If parameter is provided and is "Hidden" string, return hidden instead of collapsed
+                if (!boolVal)
+                    return parameter is "Hidden" ? Visibility.Hidden : Visibility.Collapsed;
             }
 
             return Visibility.Visible;
@@ -94,8 +81,5 @@ namespace GSF.TimeSeries.UI.Converters
         {
             return null;
         }
-
-        #endregion
-
     }
 }

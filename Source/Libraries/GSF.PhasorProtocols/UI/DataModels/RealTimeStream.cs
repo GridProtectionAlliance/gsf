@@ -52,7 +52,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         private bool m_enabled;
         private bool m_expanded;
         private string m_statusColor;
-        private bool m_configurationOutOfSync;
+        private bool? m_configurationOutOfSync;
         private ObservableCollection<RealTimeDevice> m_deviceList;
 
         #endregion
@@ -96,6 +96,15 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 OnPropertyChanged(nameof(Acronym));
             }
         }
+
+        ///// <summary>
+        ///// Gets flag that determines if the <see cref="RealTimeStream"/> is a concentrator device.
+        ///// </summary>
+        //public bool IsConcentratorDevice
+        //{
+        //    get => !Acronym.Equals("DIRECT CONNECTED");
+        //    set { }
+        //}
 
         /// <summary>
         /// Gets or sets the name of the current <see cref="RealTimeStream"/>.
@@ -146,6 +155,9 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 m_statusColor = value;
                 OnPropertyChanged(nameof(StatusColor));
+                OnPropertyChanged(nameof(ConfigurationOutOfSyncContent));
+                OnPropertyChanged(nameof(ConfigurationOutOfSyncToolTip));
+                OnPropertyChanged(nameof(ConfigurationOutOfSyncColor));
             }
         }
 
@@ -154,13 +166,61 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public bool ConfigurationOutOfSync
         {
-            get => m_configurationOutOfSync;
+            get => m_configurationOutOfSync ?? false;
             set
             {
                 m_configurationOutOfSync = value;
                 OnPropertyChanged(nameof(ConfigurationOutOfSync));
+                OnPropertyChanged(nameof(ConfigurationOutOfSyncContent));
+                OnPropertyChanged(nameof(ConfigurationOutOfSyncToolTip));
+                OnPropertyChanged(nameof(ConfigurationOutOfSyncColor));
             }
         }
+
+        /// <summary>
+        /// Gets content message for input stream configuration sync state.
+        /// </summary>
+        public string ConfigurationOutOfSyncContent
+        {
+            get => DeviceStateUnavailable ? "Loading..." :
+                m_configurationOutOfSync is null ? "Checking Config..." :
+                    m_configurationOutOfSync.Value ?
+                        "Config Out of Sync" :
+                        "Config In Sync";
+            set { }
+        }
+
+        /// <summary>
+        /// Gets tool tip for input stream configuration sync state.
+        /// </summary>
+        public string ConfigurationOutOfSyncToolTip
+        {
+            get => DeviceStateUnavailable ? "Loading device state..." :
+                m_configurationOutOfSync is null ? "Evaluating configuration synchronization state..." :
+                    m_configurationOutOfSync.Value ?
+                        "Latest received device configuration is not synchronized with host system. Click to resynchronize." :
+                        "Latest received device configuration is synchronized with host system.";
+            set { }
+        }
+
+        /// <summary>
+        /// Gets color for input stream configuration sync state.
+        /// </summary>
+        public Color ConfigurationOutOfSyncColor
+        {
+            get => DeviceStateUnavailable ? Colors.Gray :
+                m_configurationOutOfSync is null ? Colors.Blue :
+                m_configurationOutOfSync.Value ?
+                    Colors.Red :
+                    GreenColor;
+            set { }
+        }
+
+        /// <summary>
+        /// Gets flag that determines if device state is not yet available, e.g., loading.
+        /// </summary>
+        public bool DeviceStateUnavailable => string.IsNullOrWhiteSpace(StatusColor) || StatusColor is "Gray" or "Transparent";
+
 
         /// <summary>
         /// Gets or sets whether the current <see cref="RealTimeStream"/> is enabled.
@@ -193,6 +253,20 @@ namespace GSF.PhasorProtocols.UI.DataModels
         #region [ Static ]
 
         private const int GroupAccessID = -99999;
+        internal static readonly Color GreenColor;
+
+        static RealTimeStream()
+        {
+            try
+            {
+                object parsedColor = ColorConverter.ConvertFromString("#FF19C819");
+                GreenColor = parsedColor is Color color ? color : Colors.Green;
+            }
+            catch
+            {
+                GreenColor = Colors.Green;
+            }
+        }
 
         // Static Methods
 
@@ -667,6 +741,15 @@ namespace GSF.PhasorProtocols.UI.DataModels
         }
 
         /// <summary>
+        /// Gets flag that determines if the <see cref="RealTimeDevice"/> is a direct connection.
+        /// </summary>
+        public bool IsDirectConnectedDevice
+        {
+            get => ParentAcronym.Equals("DIRECT CONNECTED");
+            set { }
+        } 
+
+        /// <summary>
         /// Gets or sets Expanded flag of the <see cref="RealTimeDevice"/>.
         /// </summary>
         public bool Expanded
@@ -745,8 +828,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
             get => DeviceStateUnavailable ? Colors.Gray : 
                 m_configurationOutOfSync is null ? Colors.Blue: 
                 m_configurationOutOfSync.Value ? 
-                    Colors.Red : 
-                    Colors.Green;
+                    Colors.Red :
+                    RealTimeStream.GreenColor;
             set { }
         }
 
