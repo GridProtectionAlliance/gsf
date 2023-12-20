@@ -309,7 +309,6 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                                 // If a stream is disconnected,
                                 // its devices are also disconnected
                                 device.StatusColor = "Red";
-
                                 device.ConfigurationOutOfSync = stream.ConfigurationOutOfSync = false;
                             }
                             else if (RealTimeStatistic.InputStreamStatistics.TryGetValue((int)device.ID, out streamStatistic))

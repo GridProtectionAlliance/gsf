@@ -56,16 +56,20 @@
 
                     <Ellipse Width="12" Height="12" VerticalAlignment="Center" Fill="{tsfBinding:Column Path=StatusColor, Converter={StaticResource StringToStatusColorConverter}}" Margin="2"/>
                     <TextBlock Text="{tsfBinding:Column Path=Acronym}" Width="175" FontWeight="Bold"/>
-                    <TextBlock Text="{tsfBinding:Column Path=Name}" Width="200" FontWeight="Bold"/>
-                    <TextBlock Text="{tsfBinding:Column Path=ProtocolName}" Width="100" FontWeight="Bold"/>
-                    <TextBlock Text="{tsfBinding:Column Path=VendorDeviceName}" Width="100" FontWeight="Bold"/>
-                    <Button Content="Config Out of Sync" Foreground="Red" FontWeight="Bold" Tag="{tsfBinding:Column Path=Acronym}" 
-                            Visibility="{tsfBinding:Column Path=ConfigurationOutOfSync, Converter={StaticResource ObjectToVisibilityConverter}}"
+                    <TextBlock Text="{tsfBinding:Column Path=Name}" Width="175" FontWeight="Bold"/>
+                    <TextBlock Text="{tsfBinding:Column Path=ProtocolName}" Width="125" FontWeight="Bold"/>
+                    <TextBlock Text="{tsfBinding:Column Path=VendorDeviceName}" Width="75" FontWeight="Bold"/>
+                    <Button Content="{tsfBinding:Column Path=ConfigurationOutOfSyncContent}" 
                             Template="{StaticResource HyperlinkStyleButtonTemplate}"
-                            ToolTip="Latest received device configuration is out of sync with host system. Click to resynchronize."
-                            Width="120" Click="ButtonOutOfSync_Click"/>
+                            ToolTip="{tsfBinding:Column Path=ConfigurationOutOfSyncToolTip}"
+                            Tag="{tsfBinding:Column Path=Acronym}"
+                            Width="120" FontWeight="Bold" Click="ButtonOutOfSync_Click">
+                        <Button.Foreground>
+                            <SolidColorBrush Color="{tsfBinding:Column Path=ConfigurationOutOfSyncColor}"/>
+                        </Button.Foreground>
+                    </Button>
                     <Button Content="Edit" Tag="{tsfBinding:Column Path=Acronym}" Template="{StaticResource HyperlinkStyleButtonTemplate}" 
-                            Width="{tsfBinding:Column Path=EditWidth}" Click="ButtonEdit_Click"  />
+                            Width="30" Click="ButtonEdit_Click"  />
                 </StackPanel>
             </HierarchicalDataTemplate>
 
