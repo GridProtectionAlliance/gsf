@@ -47,11 +47,8 @@ namespace GSF.TimeSeries.UI.Converters
         {
             // If value is int, any value greater than zero resolves to true; otherwise, false
             // Once we have boolean value instead of integer, next step will handle visibility
-            if (value is int)
-            {
-                if (int.TryParse(value.ToString(), out int intVal))
-                    value = intVal > 0;
-            }
+            if (value is int intVal)
+                value = intVal > 0;
 
             // Handle boolean to visibility conversion
             if (value is bool boolVal)
