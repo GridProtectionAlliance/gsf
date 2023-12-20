@@ -97,15 +97,6 @@ namespace GSF.PhasorProtocols.UI.DataModels
             }
         }
 
-        ///// <summary>
-        ///// Gets flag that determines if the <see cref="RealTimeStream"/> is a concentrator device.
-        ///// </summary>
-        //public bool IsConcentratorDevice
-        //{
-        //    get => !Acronym.Equals("DIRECT CONNECTED");
-        //    set { }
-        //}
-
         /// <summary>
         /// Gets or sets the name of the current <see cref="RealTimeStream"/>.
         /// </summary>
