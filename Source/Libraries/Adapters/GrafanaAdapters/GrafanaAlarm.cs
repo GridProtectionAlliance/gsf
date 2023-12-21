@@ -21,54 +21,56 @@
 //
 //******************************************************************************************************
 
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+// TODO: JRC - this class is no longer used, I think it should be removed
 
-using GSF.Data.Model;
-using System;
+//#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 
-namespace GrafanaAdapters
-{
-	/// <summary>
-	/// Defines a Grafana Alarm. Similar to the GSF Alarm but without <see cref="AlarmState"/> location request.
-	/// </summary>
-	[TableName("Alarm")]
-	public class GrafanaAlarm
-	{
-		public Guid NodeID { get; set; }
+//using GSF.Data.Model;
+//using System;
 
-		[PrimaryKey]
-		public int ID { get; set; }
+//namespace GrafanaAdapters
+//{
+//	/// <summary>
+//	/// Defines a Grafana Alarm. Similar to the GSF Alarm but without <see cref="AlarmState"/> location request.
+//	/// </summary>
+//	[TableName("Alarm")]
+//	public class GrafanaAlarm
+//	{
+//		public Guid NodeID { get; set; }
 
-		public string TagName { get; set; }
+//		[PrimaryKey]
+//		public int ID { get; set; }
 
-		public Guid SignalID { get; set; }
+//		public string TagName { get; set; }
 
-		public Guid AssociatedMeasurementID { get; set; }
+//		public Guid SignalID { get; set; }
 
-		public string Description { get; set; }
+//		public Guid AssociatedMeasurementID { get; set; }
 
-		public int Severity { get; set; }
+//		public string Description { get; set; }
 
-		public int Operation { get; set; }
+//		public int Severity { get; set; }
 
-		public double SetPoint { get; set; }
+//		public int Operation { get; set; }
 
-		public double Tolerance { get; set; }
+//		public double SetPoint { get; set; }
 
-		public double Delay { get; set; }
+//		public double Tolerance { get; set; }
 
-		public double Hysteresis { get; set; }
+//		public double Delay { get; set; }
 
-		public int LoadOrder { get; set; }
+//		public double Hysteresis { get; set; }
 
-		public bool Enabled { get; set; }
+//		public int LoadOrder { get; set; }
 
-		public DateTime CreatedOn { get; set; }
+//		public bool Enabled { get; set; }
 
-		public string CreatedBy { get; set; }
+//		public DateTime CreatedOn { get; set; }
 
-		public DateTime UpdatedOn { get; set; }
+//		public string CreatedBy { get; set; }
 
-		public string UpdatedBy { get; set; }
-	}
-}
+//		public DateTime UpdatedOn { get; set; }
+
+//		public string UpdatedBy { get; set; }
+//	}
+//}

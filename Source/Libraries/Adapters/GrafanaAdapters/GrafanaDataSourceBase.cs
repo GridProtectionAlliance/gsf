@@ -21,117 +21,113 @@
 //
 //******************************************************************************************************
 
-using GSF;
-using GSF.Data;
 using GSF.TimeSeries;
-using GSF.TimeSeries.Adapters;
 using GSF.Web;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using GrafanaAdapters.GrafanaFunctions;
+using GrafanaAdapters.GrafanaFunctionsCore;
 
 
-namespace GrafanaAdapters
+namespace GrafanaAdapters;
+
+/// <summary>
+/// Represents a base implementation for Grafana data sources.
+/// </summary>
+[Serializable]
+public abstract partial class GrafanaDataSourceBase
 {
+    #region [ Members ]
+
+    // Constants
+    private const string DropEmptySeriesCommand = "dropemptyseries";
+    private const string IncludePeaksCommand = "includepeaks";
+
+    #endregion
+
+    #region [ Properties ]
+
     /// <summary>
-    /// Represents a base implementation for Grafana data sources.
+    /// Gets or sets instance name for this <see cref="GrafanaDataSourceBase"/> implementation.
     /// </summary>
-    [Serializable]
-    public abstract partial class GrafanaDataSourceBase
+    public virtual string InstanceName { get; set; }
+
+    /// <summary>
+    /// Gets or sets <see cref="DataSet"/> based meta-data source available to this <see cref="GrafanaDataSourceBase"/> implementation.
+    /// </summary>
+    public virtual DataSet Metadata { get; set; }
+
+    /// <summary>
+    /// Gets or sets maximum number of search targets to return during a search query.
+    /// </summary>
+    public int MaximumSearchTargetsPerRequest { get; set; } = 200;
+
+    /// <summary>
+    /// Gets or sets maximum number of annotations to return during an annotations query.
+    /// </summary>
+    public int MaximumAnnotationsPerRequest { get; set; } = 100;
+
+    #endregion
+
+    #region [ Methods ]
+
+    /// <summary>
+    /// Starts a query that will read data source values, given a set of point IDs and targets, over a time range.
+    /// </summary>
+    /// <param name="startTime">Start-time for query.</param>
+    /// <param name="stopTime">Stop-time for query.</param>
+    /// <param name="interval">Interval from Grafana request.</param>
+    /// <param name="includePeaks">Flag that determines if decimated data should include min/max interval peaks over provided time range.</param>
+    /// <param name="targetMap">Set of IDs with associated targets to query.</param>
+    /// <returns>Queried data source data in terms of value and time.</returns>
+    protected internal abstract IEnumerable<DataSourceValue> QueryDataSourceValues(DateTime startTime, DateTime stopTime, string interval, bool includePeaks, Dictionary<ulong, string> targetMap);
+
+    /// <summary>
+    /// Queries data source returning data as Grafana time-series data set.
+    /// </summary>
+    /// <param name="request">Query request.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    public Task<List<TimeSeriesValues>> Query(QueryRequest request, CancellationToken cancellationToken)
     {
-        #region [ Members ]
-
-        // Constants
-        private const string DropEmptySeriesCommand = "dropemptyseries";
-        private const string IncludePeaksCommand = "includepeaks";
-
-        #endregion
-
-        #region [ Properties ]
-
-        /// <summary>
-        /// Gets or sets instance name for this <see cref="GrafanaDataSourceBase"/> implementation.
-        /// </summary>
-        public virtual string InstanceName { get; set; }
-
-        /// <summary>
-        /// Gets or sets <see cref="DataSet"/> based meta-data source available to this <see cref="GrafanaDataSourceBase"/> implementation.
-        /// </summary>
-        public virtual DataSet Metadata { get; set; }
-
-        /// <summary>
-        /// Gets or sets maximum number of search targets to return during a search query.
-        /// </summary>
-        public int MaximumSearchTargetsPerRequest { get; set; } = 200;
-
-        /// <summary>
-        /// Gets or sets maximum number of annotations to return during an annotations query.
-        /// </summary>
-        public int MaximumAnnotationsPerRequest { get; set; } = 100;
-
-        #endregion
-
-        #region [ Methods ]
-
-        /// <summary>
-        /// Starts a query that will read data source values, given a set of point IDs and targets, over a time range.
-        /// </summary>
-        /// <param name="startTime">Start-time for query.</param>
-        /// <param name="stopTime">Stop-time for query.</param>
-        /// <param name="interval">Interval from Grafana request.</param>
-        /// <param name="includePeaks">Flag that determines if decimated data should include min/max interval peaks over provided time range.</param>
-        /// <param name="targetMap">Set of IDs with associated targets to query.</param>
-        /// <returns>Queried data source data in terms of value and time.</returns>
-        protected internal abstract IEnumerable<DataSourceValue> QueryDataSourceValues(DateTime startTime, DateTime stopTime, string interval, bool includePeaks, Dictionary<ulong, string> targetMap);
-
-        /// <summary>
-        /// Queries data source returning data as Grafana time-series data set.
-        /// </summary>
-        /// <param name="request">Query request.</param>
-        /// <param name="cancellationToken">Cancellation token.</param>
-        public Task<List<TimeSeriesValues>> Query(QueryRequest request, CancellationToken cancellationToken)
+        bool isFilterMatch(string target, AdHocFilter filter)
         {
-            bool isFilterMatch(string target, AdHocFilter filter)
-            {
-                // Default to positive match on failures
-                return TargetCache<bool>.GetOrAdd($"filter!{filter.key}{filter.@operator}{filter.value}", () => {
-                    try
-                    {
-                        DataRow metadata = LookupTargetMetadata(target);
+            // Default to positive match on failures
+            return TargetCache<bool>.GetOrAdd($"filter!{filter.key}{filter.@operator}{filter.value}", () => {
+                try
+                {
+                    DataRow metadata = LookupTargetMetadata(target);
 
-                        if (metadata is null)
-                            return true;
-
-                        dynamic left = metadata[filter.key];
-                        dynamic right = Convert.ChangeType(filter.value, metadata.Table.Columns[filter.key].DataType);
-
-                        return filter.@operator switch
-                        {
-                            "="  => left == right,
-                            "==" => left == right,
-                            "!=" => left != right,
-                            "<>" => left != right,
-                            "<"  => left < right,
-                            "<=" => left <= right,
-                            ">"  => left > right,
-                            ">=" => left >= right,
-                            _    => true
-                        };
-                    }
-                    catch
-                    {
+                    if (metadata is null)
                         return true;
-                    }
-                });
-            }
 
-            // Task allows processing of multiple simultaneous queries
-            return Task.Factory.StartNew(() =>
+                    dynamic left = metadata[filter.key];
+                    dynamic right = Convert.ChangeType(filter.value, metadata.Table.Columns[filter.key].DataType);
+
+                    return filter.@operator switch
+                    {
+                        "="  => left == right,
+                        "==" => left == right,
+                        "!=" => left != right,
+                        "<>" => left != right,
+                        "<"  => left < right,
+                        "<=" => left <= right,
+                        ">"  => left > right,
+                        ">=" => left >= right,
+                        _    => true
+                    };
+                }
+                catch
+                {
+                    return true;
+                }
+            });
+        }
+
+        // Task allows processing of multiple simultaneous queries
+        return Task.Factory.StartNew(() =>
             {
                 if (!string.IsNullOrWhiteSpace(request.format) && !request.format.Equals("json", StringComparison.OrdinalIgnoreCase))
                     throw new InvalidOperationException("Only JSON formatted query requests are currently supported.");
@@ -144,11 +140,22 @@ namespace GrafanaAdapters
 
                 List<TimeSeriesValues> handleQuery<T>()
                 {
-                    List<DataSourceValueGroup<T>> allGroups = new List<DataSourceValueGroup<T>>();
+                    List<DataSourceValueGroup<T>> allGroups = new();
 
                     foreach (Target target in request.targets)
                     {
-                        QueryDataHolder queryData = new QueryDataHolder(target, startTime, stopTime, request.interval, false, false, request.isPhasor, target.metadataSelection, cancellationToken);
+                        QueryDataHolder queryData = new()
+                        {
+                            SourceTarget = target,
+                            StartTime = startTime,
+                            StopTime = stopTime,
+                            Interval = request.interval,
+                            IncludePeaks = false,
+                            DropEmptySeries = false,
+                            IsPhasor = request.isPhasor,
+                            MetadataSelection = target.metadataSelection,
+                            CancellationToken = cancellationToken
+                        };
                         DataSourceValueGroup<T>[] groups = FunctionParser.Parse<T>(target.target, this, queryData);
                         allGroups.AddRange(groups);  // adding each group to the overall list
                     }
@@ -213,24 +220,23 @@ namespace GrafanaAdapters
                     handleQuery<DataSourceValue>();
             },
             cancellationToken);
-        }
-
-        private DataRow LookupTargetMetadata(string target)
-        {
-            return TargetCache<DataRow>.GetOrAdd(target, () =>
-            {
-                try
-                {
-                    return Metadata.Tables["ActiveMeasurements"].Select($"PointTag = '{target}'").FirstOrDefault();
-                }
-                catch
-                {
-                    return null;
-                }
-            });
-        }
-
-
-        #endregion
     }
+
+    private DataRow LookupTargetMetadata(string target)
+    {
+        return TargetCache<DataRow>.GetOrAdd(target, () =>
+        {
+            try
+            {
+                return Metadata.Tables["ActiveMeasurements"].Select($"PointTag = '{target}'").FirstOrDefault();
+            }
+            catch
+            {
+                return null;
+            }
+        });
+    }
+
+
+    #endregion
 }

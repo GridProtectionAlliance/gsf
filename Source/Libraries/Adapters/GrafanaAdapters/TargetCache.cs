@@ -27,86 +27,89 @@ using System.Runtime.Caching;
 using System.Threading;
 using GSF.Threading;
 
-namespace GrafanaAdapters
+namespace GrafanaAdapters;
+
+/// <summary>
+/// Exposes a method to reinitialize sliding memory caches used by Grafana data sources.
+/// </summary>
+public static class TargetCaches
 {
-    /// <summary>
-    /// Exposes a method to reinitialize sliding memory caches used by Grafana data sources.
-    /// </summary>
-    public static class TargetCaches
+    // References each type T instance TargetCache ResetCache function
+    internal static readonly List<Action> ResetCacheFunctions;
+
+    private static readonly ShortSynchronizedOperation s_resetAllCaches;
+
+    static TargetCaches()
     {
-        // References each type T instance TargetCache ResetCache function
-        internal static readonly List<Action> ResetCacheFunctions;
+        ResetCacheFunctions = new List<Action>();
 
-        private static readonly ShortSynchronizedOperation s_resetAllCaches;
-
-        static TargetCaches()
+        s_resetAllCaches = new ShortSynchronizedOperation(() =>
         {
-            ResetCacheFunctions = new List<Action>();
+            Action[] resetCacheFunctions;
 
-            s_resetAllCaches = new ShortSynchronizedOperation(() =>
-            {
-                Action[] resetCacheFunctions;
+            lock (ResetCacheFunctions)
+                resetCacheFunctions = ResetCacheFunctions.ToArray();
 
-                lock (ResetCacheFunctions)
-                    resetCacheFunctions = ResetCacheFunctions.ToArray();
-
-                foreach (Action resetCache in resetCacheFunctions)
-                    resetCache();
-            });
-        }
-
-        /// <summary>
-        /// Resets all sliding memory caches used by Grafana data sources.
-        /// </summary>
-        public static void ResetAll() => 
-            s_resetAllCaches.RunOnceAsync();
+            foreach (Action resetCache in resetCacheFunctions)
+                resetCache();
+        });
     }
 
-    // Usage Note: Each type T should be unique unless cache can be safely shared
-    internal static class TargetCache<T>
+    /// <summary>
+    /// Resets all sliding memory caches used by Grafana data sources.
+    /// </summary>
+    public static void ResetAll()
     {
-        // Desired use case is one static MemoryCache per type T:
-        // ReSharper disable StaticMemberInGenericType
-        private static readonly string s_cacheName;
-        private static MemoryCache s_targetCache;
+        s_resetAllCaches.RunOnceAsync();
+    }
+}
 
-        static TargetCache()
+// Usage Note: Each type T should be unique unless cache can be safely shared
+internal static class TargetCache<T>
+{
+    // Desired use case is one static MemoryCache per type T:
+    // ReSharper disable StaticMemberInGenericType
+    private static readonly string s_cacheName;
+    private static MemoryCache s_targetCache;
+
+    static TargetCache()
+    {
+        s_cacheName = $"GrafanaTargetCache-{typeof(T).Name}";
+        s_targetCache = new MemoryCache(s_cacheName);
+
+        lock (TargetCaches.ResetCacheFunctions)
+            TargetCaches.ResetCacheFunctions.Add(ResetCache);
+    }
+
+    internal static T GetOrAdd(string target, Func<T> valueFactory)
+    {
+        Lazy<T> newValue = new(valueFactory);
+        Lazy<T> oldValue;
+
+        try
         {
-            s_cacheName = $"GrafanaTargetCache-{typeof(T).Name}";
-            s_targetCache = new MemoryCache(s_cacheName);
-
-            lock (TargetCaches.ResetCacheFunctions)
-                TargetCaches.ResetCacheFunctions.Add(ResetCache);
+            // Race condition exists here such that target cache being referenced may
+            // be disposed between access and method invocation - hence the try/catch
+            oldValue = s_targetCache.AddOrGetExisting(target, newValue, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(1.0D) }) as Lazy<T>;
+        }
+        catch
+        {
+            oldValue = null;
         }
 
-        internal static T GetOrAdd(string target, Func<T> valueFactory)
+        try
         {
-            Lazy<T> newValue = new(valueFactory);
-            Lazy<T> oldValue;
-
-            try
-            {
-                // Race condition exists here such that target cache being referenced may
-                // be disposed between access and method invocation - hence the try/catch
-                oldValue = s_targetCache.AddOrGetExisting(target, newValue, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(1.0D) }) as Lazy<T>;
-            }
-            catch
-            {
-                oldValue = null;
-            }
-
-            try
-            {
-                return (oldValue ?? newValue).Value;
-            }
-            catch
-            {
-                s_targetCache.Remove(target);
-                throw;
-            }
+            return (oldValue ?? newValue).Value;
         }
+        catch
+        {
+            s_targetCache.Remove(target);
+            throw;
+        }
+    }
 
-        internal static void ResetCache() => 
-            Interlocked.Exchange(ref s_targetCache, new MemoryCache(s_cacheName)).Dispose();
+    internal static void ResetCache()
+    {
+        Interlocked.Exchange(ref s_targetCache, new MemoryCache(s_cacheName)).Dispose();
     }
 }

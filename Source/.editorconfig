@@ -5,3 +5,6 @@ csharp_prefer_simple_default_expression = true:silent
 
 # IDE0011: Add braces
 csharp_prefer_braces = false
+
+# VSSpell001: Spell Check
+dotnet_diagnostic.VSSpell001.severity = suggestion

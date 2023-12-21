@@ -21,26 +21,25 @@
 //
 //******************************************************************************************************
 
-namespace GrafanaAdapters
+namespace GrafanaAdapters;
+
+/// <summary>
+/// Defines a Grafana annotation request.
+/// </summary>
+public class AnnotationRequest
 {
     /// <summary>
-    /// Defines a Grafana annotation request.
+    /// Annotation request details.
     /// </summary>
-    public class AnnotationRequest
-    {
-        /// <summary>
-        /// Annotation request details.
-        /// </summary>
-        public string annotationQuery { get; set; }
+    public string annotationQuery { get; set; }
 
-        /// <summary>
-        /// Request range.
-        /// </summary>
-        public Range range { get; set; }
+    /// <summary>
+    /// Request range.
+    /// </summary>
+    public Range range { get; set; }
 
-        /// <summary>
-        /// Relative request range.
-        /// </summary>
-        public RangeRaw rangeRaw { get; set; }
-    }
+    /// <summary>
+    /// Relative request range.
+    /// </summary>
+    public RangeRaw rangeRaw { get; set; }
 }

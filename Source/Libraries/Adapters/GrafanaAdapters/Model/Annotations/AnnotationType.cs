@@ -21,36 +21,35 @@
 //
 //******************************************************************************************************
 
-namespace GrafanaAdapters
+namespace GrafanaAdapters;
+
+/// <summary>
+/// Supported annotation types for GSF Time-series Framework.
+/// </summary>
+public enum AnnotationType
 {
     /// <summary>
-    /// Supported annotation types for GSF Time-series Framework.
+    /// Raised alarm annotation.
     /// </summary>
-    public enum AnnotationType
-    {
-        /// <summary>
-        /// Raised alarm annotation.
-        /// </summary>
-        RaisedAlarms,
+    RaisedAlarms,
 
-        /// <summary>
-        /// Cleared alarm annotation.
-        /// </summary>
-        ClearedAlarms,
+    /// <summary>
+    /// Cleared alarm annotation.
+    /// </summary>
+    ClearedAlarms,
 
-        /// <summary>
-        /// Manual event annotation.
-        /// </summary>
-        Events,
+    /// <summary>
+    /// Manual event annotation.
+    /// </summary>
+    Events,
 
-        /// <summary>
-        /// All alarm annotation.
-        /// </summary>
-        Alarms,
+    /// <summary>
+    /// All alarm annotation.
+    /// </summary>
+    Alarms,
 
-        /// <summary>
-        /// Undefined annotation.
-        /// </summary>
-        Undefined
-    }
+    /// <summary>
+    /// Undefined annotation.
+    /// </summary>
+    Undefined
 }

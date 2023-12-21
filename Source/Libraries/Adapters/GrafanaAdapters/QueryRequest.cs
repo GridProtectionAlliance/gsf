@@ -23,65 +23,65 @@
 
 using System.Collections.Generic;
 
-namespace GrafanaAdapters
+namespace GrafanaAdapters;
+
+/// <summary>
+/// Defines a Grafana query request.
+/// </summary>
+public class QueryRequest
 {
     /// <summary>
-    /// Defines a Grafana query request.
+    /// Panel ID of request.
     /// </summary>
-    public class QueryRequest
-    {
-        /// <summary>
-        /// Panel ID of request.
-        /// </summary>
-        public int panelId { get; set; }
+    public int panelId { get; set; }
 
-        /// <summary>
-        /// Panel ID of request.
-        /// </summary>
-        public int dashboardId { get; set; }
+    /// <summary>
+    /// Panel ID of request.
+    /// </summary>
+    public int dashboardId { get; set; }
 
-        /// <summary>
-        /// Request range.
-        /// </summary>
-        public Range range { get; set; }
+    /// <summary>
+    /// Request range.
+    /// </summary>
+    public Range range { get; set; }
 
-        /// <summary>
-        /// Relative request range.
-        /// </summary>
-        public RangeRaw rangeRaw { get; set; }
+    /// <summary>
+    /// Relative request range.
+    /// </summary>
+    public RangeRaw rangeRaw { get; set; }
 
-        /// <summary>
-        /// Request interval.
-        /// </summary>
-        public string interval { get; set; }
+    /// <summary>
+    /// Request interval.
+    /// </summary>
+    public string interval { get; set; }
 
-        /// <summary>
-        /// Request interval, in milliseconds.
-        /// </summary>
-        public string intervalMs { get; set; }
+    /// <summary>
+    /// Request interval, in milliseconds.
+    /// </summary>
+    public string intervalMs { get; set; }
 
-        /// <summary>
-        /// Request format (typically json).
-        /// </summary>
-        public string format { get; set; }
+    /// <summary>
+    /// Request format (typically json).
+    /// </summary>
+    public string format { get; set; }
 
-        /// <summary>
-        /// Maximum data points to return.
-        /// </summary>
-        public int maxDataPoints { get; set; }
+    /// <summary>
+    /// Maximum data points to return.
+    /// </summary>
+    public int maxDataPoints { get; set; }
 
-        /// <summary>
-        /// Request targets.
-        /// </summary>
-        public List<Target> targets { get; set; }
+    /// <summary>
+    /// Request targets.
+    /// </summary>
+    public List<Target> targets { get; set; }
 
-        /// <summary>
-        /// Ad-hoc filters to apply.
-        /// </summary>
-        public List<AdHocFilter> adhocFilters { get; set; }
-        /// <summary>
-        /// Specifies if is in Phasor mode.
-        /// </summary>
-        public bool isPhasor { get; set; }
-    }
+    /// <summary>
+    /// Ad-hoc filters to apply.
+    /// </summary>
+    public List<AdHocFilter> adhocFilters { get; set; }
+
+    /// <summary>
+    /// Specifies if is in Phasor mode.
+    /// </summary>
+    public bool isPhasor { get; set; }
 }

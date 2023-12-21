@@ -20,249 +20,248 @@
 //       Generated original version of source code.
 //
 //******************************************************************************************************
+// ReSharper disable PossibleInvalidCastExceptionInForeachLoop
 
-using GSF.TimeSeries;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace GrafanaAdapters
+namespace GrafanaAdapters;
+
+/// <summary>
+/// Reads series of instances for the same time interval.
+/// </summary>
+public class TimeSliceScanner<T>
 {
+    #region [ Members ]
+
+    // Fields
+    private readonly List<IEnumerator<T>> m_enumerators;
+
+    #endregion
+
+    #region [ Constructors ]
+
     /// <summary>
-    /// Reads series of instances for the same time interval.
+    /// Creates a new <see cref="TimeSliceScanner{T}"/>.
     /// </summary>
-    public class TimeSliceScanner<T>
+    /// <param name="dataset">Source series to scan.</param>
+    /// <param name="tolerance">Time tolerance for data slices in Unix epoch milliseconds.</param>
+    public TimeSliceScanner(IEnumerable<DataSourceValueGroup<T>> dataset, double tolerance = 0.0D)
     {
-        #region [ Members ]
+        m_enumerators = new List<IEnumerator<T>>();
+        Tolerance = tolerance;
 
-        // Fields
-        private readonly List<IEnumerator<T>> m_enumerators;
-
-        #endregion
-
-        #region [ Constructors ]
-
-        /// <summary>
-        /// Creates a new <see cref="TimeSliceScanner{T}"/>.
-        /// </summary>
-        /// <param name="dataset">Source series to scan.</param>
-        /// <param name="tolerance">Time tolerance for data slices in Unix epoch milliseconds.</param>
-        public TimeSliceScanner(IEnumerable<DataSourceValueGroup<T>> dataset, double tolerance = 0.0D)
+        foreach (DataSourceValueGroup<T> group in dataset)
         {
-            m_enumerators = new List<IEnumerator<T>>();
-            Tolerance = tolerance;
+            IEnumerator<T> enumerator = group.Source.GetEnumerator();
 
-            foreach (DataSourceValueGroup<T> group in dataset)
-            {
-                IEnumerator<T> enumerator = group.Source.GetEnumerator();
-
-                // Add enumerator to the list if it has at least one value
-                if (enumerator.MoveNext())
-                    m_enumerators.Add(enumerator);
-            }
+            // Add enumerator to the list if it has at least one value
+            if (enumerator.MoveNext())
+                m_enumerators.Add(enumerator);
         }
-
-        #endregion
-
-        #region [ Properties ]
-
-        /// <summary>
-        /// Gets a flag that determines if data read has been completed.
-        /// </summary>
-        public bool DataReadComplete => m_enumerators.Count == 0;
-
-        /// <summary>
-        /// Gets time tolerance for data slices in Unix epoch milliseconds.
-        /// </summary>
-        public double Tolerance { get; }
-
-        #endregion
-
-        #region [ Methods ]
-
-        /// <summary>
-        /// Reads next time slice from the series set.
-        /// </summary>
-        /// <param name="lastValue">
-        /// Set to <c>true</c> to only publish last value per-series in time-slice for specified <see cref="Tolerance"/>;
-        /// otherwise, <c>false</c> to publish all series values since last slice.
-        /// </param>
-        /// <returns>Next time slice.</returns>
-        public IEnumerable<T> ReadNextTimeSlice(bool lastValue = true)
-        {
-            //DataSourceValues
-            if (typeof(T) == typeof(DataSourceValue))
-            {
-                if (lastValue)
-                {
-                    Dictionary<string, DataSourceValue> nextSlice = new(StringComparer.OrdinalIgnoreCase);
-                    ReadNextTimeSlice(value => nextSlice[value.Target] = value);
-                    return (IEnumerable<T>)(object)nextSlice.Values;
-                }
-                else
-                {
-                    List<DataSourceValue> nextSlice = new();
-                    ReadNextTimeSlice(value => nextSlice.Add(value));
-                    return (List<T>)(object)nextSlice;
-                }
-            }
-
-            //PhasorValues
-            else if (typeof(T) == typeof(PhasorValue))
-            {
-                if (lastValue)
-                {
-                    Dictionary<string, PhasorValue> nextSlice = new(StringComparer.OrdinalIgnoreCase);
-                    ReadNextPhasorTimeSlice(value => nextSlice[value.MagnitudeTarget] = value);
-                    return (IEnumerable<T>)(object)nextSlice.Values;
-                }
-                else
-                {
-                    List<PhasorValue> nextSlice = new();
-                    ReadNextPhasorTimeSlice(value => nextSlice.Add(value));
-                    return (List<T>)(object)nextSlice;
-                }
-            }
-
-            return Enumerable.Empty<T>();
-        }
-
-        private void ReadNextTimeSlice(Action<DataSourceValue> addValue)
-        {
-            DataSourceValue dataPoint;
-            double publishTime = double.MaxValue;
-
-            // Find minimum publication time for current values
-            foreach (IEnumerator<DataSourceValue> enumerator in m_enumerators)
-            {
-                dataPoint = enumerator.Current;
-
-                if (dataPoint.Time < publishTime)
-                    publishTime = dataPoint.Time;
-            }
-
-            publishTime += Tolerance;
-
-            List<int> completed = new();
-            int index = 0;
-
-            // Publish all values at the current time
-            foreach (IEnumerator<DataSourceValue> enumerator in m_enumerators)
-            {
-                bool enumerationComplete = false;
-                dataPoint = enumerator.Current;
-
-                if (dataPoint.Time <= publishTime)
-                {
-                    // Attempt to advance to next data point, tracking completed enumerators
-                    if (!enumerator.MoveNext())
-                    {
-                        enumerationComplete = true;
-                        completed.Add(index);
-                    }
-
-                    addValue(dataPoint);
-
-                    // Make sure any point IDs with duplicated times directly follow
-                    if (!enumerationComplete)
-                    {
-                        while (enumerator.Current.Time <= publishTime)
-                        {
-                            addValue(enumerator.Current);
-
-                            if (!enumerator.MoveNext())
-                            {
-                                completed.Add(index);
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                index++;
-            }
-
-            // Remove completed enumerators
-            if (completed.Count == 0)
-                return;
-
-            completed.Sort();
-
-            // Remove highest numeric indexes first to retain source index integrity
-            for (int i = completed.Count - 1; i >= 0; i--)
-                m_enumerators.RemoveAt(completed[i]);
-
-            completed.Clear();
-        }
-
-        private void ReadNextPhasorTimeSlice(Action<PhasorValue> addValue)
-        {
-            PhasorValue dataPoint;
-            double publishTime = double.MaxValue;
-
-            // Find minimum publication time for current values
-            foreach (IEnumerator<PhasorValue> enumerator in m_enumerators)
-            {
-                dataPoint = enumerator.Current;
-
-                if (dataPoint.Time < publishTime)
-                    publishTime = dataPoint.Time;
-            }
-
-            publishTime += Tolerance;
-
-            List<int> completed = new();
-            int index = 0;
-
-            // Publish all values at the current time
-            foreach (IEnumerator<PhasorValue> enumerator in m_enumerators)
-            {
-                bool enumerationComplete = false;
-                dataPoint = enumerator.Current;
-
-                if (dataPoint.Time <= publishTime)
-                {
-                    // Attempt to advance to next data point, tracking completed enumerators
-                    if (!enumerator.MoveNext())
-                    {
-                        enumerationComplete = true;
-                        completed.Add(index);
-                    }
-
-                    addValue(dataPoint);
-
-                    // Make sure any point IDs with duplicated times directly follow
-                    if (!enumerationComplete)
-                    {
-                        while (enumerator.Current.Time <= publishTime)
-                        {
-                            addValue(enumerator.Current);
-
-                            if (!enumerator.MoveNext())
-                            {
-                                completed.Add(index);
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                index++;
-            }
-
-            // Remove completed enumerators
-            if (completed.Count == 0)
-                return;
-
-            completed.Sort();
-
-            // Remove highest numeric indexes first to retain source index integrity
-            for (int i = completed.Count - 1; i >= 0; i--)
-                m_enumerators.RemoveAt(completed[i]);
-
-            completed.Clear();
-        }
-
-        #endregion
     }
+
+    #endregion
+
+    #region [ Properties ]
+
+    /// <summary>
+    /// Gets a flag that determines if data read has been completed.
+    /// </summary>
+    public bool DataReadComplete => m_enumerators.Count == 0;
+
+    /// <summary>
+    /// Gets time tolerance for data slices in Unix epoch milliseconds.
+    /// </summary>
+    public double Tolerance { get; }
+
+    #endregion
+
+    #region [ Methods ]
+
+    /// <summary>
+    /// Reads next time slice from the series set.
+    /// </summary>
+    /// <param name="lastValue">
+    /// Set to <c>true</c> to only publish last value per-series in time-slice for specified <see cref="Tolerance"/>;
+    /// otherwise, <c>false</c> to publish all series values since last slice.
+    /// </param>
+    /// <returns>Next time slice.</returns>
+    public IEnumerable<T> ReadNextTimeSlice(bool lastValue = true)
+    {
+        //DataSourceValues
+        if (typeof(T) == typeof(DataSourceValue))
+        {
+            if (lastValue)
+            {
+                Dictionary<string, DataSourceValue> nextSlice = new(StringComparer.OrdinalIgnoreCase);
+                ReadNextTimeSlice(value => nextSlice[value.Target] = value);
+                return (IEnumerable<T>)(object)nextSlice.Values;
+            }
+            else
+            {
+                List<DataSourceValue> nextSlice = new();
+                ReadNextTimeSlice(value => nextSlice.Add(value));
+                return (List<T>)(object)nextSlice;
+            }
+        }
+
+        //PhasorValues
+        else if (typeof(T) == typeof(PhasorValue))
+        {
+            if (lastValue)
+            {
+                Dictionary<string, PhasorValue> nextSlice = new(StringComparer.OrdinalIgnoreCase);
+                ReadNextPhasorTimeSlice(value => nextSlice[value.MagnitudeTarget] = value);
+                return (IEnumerable<T>)(object)nextSlice.Values;
+            }
+            else
+            {
+                List<PhasorValue> nextSlice = new();
+                ReadNextPhasorTimeSlice(value => nextSlice.Add(value));
+                return (List<T>)(object)nextSlice;
+            }
+        }
+
+        return Enumerable.Empty<T>();
+    }
+
+    private void ReadNextTimeSlice(Action<DataSourceValue> addValue)
+    {
+        DataSourceValue dataPoint;
+        double publishTime = double.MaxValue;
+
+        // Find minimum publication time for current values
+        foreach (IEnumerator<DataSourceValue> enumerator in m_enumerators)
+        {
+            dataPoint = enumerator.Current;
+
+            if (dataPoint.Time < publishTime)
+                publishTime = dataPoint.Time;
+        }
+
+        publishTime += Tolerance;
+
+        List<int> completed = new();
+        int index = 0;
+
+        // Publish all values at the current time
+        foreach (IEnumerator<DataSourceValue> enumerator in m_enumerators)
+        {
+            bool enumerationComplete = false;
+            dataPoint = enumerator.Current;
+
+            if (dataPoint.Time <= publishTime)
+            {
+                // Attempt to advance to next data point, tracking completed enumerators
+                if (!enumerator.MoveNext())
+                {
+                    enumerationComplete = true;
+                    completed.Add(index);
+                }
+
+                addValue(dataPoint);
+
+                // Make sure any point IDs with duplicated times directly follow
+                if (!enumerationComplete)
+                {
+                    while (enumerator.Current.Time <= publishTime)
+                    {
+                        addValue(enumerator.Current);
+
+                        if (!enumerator.MoveNext())
+                        {
+                            completed.Add(index);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            index++;
+        }
+
+        // Remove completed enumerators
+        if (completed.Count == 0)
+            return;
+
+        completed.Sort();
+
+        // Remove highest numeric indexes first to retain source index integrity
+        for (int i = completed.Count - 1; i >= 0; i--)
+            m_enumerators.RemoveAt(completed[i]);
+
+        completed.Clear();
+    }
+
+    private void ReadNextPhasorTimeSlice(Action<PhasorValue> addValue)
+    {
+        PhasorValue dataPoint;
+        double publishTime = double.MaxValue;
+
+        // Find minimum publication time for current values
+        foreach (IEnumerator<PhasorValue> enumerator in m_enumerators)
+        {
+            dataPoint = enumerator.Current;
+
+            if (dataPoint.Time < publishTime)
+                publishTime = dataPoint.Time;
+        }
+
+        publishTime += Tolerance;
+
+        List<int> completed = new();
+        int index = 0;
+
+        // Publish all values at the current time
+        foreach (IEnumerator<PhasorValue> enumerator in m_enumerators)
+        {
+            bool enumerationComplete = false;
+            dataPoint = enumerator.Current;
+
+            if (dataPoint.Time <= publishTime)
+            {
+                // Attempt to advance to next data point, tracking completed enumerators
+                if (!enumerator.MoveNext())
+                {
+                    enumerationComplete = true;
+                    completed.Add(index);
+                }
+
+                addValue(dataPoint);
+
+                // Make sure any point IDs with duplicated times directly follow
+                if (!enumerationComplete)
+                {
+                    while (enumerator.Current.Time <= publishTime)
+                    {
+                        addValue(enumerator.Current);
+
+                        if (!enumerator.MoveNext())
+                        {
+                            completed.Add(index);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            index++;
+        }
+
+        // Remove completed enumerators
+        if (completed.Count == 0)
+            return;
+
+        completed.Sort();
+
+        // Remove highest numeric indexes first to retain source index integrity
+        for (int i = completed.Count - 1; i >= 0; i--)
+            m_enumerators.RemoveAt(completed[i]);
+
+        completed.Clear();
+    }
+
+    #endregion
 }

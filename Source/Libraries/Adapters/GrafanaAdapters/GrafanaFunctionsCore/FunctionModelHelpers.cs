@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  Column.cs - Gbtc
+//  FunctionModelHelpers.cs - Gbtc
 //
-//  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2023, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,35 +16,30 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  09/12/2016 - Ritchie Carroll
+//  08/23/2023 - Timothy Liakh
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-namespace GrafanaAdapters;
+using System;
+using System.Text.RegularExpressions;
 
-/// <summary>
-/// Defines a Grafana table column.
-/// </summary>
-public class Column
+namespace GrafanaAdapters.GrafanaFunctionsCore;
+
+internal static class FunctionModelHelpers
 {
-    /// <summary>
-    /// Column title.
-    /// </summary>
-    public string text { get; set; }
+    private const string ExpressionFormat = @"^{0}\s*\(\s*(?<Expression>.+)\s*\)";
 
-    /// <summary>
-    /// Column type, e.g., "time", "mean", "sum", etc.
-    /// </summary>
-    public string type { get; set; }
+    public const FunctionOperations DefaultFunctionOperations = FunctionOperations.Standard | FunctionOperations.Slice | FunctionOperations.Set;
 
-    /// <summary>
-    /// Flag that determines if column is sortable.
-    /// </summary>
-    public bool sort { get; set; }
+    public static readonly Regex FunctionRegex = GenerateFunctionRegex(".*");
 
-    /// <summary>
-    /// Flag that determines if column is sorted descending.
-    /// </summary>
-    public bool desc { get; set; }
+    public static Regex GenerateFunctionRegex(params string[] functionNames)
+    {
+        if (functionNames.Length == 0)
+            throw new ArgumentException("At least one function name must be specified.", nameof(functionNames));
+
+        string allAliases = functionNames.Length == 1 ? functionNames[0] :$"({string.Join("|", functionNames)})";
+        return new Regex(string.Format(ExpressionFormat, allAliases), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    }
 }

@@ -21,21 +21,20 @@
 //
 //******************************************************************************************************
 
-namespace GrafanaAdapters
+namespace GrafanaAdapters;
+
+/// <summary>
+/// Defines a Grafana query range.
+/// </summary>
+public class Range
 {
     /// <summary>
-    /// Defines a Grafana query range.
+    /// From time for range.
     /// </summary>
-    public class Range
-    {
-        /// <summary>
-        /// From time for range.
-        /// </summary>
-        public string from { get; set; }
+    public string from { get; set; }
 
-        /// <summary>
-        /// To time for range. 
-        /// </summary>
-        public string to { get; set; }
-    }
+    /// <summary>
+    /// To time for range. 
+    /// </summary>
+    public string to { get; set; }
 }

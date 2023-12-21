@@ -25,26 +25,25 @@ using System.Collections.Generic;
 
 #pragma warning disable IDE1006 // Naming Styles
 
-namespace GrafanaAdapters
+namespace GrafanaAdapters;
+
+/// <summary>
+/// Defines a Grafana query location request.
+/// </summary>
+public class LocationRequest
 {
     /// <summary>
-    /// Defines a Grafana query location request.
+    /// Radius of overlapping coordinate distribution.
     /// </summary>
-    public class LocationRequest
-    {
-        /// <summary>
-        /// Radius of overlapping coordinate distribution.
-        /// </summary>
-        public double? radius { get; set; }
+    public double? radius { get; set; }
 
-        /// <summary>
-        /// Zoom level.
-        /// </summary>
-        public double? zoom { get; set; }
+    /// <summary>
+    /// Zoom level.
+    /// </summary>
+    public double? zoom { get; set; }
 
-        /// <summary>
-        /// Query request.
-        /// </summary>
-        public List<Target> request { get; set; }
-    }
+    /// <summary>
+    /// Query request.
+    /// </summary>
+    public List<Target> request { get; set; }
 }

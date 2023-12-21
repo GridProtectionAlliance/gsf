@@ -21,21 +21,20 @@
 //
 //******************************************************************************************************
 
-namespace GrafanaAdapters
+namespace GrafanaAdapters;
+
+/// <summary>
+/// Defines a Grafana relative query range.
+/// </summary>
+public class RangeRaw
 {
     /// <summary>
-    /// Defines a Grafana relative query range.
+    /// Relative from time for raw range.
     /// </summary>
-    public class RangeRaw
-    {
-        /// <summary>
-        /// Relative from time for raw range.
-        /// </summary>
-        public string from { get; set; }
+    public string from { get; set; }
 
-        /// <summary>
-        /// Relative to time for raw range.
-        /// </summary>
-        public string to { get; set; }
-    }
+    /// <summary>
+    /// Relative to time for raw range.
+    /// </summary>
+    public string to { get; set; }
 }

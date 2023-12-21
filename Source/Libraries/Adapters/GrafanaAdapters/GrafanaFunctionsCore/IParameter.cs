@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  Column.cs - Gbtc
+//  IParameter.cs - Gbtc
 //
-//  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2023, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,35 +16,59 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  09/12/2016 - Ritchie Carroll
+//  08/23/2023 - Timothy Liakh
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-namespace GrafanaAdapters;
+using System;
+using System.Collections.Generic;
+
+namespace GrafanaAdapters.GrafanaFunctionsCore;
 
 /// <summary>
-/// Defines a Grafana table column.
+/// Defines a common interface for parameters of Grafana functions.
 /// </summary>
-public class Column
+public interface IParameter
 {
     /// <summary>
-    /// Column title.
+    /// Gets or sets the description of the parameter.
     /// </summary>
-    public string text { get; set; }
+    string Description { get; }
 
     /// <summary>
-    /// Column type, e.g., "time", "mean", "sum", etc.
+    /// Gets or sets a value indicating whether the parameter is required.
     /// </summary>
-    public string type { get; set; }
+    bool Required { get; }
 
     /// <summary>
-    /// Flag that determines if column is sortable.
+    /// Gets the type of the parameter.
     /// </summary>
-    public bool sort { get; set; }
+    Type ParameterType { get; }
 
     /// <summary>
-    /// Flag that determines if column is sorted descending.
+    /// Gets or sets the type name of the parameter.
     /// </summary>
-    public bool desc { get; set; }
+    string ParameterTypeName { get; }
+    /// <summary>
+    /// Sets the value of the parameter.
+    /// </summary>
+    void SetValue(GrafanaDataSourceBase dataSourceBase, object value, string target, Dictionary<string, string> metadata, bool isPhasor);
+}
+
+/// <summary>
+/// Defines a common interface for parameters of a specific type.
+/// </summary>
+/// <typeparam name="T">The type of the parameter.</typeparam>
+public interface IParameter<out T> : IParameter
+{
+    /// <summary>
+    /// Gets default value of the parameter.
+    /// </summary>
+    T Default { get; }
+
+    /// <summary>
+    /// Gets or sets the actual value of the parameter.
+    /// </summary>
+    T Value { get; }
 }

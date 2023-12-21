@@ -21,36 +21,35 @@
 //
 //******************************************************************************************************
 
-namespace GrafanaAdapters
+namespace GrafanaAdapters;
+
+/// <summary>
+/// Defines a Grafana annotation response.
+/// </summary>
+public class AnnotationResponse
 {
     /// <summary>
-    /// Defines a Grafana annotation response.
+    /// Annotation title.
     /// </summary>
-    public class AnnotationResponse
-    {
-        /// <summary>
-        /// Annotation title.
-        /// </summary>
-        public string title { get; set; }
+    public string title { get; set; }
 
-        /// <summary>
-        /// Annotation time.
-        /// </summary>
-        public double time { get; set; }
+    /// <summary>
+    /// Annotation time.
+    /// </summary>
+    public double time { get; set; }
 
-        /// <summary>
-        /// Annotation end time.
-        /// </summary>
-        public double endTime { get; set; }
+    /// <summary>
+    /// Annotation end time.
+    /// </summary>
+    public double endTime { get; set; }
 
-        /// <summary>
-        /// Annotation text.
-        /// </summary>
-        public string text { get; set; }
+    /// <summary>
+    /// Annotation text.
+    /// </summary>
+    public string text { get; set; }
 
-        /// <summary>
-        /// Annotation tags.
-        /// </summary>
-        public string tags { get; set; }
-    }
+    /// <summary>
+    /// Annotation tags.
+    /// </summary>
+    public string tags { get; set; }
 }

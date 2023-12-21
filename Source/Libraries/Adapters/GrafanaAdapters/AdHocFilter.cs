@@ -21,26 +21,25 @@
 //
 //******************************************************************************************************
 
-namespace GrafanaAdapters
+namespace GrafanaAdapters;
+
+/// <summary>
+/// Defines a Grafana ad-hoc filter request.
+/// </summary>
+public class AdHocFilter
 {
     /// <summary>
-    /// Defines a Grafana ad-hoc filter request.
+    /// Request key.
     /// </summary>
-    public class AdHocFilter
-    {
-        /// <summary>
-        /// Request key.
-        /// </summary>
-        public string key { get; set; }
+    public string key { get; set; }
 
-        /// <summary>
-        /// Request operator.
-        /// </summary>
-        public string @operator { get; set; }
+    /// <summary>
+    /// Request operator.
+    /// </summary>
+    public string @operator { get; set; }
 
-        /// <summary>
-        /// Request value.
-        /// </summary>
-        public string value { get; set; }
-    }
+    /// <summary>
+    /// Request value.
+    /// </summary>
+    public string value { get; set; }
 }

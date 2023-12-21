@@ -24,18 +24,17 @@
 using System.ServiceModel;
 using System.ServiceModel.Web;
 
-namespace GrafanaAdapters
+namespace GrafanaAdapters;
+
+/// <summary>
+/// Defines needed API calls for a Grafana data source.
+/// </summary>
+[ServiceContract]
+public partial interface IGrafanaDataService
 {
     /// <summary>
-    /// Defines needed API calls for a Grafana data source.
+    /// Validates that openHistorian Grafana data source is responding as expected.
     /// </summary>
-    [ServiceContract]
-    public partial interface IGrafanaDataService
-    {
-        /// <summary>
-        /// Validates that openHistorian Grafana data source is responding as expected.
-        /// </summary>
-        [OperationContract, WebInvoke(UriTemplate = "/", Method ="GET", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        void TestDataSource();
-    }
+    [OperationContract, WebInvoke(UriTemplate = "/", Method ="GET", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+    void TestDataSource();
 }

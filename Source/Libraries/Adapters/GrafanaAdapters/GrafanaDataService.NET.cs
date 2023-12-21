@@ -27,121 +27,120 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using GSF.Historian.DataServices;
 
-namespace GrafanaAdapters
+namespace GrafanaAdapters;
+
+/// <summary>
+/// Represents a REST based API for a simple JSON based Grafana data source for the openHistorian 1.0.
+/// </summary>
+// .NET Implementation
+public partial class GrafanaDataService : DataService, IGrafanaDataService
 {
     /// <summary>
-    /// Represents a REST based API for a simple JSON based Grafana data source for the openHistorian 1.0.
+    /// Queries openHistorian as a Grafana data source.
     /// </summary>
-    // .NET Implementation
-    public partial class GrafanaDataService : DataService, IGrafanaDataService
+    /// <param name="request">Query request.</param>
+    public async Task<List<TimeSeriesValues>> Query(QueryRequest request)
     {
-        /// <summary>
-        /// Queries openHistorian as a Grafana data source.
-        /// </summary>
-        /// <param name="request">Query request.</param>
-        public async Task<List<TimeSeriesValues>> Query(QueryRequest request)
-        {
-            // Abort if services are not enabled
-            if (!Enabled || Archive is null)
-                return null;
+        // Abort if services are not enabled
+        if (!Enabled || Archive is null)
+            return null;
 
-            return await m_dataSource.Query(request, m_cancellationSource.Token);
-        }
+        return await m_dataSource.Query(request, m_cancellationSource.Token);
+    }
 
-        /// <summary>
-        /// Queries openPDC alarm states as a Grafana data source.
-        /// </summary>
-        /// <param name="request">Query request.</param>
-        public async Task<IEnumerable<AlarmDeviceStateView>> GetAlarmState(QueryRequest request)
-        {
-            // Abort if services are not enabled
-            if (!Enabled || Archive is null)
-                return null;
+    /// <summary>
+    /// Queries openPDC alarm states as a Grafana data source.
+    /// </summary>
+    /// <param name="request">Query request.</param>
+    public async Task<IEnumerable<AlarmDeviceStateView>> GetAlarmState(QueryRequest request)
+    {
+        // Abort if services are not enabled
+        if (!Enabled || Archive is null)
+            return null;
 
-            return await m_dataSource.GetAlarmState(request, m_cancellationSource.Token);
-        }
+        return await m_dataSource.GetAlarmState(request, m_cancellationSource.Token);
+    }
 
-        /// <summary>
-        /// Queries openHistorian Device alarm states.
-        /// </summary>
-        /// <param name="request">Query request.</param>
-        public async Task<IEnumerable<AlarmState>> GetDeviceAlarms(QueryRequest request)
-        {
-            // Abort if services are not enabled
-            if (!Enabled || Archive is null)
-                return null;
+    /// <summary>
+    /// Queries openHistorian Device alarm states.
+    /// </summary>
+    /// <param name="request">Query request.</param>
+    public async Task<IEnumerable<AlarmState>> GetDeviceAlarms(QueryRequest request)
+    {
+        // Abort if services are not enabled
+        if (!Enabled || Archive is null)
+            return null;
 
-            return await m_dataSource.GetDeviceAlarms(request, m_cancellationSource.Token);
-        }
+        return await m_dataSource.GetDeviceAlarms(request, m_cancellationSource.Token);
+    }
 
-        /// <summary>
-        /// Queries openHistorian Device Groups.
-        /// </summary>
-        /// <param name="request">Query request.</param>
-        public async Task<IEnumerable<DeviceGroup>> GetDeviceGroups(QueryRequest request)
-        {
-            // Abort if services are not enabled
-            if (!Enabled || Archive is null)
-                return null;
+    /// <summary>
+    /// Queries openHistorian Device Groups.
+    /// </summary>
+    /// <param name="request">Query request.</param>
+    public async Task<IEnumerable<DeviceGroup>> GetDeviceGroups(QueryRequest request)
+    {
+        // Abort if services are not enabled
+        if (!Enabled || Archive is null)
+            return null;
 
-            return await m_dataSource.GetDeviceGroups(request, m_cancellationSource.Token);
-        }       
+        return await m_dataSource.GetDeviceGroups(request, m_cancellationSource.Token);
+    }       
 
-        /// <summary>
-        /// Queries openHistorian as a Grafana Metadata source.
-        /// </summary>
-        /// <param name="request">Query request.</param>
-        public async Task<string> GetMetadata(Target request)
-        {
-            return await m_dataSource.GetMetadata(request);
-        }
+    /// <summary>
+    /// Queries openHistorian as a Grafana Metadata source.
+    /// </summary>
+    /// <param name="request">Query request.</param>
+    public async Task<string> GetMetadata(Target request)
+    {
+        return await m_dataSource.GetMetadata(request);
+    }
 
-        /// <summary>
-        /// Search openHistorian for a target.
-        /// </summary>
-        /// <param name="request">Search target.</param>
-        public async Task<string[]> Search(Target request)
-        {
-            return await m_dataSource.Search(request, m_cancellationSource.Token);
-        }
+    /// <summary>
+    /// Search openHistorian for a target.
+    /// </summary>
+    /// <param name="request">Search target.</param>
+    public async Task<string[]> Search(Target request)
+    {
+        return await m_dataSource.Search(request, m_cancellationSource.Token);
+    }
 
-        /// <summary>
-        /// Queries openHistorian for annotations in a time-range (e.g., Alarms).
-        /// </summary>
-        /// <param name="request">Annotation request.</param>
-        public async Task<List<AnnotationResponse>> Annotations(AnnotationRequest request)
-        {
-            // Abort if services are not enabled
-            if (!Enabled || Archive is null)
-                return null;
+    /// <summary>
+    /// Queries openHistorian for annotations in a time-range (e.g., Alarms).
+    /// </summary>
+    /// <param name="request">Annotation request.</param>
+    public async Task<List<AnnotationResponse>> Annotations(AnnotationRequest request)
+    {
+        // Abort if services are not enabled
+        if (!Enabled || Archive is null)
+            return null;
 
-            return await m_dataSource.Annotations(request, m_cancellationSource.Token);
-        }
+        return await m_dataSource.Annotations(request, m_cancellationSource.Token);
+    }
        
-        /// <summary>
-        /// Queries available metadata options.
-        /// </summary>
-        /// <param name="isPhasor">A boolean indicating whether the data is a phasor.</param>
-        public async Task<string[]> GetTableOptions(bool isPhasor)
-        {
-            return await m_dataSource.GetTableOptions(isPhasor, m_cancellationSource.Token);
-        }
+    /// <summary>
+    /// Queries available metadata options.
+    /// </summary>
+    /// <param name="isPhasor">A boolean indicating whether the data is a phasor.</param>
+    public async Task<string[]> GetTableOptions(bool isPhasor)
+    {
+        return await m_dataSource.GetTableOptions(isPhasor, m_cancellationSource.Token);
+    }
 
-        /// <summary>
-        /// Queries description of available functions.
-        /// </summary>
-        public async Task<FunctionDescription[]> GetFunctions()
-        {
-            return await m_dataSource.GetFunctionDescription(m_cancellationSource.Token);
-        }
+    /// <summary>
+    /// Queries description of available functions.
+    /// </summary>
+    public async Task<FunctionDescription[]> GetFunctions()
+    {
+        return await m_dataSource.GetFunctionDescription(m_cancellationSource.Token);
+    }
 
-        /// <summary>
-        /// Queries available metadata fields for a given source.
-        /// </summary>
-        public async Task<Dictionary<string, string[]>> GetMetadataOptions(MetadataOptionsRequest request)
-        {
-            return await m_dataSource.GetMetadataOptions(request, m_cancellationSource.Token);
-        }
+    /// <summary>
+    /// Queries available metadata fields for a given source.
+    /// </summary>
+    public async Task<Dictionary<string, string[]>> GetMetadataOptions(MetadataOptionsRequest request)
+    {
+        return await m_dataSource.GetMetadataOptions(request, m_cancellationSource.Token);
     }
 }
 

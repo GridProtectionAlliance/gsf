@@ -21,17 +21,15 @@
 //
 //******************************************************************************************************
 
-namespace GrafanaAdapters
+namespace GrafanaAdapters;
+
+/// <summary>
+/// Represents a request object for available metadata options.
+/// </summary>
+public class MetadataOptionsRequest
 {
     /// <summary>
-    /// Represents a request object for available metadata options.
+    /// Gets or sets the array of table names.
     /// </summary>
-    public class MetadataOptionsRequest
-    {
-        /// <summary>
-        /// Gets or sets the array of table names.
-        /// </summary>
-        public string[] Tables { get; set; }
-    }
-    
+    public string[] Tables { get; set; }
 }

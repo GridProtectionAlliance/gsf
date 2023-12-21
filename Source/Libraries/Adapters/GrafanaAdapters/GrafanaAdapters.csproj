@@ -67,6 +67,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AdHocFilter.cs" />
+    <Compile Include="GlobalUsings.cs" />
+    <Compile Include="GrafanaFunctionsCore\GrafanaFunctionBase.cs" />
+    <Compile Include="GrafanaFunctionsCore\IParameter.cs" />
+    <Compile Include="GrafanaFunctionsCore\Parameter.cs" />
+    <Compile Include="GrafanaFunctionsCore\QueryDataHolder.cs" />
     <Compile Include="Model\Annotations\AnnotationExtensions.cs" />
     <Compile Include="Model\Annotations\AnnotationRequest.cs" />
     <Compile Include="Model\Annotations\AnnotationResponse.cs" />
@@ -81,11 +86,11 @@
     <Compile Include="GrafanaDataServiceMono.cs" />
     <Compile Include="GrafanaDataSourceBase.cs" />
     <Compile Include="GrafanaDataSourceBase_AncillaryOperations.cs" />
-    <Compile Include="GrafanaFunctionBase\Functions.cs" />
-    <Compile Include="GrafanaFunctionBase\FunctionsHelpers.cs" />
-    <Compile Include="GrafanaFunctionBase\IGrafanaFunction.cs" />
-    <Compile Include="GrafanaFunctionBase\TargetTimeUnit.cs" />
-    <Compile Include="GrafanaFunctionBase\TimeConversion.cs" />
+    <Compile Include="GrafanaFunctionsCore\FunctionParser.cs" />
+    <Compile Include="GrafanaFunctionsCore\FunctionModelHelpers.cs" />
+    <Compile Include="GrafanaFunctionsCore\IGrafanaFunction.cs" />
+    <Compile Include="GrafanaFunctionsCore\TargetTimeUnit.cs" />
+    <Compile Include="GrafanaFunctionsCore\TimeConversion.cs" />
     <Compile Include="GrafanaFunctions\AbsoluteValue.cs" />
     <Compile Include="GrafanaFunctions\Add.cs" />
     <Compile Include="GrafanaFunctions\Average.cs" />

@@ -1,118 +1,96 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+using GrafanaAdapters.GrafanaFunctionsCore;
 
-namespace GrafanaAdapters.GrafanaFunctions
+namespace GrafanaAdapters.GrafanaFunctions;
+
+/// <summary>
+/// Returns a series of values that represent the difference between consecutive values in the source series.
+/// </summary>
+/// <remarks>
+/// Signature: <c>Difference(expression)</c><br/>
+/// Returns: Series of values.<br/>
+/// Example: <c>Difference(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
+/// Variants: Difference, Diff<br/>
+/// Execution: Deferred enumeration.
+/// </remarks>
+public class Difference: GrafanaFunctionBase
 {
-    /// <summary>
-    /// Returns a series of values that represent the difference between consecutive values in the source series.
-    /// </summary>
-    /// <remarks>
-    /// Signature: <c>Difference(expression)</c><br/>
-    /// Returns: Series of values.<br/>
-    /// Example: <c>Difference(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
-    /// Variants: Difference, Diff<br/>
-    /// Execution: Deferred enumeration.
-    /// </remarks>
-    public class Difference : IGrafanaFunction
+    /// <inheritdoc />
+    public override string Name => nameof(Difference);
+
+    /// <inheritdoc />
+    public override string Description => "Returns a series of values that represent the difference between consecutive values in the source series.";
+
+    /// <inheritdoc />
+    public override string[] Aliases => new[] { "Diff" };
+
+    /// <inheritdoc />
+    public override List<IParameter> Parameters => new()
     {
-        /// <inheritdoc />
-        public string Name { get; } = "Difference";
+        new Parameter<IDataSourceValueGroup>
+        {
+            Default = new DataSourceValueGroup<DataSourceValue>(),
+            Description = "Data Points",
+            Required = true
+        }
+    };
 
-        /// <inheritdoc />
-        public string Description { get; } = "Returns a series of values that represent the difference between consecutive values in the source series.";
+    /// <inheritdoc />
+    public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
+    {
+        // Get Values
+        DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
 
-        /// <inheritdoc />
-        public Type Type { get; } = typeof(Difference);
-
-        /// <inheritdoc />
-        public Regex Regex { get; } = new Regex(string.Format(FunctionsModelHelper.ExpressionFormat, "(Difference|Diff)"), RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
-        /// <inheritdoc />
-        public List<IParameter> Parameters { get; } =
-            new List<IParameter>
+        // Compute
+        double previousValue = dataSourceValues.Source.First().Value;
+        IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source
+            .Skip(1)
+            .Select(dataSourceValue =>
             {
-                new Parameter<IDataSourceValueGroup>
-                {
-                    Default = new DataSourceValueGroup<DataSourceValue>(),
-                    Description = "Data Points",
-                    Required = true
-                }
-            };
+                DataSourceValue transformedValue = dataSourceValue;
 
-        /// <summary>
-        /// Computes based on type DataSourceValue
-        /// </summary>
-        /// <param name="parameters"></param>
-        /// <returns></returns>
-        public DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
-        {
-            // Get Values
-            DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
+                transformedValue.Value -= previousValue;
 
-            // Compute
-            double previousValue = dataSourceValues.Source.First().Value;
-            IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source
-                .Skip(1)
-                .Select(dataSourceValue =>
-                {
-                    DataSourceValue transformedValue = dataSourceValue;
+                previousValue = dataSourceValue.Value;
+                return transformedValue;
+            });
 
-                    transformedValue.Value -= previousValue;
+        // Set Values
+        dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
+        dataSourceValues.Source = transformedDataSourceValues;
 
-                    previousValue = dataSourceValue.Value;
-                    return transformedValue;
-                });
+        return dataSourceValues;
+    }
 
-            // Set Values
-            dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
-            dataSourceValues.Source = transformedDataSourceValues;
+    /// <inheritdoc />
+    public override DataSourceValueGroup<PhasorValue> ComputePhasor(List<IParameter> parameters)
+    {
+        // Get Values
+        DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
 
-            return dataSourceValues;
-        }
+        // Compute
+        double previousMag = phasorValues.Source.First().Magnitude;
+        double previousAng = phasorValues.Source.First().Angle;
+        IEnumerable<PhasorValue> transformedPhasorValues = phasorValues.Source
+            .Skip(1)
+            .Select(phasorValue =>
+            {
+                PhasorValue transformedValue = phasorValue;
 
-        /// <summary>
-        /// Computes based on type PhasorValue
-        /// </summary>
-        /// <param name="parameters"></param>
-        /// <returns></returns>
-        public DataSourceValueGroup<PhasorValue> ComputePhasor(List<IParameter> parameters)
-        {
-            // Get Values
-            DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
+                transformedValue.Magnitude -= previousMag;
+                transformedValue.Angle -= previousAng;
 
-            // Compute
-            double previousMag = phasorValues.Source.First().Magnitude;
-            double previousAng = phasorValues.Source.First().Angle;
-            IEnumerable<PhasorValue> transformedPhasorValues = phasorValues.Source
-                .Skip(1)
-                .Select(phasorValue =>
-                {
-                    PhasorValue transformedValue = phasorValue;
+                previousMag = phasorValue.Magnitude;
+                previousAng = phasorValue.Angle;
+                return transformedValue;
+            });
 
-                    transformedValue.Magnitude -= previousMag;
-                    transformedValue.Angle -= previousAng;
+        // Set Values
+        string[] labels = phasorValues.Target.Split(';');
+        phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
+        phasorValues.Source = transformedPhasorValues;
 
-                    previousMag = phasorValue.Magnitude;
-                    previousAng = phasorValue.Angle;
-                    return transformedValue;
-                });
-
-            // Set Values
-            string[] labels = phasorValues.Target.Split(';');
-            phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
-            phasorValues.Source = transformedPhasorValues;
-
-            return phasorValues;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Difference"/> class.
-        /// </summary>
-        public Difference() { }
+        return phasorValues;
     }
 }

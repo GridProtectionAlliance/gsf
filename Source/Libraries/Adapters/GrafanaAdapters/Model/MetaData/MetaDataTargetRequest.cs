@@ -21,23 +21,20 @@
 //
 //******************************************************************************************************
 
-namespace GrafanaAdapters
+namespace GrafanaAdapters;
+
+/// <summary>
+/// Represents a request object for metadata results for a specific Target.
+/// </summary>
+public class MetadataTargetRequest
 {
     /// <summary>
-    /// Represents a request object for metadata results for a specific Target.
+    /// Gets or sets the target string.
     /// </summary>
-    public class MetadataTargetRequest
-    {
-        /// <summary>
-        /// Gets or sets the target string.
-        /// </summary>
-        public string Target { get; set; }
+    public string Target { get; set; }
 
-        /// <summary>
-        /// Gets or sets the tables array.
-        /// </summary>
-        public string[] Tables { get; set; }
-    }
-
-
+    /// <summary>
+    /// Gets or sets the tables array.
+    /// </summary>
+    public string[] Tables { get; set; }
 }

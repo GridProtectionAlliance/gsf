@@ -24,29 +24,27 @@
 using System.Collections.Generic;
 using GSF.Data.Model;
 
-namespace GrafanaAdapters
+namespace GrafanaAdapters;
+
+/// <summary>
+/// Represents a group of devices modeled as a separate virtual Device with connection string.
+/// </summary>
+public class DeviceGroup
 {
     /// <summary>
-    /// Represents a group of devices modeled as a separate virtual Device with connection string.
+    /// Unique ID.
     /// </summary>
-    public class DeviceGroup
-    {
-        /// <summary>
-        /// Unique ID.
-        /// </summary>
-        [PrimaryKey(true)]
-        public int ID { get; set; }
+    [PrimaryKey(true)]
+    public int ID { get; set; }
 
-        /// <summary>
-        /// Name of the Device.
-        /// </summary>
-        public string Name { get; set; }
+    /// <summary>
+    /// Name of the Device.
+    /// </summary>
+    public string Name { get; set; }
 
-        /// <summary>
-        /// List of attached Device IDs.
-        /// </summary>
-        public List<int> Devices { get; set; }
+    /// <summary>
+    /// List of attached Device IDs.
+    /// </summary>
+    public List<int> Devices { get; set; }
 
-    }
 }
-

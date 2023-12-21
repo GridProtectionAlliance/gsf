@@ -23,41 +23,41 @@
 
 using System.Collections.Generic;
 
-namespace GrafanaAdapters
+namespace GrafanaAdapters;
+
+/// <summary>
+/// Defines a Grafana query request target.
+/// </summary>
+public class Target
 {
     /// <summary>
-    /// Defines a Grafana query request target.
+    /// Reference ID.
     /// </summary>
-    public class Target
-    {
-        /// <summary>
-        /// Reference ID.
-        /// </summary>
-        public string refId { get; set; }
+    public string refId { get; set; }
 
-        /// <summary>
-        /// Target point/tag name.
-        /// </summary>
-        public string target { get; set; }
+    /// <summary>
+    /// Target point/tag name.
+    /// </summary>
+    public string target { get; set; }
        
-        /// <summary>
-        /// Target method, can either be phasor or not
-        /// </summary>
-        public bool isPhasor { get; set; }
-        /// <summary>
-        /// Metadata selections
-        /// </summary>
-        public Dictionary<string, List<string>> metadataSelection { get; set; }
+    /// <summary>
+    /// Target method, can either be phasor or not
+    /// </summary>
+    public bool isPhasor { get; set; }
 
-        /// <summary>
-        /// Exclude data that have the specified flags set.
-        /// </summary>
-        public uint excludedFlags { get; set; }
+    /// <summary>
+    /// Metadata selections
+    /// </summary>
+    public Dictionary<string, List<string>> metadataSelection { get; set; }
 
-        /// <summary>
-        /// Exclude data that has normal flag set.
-        /// </summary>
-        public bool excludeNormalFlags { get; set; }
+    /// <summary>
+    /// Exclude data that have the specified flags set.
+    /// </summary>
+    public uint excludedFlags { get; set; }
 
-    }
+    /// <summary>
+    /// Exclude data that has normal flag set.
+    /// </summary>
+    public bool excludeNormalFlags { get; set; }
+
 }

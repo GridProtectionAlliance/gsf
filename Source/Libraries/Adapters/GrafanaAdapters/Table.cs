@@ -23,26 +23,25 @@
 
 using System.Collections.Generic;
 
-namespace GrafanaAdapters
+namespace GrafanaAdapters;
+
+/// <summary>
+/// Defines a Grafana table.
+/// </summary>
+public class Table
 {
     /// <summary>
-    /// Defines a Grafana table.
+    /// Table columns.
     /// </summary>
-    public class Table
-    {
-        /// <summary>
-        /// Table columns.
-        /// </summary>
-        public List<Column> columns { get; set; }
+    public List<Column> columns { get; set; }
 
-        /// <summary>
-        /// Table rows.
-        /// </summary>
-        public List<List<double?>> rows { get; set; }
+    /// <summary>
+    /// Table rows.
+    /// </summary>
+    public List<List<double?>> rows { get; set; }
 
-        /// <summary>
-        /// Table type (typically set to "table").
-        /// </summary>
-        public string type { get; set; }
-    }
+    /// <summary>
+    /// Table type (typically set to "table").
+    /// </summary>
+    public string type { get; set; }
 }
