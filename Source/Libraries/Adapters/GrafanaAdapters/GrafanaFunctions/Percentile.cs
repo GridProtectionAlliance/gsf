@@ -36,12 +36,8 @@ public class Percentile: GrafanaFunctionBase
             Description = "A floating point value, representing a percentage, that must range from 0 to 100.",
             Required = true
         },
-        new Parameter<IDataSourceValueGroup>
-        {
-            Default = new DataSourceValueGroup<DataSourceValue>(),
-            Description = "Data Points",
-            Required = true
-        },
+
+        InputDataPointValues
     };
 
     /// <summary>

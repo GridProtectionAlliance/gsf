@@ -39,18 +39,12 @@ public class Interval: GrafanaFunctionBase
             Description = "A floating-point value that must be greater than or equal to zero that represents the desired time interval",
             Required = true
         },
-        new Parameter<IDataSourceValueGroup>
-        {
-            Default = new DataSourceValueGroup<DataSourceValue>(),
-            Description = "Data Points",
-            Required = true
-        },
+
+        InputDataPointValues,
+
         new Parameter<TargetTimeUnit>
         {
-            Default = new TargetTimeUnit
-            {
-                Unit = TimeUnit.Seconds
-            },
+            Default = new TargetTimeUnit { Unit = TimeUnit.Seconds },
             Description = "Specifies the type of time units and must be one of the following: Seconds, Nanoseconds, Microseconds, Milliseconds, " +
                           "Minutes, Hours, Days, Weeks, Ke (i.e., traditional Chinese unit of decimal time), Ticks (i.e., 100-nanosecond intervals), PlanckTime or " +
                           "AtomicUnitsOfTime - defaults to Seconds.",

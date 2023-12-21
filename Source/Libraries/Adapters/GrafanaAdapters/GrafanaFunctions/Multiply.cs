@@ -33,12 +33,8 @@ public class Multiply: GrafanaFunctionBase
             Description = "A floating point value representing an multiplicative offset to be applied to each value the source series.",
             Required = true
         },
-        new Parameter<IDataSourceValueGroup>
-        {
-            Default = new DataSourceValueGroup<DataSourceValue>(),
-            Description = "Data Points",
-            Required = true
-        }
+
+        InputDataPointValues
     };
 
     /// <inheritdoc />

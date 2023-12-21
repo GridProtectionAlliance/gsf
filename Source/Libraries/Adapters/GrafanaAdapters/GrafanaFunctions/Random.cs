@@ -40,12 +40,9 @@ public class Random: GrafanaFunctionBase
             Description = "A integer value or percent representing number of % of elements to take.",
             Required = true
         },
-        new Parameter<IDataSourceValueGroup>
-        {
-            Default = new DataSourceValueGroup<DataSourceValue>(),
-            Description = "Data Points",
-            Required = true
-        },
+
+        InputDataPointValues,
+
         new Parameter<bool>
         {
             Default = true,

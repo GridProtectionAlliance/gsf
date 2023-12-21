@@ -32,7 +32,12 @@ internal static class FunctionModelHelpers
 
     public const FunctionOperations DefaultFunctionOperations = FunctionOperations.Standard | FunctionOperations.Slice | FunctionOperations.Set;
 
-    public static readonly Regex FunctionRegex = GenerateFunctionRegex(".*");
+    public static readonly Parameter<IDataSourceValueGroup> InputDataPointValues = new()
+    {
+        Default = new DataSourceValueGroup<DataSourceValue>(),
+        Description = "Input Data Points",
+        Required = true
+    };
 
     public static Regex GenerateFunctionRegex(params string[] functionNames)
     {

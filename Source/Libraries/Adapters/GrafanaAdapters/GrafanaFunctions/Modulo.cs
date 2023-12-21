@@ -36,12 +36,8 @@ public class Modulo: GrafanaFunctionBase
             Description = "A floating point value representing a divisive factor to be applied to each value the source series.",
             Required = true
         },
-        new Parameter<IDataSourceValueGroup>
-        {
-            Default = new DataSourceValueGroup<DataSourceValue>(),
-            Description = "Data Points",
-            Required = true
-        }
+
+        InputDataPointValues
     };
 
     /// <inheritdoc />

@@ -38,12 +38,8 @@ public class Label: GrafanaFunctionBase
             Description = "Specifies label to be renamed to.",
             Required = true
         },
-        new Parameter<IDataSourceValueGroup>
-        {
-            Default = new DataSourceValueGroup<DataSourceValue>(),
-            Description = "Data Points",
-            Required = true
-        }
+
+        InputDataPointValues
     };
 
     /// <inheritdoc />

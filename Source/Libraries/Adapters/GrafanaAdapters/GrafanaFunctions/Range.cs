@@ -25,12 +25,7 @@ public class Range: GrafanaFunctionBase
     /// <inheritdoc />
     public override List<IParameter> Parameters => new()
     {
-        new Parameter<IDataSourceValueGroup>
-        {
-            Default = new DataSourceValueGroup<DataSourceValue>(),
-            Description = "Data Points",
-            Required = true
-        }
+        InputDataPointValues
     };
 
     /// <inheritdoc />

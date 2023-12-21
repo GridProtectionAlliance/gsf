@@ -32,12 +32,8 @@ public class TimeIntegration: GrafanaFunctionBase
     /// <inheritdoc />
     public override List<IParameter> Parameters => new()
     {
-        new Parameter<IDataSourceValueGroup>
-        {
-            Default = new DataSourceValueGroup<DataSourceValue>(),
-            Description = "Data Points",
-            Required = true
-        },
+        InputDataPointValues,
+
         new Parameter<TargetTimeUnit>
         {
             Default = new TargetTimeUnit { Unit = TimeUnit.Hours },

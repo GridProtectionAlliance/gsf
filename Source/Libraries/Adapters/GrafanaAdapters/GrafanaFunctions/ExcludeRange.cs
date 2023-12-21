@@ -45,12 +45,9 @@ public class ExcludeRange: GrafanaFunctionBase
             Description = "A floating point value representing the high end of the range allowed in the return series.",
             Required = true
         },
-        new Parameter<IDataSourceValueGroup>
-        {
-            Default = new DataSourceValueGroup<DataSourceValue>(),
-            Description = "Data Points",
-            Required = true
-        },
+
+        InputDataPointValues,
+
         new Parameter<bool>
         {
             Default = false,
@@ -62,7 +59,7 @@ public class ExcludeRange: GrafanaFunctionBase
             Default = false,
             Description = "A boolean flag which determines if high value is inclusive.",
             Required = false
-        },
+        }
     };
 
     /// <inheritdoc />
