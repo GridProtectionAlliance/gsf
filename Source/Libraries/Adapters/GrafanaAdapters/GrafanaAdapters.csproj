@@ -71,7 +71,8 @@
     <Compile Include="GrafanaFunctionsCore\GrafanaFunctionBase.cs" />
     <Compile Include="GrafanaFunctionsCore\IParameter.cs" />
     <Compile Include="GrafanaFunctionsCore\Parameter.cs" />
-    <Compile Include="GrafanaFunctionsCore\QueryDataHolder.cs" />
+    <Compile Include="GrafanaFunctionsCore\QueryParameters.cs" />
+    <Compile Include="IDataSourceValue.cs" />
     <Compile Include="Model\Annotations\AnnotationExtensions.cs" />
     <Compile Include="Model\Annotations\AnnotationRequest.cs" />
     <Compile Include="Model\Annotations\AnnotationResponse.cs" />
@@ -120,11 +121,6 @@
     <Compile Include="GrafanaFunctions\Random.cs" />
     <Compile Include="GrafanaFunctions\Range.cs" />
     <Compile Include="GrafanaFunctions\Round.cs" />
-    <Compile Include="GrafanaFunctions\SliceAdd.cs" />
-    <Compile Include="GrafanaFunctions\SliceAverage.cs" />
-    <Compile Include="GrafanaFunctions\SliceDivide.cs" />
-    <Compile Include="GrafanaFunctions\SliceMultiply.cs" />
-    <Compile Include="GrafanaFunctions\SliceSubtract.cs" />
     <Compile Include="GrafanaFunctions\StandardDeviation.cs" />
     <Compile Include="GrafanaFunctions\Subtract.cs" />
     <Compile Include="GrafanaFunctions\TimeDifference.cs" />
@@ -189,6 +185,7 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterBuild">
     <CallTarget Targets="SignBuild" />

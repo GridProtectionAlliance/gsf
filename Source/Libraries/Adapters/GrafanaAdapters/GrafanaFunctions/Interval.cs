@@ -22,10 +22,10 @@ namespace GrafanaAdapters.GrafanaFunctions;
 /// Variants: Interval<br/>
 /// Execution: Deferred enumeration.
 /// </remarks>
-public class Interval: GrafanaFunctionBase
+public abstract class Interval<T> : GrafanaFunctionBase<T> where T : IDataSourceValue
 {
     /// <inheritdoc />
-    public override string Name => nameof(Interval);
+    public override string Name => "Interval";
 
     /// <inheritdoc />
     public override string Description => "Returns a series of values that represent a decimated set of the values in the source series based on the specified interval N, in time units.";
@@ -45,75 +45,85 @@ public class Interval: GrafanaFunctionBase
         new Parameter<TargetTimeUnit>
         {
             Default = new TargetTimeUnit { Unit = TimeUnit.Seconds },
-            Description = "Specifies the type of time units and must be one of the following: Seconds, Nanoseconds, Microseconds, Milliseconds, " +
-                          "Minutes, Hours, Days, Weeks, Ke (i.e., traditional Chinese unit of decimal time), Ticks (i.e., 100-nanosecond intervals), PlanckTime or " +
-                          "AtomicUnitsOfTime - defaults to Seconds.",
+            Description =
+                "Specifies the type of time units and must be one of the following: Seconds, Nanoseconds, Microseconds, Milliseconds, " +
+                "Minutes, Hours, Days, Weeks, Ke (i.e., traditional Chinese unit of decimal time), Ticks (i.e., 100-nanosecond intervals), PlanckTime or " +
+                "AtomicUnitsOfTime - defaults to Seconds.",
             Required = false
         }
     };
 
     /// <inheritdoc />
-    public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
+    public class ComputeDataSourceValue : Interval<DataSourceValue>
     {
-        // Get Values
-        double value = (parameters[0] as IParameter<double>).Value;
-        DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
-        TargetTimeUnit timeUnit = (parameters[2] as IParameter<TargetTimeUnit>).Value;
 
-        if(value < 0)
-            throw new ArgumentException($"{value} must be greater than or equal to 0.");
-
-        // Compute
-        double timeValue = TimeConversion.FromTimeUnits(value, timeUnit) / SI.Milli;
-
-        double previousTime = dataSourceValues.Source.First().Time;
-        List<DataSourceValue> transformedDataSourceValues = new();
-        foreach (DataSourceValue dataSourceValue in dataSourceValues.Source.Skip(1))
+        /// <inheritdoc />
+        public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
         {
-            if (dataSourceValue.Time - previousTime > timeValue)
+            // Get Values
+            double value = (parameters[0] as IParameter<double>).Value;
+            DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
+            TargetTimeUnit timeUnit = (parameters[2] as IParameter<TargetTimeUnit>).Value;
+
+            if (value < 0)
+                throw new ArgumentException($"{value} must be greater than or equal to 0.");
+
+            // Compute
+            double timeValue = TimeConversion.FromTimeUnits(value, timeUnit) / SI.Milli;
+
+            double previousTime = dataSourceValues.Source.First().Time;
+            List<DataSourceValue> transformedDataSourceValues = new();
+            foreach (DataSourceValue dataSourceValue in dataSourceValues.Source.Skip(1))
             {
-                previousTime = dataSourceValue.Time;
-                transformedDataSourceValues.Add(dataSourceValue);
+                if (dataSourceValue.Time - previousTime > timeValue)
+                {
+                    previousTime = dataSourceValue.Time;
+                    transformedDataSourceValues.Add(dataSourceValue);
+                }
             }
+
+            // Set Values
+            dataSourceValues.Target = $"{Name}({value},{dataSourceValues.Target},{timeUnit.Unit})";
+            dataSourceValues.Source = transformedDataSourceValues;
+
+            return dataSourceValues;
         }
-
-        // Set Values
-        dataSourceValues.Target = $"{Name}({value},{dataSourceValues.Target},{timeUnit.Unit})";
-        dataSourceValues.Source = transformedDataSourceValues;
-
-        return dataSourceValues;
     }
 
     /// <inheritdoc />
-    public override DataSourceValueGroup<PhasorValue> ComputePhasor(List<IParameter> parameters)
+    public class ComputePhasorValue : Interval<PhasorValue>
     {
-        // Get Values
-        double value = (parameters[0] as IParameter<double>).Value;
-        DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
-        TargetTimeUnit timeUnit = (parameters[2] as IParameter<TargetTimeUnit>).Value;
-            
-        if (value < 0)
-            throw new ArgumentException($"{value} must be greater than or equal to 0.");
-
-        // Compute
-        double timeValue = TimeConversion.FromTimeUnits(value, timeUnit) / SI.Milli;
-
-        double previousTime = phasorValues.Source.First().Time;
-        List<PhasorValue> transformedPhasorValues = new();
-        foreach (PhasorValue phasorValue in phasorValues.Source.Skip(1))
+        /// <inheritdoc />
+        public override DataSourceValueGroup<PhasorValue> Compute(List<IParameter> parameters)
         {
-            if (phasorValue.Time - previousTime > timeValue)
+            // Get Values
+            double value = (parameters[0] as IParameter<double>).Value;
+            DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
+            TargetTimeUnit timeUnit = (parameters[2] as IParameter<TargetTimeUnit>).Value;
+
+            if (value < 0)
+                throw new ArgumentException($"{value} must be greater than or equal to 0.");
+
+            // Compute
+            double timeValue = TimeConversion.FromTimeUnits(value, timeUnit) / SI.Milli;
+
+            double previousTime = phasorValues.Source.First().Time;
+            List<PhasorValue> transformedPhasorValues = new();
+            foreach (PhasorValue phasorValue in phasorValues.Source.Skip(1))
             {
-                previousTime = phasorValue.Time;
-                transformedPhasorValues.Add(phasorValue);
+                if (phasorValue.Time - previousTime > timeValue)
+                {
+                    previousTime = phasorValue.Time;
+                    transformedPhasorValues.Add(phasorValue);
+                }
             }
+
+            // Set Values
+            string[] labels = phasorValues.Target.Split(';');
+            phasorValues.Target = $"{Name}({labels[0]},{timeUnit.Unit});{Name}({labels[1]},{timeUnit.Unit})";
+            phasorValues.Source = transformedPhasorValues;
+
+            return phasorValues;
         }
-
-        // Set Values
-        string[] labels = phasorValues.Target.Split(';');
-        phasorValues.Target = $"{Name}({labels[0]},{timeUnit.Unit});{Name}({labels[1]},{timeUnit.Unit})";
-        phasorValues.Source = transformedPhasorValues;
-
-        return phasorValues;
     }
 }

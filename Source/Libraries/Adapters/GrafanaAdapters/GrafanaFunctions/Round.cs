@@ -16,10 +16,10 @@ namespace GrafanaAdapters.GrafanaFunctions;
 /// Variants: Round<br/>
 /// Execution: Deferred enumeration.
 /// </remarks>
-public class Round: GrafanaFunctionBase
+public abstract class Round<T> : GrafanaFunctionBase<T> where T : IDataSourceValue
 {
     /// <inheritdoc />
-    public override string Name => nameof(Round);
+    public override string Name => "Round";
 
     /// <inheritdoc />
     public override string Description => "Returns a series of values that represent the rounded value, with N fractional digits, of each of the values in the source series.";
@@ -38,50 +38,58 @@ public class Round: GrafanaFunctionBase
     };
 
     /// <inheritdoc />
-    public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
+    public class ComputeDataSourceValue : Round<DataSourceValue>
     {
-        // Get Values
-        DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
-        int numberDecimals = (parameters[1] as IParameter<int>).Value;
-
-        // Compute
-        IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source.Select(dataSourceValue =>
+        /// <inheritdoc />
+        public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
         {
-            DataSourceValue transformedValue = dataSourceValue;
-            transformedValue.Value = Math.Round(transformedValue.Value, numberDecimals);
+            // Get Values
+            DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
+            int numberDecimals = (parameters[1] as IParameter<int>).Value;
 
-            return transformedValue;
-        });
+            // Compute
+            IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source.Select(dataSourceValue =>
+            {
+                DataSourceValue transformedValue = dataSourceValue;
+                transformedValue.Value = Math.Round(transformedValue.Value, numberDecimals);
 
-        // Set Values
-        dataSourceValues.Target = $"{Name}({dataSourceValues.Target},{numberDecimals})";
-        dataSourceValues.Source = transformedDataSourceValues;
+                return transformedValue;
+            });
 
-        return dataSourceValues;
+            // Set Values
+            dataSourceValues.Target = $"{Name}({dataSourceValues.Target},{numberDecimals})";
+            dataSourceValues.Source = transformedDataSourceValues;
+
+            return dataSourceValues;
+        }
     }
 
     /// <inheritdoc />
-    public override DataSourceValueGroup<PhasorValue> ComputePhasor(List<IParameter> parameters)
+    public class ComputePhasorValue : Round<PhasorValue>
     {
-        // Get Values
-        DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
-        int numberDecimals = (parameters[1] as IParameter<int>).Value;
-
-        // Compute
-        IEnumerable<PhasorValue> transformedPhasorValues = phasorValues.Source.Select(phasorValue =>
+        /// <inheritdoc />
+        public override DataSourceValueGroup<PhasorValue> Compute(List<IParameter> parameters)
         {
-            PhasorValue transformedValue = phasorValue;
-            transformedValue.Magnitude = Math.Round(transformedValue.Magnitude, numberDecimals);
-            transformedValue.Angle = Math.Round(transformedValue.Angle, numberDecimals);
+            // Get Values
+            DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
+            int numberDecimals = (parameters[1] as IParameter<int>).Value;
 
-            return transformedValue;
-        });
+            // Compute
+            IEnumerable<PhasorValue> transformedPhasorValues = phasorValues.Source.Select(phasorValue =>
+            {
+                PhasorValue transformedValue = phasorValue;
+                transformedValue.Magnitude = Math.Round(transformedValue.Magnitude, numberDecimals);
+                transformedValue.Angle = Math.Round(transformedValue.Angle, numberDecimals);
 
-        // Set Values
-        string[] labels = phasorValues.Target.Split(';');
-        phasorValues.Target = $"{Name}({labels[0]},{numberDecimals});{Name}({labels[1]},{numberDecimals})";
-        phasorValues.Source = transformedPhasorValues;
+                return transformedValue;
+            });
 
-        return phasorValues;
+            // Set Values
+            string[] labels = phasorValues.Target.Split(';');
+            phasorValues.Target = $"{Name}({labels[0]},{numberDecimals});{Name}({labels[1]},{numberDecimals})";
+            phasorValues.Source = transformedPhasorValues;
+
+            return phasorValues;
+        }
     }
 }

@@ -17,10 +17,10 @@ namespace GrafanaAdapters.GrafanaFunctions;
 /// Variants: StandardDeviation, StdDev<br/>
 /// Execution: Immediate in-memory array load.
 /// </remarks>
-public class StandardDeviation: GrafanaFunctionBase
+public abstract class StandardDeviation<T> : GrafanaFunctionBase<T> where T : IDataSourceValue
 {
     /// <inheritdoc />
-    public override string Name => nameof(StandardDeviation);
+    public override string Name => "StandardDeviation";
 
     /// <inheritdoc />
     public override string Description => "Returns a single value that represents the standard deviation of the values in the source series.";
@@ -42,47 +42,49 @@ public class StandardDeviation: GrafanaFunctionBase
     };
 
     /// <inheritdoc />
-    public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
+    public class ComputeDataSourceValue : StandardDeviation<DataSourceValue>
     {
-        // Get Values
-        DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
-        bool useSample = (parameters[1] as IParameter<bool>).Value;
+        /// <inheritdoc />
+        public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
+        {
+            // Get Values
+            DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
+            bool useSample = (parameters[1] as IParameter<bool>).Value;
 
-        // Compute
-        DataSourceValue lastElement = dataSourceValues.Source.Last();
-        lastElement.Value = dataSourceValues.Source
-            .Select(dataValue => { return dataValue.Value; })
-            .StandardDeviation(useSample);
+            // Compute
+            DataSourceValue lastElement = dataSourceValues.Source.Last();
+            lastElement.Value = dataSourceValues.Source.Select(dataValue => { return dataValue.Value; }).StandardDeviation(useSample);
 
-        // Set Values
-        dataSourceValues.Target = $"{Name}({dataSourceValues.Target},{useSample})";
-        dataSourceValues.Source = Enumerable.Repeat(lastElement, 1);
+            // Set Values
+            dataSourceValues.Target = $"{Name}({dataSourceValues.Target},{useSample})";
+            dataSourceValues.Source = Enumerable.Repeat(lastElement, 1);
 
-        return dataSourceValues;
+            return dataSourceValues;
+        }
     }
 
     /// <inheritdoc />
-    public override DataSourceValueGroup<PhasorValue> ComputePhasor(List<IParameter> parameters)
+    public class ComputePhasorValue : StandardDeviation<PhasorValue>
     {
-        // Get Values
-        DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
-        bool useSample = (parameters[1] as IParameter<bool>).Value;
+        /// <inheritdoc />
+        public override DataSourceValueGroup<PhasorValue> Compute(List<IParameter> parameters)
+        {
+            // Get Values
+            DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
+            bool useSample = (parameters[1] as IParameter<bool>).Value;
 
-        // Compute
-        PhasorValue lastElement = phasorValues.Source.Last();
-        lastElement.Magnitude = phasorValues.Source
-            .Select(dataValue => { return dataValue.Magnitude; })
-            .StandardDeviation(useSample);
+            // Compute
+            PhasorValue lastElement = phasorValues.Source.Last();
+            lastElement.Magnitude = phasorValues.Source.Select(dataValue => { return dataValue.Magnitude; }).StandardDeviation(useSample);
 
-        lastElement.Angle = phasorValues.Source
-            .Select(dataValue => { return dataValue.Angle; })
-            .StandardDeviation(useSample);
+            lastElement.Angle = phasorValues.Source.Select(dataValue => { return dataValue.Angle; }).StandardDeviation(useSample);
 
-        // Set Values
-        string[] labels = phasorValues.Target.Split(';');
-        phasorValues.Target = $"{Name}({labels[0]},{useSample});{Name}({labels[1]},{useSample})";
-        phasorValues.Source = Enumerable.Repeat(lastElement, 1);
+            // Set Values
+            string[] labels = phasorValues.Target.Split(';');
+            phasorValues.Target = $"{Name}({labels[0]},{useSample});{Name}({labels[1]},{useSample})";
+            phasorValues.Source = Enumerable.Repeat(lastElement, 1);
 
-        return phasorValues;
+            return phasorValues;
+        }
     }
 }

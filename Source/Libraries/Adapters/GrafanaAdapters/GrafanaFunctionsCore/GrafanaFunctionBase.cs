@@ -30,7 +30,7 @@ namespace GrafanaAdapters.GrafanaFunctionsCore
     /// <summary>
     /// Represents the base functionality for any Grafana function.
     /// </summary>
-    public abstract class GrafanaFunctionBase : IGrafanaFunction
+    public abstract class GrafanaFunctionBase<T> : IGrafanaFunction<T> where T : IDataSourceValue
     {
         private Regex m_regex;
 
@@ -69,36 +69,18 @@ namespace GrafanaAdapters.GrafanaFunctionsCore
         public abstract List<IParameter> Parameters { get; }
 
         /// <inheritdoc />
-        public abstract DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters);
+        public abstract DataSourceValueGroup<T> Compute(List<IParameter> parameters);
 
         /// <inheritdoc />
-        public virtual DataSourceValueGroup<PhasorValue> ComputePhasor(List<IParameter> parameters)
-        {
-            return null;
-        }
-
-        /// <inheritdoc />
-        public virtual DataSourceValueGroup<DataSourceValue> ComputeSlice(List<IParameter> parameters)
+        public DataSourceValueGroup<T> ComputeSlice(List<IParameter> parameters)
         {
             return Compute(parameters);
         }
 
         /// <inheritdoc />
-        public virtual DataSourceValueGroup<PhasorValue> ComputePhasorSlice(List<IParameter> parameters)
-        {
-            return ComputePhasor(parameters);
-        }
-
-        /// <inheritdoc />
-        public virtual DataSourceValueGroup<DataSourceValue> ComputeSet(List<IParameter> parameters)
+        public DataSourceValueGroup<T> ComputeSet(List<IParameter> parameters)
         {
             return Compute(parameters);
-        }
-
-        /// <inheritdoc />
-        public virtual DataSourceValueGroup<PhasorValue> ComputePhasorSet(List<IParameter> parameters)
-        {
-            return ComputePhasor(parameters);
         }
     }
 }

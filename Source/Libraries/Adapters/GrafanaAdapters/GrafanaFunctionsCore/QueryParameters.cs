@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  QueryDataHolder.cs - Gbtc
+//  QueryParameters.cs - Gbtc
 //
 //  Copyright © 2023, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -27,7 +27,7 @@ using System.Threading;
 
 namespace GrafanaAdapters.GrafanaFunctionsCore;
 
-internal class QueryDataHolder
+internal class QueryParameters
 {
     public Target SourceTarget { get; set; }
 

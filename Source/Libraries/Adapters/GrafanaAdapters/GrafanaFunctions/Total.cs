@@ -14,10 +14,10 @@ namespace GrafanaAdapters.GrafanaFunctions;
 /// Variants: Total, Sum<br/>
 /// Execution: Immediate enumeration.
 /// </remarks>
-public class Total: GrafanaFunctionBase
+public abstract class Total<T> : GrafanaFunctionBase<T> where T : IDataSourceValue
 {
     /// <inheritdoc />
-    public override string Name => nameof(Total);
+    public override string Name => "Total";
 
     /// <inheritdoc />
     public override string Description => "Returns a single value that represents the sum of the values in the source series.";
@@ -32,45 +32,47 @@ public class Total: GrafanaFunctionBase
     };
 
     /// <inheritdoc />
-    public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
+    public class ComputeDataSourceValue : Total<DataSourceValue>
     {
-        // Get Values
-        DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
+        /// <inheritdoc />
+        public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
+        {
+            // Get Values
+            DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
 
-        // Compute
-        DataSourceValue lastElement = dataSourceValues.Source.Last();
-        lastElement.Value = dataSourceValues.Source
-            .Select(dataValue => { return dataValue.Value; })
-            .Sum();
+            // Compute
+            DataSourceValue lastElement = dataSourceValues.Source.Last();
+            lastElement.Value = dataSourceValues.Source.Select(dataValue => { return dataValue.Value; }).Sum();
 
-        // Set Values
-        dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
-        dataSourceValues.Source = Enumerable.Repeat(lastElement, 1);
+            // Set Values
+            dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
+            dataSourceValues.Source = Enumerable.Repeat(lastElement, 1);
 
-        return dataSourceValues;
+            return dataSourceValues;
+        }
     }
 
     /// <inheritdoc />
-    public override DataSourceValueGroup<PhasorValue> ComputePhasor(List<IParameter> parameters)
+    public class ComputePhasorValue : Total<PhasorValue>
     {
-        // Get Values
-        DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
+        /// <inheritdoc />
+        public override DataSourceValueGroup<PhasorValue> Compute(List<IParameter> parameters)
+        {
+            // Get Values
+            DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
 
-        // Compute
-        PhasorValue lastElement = phasorValues.Source.Last();
-        lastElement.Magnitude = phasorValues.Source
-            .Select(dataValue => { return dataValue.Magnitude; })
-            .Sum();
+            // Compute
+            PhasorValue lastElement = phasorValues.Source.Last();
+            lastElement.Magnitude = phasorValues.Source.Select(dataValue => { return dataValue.Magnitude; }).Sum();
 
-        lastElement.Angle = phasorValues.Source
-            .Select(dataValue => { return dataValue.Angle; })
-            .Sum();
+            lastElement.Angle = phasorValues.Source.Select(dataValue => { return dataValue.Angle; }).Sum();
 
-        // Set Values
-        string[] labels = phasorValues.Target.Split(';');
-        phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
-        phasorValues.Source = Enumerable.Repeat(lastElement, 1);
+            // Set Values
+            string[] labels = phasorValues.Target.Split(';');
+            phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
+            phasorValues.Source = Enumerable.Repeat(lastElement, 1);
 
-        return phasorValues;
+            return phasorValues;
+        }
     }
 }

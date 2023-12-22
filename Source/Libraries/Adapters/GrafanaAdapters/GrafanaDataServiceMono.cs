@@ -133,7 +133,7 @@ namespace GrafanaAdapters
         /// </summary>
         public FunctionDescription[] GetFunctions()
         {
-            return m_dataSource.GetFunctionDescription(m_cancellationSource.Token).Result;
+            return m_dataSource.GetFunctionDescriptions(m_cancellationSource.Token).Result;
         }
 
         /// <summary>

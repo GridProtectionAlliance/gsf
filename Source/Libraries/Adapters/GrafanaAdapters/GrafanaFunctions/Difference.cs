@@ -14,10 +14,10 @@ namespace GrafanaAdapters.GrafanaFunctions;
 /// Variants: Difference, Diff<br/>
 /// Execution: Deferred enumeration.
 /// </remarks>
-public class Difference: GrafanaFunctionBase
+public abstract class Difference<T> : GrafanaFunctionBase<T> where T : IDataSourceValue
 {
     /// <inheritdoc />
-    public override string Name => nameof(Difference);
+    public override string Name => "Difference";
 
     /// <inheritdoc />
     public override string Description => "Returns a series of values that represent the difference between consecutive values in the source series.";
@@ -32,16 +32,17 @@ public class Difference: GrafanaFunctionBase
     };
 
     /// <inheritdoc />
-    public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
+    public class ComputeDataSourceValue : Difference<DataSourceValue>
     {
-        // Get Values
-        DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
+        /// <inheritdoc />
+        public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
+        {
+            // Get Values
+            DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
 
-        // Compute
-        double previousValue = dataSourceValues.Source.First().Value;
-        IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source
-            .Skip(1)
-            .Select(dataSourceValue =>
+            // Compute
+            double previousValue = dataSourceValues.Source.First().Value;
+            IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source.Skip(1).Select(dataSourceValue =>
             {
                 DataSourceValue transformedValue = dataSourceValue;
 
@@ -51,25 +52,27 @@ public class Difference: GrafanaFunctionBase
                 return transformedValue;
             });
 
-        // Set Values
-        dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
-        dataSourceValues.Source = transformedDataSourceValues;
+            // Set Values
+            dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
+            dataSourceValues.Source = transformedDataSourceValues;
 
-        return dataSourceValues;
+            return dataSourceValues;
+        }
     }
 
     /// <inheritdoc />
-    public override DataSourceValueGroup<PhasorValue> ComputePhasor(List<IParameter> parameters)
+    public class ComputePhasorValue : Difference<PhasorValue>
     {
-        // Get Values
-        DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
+        /// <inheritdoc />
+        public override DataSourceValueGroup<PhasorValue> Compute(List<IParameter> parameters)
+        {
+            // Get Values
+            DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
 
-        // Compute
-        double previousMag = phasorValues.Source.First().Magnitude;
-        double previousAng = phasorValues.Source.First().Angle;
-        IEnumerable<PhasorValue> transformedPhasorValues = phasorValues.Source
-            .Skip(1)
-            .Select(phasorValue =>
+            // Compute
+            double previousMag = phasorValues.Source.First().Magnitude;
+            double previousAng = phasorValues.Source.First().Angle;
+            IEnumerable<PhasorValue> transformedPhasorValues = phasorValues.Source.Skip(1).Select(phasorValue =>
             {
                 PhasorValue transformedValue = phasorValue;
 
@@ -81,11 +84,12 @@ public class Difference: GrafanaFunctionBase
                 return transformedValue;
             });
 
-        // Set Values
-        string[] labels = phasorValues.Target.Split(';');
-        phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
-        phasorValues.Source = transformedPhasorValues;
+            // Set Values
+            string[] labels = phasorValues.Target.Split(';');
+            phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
+            phasorValues.Source = transformedPhasorValues;
 
-        return phasorValues;
+            return phasorValues;
+        }
     }
 }

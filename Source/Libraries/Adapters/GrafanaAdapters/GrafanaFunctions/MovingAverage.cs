@@ -18,10 +18,10 @@ namespace GrafanaAdapters.GrafanaFunctions;
 /// Variants: TimeIntegration, TimeInt<br/>
 /// Execution: Immediate enumeration.
 /// </remarks>
-public class MovingAverage: GrafanaFunctionBase
+public abstract class MovingAverage<T> : GrafanaFunctionBase<T> where T : IDataSourceValue
 {
     /// <inheritdoc />
-    public override string Name => nameof(MovingAverage);
+    public override string Name => "MovingAverage";
 
     /// <inheritdoc />
     public override string Description => "Returns a series of value that represent the moving average of the initial data.";
@@ -43,85 +43,94 @@ public class MovingAverage: GrafanaFunctionBase
 
         new Parameter<TargetTimeUnit>
         {
-            Default = new TargetTimeUnit {  Unit = TimeUnit.Seconds },
-            Description = "Specifies the type of time units and must be one of the following: Seconds, Nanoseconds, Microseconds, Milliseconds, " +
-                          "Minutes, Hours, Days, Weeks, Ke (i.e., traditional Chinese unit of decimal time), Ticks (i.e., 100-nanosecond intervals), PlanckTime or " +
-                          "AtomicUnitsOfTime - defaults to Seconds.",
+            Default = new TargetTimeUnit { Unit = TimeUnit.Seconds },
+            Description =
+                "Specifies the type of time units and must be one of the following: Seconds, Nanoseconds, Microseconds, Milliseconds, " +
+                "Minutes, Hours, Days, Weeks, Ke (i.e., traditional Chinese unit of decimal time), Ticks (i.e., 100-nanosecond intervals), PlanckTime or " +
+                "AtomicUnitsOfTime - defaults to Seconds.",
             Required = false
         }
     };
 
     /// <inheritdoc />
-    public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
+    public class ComputeDataSourceValue : MovingAverage<DataSourceValue>
     {
-        // Get Values
-        double timeValue = (parameters[0] as IParameter<double>).Value;
-        DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
-        TargetTimeUnit timeUnit = (parameters[2] as IParameter<TargetTimeUnit>).Value;
-            
-        Time timeObj = TimeConversion.FromTimeUnits(timeValue, timeUnit);
-        double tolerance = timeObj.ConvertTo(TimeUnit.Seconds);
-
-        List<DataSourceValue> dataSourceValuesList = dataSourceValues.Source.ToList();
-        List<DataSourceValue> movingAverageList = new();
-
-        // Compute
-        TimeSliceScanner<DataSourceValue> scanner = new(new List<DataSourceValueGroup<DataSourceValue>> { dataSourceValues }, tolerance / SI.Milli);
-        while (!scanner.DataReadComplete)
+        /// <inheritdoc />
+        public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
         {
-            IEnumerable<DataSourceValue> dataPointGroups = scanner.ReadNextTimeSlice();
-            if (!dataPointGroups.Any())
-                continue;
+            // Get Values
+            double timeValue = (parameters[0] as IParameter<double>).Value;
+            DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
+            TargetTimeUnit timeUnit = (parameters[2] as IParameter<TargetTimeUnit>).Value;
 
-            DataSourceValue transformedValue = dataPointGroups.Last();
-            transformedValue.Value = dataPointGroups.Select(dataValue => { return dataValue.Value; }).Average();
-            transformedValue.Time = dataPointGroups.Select(dataValue => { return dataValue.Time; }).Average();
+            Time timeObj = TimeConversion.FromTimeUnits(timeValue, timeUnit);
+            double tolerance = timeObj.ConvertTo(TimeUnit.Seconds);
 
-            movingAverageList.Add(transformedValue);
+            List<DataSourceValue> dataSourceValuesList = dataSourceValues.Source.ToList();
+            List<DataSourceValue> movingAverageList = new();
+
+            // Compute
+            TimeSliceScanner<DataSourceValue> scanner = new(new List<DataSourceValueGroup<DataSourceValue>> { dataSourceValues }, tolerance / SI.Milli);
+            while (!scanner.DataReadComplete)
+            {
+                IEnumerable<DataSourceValue> dataPointGroups = scanner.ReadNextTimeSlice();
+                if (!dataPointGroups.Any())
+                    continue;
+
+                DataSourceValue transformedValue = dataPointGroups.Last();
+                transformedValue.Value = dataPointGroups.Select(dataValue => { return dataValue.Value; }).Average();
+                transformedValue.Time = dataPointGroups.Select(dataValue => { return dataValue.Time; }).Average();
+
+                movingAverageList.Add(transformedValue);
+            }
+
+            // Set Values
+            dataSourceValues.Target = $"{Name}({dataSourceValues.Target},{timeUnit.Unit})";
+            dataSourceValues.Source = movingAverageList;
+
+            return dataSourceValues;
         }
-
-        // Set Values
-        dataSourceValues.Target = $"{Name}({dataSourceValues.Target},{timeUnit.Unit})";
-        dataSourceValues.Source = movingAverageList;
-
-        return dataSourceValues;
     }
 
     /// <inheritdoc />
-    public override DataSourceValueGroup<PhasorValue> ComputePhasor(List<IParameter> parameters)
+    public class ComputePhasorValue : MovingAverage<PhasorValue>
     {
-        // Get Values
-        double timeValue = (parameters[0] as IParameter<double>).Value;
-        DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
-        TargetTimeUnit timeUnit = (parameters[2] as IParameter<TargetTimeUnit>).Value;
-
-        Time timeObj = TimeConversion.FromTimeUnits(timeValue, timeUnit);
-        double tolerance = timeObj.ConvertTo(TimeUnit.Seconds);
-
-        List<PhasorValue> phasorSourceValuesList = phasorValues.Source.ToList();
-        List<PhasorValue> movingAverageList = new();
-
-        // Compute
-        TimeSliceScanner<PhasorValue> scanner = new(new List<DataSourceValueGroup<PhasorValue>> { phasorValues }, tolerance / SI.Milli);
-        while (!scanner.DataReadComplete)
+        /// <inheritdoc />
+        public override DataSourceValueGroup<PhasorValue> Compute(List<IParameter> parameters)
         {
-            IEnumerable<PhasorValue> dataPointGroups = scanner.ReadNextTimeSlice();
-            if (!dataPointGroups.Any())
-                continue;
+            // Get Values
+            double timeValue = (parameters[0] as IParameter<double>).Value;
+            DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
+            TargetTimeUnit timeUnit = (parameters[2] as IParameter<TargetTimeUnit>).Value;
 
-            PhasorValue transformedValue = dataPointGroups.Last();
-            transformedValue.Magnitude = dataPointGroups.Select(dataValue => { return dataValue.Magnitude; }).Average();
-            transformedValue.Angle = dataPointGroups.Select(dataValue => { return dataValue.Angle; }).Average();
-            transformedValue.Time = dataPointGroups.Select(dataValue => { return dataValue.Time; }).Average();
+            Time timeObj = TimeConversion.FromTimeUnits(timeValue, timeUnit);
+            double tolerance = timeObj.ConvertTo(TimeUnit.Seconds);
 
-            movingAverageList.Add(transformedValue);
+            List<PhasorValue> phasorSourceValuesList = phasorValues.Source.ToList();
+            List<PhasorValue> movingAverageList = new();
+
+            // Compute
+            TimeSliceScanner<PhasorValue> scanner = new(new List<DataSourceValueGroup<PhasorValue>> { phasorValues }, tolerance / SI.Milli);
+            while (!scanner.DataReadComplete)
+            {
+                IEnumerable<PhasorValue> dataPointGroups = scanner.ReadNextTimeSlice();
+                if (!dataPointGroups.Any())
+                    continue;
+
+                PhasorValue transformedValue = dataPointGroups.Last();
+                transformedValue.Magnitude = dataPointGroups.Select(dataValue => { return dataValue.Magnitude; }).Average();
+                transformedValue.Angle = dataPointGroups.Select(dataValue => { return dataValue.Angle; }).Average();
+                transformedValue.Time = dataPointGroups.Select(dataValue => { return dataValue.Time; }).Average();
+
+                movingAverageList.Add(transformedValue);
+            }
+
+            // Set Values
+            string[] labels = phasorValues.Target.Split(';');
+            phasorValues.Target = $"{Name}({labels[0]},{timeUnit.Unit});{Name}({labels[1]},{timeUnit.Unit})";
+            phasorValues.Source = movingAverageList;
+
+            return phasorValues;
         }
-
-        // Set Values
-        string[] labels = phasorValues.Target.Split(';');
-        phasorValues.Target = $"{Name}({labels[0]},{timeUnit.Unit});{Name}({labels[1]},{timeUnit.Unit})";
-        phasorValues.Source = movingAverageList;
-
-        return phasorValues;
     }
 }

@@ -16,10 +16,10 @@ namespace GrafanaAdapters.GrafanaFunctions;
 /// Variants: Modulo, Modulus, Mod<br/>
 /// Execution: Deferred enumeration.
 /// </remarks>
-public class Modulo: GrafanaFunctionBase
+public abstract class Modulo<T> : GrafanaFunctionBase<T> where T : IDataSourceValue
 {
     /// <inheritdoc />
-    public override string Name => nameof(Modulo);
+    public override string Name => "Modulo";
 
     /// <inheritdoc />
     public override string Description => "Returns a series of values that represent each of the values in the source series modulo by N.";
@@ -41,49 +41,57 @@ public class Modulo: GrafanaFunctionBase
     };
 
     /// <inheritdoc />
-    public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
+    public class ComputeDataSourceValue : Modulo<DataSourceValue>
     {
-        // Get Values
-        double value = (parameters[0] as IParameter<double>).Value;
-        DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
-
-        // Compute
-        IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source.Select(dataSourceValue =>
+        /// <inheritdoc />
+        public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
         {
-            DataSourceValue transformedValue = dataSourceValue;
-            transformedValue.Value %= value;
+            // Get Values
+            double value = (parameters[0] as IParameter<double>).Value;
+            DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
 
-            return transformedValue;
-        });
+            // Compute
+            IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source.Select(dataSourceValue =>
+            {
+                DataSourceValue transformedValue = dataSourceValue;
+                transformedValue.Value %= value;
 
-        // Set Values
-        dataSourceValues.Target = $"{dataSourceValues.Target}/{value}";
-        dataSourceValues.Source = transformedDataSourceValues;
+                return transformedValue;
+            });
 
-        return dataSourceValues;
+            // Set Values
+            dataSourceValues.Target = $"{dataSourceValues.Target}/{value}";
+            dataSourceValues.Source = transformedDataSourceValues;
+
+            return dataSourceValues;
+        }
     }
 
     /// <inheritdoc />
-    public override DataSourceValueGroup<PhasorValue> ComputePhasor(List<IParameter> parameters)
+    public class ComputePhasorValue : Modulo<PhasorValue>
     {
-        // Get Values
-        double value = (parameters[0] as IParameter<double>).Value;
-        DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
-
-        // Compute
-        IEnumerable<PhasorValue> transformedPhasorValues = phasorValues.Source.Select(phasorValue =>
+        /// <inheritdoc />
+        public override DataSourceValueGroup<PhasorValue> Compute(List<IParameter> parameters)
         {
-            PhasorValue transformedValue = phasorValue;
-            transformedValue.Magnitude %= value;
+            // Get Values
+            double value = (parameters[0] as IParameter<double>).Value;
+            DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
 
-            return transformedValue;
-        });
+            // Compute
+            IEnumerable<PhasorValue> transformedPhasorValues = phasorValues.Source.Select(phasorValue =>
+            {
+                PhasorValue transformedValue = phasorValue;
+                transformedValue.Magnitude %= value;
 
-        // Set Values
-        string[] labels = phasorValues.Target.Split(';');
-        phasorValues.Target = $"{labels[0]}%{value};{labels[1]}%{value}";
-        phasorValues.Source = transformedPhasorValues;
+                return transformedValue;
+            });
 
-        return phasorValues;
+            // Set Values
+            string[] labels = phasorValues.Target.Split(';');
+            phasorValues.Target = $"{labels[0]}%{value};{labels[1]}%{value}";
+            phasorValues.Source = transformedPhasorValues;
+
+            return phasorValues;
+        }
     }
 }

@@ -14,10 +14,10 @@ namespace GrafanaAdapters.GrafanaFunctions;
 /// Variants: Maximum, Max<br/>
 /// Execution: Immediate enumeration.
 /// </remarks>
-public class Maximum: GrafanaFunctionBase
+public abstract class Maximum<T> : GrafanaFunctionBase<T> where T : IDataSourceValue
 {
     /// <inheritdoc />
-    public override string Name => nameof(Maximum);
+    public override string Name => "Maximum";
 
     /// <inheritdoc />
     public override string Description => " Returns a single value that is the maximum of the values in the source series.";
@@ -32,35 +32,43 @@ public class Maximum: GrafanaFunctionBase
     };
 
     /// <inheritdoc />
-    public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
+    public class ComputeDataSourceValue : Maximum<DataSourceValue>
     {
-        // Get Values
-        DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
+        /// <inheritdoc />
+        public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
+        {
+            // Get Values
+            DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
 
-        // Compute
-        DataSourceValue minimumDataSourceValue = dataSourceValues.Source.OrderBy(dataValue => dataValue.Value).Last();
+            // Compute
+            DataSourceValue minimumDataSourceValue = dataSourceValues.Source.OrderBy(dataValue => dataValue.Value).Last();
 
-        // Set Values
-        dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
-        dataSourceValues.Source = Enumerable.Repeat(minimumDataSourceValue, 1);
+            // Set Values
+            dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
+            dataSourceValues.Source = Enumerable.Repeat(minimumDataSourceValue, 1);
 
-        return dataSourceValues;
+            return dataSourceValues;
+        }
     }
 
     /// <inheritdoc />
-    public override DataSourceValueGroup<PhasorValue> ComputePhasor(List<IParameter> parameters)
+    public class ComputePhasorValue : Maximum<PhasorValue>
     {
-        // Get Values
-        DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
+        /// <inheritdoc />
+        public override DataSourceValueGroup<PhasorValue> Compute(List<IParameter> parameters)
+        {
+            // Get Values
+            DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
 
-        // Compute
-        PhasorValue minimumPhasorValue = phasorValues.Source.OrderBy(dataValue => dataValue.Magnitude).Last();
+            // Compute
+            PhasorValue minimumPhasorValue = phasorValues.Source.OrderBy(dataValue => dataValue.Magnitude).Last();
 
-        // Set Values
-        string[] labels = phasorValues.Target.Split(';');
-        phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
-        phasorValues.Source = Enumerable.Repeat(minimumPhasorValue, 1);
+            // Set Values
+            string[] labels = phasorValues.Target.Split(';');
+            phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
+            phasorValues.Source = Enumerable.Repeat(minimumPhasorValue, 1);
 
-        return phasorValues;
+            return phasorValues;
+        }
     }
 }

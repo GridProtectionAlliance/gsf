@@ -14,10 +14,10 @@ namespace GrafanaAdapters.GrafanaFunctions;
 /// Variants: Average, Avg, Mean<br/>
 /// Execution: Immediate enumeration.
 /// </remarks>
-public class Average: GrafanaFunctionBase
+public abstract class Average<T> : GrafanaFunctionBase<T> where T : IDataSourceValue
 {
     /// <inheritdoc />
-    public override string Name => nameof(Average);
+    public override string Name => "Average";
 
     /// <inheritdoc />
     public override string Description => "Returns a single value that represents the mean of the values in the source series.";
@@ -32,46 +32,48 @@ public class Average: GrafanaFunctionBase
     };
 
     /// <inheritdoc />
-    public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
+    public class ComputeDataSourceValue : Average<DataSourceValue>
     {
-        // Get Values
-        DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>)!.Value;
+        /// <inheritdoc />
+        public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
+        {
+            // Get Values
+            DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>)!.Value;
 
-        // Compute
-        DataSourceValue lastElement = dataSourceValues.Source.Last();
-        lastElement.Value = dataSourceValues.Source
-            .Select(dataValue => dataValue.Value)
-            .Average();
+            // Compute
+            DataSourceValue lastElement = dataSourceValues.Source.Last();
+            lastElement.Value = dataSourceValues.Source.Select(dataValue => dataValue.Value).Average();
 
-        // Set Values
-        dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
-        dataSourceValues.Source = Enumerable.Repeat(lastElement, 1);
+            // Set Values
+            dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
+            dataSourceValues.Source = Enumerable.Repeat(lastElement, 1);
 
-        return dataSourceValues;
+            return dataSourceValues;
+        }
     }
 
     /// <inheritdoc />
-    public override DataSourceValueGroup<PhasorValue> ComputePhasor(List<IParameter> parameters)
+    public class ComputePhasorValue : Average<PhasorValue>
     {
-        // Get Values
-        DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>)!.Value;
+        /// <inheritdoc />
+        public override DataSourceValueGroup<PhasorValue> Compute(List<IParameter> parameters)
+        {
+            // Get Values
+            DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>)!.Value;
 
-        // Compute
-        PhasorValue lastElement = phasorValues.Source.Last();
-        
-        lastElement.Magnitude = phasorValues.Source
-            .Select(dataValue => dataValue.Magnitude)
-            .Average();
-        
-        lastElement.Angle = phasorValues.Source
-            .Select(dataValue => dataValue.Angle)
-            .Average();
+            // Compute
+            PhasorValue lastElement = phasorValues.Source.Last();
 
-        // Set Values
-        string[] labels = phasorValues.Target.Split(';');
-        phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
-        phasorValues.Source = Enumerable.Repeat(lastElement, 1);
+            lastElement.Magnitude = phasorValues.Source.Select(dataValue => dataValue.Magnitude).Average();
 
-        return phasorValues;
+            lastElement.Angle = phasorValues.Source.Select(dataValue => dataValue.Angle).Average();
+
+            // Set Values
+            string[] labels = phasorValues.Target.Split(';');
+            phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
+            phasorValues.Source = Enumerable.Repeat(lastElement, 1);
+
+            return phasorValues;
+        }
     }
 }

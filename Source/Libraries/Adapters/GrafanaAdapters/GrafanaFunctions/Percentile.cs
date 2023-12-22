@@ -16,10 +16,10 @@ namespace GrafanaAdapters.GrafanaFunctions;
 /// Variants: Percentile, Pctl<br/>
 /// Execution: Immediate in-memory array load.
 /// </remarks>
-public class Percentile: GrafanaFunctionBase
+public abstract class Percentile<T> : GrafanaFunctionBase<T> where T : IDataSourceValue
 {
     /// <inheritdoc />
-    public override string Name => nameof(Percentile);
+    public override string Name => "Percentile";
 
     /// <inheritdoc />
     public override string Description => "Returns a series of N, or N% of total, values from the start of the source series.";
@@ -40,13 +40,8 @@ public class Percentile: GrafanaFunctionBase
         InputDataPointValues
     };
 
-    /// <summary>
-    /// Used to convert value or percent to the number of points selected
-    /// </summary>
-    /// <param name="rawValue"></param>
-    /// <returns></returns>
-    /// <exception cref="Exception"></exception>
-    private double ConvertToValue(string rawValue)
+    // Converts value or percent to the number of points selected
+    private static double ConvertToValue(string rawValue)
     {
         try
         {
@@ -64,71 +59,81 @@ public class Percentile: GrafanaFunctionBase
     }
 
     /// <inheritdoc />
-    public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
+    public class ComputeDataSourceValue : Percentile<DataSourceValue>
     {
-        // Get Values
-        string rawValue = (parameters[0] as IParameter<string>).Value;
-        DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
-        double percent = ConvertToValue(rawValue);
-
-        // Compute
-        DataSourceValue selectedElement = dataSourceValues.Source.Last();
-
-        if (percent <= 0)
-            selectedElement = dataSourceValues.Source.First();
-        else
+        /// <inheritdoc />
+        public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
         {
-            List<DataSourceValue> values = dataSourceValues.Source.ToList();
-            double n = (dataSourceValues.Source.Count() - 1) * (percent / 100.0D) + 1.0D;
-            int k = (int)n;
-            if(k >= values.Count) k = (values.Count - 1);
-            DataSourceValue kData = values[k];
-            double d = n - k;
-            double k0 = values[k - 1].Value;
-            double k1 = kData.Value;
+            // Get Values
+            string rawValue = (parameters[0] as IParameter<string>).Value;
+            DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
+            double percent = ConvertToValue(rawValue);
 
-            selectedElement.Value = k0 + d * (k1 - k0);
-            selectedElement.Time = kData.Time;
+            // Compute
+            DataSourceValue selectedElement = dataSourceValues.Source.Last();
+
+            if (percent <= 0)
+                selectedElement = dataSourceValues.Source.First();
+            else
+            {
+                List<DataSourceValue> values = dataSourceValues.Source.ToList();
+                double n = (dataSourceValues.Source.Count() - 1) * (percent / 100.0D) + 1.0D;
+                int k = (int)n;
+                if (k >= values.Count)
+                    k = (values.Count - 1);
+                DataSourceValue kData = values[k];
+                double d = n - k;
+                double k0 = values[k - 1].Value;
+                double k1 = kData.Value;
+
+                selectedElement.Value = k0 + d * (k1 - k0);
+                selectedElement.Time = kData.Time;
+            }
+
+            // Set Values
+            dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
+            dataSourceValues.Source = Enumerable.Repeat(selectedElement, 1);
+
+            return dataSourceValues;
         }
-
-        // Set Values
-        dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
-        dataSourceValues.Source = Enumerable.Repeat(selectedElement, 1);
-
-        return dataSourceValues;
     }
 
     /// <inheritdoc />
-    public override DataSourceValueGroup<PhasorValue> ComputePhasor(List<IParameter> parameters)
+    public class ComputePhasorValue : Percentile<PhasorValue>
     {
-        // Get Values
-        string rawValue = (parameters[0] as IParameter<string>).Value;
-        DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
-        double percent = ConvertToValue(rawValue);
-
-        // Compute
-        PhasorValue selectedElement = phasorValues.Source.Last();
-        if (percent <= 0)
-            selectedElement = phasorValues.Source.First();
-        else
+        /// <inheritdoc />
+        public override DataSourceValueGroup<PhasorValue> Compute(List<IParameter> parameters)
         {
-            List<PhasorValue> values = phasorValues.Source.ToList();
-            double n = (phasorValues.Source.Count() - 1) * (percent / 100.0D) + 1.0D;
-            int k = (int)n;
-            PhasorValue kData = values[k];
-            double d = n - k;
-            double k0 = values[k - 1].Magnitude;
-            double k1 = kData.Magnitude;
+            // Get Values
+            string rawValue = (parameters[0] as IParameter<string>).Value;
+            DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
+            double percent = ConvertToValue(rawValue);
 
-            selectedElement.Magnitude = k0 + d * (k1 - k0);
-            selectedElement.Angle = k0 + d * (k1 - k0);
-            selectedElement.Time = kData.Time;
+            // Compute
+            PhasorValue selectedElement = phasorValues.Source.Last();
+            if (percent <= 0)
+                selectedElement = phasorValues.Source.First();
+            else
+            {
+                List<PhasorValue> values = phasorValues.Source.ToList();
+                double n = (phasorValues.Source.Count() - 1) * (percent / 100.0D) + 1.0D;
+                int k = (int)n;
+                PhasorValue kData = values[k];
+                double d = n - k;
+                double k0 = values[k - 1].Magnitude;
+                double k1 = kData.Magnitude;
+
+                selectedElement.Magnitude = k0 + d * (k1 - k0);
+                selectedElement.Angle = k0 + d * (k1 - k0);
+                selectedElement.Time = kData.Time;
+            }
+
+            // Set Values
+            string[] labels = phasorValues.Target.Split(';');
+            phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
+            phasorValues.Source = Enumerable.Repeat(selectedElement, 1);
+
+            return phasorValues;
         }
-        // Set Values
-        string[] labels = phasorValues.Target.Split(';');
-        phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
-        phasorValues.Source = Enumerable.Repeat(selectedElement, 1);
-
-        return phasorValues;
     }
 }

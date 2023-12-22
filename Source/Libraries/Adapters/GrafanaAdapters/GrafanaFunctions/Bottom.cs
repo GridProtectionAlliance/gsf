@@ -20,10 +20,10 @@ namespace GrafanaAdapters.GrafanaFunctions;
 /// Variants: Bottom, Bot, Smallest<br/>
 /// Execution: Immediate in-memory array load.
 /// </remarks>
-public class Bottom: GrafanaFunctionBase
+public abstract class Bottom<T> : GrafanaFunctionBase<T> where T : IDataSourceValue
 {
     /// <inheritdoc />
-    public override string Name => nameof(Bottom);
+    public override string Name => "Bottom";
 
     /// <inheritdoc />
     public override string Description => "Returns a series of N, or N% of total, values that are the smallest in the source series.";
@@ -51,14 +51,8 @@ public class Bottom: GrafanaFunctionBase
         }
     };
 
-    /// <summary>
-    /// Used to convert value or percent to the number of points selected
-    /// </summary>
-    /// <param name="rawValue"></param>
-    /// <param name="numberPoints"></param>
-    /// <returns></returns>
-    /// <exception cref="Exception"></exception>
-    private int convertToValue(string rawValue, int numberPoints)
+    // Converts value or percent to the number of points selected
+    private static int ConvertToValue(string rawValue, int numberPoints)
     {
         try
         {
@@ -66,10 +60,10 @@ public class Bottom: GrafanaFunctionBase
             if (rawValue.EndsWith("%")) // Percent
             {
                 double percent = Convert.ToDouble(rawValue.TrimEnd('%')) / 100;
-                
+
                 if (percent is < 0 or > 1)
                     throw new Exception($"Error {rawValue} out of bounds (0 - 100).");
-                
+
                 return Convert.ToInt32(numberPoints * percent);
             }
 
@@ -86,90 +80,94 @@ public class Bottom: GrafanaFunctionBase
     }
 
     /// <inheritdoc />
-    public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
+    public class ComputeDataSourceValue : Bottom<DataSourceValue>
     {
-        // Get Values
-        string rawValue = (parameters[0] as IParameter<string>)!.Value;
-        DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
-        bool normalizeTime = (parameters[2] as IParameter<bool>)!.Value;
-        int numberRequested = convertToValue(rawValue, dataSourceValues.Source.Count());
-
-        // Requested more than accessible
-        if (numberRequested >= dataSourceValues.Source.Count())
-            numberRequested = dataSourceValues.Source.Count();
-
-        // Compute
-        double baseTime = dataSourceValues.Source.First().Time;
-        double timeRange = dataSourceValues.Source.Last().Time - baseTime;
-
-        IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source
-            .OrderBy(dataSourceValue => dataSourceValue.Value)
-            .Take(numberRequested);
-
-        // Normalize Time
-        if (normalizeTime)
+        /// <inheritdoc />
+        public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
         {
-            int count = transformedDataSourceValues.Count() - 1;
-            double timeStep = count == 0 ? 0 : timeRange / count;
+            // Get Values
+            string rawValue = (parameters[0] as IParameter<string>)!.Value;
+            DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
+            bool normalizeTime = (parameters[2] as IParameter<bool>)!.Value;
+            int numberRequested = ConvertToValue(rawValue, dataSourceValues.Source.Count());
 
-            transformedDataSourceValues = transformedDataSourceValues.Select((dataSourceValue, index) =>
+            // Requested more than accessible
+            if (numberRequested >= dataSourceValues.Source.Count())
+                numberRequested = dataSourceValues.Source.Count();
+
+            // Compute
+            double baseTime = dataSourceValues.Source.First().Time;
+            double timeRange = dataSourceValues.Source.Last().Time - baseTime;
+
+            IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source.OrderBy(dataSourceValue => dataSourceValue.Value).Take(numberRequested);
+
+            // Normalize Time
+            if (normalizeTime)
             {
-                DataSourceValue newDataSourceValue = dataSourceValue;
-                newDataSourceValue.Time = baseTime + (index * timeStep);
+                int count = transformedDataSourceValues.Count() - 1;
+                double timeStep = count == 0 ? 0 : timeRange / count;
 
-                return newDataSourceValue;
-            });
+                transformedDataSourceValues = transformedDataSourceValues.Select((dataSourceValue, index) =>
+                {
+                    DataSourceValue newDataSourceValue = dataSourceValue;
+                    newDataSourceValue.Time = baseTime + (index * timeStep);
+
+                    return newDataSourceValue;
+                });
+            }
+
+            // Set Values
+            dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
+            dataSourceValues.Source = transformedDataSourceValues;
+
+            return dataSourceValues;
         }
-
-        // Set Values
-        dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
-        dataSourceValues.Source = transformedDataSourceValues;
-
-        return dataSourceValues;
     }
 
     /// <inheritdoc />
-    public override DataSourceValueGroup<PhasorValue> ComputePhasor(List<IParameter> parameters)
+    public class ComputePhasorValue : Bottom<PhasorValue>
     {
-        // Get Values
-        string rawValue = (parameters[0] as IParameter<string>)!.Value;
-        DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
-        bool normalizeTime = (parameters[2] as IParameter<bool>)!.Value;
-
-        int numberRequested = convertToValue(rawValue, phasorValues.Source.Count());
-
-        // Requested more than accessible
-        if (numberRequested >= phasorValues.Source.Count())
-            numberRequested = phasorValues.Source.Count();
-
-        // Compute
-        double baseTime = phasorValues.Source.First().Time;
-        double timeRange = phasorValues.Source.Last().Time - baseTime;
-
-        IEnumerable<PhasorValue> transformedPhasorValues = phasorValues.Source
-            .OrderBy(phasorValue => phasorValue.Magnitude)
-            .Take(numberRequested);
-
-        // Normalize Time
-        if (normalizeTime)
+        /// <inheritdoc />
+        public override DataSourceValueGroup<PhasorValue> Compute(List<IParameter> parameters)
         {
-            int count = transformedPhasorValues.Count() - 1;
-            double timeStep = count == 0 ? 0 : timeRange / count;
+            // Get Values
+            string rawValue = (parameters[0] as IParameter<string>)!.Value;
+            DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
+            bool normalizeTime = (parameters[2] as IParameter<bool>)!.Value;
 
-            transformedPhasorValues = transformedPhasorValues.Select((phasorValue, index) =>
+            int numberRequested = ConvertToValue(rawValue, phasorValues.Source.Count());
+
+            // Requested more than accessible
+            if (numberRequested >= phasorValues.Source.Count())
+                numberRequested = phasorValues.Source.Count();
+
+            // Compute
+            double baseTime = phasorValues.Source.First().Time;
+            double timeRange = phasorValues.Source.Last().Time - baseTime;
+
+            IEnumerable<PhasorValue> transformedPhasorValues = phasorValues.Source.OrderBy(phasorValue => phasorValue.Magnitude).Take(numberRequested);
+
+            // Normalize Time
+            if (normalizeTime)
             {
-                PhasorValue newPhasorValue = phasorValue;
-                newPhasorValue.Time = baseTime + (index * timeStep);
+                int count = transformedPhasorValues.Count() - 1;
+                double timeStep = count == 0 ? 0 : timeRange / count;
 
-                return newPhasorValue;
-            });
+                transformedPhasorValues = transformedPhasorValues.Select((phasorValue, index) =>
+                {
+                    PhasorValue newPhasorValue = phasorValue;
+                    newPhasorValue.Time = baseTime + (index * timeStep);
+
+                    return newPhasorValue;
+                });
+            }
+
+            // Set Values
+            string[] labels = phasorValues.Target.Split(';');
+            phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
+            phasorValues.Source = transformedPhasorValues;
+
+            return phasorValues;
         }
-
-        // Set Values
-        string[] labels = phasorValues.Target.Split(';');
-        phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
-        phasorValues.Source = transformedPhasorValues;
-
-        return phasorValues;
     }
 }

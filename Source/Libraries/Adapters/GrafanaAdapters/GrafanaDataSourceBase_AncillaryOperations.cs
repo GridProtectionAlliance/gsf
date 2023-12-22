@@ -21,14 +21,12 @@
 //
 //******************************************************************************************************
 
-using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using GrafanaAdapters.GrafanaFunctionsCore;
 using GSF;
 using GSF.Data;
 using GSF.Data.Model;
@@ -87,95 +85,95 @@ partial class GrafanaDataSourceBase
         }
 
         return Task.Factory.StartNew(() =>
+        {
+            return TargetCache<string[]>.GetOrAdd($"search!{target}", () =>
             {
-                return TargetCache<string[]>.GetOrAdd($"search!{target}", () =>
+                if (request.target is not null)
                 {
-                    if (request.target is not null)
+                    // Attempt to parse search target as a SQL SELECT statement that will operate as a filter for in memory metadata (not a database query)
+                    if (parseSelectExpression(request.target.Trim(), out string tableName, out string[] fieldNames, out string expression, out string sortField, out int takeCount))
                     {
-                        // Attempt to parse search target as a SQL SELECT statement that will operate as a filter for in memory metadata (not a database query)
-                        if (parseSelectExpression(request.target.Trim(), out string tableName, out string[] fieldNames, out string expression, out string sortField, out int takeCount))
+                        DataTableCollection tables = Metadata.Tables;
+                        List<string> results = new();
+
+                        if (!tables.Contains(tableName))
+                            return results.ToArray();
+
+                        DataTable table = tables[tableName];
+                        List<string> validFieldNames = new();
+
+                        for (int i = 0; i < fieldNames?.Length; i++)
                         {
-                            DataTableCollection tables = Metadata.Tables;
-                            List<string> results = new();
+                            string fieldName = fieldNames[i].Trim();
 
-                            if (tables.Contains(tableName))
+                            if (table.Columns.Contains(fieldName))
+                                validFieldNames.Add(fieldName);
+                        }
+
+                        fieldNames = validFieldNames.ToArray();
+
+                        if (fieldNames.Length == 0)
+                            fieldNames = table.Columns.Cast<DataColumn>().Select(column => column.ColumnName).ToArray();
+
+                        // If no filter expression or take count was specified, limit search target results - user can
+                        // still request larger results sets by specifying desired TOP count.
+                        if (takeCount == int.MaxValue && string.IsNullOrWhiteSpace(expression))
+                            takeCount = MaximumSearchTargetsPerRequest;
+
+                        void executeSelect(IEnumerable<DataRow> queryOperation)
+                        {
+                            results.AddRange(queryOperation.Take(takeCount).Select(row =>
+                                string.Join(",", fieldNames.Select(fieldName => row[fieldName].ToString()))));
+                        }
+
+                        if (string.IsNullOrWhiteSpace(expression))
+                        {
+                            if (string.IsNullOrWhiteSpace(sortField))
                             {
-                                DataTable table = tables[tableName];
-                                List<string> validFieldNames = new();
-
-                                for (int i = 0; i < fieldNames?.Length; i++)
+                                executeSelect(table.Select());
+                            }
+                            else
+                            {
+                                if (Common.IsNumericType(table.Columns[sortField].DataType))
                                 {
-                                    string fieldName = fieldNames[i].Trim();
-
-                                    if (table.Columns.Contains(fieldName))
-                                        validFieldNames.Add(fieldName);
-                                }
-
-                                fieldNames = validFieldNames.ToArray();
-
-                                if (fieldNames.Length == 0)
-                                    fieldNames = table.Columns.Cast<DataColumn>().Select(column => column.ColumnName).ToArray();
-
-                                // If no filter expression or take count was specified, limit search target results - user can
-                                // still request larger results sets by specifying desired TOP count.
-                                if (takeCount == int.MaxValue && string.IsNullOrWhiteSpace(expression))
-                                    takeCount = MaximumSearchTargetsPerRequest;
-
-                                void executeSelect(IEnumerable<DataRow> queryOperation)
-                                {
-                                    results.AddRange(queryOperation.Take(takeCount).Select(row =>
-                                        string.Join(",", fieldNames.Select(fieldName => row[fieldName].ToString()))));
-                                }
-
-                                if (string.IsNullOrWhiteSpace(expression))
-                                {
-                                    if (string.IsNullOrWhiteSpace(sortField))
+                                    decimal parseAsNumeric(DataRow row)
                                     {
-                                        executeSelect(table.Select());
+                                        decimal.TryParse(row[sortField].ToString(), out decimal result);
+                                        return result;
                                     }
-                                    else
-                                    {
-                                        if (Common.IsNumericType(table.Columns[sortField].DataType))
-                                        {
-                                            decimal parseAsNumeric(DataRow row)
-                                            {
-                                                decimal.TryParse(row[sortField].ToString(), out decimal result);
-                                                return result;
-                                            }
 
-                                            executeSelect(table.Select().OrderBy(parseAsNumeric));
-                                        }
-                                        else
-                                        {
-                                            executeSelect(table.Select().OrderBy(row => row[sortField].ToString()));
-                                        }
-                                    }
+                                    executeSelect(table.Select().OrderBy(parseAsNumeric));
                                 }
                                 else
                                 {
-                                    executeSelect(table.Select(expression, sortField));
+                                    executeSelect(table.Select().OrderBy(row => row[sortField].ToString()));
                                 }
                             }
-
-                            return results.ToArray();
                         }
-                    }
+                        else
+                        {
+                            executeSelect(table.Select(expression, sortField));
+                        }
 
-                    // Non "SELECT" style expressions default to searches on ActiveMeasurements meta-data table
-                    if (request.isPhasor)
-                    {
-                        return Metadata.Tables["Phasor"].AsEnumerable()
-                            .Select(row => row["Label"].ToString())
-                            .ToArray();
+                        return results.ToArray();
                     }
-                    // Non "SELECT" style expressions default to searches on ActiveMeasurements meta-data table
-                    else
-                    {
-                        return Metadata.Tables["ActiveMeasurements"].Select($"ID LIKE '{InstanceName}:%' AND PointTag LIKE '%{target}%'").Take(MaximumSearchTargetsPerRequest).Select(row => $"{row["PointTag"]}").ToArray();
-                    }
-                });
-            },
-            cancellationToken);
+                }
+
+                // TODO: JRC - suggest renaming 'isPhasor' parameter to 'dataType' and making it a string,
+                // then check value, e.g., "PhasorValue" or "DataSourceValue", and query the following
+                // from an updated IDataSourceValue interface function - can create a new instance of
+                // type based on the value of 'dataType' and then call the interface function:
+
+                // Non "SELECT" style expressions default to searches on ActiveMeasurements meta-data table
+                if (request.isPhasor)
+                    return Metadata.Tables["Phasor"].AsEnumerable()
+                        .Select(row => row["Label"].ToString())
+                        .ToArray();
+
+                return Metadata.Tables["ActiveMeasurements"].Select($"ID LIKE '{InstanceName}:%' AND PointTag LIKE '%{target}%'").Take(MaximumSearchTargetsPerRequest).Select(row => $"{row["PointTag"]}").ToArray();
+            });
+        },
+        cancellationToken);
     }
 
     /// <summary>
@@ -211,9 +209,9 @@ partial class GrafanaDataSourceBase
                 continue;
 
             int index = 0;
+
             foreach (double[] datapoint in values.datapoints)
             {
-
                 if (!type.IsApplicable(datapoint))
                 {
                     index++;
@@ -221,22 +219,27 @@ partial class GrafanaDataSourceBase
                 }
 
                 AnnotationResponse response;
+
                 if (index == values.datapoints.Count-1 )
+                {
                     response = new AnnotationResponse
                     {
                         time = datapoint[TimeSeriesValues.Time],
                         endTime = datapoint[TimeSeriesValues.Time],
                     };
+                }
                 else
+                {
                     response = new AnnotationResponse
                     {
                         time = datapoint[TimeSeriesValues.Time],
                         endTime = values.datapoints[index + 1][TimeSeriesValues.Time],
                     };
+                }
 
                 type.PopulateResponse(response, target, definition, datapoint, Metadata);
-
                 responses.Add(response);
+
                 index++;
             }
         }
@@ -244,21 +247,20 @@ partial class GrafanaDataSourceBase
         return responses;
     }
 
-
     /// <summary>
     /// Queries current alarm device state.
     /// </summary>
     /// <param name="request">Alarm request.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns> Queried device alarm states.</returns>
-    public Task<IEnumerable<AlarmDeviceStateView>> GetAlarmState(QueryRequest request, CancellationToken cancellationToken)
+    public virtual Task<IEnumerable<AlarmDeviceStateView>> GetAlarmState(QueryRequest request, CancellationToken cancellationToken)
     {
         return Task.Factory.StartNew(() =>
-            {
-                using AdoDataConnection connection = new("systemSettings"); 
-                return new TableOperations<AlarmDeviceStateView>(connection).QueryRecords("Name");
-            },
-            cancellationToken);
+        {
+            using AdoDataConnection connection = new("systemSettings"); 
+            return new TableOperations<AlarmDeviceStateView>(connection).QueryRecords("Name");
+        },
+        cancellationToken);
     }
 
     /// <summary>
@@ -267,14 +269,14 @@ partial class GrafanaDataSourceBase
     /// <param name="request">Alarm request.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns> Queried device alarm states.</returns>
-    public Task<IEnumerable<AlarmState>> GetDeviceAlarms(QueryRequest request, CancellationToken cancellationToken)
+    public virtual Task<IEnumerable<AlarmState>> GetDeviceAlarms(QueryRequest request, CancellationToken cancellationToken)
     {
         return Task.Factory.StartNew(() =>
-            {
-                using AdoDataConnection connection = new("systemSettings");
-                return new TableOperations<AlarmState>(connection).QueryRecords("ID");
-            },
-            cancellationToken);
+        {
+            using AdoDataConnection connection = new("systemSettings");
+            return new TableOperations<AlarmState>(connection).QueryRecords("ID");
+        },
+        cancellationToken);
     }
 
     /// <summary>
@@ -283,33 +285,33 @@ partial class GrafanaDataSourceBase
     /// <param name="request">request.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns> List of Device Groups.</returns>
-    public Task<IEnumerable<DeviceGroup>> GetDeviceGroups(QueryRequest request, CancellationToken cancellationToken)
+    public virtual Task<IEnumerable<DeviceGroup>> GetDeviceGroups(QueryRequest request, CancellationToken cancellationToken)
     {
         return Task.Factory.StartNew(() =>
+        {
+            using AdoDataConnection connection = new("systemSettings");
+
+            IEnumerable<GSF.TimeSeries.Model.Device> groups = (new TableOperations<GSF.TimeSeries.Model.Device>(connection)).QueryRecordsWhere("AccessID = -99999");
+
+            return groups.Select(item => new DeviceGroup
             {
-                using AdoDataConnection connection = new("systemSettings");
+                ID = item.ID,
+                Name = item.Name,
+                Devices = processDeviceGroup(item.ConnectionString).ToList()
 
-                IEnumerable<GSF.TimeSeries.Model.Device> groups = (new TableOperations<GSF.TimeSeries.Model.Device>(connection)).QueryRecordsWhere("AccessID = -99999");
+            });
+        },
+        cancellationToken);
 
-                return groups.Select(item => new DeviceGroup
-                {
-                    ID = item.ID,
-                    Name = item.Name,
-                    Devices = ProcessDeviceGroup(item.ConnectionString).ToList()
+        IEnumerable<int> processDeviceGroup(string connectionString)
+        {
+            // Parse the connection string into a dictionary of key-value pairs for easy lookups
+            Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
 
-                });
-            },
-            cancellationToken);
-    }
-
-    private IEnumerable<int> ProcessDeviceGroup(string connectionString)
-    {
-        // Parse the connection string into a dictionary of key-value pairs for easy lookups
-        Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
-
-        return !settings.ContainsKey("DeviceIDs") ? 
-            new List<int>() : 
-            settings["DeviceIDs"].Split(',').Select(item => ParseInt(item));
+            return !settings.ContainsKey("DeviceIDs") ?
+                new List<int>() :
+                settings["DeviceIDs"].Split(',').Select(item => ParseInt(item));
+        }
     }
 
     /// <summary>
@@ -318,103 +320,81 @@ partial class GrafanaDataSourceBase
     /// <param name="isPhasor">A boolean indicating whether the data is a phasor.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns> Available MetaData Table options.</returns>
-    public Task<string[]> GetTableOptions(bool isPhasor, CancellationToken cancellationToken)
+    // TODO: JRC - suggest renaming first parameter to 'dataType' and making it a string value, e.g., "PhasorValue" or "DataSourceValue", to allow for future expansion
+    public virtual Task<string[]> GetTableOptions(bool isPhasor, CancellationToken cancellationToken)
     {
-        Func<DataTable, bool> hasCollumns = (tbl) => tbl.Columns.Contains("ID") &&
-                                                     tbl.Columns.Contains("SignalID") &&
-                                                     tbl.Columns.Contains("PointTag") &&
-                                                     tbl.Columns.Contains("Adder") &&
-                                                     tbl.Columns.Contains("Multiplier");
-
         return Task.Factory.StartNew(() =>
+        {
+            // Phasor mode only has one table for now
+            if (isPhasor)
+                return new[] { "Phasor" };
+
+            List<string> tables = new();    
+
+            foreach (DataTable table in Metadata.Tables)
             {
-                // Phasor mode only has one table for now
-                if (isPhasor)
-                    return new string[1] { "Phasor" };
+                if (hasRequiredMetadataSourceColumns(table) && table.Rows.Count > 0)
+                    tables.Add(table.TableName); 
+            }
 
-                List<string> tables = new();    
+            return tables.ToArray();
+        },
+        cancellationToken);
 
-                foreach (DataTable table in Metadata.Tables)
-                {
-                    if (hasCollumns(table) && table.Rows.Count > 0)
-                        tables.Add(table.TableName); 
-                }
-                return tables.ToArray();
-            },
-            cancellationToken);
-    }
-
-    private static int ParseInt(string parameter, bool includeZero = true)
-    {
-        parameter = parameter.Trim();
-
-        if (!int.TryParse(parameter, out int value))
-            throw new FormatException($"Could not parse '{parameter}' as an integer value.");
-
-        if (includeZero)
-        {
-            if (value < 0)
-                throw new ArgumentOutOfRangeException($"Value '{parameter}' is less than zero.");
-        }
-        else
-        {
-            if (value <= 0)
-                throw new ArgumentOutOfRangeException($"Value '{parameter}' is less than or equal to zero.");
-        }
-
-        return value;
+        bool hasRequiredMetadataSourceColumns(DataTable table) =>
+            table.Columns.Contains("ID") &&
+            table.Columns.Contains("SignalID") &&
+            table.Columns.Contains("PointTag") &&
+            table.Columns.Contains("Adder") &&
+            table.Columns.Contains("Multiplier");
     }
 
     /// <summary>
     /// Queries description of available functions.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token.</param>
-    public Task<FunctionDescription[]> GetFunctionDescription(CancellationToken cancellationToken)
+    // TODO: JRC - suggest passing a parameter e.g. 'dataType' string to filter function descriptions by data type, e.g., "PhasorValue" or "DataSourceValue"
+    public virtual Task<FunctionDescription[]> GetFunctionDescription(CancellationToken cancellationToken)
     {
-        return Task.Factory.StartNew(() => FunctionParser.GetFunctionDescription().ToArray(),            
-            cancellationToken);
-            
+        return Task.Factory.StartNew(() => GetFunctionDescriptions().ToArray(), cancellationToken);
     }
 
     /// <summary>
-    /// Requests Grafana Metadata source for multiple targets.
+    /// Requests Grafana metadata table column names for multiple targets.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <param name="request"> The targets and the meta data requested</param>
-    /// <returns> Queried metadata.</returns>
-    public Task<Dictionary<string, string[]>> GetMetadataOptions(MetadataOptionsRequest request, CancellationToken cancellationToken)
+    /// <returns>Queried metadata table column names.</returns>
+    public virtual Task<Dictionary<string, string[]>> GetMetadataOptions(MetadataOptionsRequest request, CancellationToken cancellationToken)
     {
         return Task.Factory.StartNew(() =>
+        {
+            Dictionary<string, string[]> tableColumnNames = new();
+
+            foreach (string table in request.Tables)
             {
-                Dictionary<string, string[]> tableColumnNames = new();
+                if (!Metadata.Tables.Contains(table))
+                    continue;
 
-                foreach (string table in request.Tables)
-                {
-                    if (Metadata.Tables.Contains(table))
-                    {
-                        DataColumnCollection columns = Metadata.Tables[table].Columns;
+                DataColumnCollection columns = Metadata.Tables[table].Columns;
+                List<string> columnNames = new();
 
-                        List<string> columnNames = new();
+                for (int i = 0; i < columns.Count; i++) 
+                    columnNames.Add(columns[i].ColumnName);
 
-                        for (int i = 0; i < columns.Count; i++)
-                        {
-                            columnNames.Add(columns[i].ColumnName);
-                        }
+                tableColumnNames[table] = columnNames.ToArray();
+            }
+            return tableColumnNames;
 
-                        tableColumnNames[table] = columnNames.ToArray();
-                    }
-                }
-                return tableColumnNames;
-
-            },
-            cancellationToken);
+        },
+        cancellationToken);
     }
 
     /// <summary>
-    /// Queries openHistorian as a Grafana Metadata source.
+    /// Queries openHistorian as a Grafana metadata source.
     /// </summary>
     /// <param name="request">Query request.</param>
-    public Task<string> GetMetadata(Target request)
+    public virtual Task<string> GetMetadata(Target request)
     {
         return Task.Factory.StartNew(() =>
         {
@@ -422,31 +402,37 @@ partial class GrafanaDataSourceBase
 
             if (string.IsNullOrWhiteSpace(request.target))
             {
+                string tableName = request.metadataSelection.FirstOrDefault().Key;
+                string fieldName = request.metadataSelection.FirstOrDefault().Value.FirstOrDefault();
 
-                string table = request.metadataSelection.FirstOrDefault().Key;
-                string field = request.metadataSelection.FirstOrDefault().Value.FirstOrDefault();
-
-                DataRow[] rows = Metadata.Tables[table].Select() ?? Array.Empty<DataRow>();
-                foreach (DataRow row in rows)
+                if (fieldName is not null)
                 {
-                    result.Add(row[field].ToString());
+                    DataTable table = Metadata.Tables[tableName];
+
+                    if (table is not null)
+                    {
+                        DataRow[] rows = table.Select();
+
+                        foreach (DataRow row in rows)
+                            result.Add(row[fieldName].ToString());
+                    }
                 }
+
                 return JsonConvert.SerializeObject(result);
             }
 
-            IEnumerable<ParsedTarget<DataSourceValue>> targets = ParsedTarget<DataSourceValue>.ParseTargets(request.target.Trim());
-            string[] rootTargets = targets.SelectMany(pt => pt.DataTargets).ToArray();
+            // TODO: JRC - verify this is correct - this assumes that the target is a normal data source value
+            ParsedTarget<DataSourceValue>[] targets = ParseTargets<DataSourceValue>(request.target.Trim());
+            
+            string[] rootTargets = targets.SelectMany(target => target.DataTargets).ToArray();
 
-            foreach (string t in rootTargets)
+            foreach (string rootTarget in rootTargets)
             {
-                KeyValuePair<string, string> data = FunctionParser
-                    .GetMetadata(this, t, request.metadataSelection)
-                    .FirstOrDefault();
+                KeyValuePair<string, string> data = GetMetadata(rootTarget, request.metadataSelection).FirstOrDefault();
                 result.Add(data.Value);
             }
 
             return JsonConvert.SerializeObject(result);
         });
     }
-
 }

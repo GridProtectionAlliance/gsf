@@ -83,5 +83,6 @@ public class QueryRequest
     /// <summary>
     /// Specifies if is in Phasor mode.
     /// </summary>
+    // TODO: JRC - suggest renaming this to 'dataType' and making it a string value, e.g., "PhasorValue" or "DataSourceValue", to allow for future expansion
     public bool isPhasor { get; set; }
 }

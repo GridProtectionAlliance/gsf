@@ -86,20 +86,19 @@ public interface IGrafanaFunction
     /// Gets the list of parameters of the Grafana function.
     /// </summary>
     List<IParameter> Parameters { get; }
+}
 
+/// <summary>
+/// Defines a common interface for Grafana functions for a specific data source value type.
+/// </summary>
+public interface IGrafanaFunction<T> : IGrafanaFunction where T : IDataSourceValue
+{
     /// <summary>
     /// Executes the computation for the Grafana function.
     /// </summary>
     /// <param name="parameters">The input parameters for the computation.</param>
     /// <returns>A sequence of computed data source parameters.</returns>
-    DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters);
-
-    /// <summary>
-    /// Executes the computation for phasor values of the Grafana function.
-    /// </summary>
-    /// <param name="parameters">The input parameters for the computation.</param>
-    /// <returns>A sequence of computed data source parameters.</returns>
-    DataSourceValueGroup<PhasorValue> ComputePhasor(List<IParameter> parameters);
+    DataSourceValueGroup<T> Compute(List<IParameter> parameters);
 
     /// <summary>
     /// Executes a custom slice computation for the Grafana function.
@@ -111,19 +110,7 @@ public interface IGrafanaFunction
     /// need special handling for slice operations. By default, this method will call
     /// <see cref="Compute"/> to perform the computation.
     /// </remarks>
-    DataSourceValueGroup<DataSourceValue> ComputeSlice(List<IParameter> parameters);
-
-    /// <summary>
-    /// Executes a custom slice computation for phasor values for the Grafana function.
-    /// </summary>
-    /// <param name="parameters">The input parameters for the computation.</param>
-    /// <returns>A sequence of computed data source parameters.</returns>
-    /// <remarks>
-    /// This method is used to support custom slice computations for functions that
-    /// need special handling for slice operations. By default, this method will call
-    /// <see cref="ComputePhasor"/> to perform the computation.
-    /// </remarks>
-    DataSourceValueGroup<PhasorValue> ComputePhasorSlice(List<IParameter> parameters);
+    DataSourceValueGroup<T> ComputeSlice(List<IParameter> parameters);
 
     /// <summary>
     /// Executes a custom set computation for the Grafana function.
@@ -135,17 +122,5 @@ public interface IGrafanaFunction
     /// need special handling for set operations. By default, this method will call
     /// <see cref="Compute"/> to perform the computation.
     /// </remarks>
-    DataSourceValueGroup<DataSourceValue> ComputeSet(List<IParameter> parameters);
-
-    /// <summary>
-    /// Executes a custom set computation for phasor values for the Grafana function.
-    /// </summary>
-    /// <param name="parameters">The input parameters for the computation.</param>
-    /// <returns>A sequence of computed data source parameters.</returns>
-    /// <remarks>
-    /// This method is used to support custom set computations for functions that
-    /// need special handling for set operations. By default, this method will call
-    /// <see cref="ComputePhasor"/> to perform the computation.
-    /// </remarks>
-    DataSourceValueGroup<PhasorValue> ComputePhasorSet(List<IParameter> parameters);
+    DataSourceValueGroup<T> ComputeSet(List<IParameter> parameters);
 }

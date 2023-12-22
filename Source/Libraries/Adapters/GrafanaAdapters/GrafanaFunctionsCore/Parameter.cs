@@ -42,7 +42,7 @@ internal class Parameter<T> : IParameter<T>
 
     public string ParameterTypeName => ParameterType.Name;
 
-    private (T value, bool success) LookupMetadata(GrafanaDataSourceBase dataSourceBase, Dictionary<string, string> metadata, string value, string target, bool isPhasor)
+    private (T value, bool success) LookupMetadata<TDataSourceValue>(TDataSourceValue instance, DataSet dataSourceMetadata, Dictionary<string, string> metadata, string value, string target) where TDataSourceValue : IDataSourceValue
     {
         // Attempt to find in dictionary
         if (metadata.Count != 0 && metadata.TryGetValue(value, out string metaValue))
@@ -58,13 +58,9 @@ internal class Parameter<T> : IParameter<T>
             }
         }
 
-        // Not found, check ActiveMeasurements
-        DataRow[] rows;
-
-        if (isPhasor)
-            rows = dataSourceBase?.Metadata.Tables["Phasor"].Select($"Label = '{target}'") ?? Array.Empty<DataRow>();
-        else
-            rows = dataSourceBase?.Metadata.Tables["ActiveMeasurements"].Select($"PointTag = '{target}'") ?? Array.Empty<DataRow>();
+        // Not found, lookup in metadata
+        instance ??= (TDataSourceValue)Activator.CreateInstance(typeof(TDataSourceValue));
+        DataRow[] rows = instance.LookupMetadata(dataSourceMetadata, target);
 
         // Not valid
         if (!(rows.Length > 0 && rows[0].Table.Columns.Contains(value)))
@@ -93,10 +89,10 @@ internal class Parameter<T> : IParameter<T>
     /// If nothing is found, it looks through ActiveMeasurements for it.
     /// Finally, if none of the above work it throws an error.
     /// </remarks>
-    public void SetValue(GrafanaDataSourceBase dataSourceBase, object value, string target, Dictionary<string, string> metadata, bool isPhasor)
+    public void SetValue<TDataSourceValue>(TDataSourceValue instance, DataSet dataSourceMetadata, object value, string target, Dictionary<string, string> metadata) where TDataSourceValue : IDataSourceValue
     {
         // No value specified
-        if (value == null)
+        if (value is null)
         {
             // Required -> error
             if (Required)
@@ -121,7 +117,7 @@ internal class Parameter<T> : IParameter<T>
         {
             strValue = strValue.Substring(1, strValue.Length - 2);
                 
-            (T value, bool success) result = LookupMetadata(dataSourceBase, metadata, strValue, target, isPhasor);
+            (T value, bool success) result = LookupMetadata(instance, dataSourceMetadata, metadata, strValue, target);
                 
             if (result.success)
                 strValue = result.value.ToString();
@@ -164,7 +160,7 @@ internal class Parameter<T> : IParameter<T>
         catch (Exception)
         {
             // Not proper type, check metadata
-            (T value, bool success) result = LookupMetadata(dataSourceBase, metadata, strValue, target, isPhasor);
+            (T value, bool success) result = LookupMetadata(instance, dataSourceMetadata, metadata, strValue, target);
 
             if (result.success)
                 Value = result.value;

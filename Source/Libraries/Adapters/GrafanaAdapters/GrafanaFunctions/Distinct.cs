@@ -14,10 +14,10 @@ namespace GrafanaAdapters.GrafanaFunctions;
 /// Variants: Distinct, Unique<br/>
 /// Execution: Deferred enumeration.
 /// </remarks>
-public class Distinct: GrafanaFunctionBase
+public abstract class Distinct<T> : GrafanaFunctionBase<T> where T : IDataSourceValue
 {
     /// <inheritdoc />
-    public override string Name => nameof(Distinct);
+    public override string Name => "Distinct";
 
     /// <inheritdoc />
     public override string Description => "Returns a series of values that represent the unique set of values in the source series.";
@@ -32,35 +32,43 @@ public class Distinct: GrafanaFunctionBase
     };
 
     /// <inheritdoc />
-    public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
+    public class ComputeDataSourceValue : Distinct<DataSourceValue>
     {
-        // Get Values
-        DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
+        /// <inheritdoc />
+        public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
+        {
+            // Get Values
+            DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
 
-        // Compute
-        IEnumerable<DataSourceValue> distinctValues = dataSourceValues.Source.GroupBy(dataValue => dataValue.Value).Select(group => group.First());
+            // Compute
+            IEnumerable<DataSourceValue> distinctValues = dataSourceValues.Source.GroupBy(dataValue => dataValue.Value).Select(group => group.First());
 
-        // Set Values
-        dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
-        dataSourceValues.Source = distinctValues;
+            // Set Values
+            dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
+            dataSourceValues.Source = distinctValues;
 
-        return dataSourceValues;
+            return dataSourceValues;
+        }
     }
 
     /// <inheritdoc />
-    public override DataSourceValueGroup<PhasorValue> ComputePhasor(List<IParameter> parameters)
+    public class ComputePhasorValue : Distinct<PhasorValue>
     {
-        // Get Values
-        DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
+        /// <inheritdoc />
+        public override DataSourceValueGroup<PhasorValue> Compute(List<IParameter> parameters)
+        {
+            // Get Values
+            DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
 
-        // Compute
-        IEnumerable<PhasorValue> distinctValues = phasorValues.Source.GroupBy(dataValue => dataValue.Magnitude).Select(group => group.First());
+            // Compute
+            IEnumerable<PhasorValue> distinctValues = phasorValues.Source.GroupBy(dataValue => dataValue.Magnitude).Select(group => group.First());
 
-        // Set Values
-        string[] labels = phasorValues.Target.Split(';');
-        phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
-        phasorValues.Source = distinctValues;
+            // Set Values
+            string[] labels = phasorValues.Target.Split(';');
+            phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
+            phasorValues.Source = distinctValues;
 
-        return phasorValues;
+            return phasorValues;
+        }
     }
 }

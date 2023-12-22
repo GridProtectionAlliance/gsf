@@ -58,6 +58,9 @@ public static class TargetCaches
     /// <summary>
     /// Resets all sliding memory caches used by Grafana data sources.
     /// </summary>
+    /// <remarks>
+    /// This should be called any time data source metadata is updated.
+    /// </remarks>
     public static void ResetAll()
     {
         s_resetAllCaches.RunOnceAsync();

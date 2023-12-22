@@ -28,7 +28,7 @@ namespace GrafanaAdapters.GrafanaFunctionsCore;
 
 internal static class FunctionModelHelpers
 {
-    private const string ExpressionFormat = @"^{0}\s*\(\s*(?<Expression>.+)\s*\)";
+    private const string ExpressionFormat = @"^(?<GroupOp>Slice|Set)?{0}\s*\(\s*(?<Expression>.+)\s*\)";
 
     public const FunctionOperations DefaultFunctionOperations = FunctionOperations.Standard | FunctionOperations.Slice | FunctionOperations.Set;
 
@@ -46,5 +46,26 @@ internal static class FunctionModelHelpers
 
         string allAliases = functionNames.Length == 1 ? functionNames[0] :$"({string.Join("|", functionNames)})";
         return new Regex(string.Format(ExpressionFormat, allAliases), RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    }
+
+    public static int ParseInt(string parameter, bool includeZero = true)
+    {
+        parameter = parameter.Trim();
+
+        if (!int.TryParse(parameter, out int value))
+            throw new FormatException($"Could not parse '{parameter}' as an integer value.");
+
+        if (includeZero)
+        {
+            if (value < 0)
+                throw new ArgumentOutOfRangeException($"Value '{parameter}' is less than zero.");
+        }
+        else
+        {
+            if (value <= 0)
+                throw new ArgumentOutOfRangeException($"Value '{parameter}' is less than or equal to zero.");
+        }
+
+        return value;
     }
 }

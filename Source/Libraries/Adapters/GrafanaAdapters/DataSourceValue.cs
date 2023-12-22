@@ -22,14 +22,16 @@
 //******************************************************************************************************
 
 using GSF.TimeSeries;
+using System;
 using System.Collections.Generic;
+using System.Data;
 
 namespace GrafanaAdapters;
 
 /// <summary>
-/// Defines a structure that represents an individual time-series value from a data source.
+/// Represents an individual time-series value from a data source.
 /// </summary>
-public struct DataSourceValue
+public struct DataSourceValue : IDataSourceValue
 {
     /// <summary>
     /// Query target, e.g., a point-tag.
@@ -50,6 +52,20 @@ public struct DataSourceValue
     /// Flags for queried value.
     /// </summary>
     public MeasurementStateFlags Flags;
+
+    /// <inheritdoc />
+    readonly double IDataSourceValue.Time => Time;
+
+    /// <inheritdoc />
+    readonly double[] IDataSourceValue.TimeSeriesValue => new[] { Value, Time };
+
+    /// <inheritdoc />
+    readonly MeasurementStateFlags IDataSourceValue.Flags => Flags;
+
+    DataRow[] IDataSourceValue.LookupMetadata(DataSet metadata, string target)
+    {
+        return metadata?.Tables["ActiveMeasurements"].Select($"PointTag = '{target}'") ?? Array.Empty<DataRow>();
+    }
 }
 
 /// <summary>
@@ -63,10 +79,6 @@ public class DataSourceValueComparer : IComparer<DataSourceValue>
     public int Compare(DataSourceValue x, DataSourceValue y)
     {
         int result = x.Value.CompareTo(y.Value);
-
-        if (result != 0)
-            return result;
-
-        return x.Time.CompareTo(y.Time);
+        return result != 0 ? result : x.Time.CompareTo(y.Time);
     }
 }

@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 
 namespace GrafanaAdapters.GrafanaFunctionsCore;
 
@@ -50,10 +51,11 @@ public interface IParameter
     /// Gets or sets the type name of the parameter.
     /// </summary>
     string ParameterTypeName { get; }
+
     /// <summary>
     /// Sets the value of the parameter.
     /// </summary>
-    void SetValue(GrafanaDataSourceBase dataSourceBase, object value, string target, Dictionary<string, string> metadata, bool isPhasor);
+    void SetValue<TDataSourceValue>(TDataSourceValue instance, DataSet dataSourceMetadata, object value, string target, Dictionary<string, string> metadata) where TDataSourceValue : IDataSourceValue;
 }
 
 /// <summary>

@@ -60,7 +60,7 @@ public class TargetTimeUnit
     /// </returns>
     public static bool TryParse(string value, out TargetTimeUnit targetTimeUnit)
     {
-        if (Enum.TryParse(value, out TimeUnit timeUnit))
+        if (Enum.TryParse(value, true, out TimeUnit timeUnit))
         {
             targetTimeUnit = new TargetTimeUnit { Unit = timeUnit };
             return true;

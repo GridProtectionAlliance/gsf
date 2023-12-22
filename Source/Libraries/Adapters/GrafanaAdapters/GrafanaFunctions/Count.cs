@@ -14,10 +14,10 @@ namespace GrafanaAdapters.GrafanaFunctions;
 /// Variants: Count<br/>
 /// Execution: Immediate enumeration.
 /// </remarks>
-public class Count: GrafanaFunctionBase
+public abstract class Count<T> : GrafanaFunctionBase<T> where T : IDataSourceValue
 {
     /// <inheritdoc />
-    public override string Name => nameof(Count);
+    public override string Name => "Count";
 
     /// <inheritdoc />
     public override string Description => "Returns a single value that is the count of the values in the source series.";
@@ -29,38 +29,46 @@ public class Count: GrafanaFunctionBase
     };
 
     /// <inheritdoc />
-    public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
+    public class ComputeDataSourceValue : Count<DataSourceValue>
     {
-        // Get Values
-        DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
+        /// <inheritdoc />
+        public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
+        {
+            // Get Values
+            DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
 
-        // Compute
-        DataSourceValue lastElement = dataSourceValues.Source.Last();
-        lastElement.Value = dataSourceValues.Source.Count();
+            // Compute
+            DataSourceValue lastElement = dataSourceValues.Source.Last();
+            lastElement.Value = dataSourceValues.Source.Count();
 
-        // Set Values
-        dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
-        dataSourceValues.Source = Enumerable.Repeat(lastElement, 1);
+            // Set Values
+            dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
+            dataSourceValues.Source = Enumerable.Repeat(lastElement, 1);
 
-        return dataSourceValues;
+            return dataSourceValues;
+        }
     }
 
     /// <inheritdoc />
-    public override DataSourceValueGroup<PhasorValue> ComputePhasor(List<IParameter> parameters)
+    public class ComputePhasorValue : Count<PhasorValue>
     {
-        // Get Values
-        DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
+        /// <inheritdoc />
+        public override DataSourceValueGroup<PhasorValue> Compute(List<IParameter> parameters)
+        {
+            // Get Values
+            DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
 
-        // Compute
-        PhasorValue lastElement = phasorValues.Source.Last();
-        lastElement.Magnitude = phasorValues.Source.Count();
-        lastElement.Angle = phasorValues.Source.Count();
+            // Compute
+            PhasorValue lastElement = phasorValues.Source.Last();
+            lastElement.Magnitude = phasorValues.Source.Count();
+            lastElement.Angle = phasorValues.Source.Count();
 
-        // Set Values
-        string[] labels = phasorValues.Target.Split(';');
-        phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
-        phasorValues.Source = Enumerable.Repeat(lastElement, 1);
+            // Set Values
+            string[] labels = phasorValues.Target.Split(';');
+            phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
+            phasorValues.Source = Enumerable.Repeat(lastElement, 1);
 
-        return phasorValues;
+            return phasorValues;
+        }
     }
 }

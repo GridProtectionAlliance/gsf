@@ -18,10 +18,10 @@ namespace GrafanaAdapters.GrafanaFunctions;
 /// Variants: Label, Name<br/>
 /// Execution: Deferred enumeration.
 /// </remarks>
-public class Label: GrafanaFunctionBase
+public abstract class Label<T> : GrafanaFunctionBase<T> where T : IDataSourceValue
 {
     /// <inheritdoc />
-    public override string Name => nameof(Label);
+    public override string Name => "Label";
 
     /// <inheritdoc />
     public override string Description => "Renames a series with the specified label value.";
@@ -43,28 +43,36 @@ public class Label: GrafanaFunctionBase
     };
 
     /// <inheritdoc />
-    public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
+    public class ComputeDataSourceValue : Label<DataSourceValue>
     {
-        // Get Values
-        string label = (parameters[0] as IParameter<string>).Value;
-        DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
+        /// <inheritdoc />
+        public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
+        {
+            // Get Values
+            string label = (parameters[0] as IParameter<string>).Value;
+            DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
 
-        // Set Values
-        dataSourceValues.Target = $"{label}";
+            // Set Values
+            dataSourceValues.Target = $"{label}";
 
-        return dataSourceValues;
+            return dataSourceValues;
+        }
     }
 
     /// <inheritdoc />
-    public override DataSourceValueGroup<PhasorValue> ComputePhasor(List<IParameter> parameters)
+    public class ComputePhasorValue : Label<PhasorValue>
     {
-        // Get Values
-        string label = (parameters[0] as IParameter<string>).Value;
-        DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
+        /// <inheritdoc />
+        public override DataSourceValueGroup<PhasorValue> Compute(List<IParameter> parameters)
+        {
+            // Get Values
+            string label = (parameters[0] as IParameter<string>).Value;
+            DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
 
-        // Set Values
-        phasorValues.Target = $"{label}";
+            // Set Values
+            phasorValues.Target = $"{label}";
 
-        return phasorValues;
+            return phasorValues;
+        }
     }
 }

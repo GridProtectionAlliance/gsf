@@ -19,10 +19,10 @@ namespace GrafanaAdapters.GrafanaFunctions;
 /// Variants: Last<br/>
 /// Execution: Immediate in-memory array load.
 /// </remarks>
-public class Last: GrafanaFunctionBase
+public abstract class Last<T> : GrafanaFunctionBase<T> where T : IDataSourceValue
 {
     /// <inheritdoc />
-    public override string Name => nameof(Last);
+    public override string Name => "Last";
 
     /// <inheritdoc />
     public override string Description => "Returns a series of N, or N% of total, values from the end of the source series.";
@@ -40,14 +40,8 @@ public class Last: GrafanaFunctionBase
         InputDataPointValues
     };
 
-    /// <summary>
-    /// Used to convert value or percent to the number of points selected
-    /// </summary>
-    /// <param name="rawValue"></param>
-    /// <param name="numberPoints"></param>
-    /// <returns></returns>
-    /// <exception cref="Exception"></exception>
-    private int convertToValue(string rawValue, int numberPoints)
+    // Converts value or percent to the number of points selected
+    private static int ConvertToValue(string rawValue, int numberPoints)
     {
         try
         {
@@ -59,6 +53,7 @@ public class Last: GrafanaFunctionBase
                 {
                     throw new Exception($"Error {rawValue} out of bounds (0 - 100).");
                 }
+
                 return Convert.ToInt32(numberPoints * percent);
             }
             //Number
@@ -81,52 +76,56 @@ public class Last: GrafanaFunctionBase
     }
 
     /// <inheritdoc />
-    public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
+    public class ComputeDataSourceValue : Last<DataSourceValue>
     {
-        // Get Values
-        string rawValue = (parameters[0] as IParameter<string>).Value;
-        DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
-        int numberRequested = convertToValue(rawValue, dataSourceValues.Source.Count());
+        /// <inheritdoc />
+        public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
+        {
+            // Get Values
+            string rawValue = (parameters[0] as IParameter<string>).Value;
+            DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
+            int numberRequested = ConvertToValue(rawValue, dataSourceValues.Source.Count());
 
-        // Requested more than accessable
-        if (numberRequested >= dataSourceValues.Source.Count())
-            numberRequested = dataSourceValues.Source.Count();
+            // Requested more than accessable
+            if (numberRequested >= dataSourceValues.Source.Count())
+                numberRequested = dataSourceValues.Source.Count();
 
-        // Compute
-        IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source
-            .OrderByDescending(dataSourceValue => dataSourceValue.Time) 
-            .Take(numberRequested);
+            // Compute
+            IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source.OrderByDescending(dataSourceValue => dataSourceValue.Time).Take(numberRequested);
 
-        // Set Values
-        dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
-        dataSourceValues.Source = transformedDataSourceValues;
+            // Set Values
+            dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
+            dataSourceValues.Source = transformedDataSourceValues;
 
-        return dataSourceValues;
+            return dataSourceValues;
+        }
     }
 
     /// <inheritdoc />
-    public override DataSourceValueGroup<PhasorValue> ComputePhasor(List<IParameter> parameters)
+    public class ComputePhasorValue : Last<PhasorValue>
     {
-        // Get Values
-        string rawValue = (parameters[0] as IParameter<string>).Value;
-        DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
+        /// <inheritdoc />
+        public override DataSourceValueGroup<PhasorValue> Compute(List<IParameter> parameters)
+        {
+            // Get Values
+            string rawValue = (parameters[0] as IParameter<string>).Value;
+            DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
 
-        int numberRequested = convertToValue(rawValue, phasorValues.Source.Count());
+            int numberRequested = ConvertToValue(rawValue, phasorValues.Source.Count());
 
-        // Requested more than accessable
-        if (numberRequested >= phasorValues.Source.Count())
-            numberRequested = phasorValues.Source.Count();
+            // Requested more than accessable
+            if (numberRequested >= phasorValues.Source.Count())
+                numberRequested = phasorValues.Source.Count();
 
-        // Compute
-        IEnumerable<PhasorValue> transformedPhasorValues = phasorValues.Source
-            .OrderByDescending(phasorValue => phasorValue.Time)
-            .Take(numberRequested);
+            // Compute
+            IEnumerable<PhasorValue> transformedPhasorValues = phasorValues.Source.OrderByDescending(phasorValue => phasorValue.Time).Take(numberRequested);
 
-        // Set Values
-        string[] labels = phasorValues.Target.Split(';');
-        phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
-        phasorValues.Source = transformedPhasorValues;
+            // Set Values
+            string[] labels = phasorValues.Target.Split(';');
+            phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
+            phasorValues.Source = transformedPhasorValues;
 
-        return phasorValues;
+            return phasorValues;
+        }
     }
 }
