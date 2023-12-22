@@ -27,13 +27,12 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using GrafanaAdapters.GrafanaFunctionsCore;
 using GSF;
 using GSF.Data;
 using GSF.Data.Model;
 using Newtonsoft.Json;
 using static GrafanaAdapters.GrafanaFunctionsCore.FunctionParser;
-
-#pragma warning disable IDE0060 // Remove unused parameter
 
 namespace GrafanaAdapters;
 
@@ -50,39 +49,6 @@ partial class GrafanaDataSourceBase
     public virtual Task<string[]> Search(Target request, CancellationToken cancellationToken)
     {
         string target = request.target == "select metric" ? "" : request.target;
-
-        // Attempt to parse an expression that has SQL SELECT syntax
-        bool parseSelectExpression(string selectExpression, out string tableName, out string[] fieldNames, out string expression, out string sortField, out int topCount)
-        {
-            tableName = null;
-            fieldNames = null;
-            expression = null;
-            sortField = null;
-            topCount = 0;
-
-            if (string.IsNullOrWhiteSpace(selectExpression))
-                return false;
-
-            // RegEx instance used to parse meta-data for target search queries using a reduced SQL SELECT statement syntax
-            s_selectExpression ??= new Regex(@"(SELECT\s+(TOP\s+(?<MaxRows>\d+)\s+)?(\s*((?<FieldName>\*)|((?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)))?\s*FROM\s+(?<TableName>\w+)\s+WHERE\s+(?<Expression>.+)\s+ORDER\s+BY\s+(?<SortField>\w+))|(SELECT\s+(TOP\s+(?<MaxRows>\d+)\s+)?(\s*((?<FieldName>\*)|((?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)))?\s*FROM\s+(?<TableName>\w+)\s+WHERE\s+(?<Expression>.+))|(SELECT\s+(TOP\s+(?<MaxRows>\d+)\s+)?((\s*((?<FieldName>\*)|((?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)))?)?\s*FROM\s+(?<TableName>\w+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
-            Match match = s_selectExpression.Match(selectExpression.ReplaceControlCharacters());
-
-            if (!match.Success)
-                return false;
-
-            tableName = match.Result("${TableName}").Trim();
-            fieldNames = match.Groups["FieldName"].Captures.Cast<Capture>().Select(capture => capture.Value).ToArray();
-            expression = match.Result("${Expression}").Trim();
-            sortField = match.Result("${SortField}").Trim();
-
-            string maxRows = match.Result("${MaxRows}").Trim();
-
-            if (string.IsNullOrEmpty(maxRows) || !int.TryParse(maxRows, out topCount))
-                topCount = int.MaxValue;
-
-            return true;
-        }
 
         return Task.Factory.StartNew(() =>
         {
@@ -174,6 +140,39 @@ partial class GrafanaDataSourceBase
             });
         },
         cancellationToken);
+
+        // Attempt to parse an expression that has SQL SELECT syntax
+        bool parseSelectExpression(string selectExpression, out string tableName, out string[] fieldNames, out string expression, out string sortField, out int topCount)
+        {
+            tableName = null;
+            fieldNames = null;
+            expression = null;
+            sortField = null;
+            topCount = 0;
+
+            if (string.IsNullOrWhiteSpace(selectExpression))
+                return false;
+
+            // RegEx instance used to parse meta-data for target search queries using a reduced SQL SELECT statement syntax
+            s_selectExpression ??= new Regex(@"(SELECT\s+(TOP\s+(?<MaxRows>\d+)\s+)?(\s*((?<FieldName>\*)|((?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)))?\s*FROM\s+(?<TableName>\w+)\s+WHERE\s+(?<Expression>.+)\s+ORDER\s+BY\s+(?<SortField>\w+))|(SELECT\s+(TOP\s+(?<MaxRows>\d+)\s+)?(\s*((?<FieldName>\*)|((?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)))?\s*FROM\s+(?<TableName>\w+)\s+WHERE\s+(?<Expression>.+))|(SELECT\s+(TOP\s+(?<MaxRows>\d+)\s+)?((\s*((?<FieldName>\*)|((?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)))?)?\s*FROM\s+(?<TableName>\w+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+            Match match = s_selectExpression.Match(selectExpression.ReplaceControlCharacters());
+
+            if (!match.Success)
+                return false;
+
+            tableName = match.Result("${TableName}").Trim();
+            fieldNames = match.Groups["FieldName"].Captures.Cast<Capture>().Select(capture => capture.Value).ToArray();
+            expression = match.Result("${Expression}").Trim();
+            sortField = match.Result("${SortField}").Trim();
+
+            string maxRows = match.Result("${MaxRows}").Trim();
+
+            if (string.IsNullOrEmpty(maxRows) || !int.TryParse(maxRows, out topCount))
+                topCount = int.MaxValue;
+
+            return true;
+        }
     }
 
     /// <summary>
@@ -394,7 +393,7 @@ partial class GrafanaDataSourceBase
     /// Queries openHistorian as a Grafana metadata source.
     /// </summary>
     /// <param name="request">Query request.</param>
-    public virtual Task<string> GetMetadata(Target request)
+    public virtual Task<string> GetMetadata<T>(Target request) where T : IDataSourceValue
     {
         return Task.Factory.StartNew(() =>
         {
@@ -428,7 +427,7 @@ partial class GrafanaDataSourceBase
 
             foreach (string rootTarget in rootTargets)
             {
-                KeyValuePair<string, string> data = GetMetadata(rootTarget, request.metadataSelection).FirstOrDefault();
+                KeyValuePair<string, string> data = FunctionParser.GetMetadata<T>(Metadata, rootTarget, request.metadataSelection).FirstOrDefault();
                 result.Add(data.Value);
             }
 

@@ -93,7 +93,11 @@ public partial class GrafanaDataService : DataService, IGrafanaDataService
     /// <param name="request">Query request.</param>
     public async Task<string> GetMetadata(Target request)
     {
-        return await m_dataSource.GetMetadata(request);
+        // TODO: JRC - fix this if 'isPhasor' gets updated to 'dataType'
+        if (request.isPhasor)
+            return await m_dataSource.GetMetadata<PhasorValue>(request);
+
+        return await m_dataSource.GetMetadata<DataSourceValue>(request);
     }
 
     /// <summary>

@@ -23,7 +23,6 @@
 
 using GSF;
 using GSF.TimeSeries;
-using GSF.TimeSeries.Adapters;
 using GSF.Web;
 using System;
 using System.Collections.Generic;
@@ -43,14 +42,6 @@ namespace GrafanaAdapters;
 public abstract partial class GrafanaDataSourceBase
 {
     #region [ Members ]
-
-    // Nested Types
-    private struct PhasorInfo
-    {
-        public string Label;
-        public string Magnitude;
-        public string Phase;
-    };
 
     // Constants
     private const string DropEmptySeriesCommand = "dropemptyseries";
@@ -102,114 +93,111 @@ public abstract partial class GrafanaDataSourceBase
     /// <param name="cancellationToken">Cancellation token.</param>
     public Task<List<TimeSeriesValues>> Query(QueryRequest request, CancellationToken cancellationToken)
     {
+        if (!string.IsNullOrWhiteSpace(request.format) && !request.format.Equals("json", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("Only JSON formatted query requests are currently supported.");
+
+        // TODO: JRC - suggest renaming 'request.isPhasor' parameter to 'request.dataType' and making it a string, then check value, e.g., "PhasorValue" or "DataSourceValue"
+
         // Task allows processing of multiple simultaneous queries
-        return Task.Factory.StartNew(() =>
+        return Task.Factory.StartNew(() => request.isPhasor ? 
+                ProcessQuery<PhasorValue>(request, cancellationToken) : 
+                ProcessQuery<DataSourceValue>(request, cancellationToken),
+        cancellationToken);
+
+        // FUTURE: Dynamic types could be supported by loading all found implementations of
+        // 'IDataSourceValue' interface. In this case call to ProcessQuery<T> would be made
+        // based on value of 'dataType', i.e., DataSourceValue.Default(string), by creating
+        // a static delegate like 'Action<Type, QueryRequest, CancellationToken>' that would
+        // call 'ProcessQuery<T>' with the appropriate type.
+    }
+
+    private List<TimeSeriesValues> ProcessQuery<T>(QueryRequest request, CancellationToken cancellationToken) where T : IDataSourceValue
+    {
+        DateTime startTime = request.range.from.ParseJsonTimestamp();
+        DateTime stopTime = request.range.to.ParseJsonTimestamp();
+
+        foreach (Target target in request.targets)
+            target.target = target.target?.Trim() ?? "";
+
+        List<DataSourceValueGroup<T>> valueGroups = new();
+
+        foreach (Target target in request.targets)
         {
-            if (!string.IsNullOrWhiteSpace(request.format) && !request.format.Equals("json", StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException("Only JSON formatted query requests are currently supported.");
+            bool dropEmptySeries = false;
+            bool includePeaks = false;
 
-            DateTime startTime = request.range.from.ParseJsonTimestamp();
-            DateTime stopTime = request.range.to.ParseJsonTimestamp();
-
-            foreach (Target target in request.targets)
-                target.target = target.target?.Trim() ?? "";
-
-            List<TimeSeriesValues> processQuery<T>() where T : IDataSourceValue
+            // Handle query commands
+            if (target.target.ToLowerInvariant().Contains(DropEmptySeriesCommand))
             {
-                List<DataSourceValueGroup<T>> valueGroups = new();
-
-                foreach (Target target in request.targets)
-                {
-                    bool dropEmptySeries = false;
-                    bool includePeaks = false;
-
-                    // Handle query commands
-                    if (target.target.ToLowerInvariant().Contains(DropEmptySeriesCommand))
-                    {
-                        dropEmptySeries = true;
-                        target.target = target.target.ReplaceCaseInsensitive(DropEmptySeriesCommand, "");
-                    }
-
-                    if (target.target.ToLowerInvariant().Contains(IncludePeaksCommand))
-                    {
-                        includePeaks = true;
-                        target.target = target.target.ReplaceCaseInsensitive(IncludePeaksCommand, "");
-                    }
-
-                    QueryParameters parameters = new()
-                    {
-                        SourceTarget = target,
-                        StartTime = startTime,
-                        StopTime = stopTime,
-                        Interval = request.interval,
-                        IncludePeaks = includePeaks,
-                        DropEmptySeries = dropEmptySeries,
-                        IsPhasor = request.isPhasor,
-                        MetadataSelection = target.metadataSelection,
-                        CancellationToken = cancellationToken
-                    };
-
-                    // Parse target expressions
-                    ParsedTarget<T>[] targets = ParseTargets<T>(target.target);
-
-                    // Query data source with returned as data as a dictionary of point tags and data
-                    Dictionary<string, DataSourceValueGroup<T>> pointData = request.isPhasor ?
-                        GetTargetPhasorData(targets.GetDataTargets(), parameters) as Dictionary<string, DataSourceValueGroup<T>> :
-                        GetTargetValueData(targets.GetDataTargets(), parameters) as Dictionary<string, DataSourceValueGroup<T>>;
-
-                    // Execute series functions against queried data for each target
-                    IEnumerable<DataSourceValueGroup<T>> groups = ExecuteSeriesFunctions(targets, pointData, Metadata, cancellationToken);
-
-                    // Add each group to the overall list
-                    valueGroups.AddRange(groups);
-                }
-
-                // Establish result series sequentially so that order remains consistent between calls
-                List<TimeSeriesValues> result = valueGroups.Select(valueGroup => new TimeSeriesValues
-                {
-                    target = valueGroup.Target,
-                    rootTarget = valueGroup.RootTarget,
-                    meta = valueGroup.metadata,
-                    dropEmptySeries = valueGroup.DropEmptySeries,
-                    refId = valueGroup.refId
-                }).ToList();
-
-                // Apply any encountered ad-hoc filters
-                if (request.adhocFilters?.Count > 0)
-                {
-                    foreach (AdHocFilter filter in request.adhocFilters)
-                        result = result.Where(values => isFilterMatch(values.rootTarget, filter)).ToList();
-                }
-
-                // Process series data in parallel
-                Parallel.ForEach(result, new ParallelOptions { CancellationToken = cancellationToken }, series =>
-                {
-                    // For deferred enumerations, any work to be done is left till last moment - in this case "ToList()" invokes actual operation                    
-                    DataSourceValueGroup<T> valueGroup = valueGroups.First(group => group.Target.Equals(series.target));
-                    IEnumerable<T> values = valueGroup.Source;
-
-                    if (valueGroup.SourceTarget?.excludeNormalFlags ?? false)
-                        values = values.Where(value => value.Flags != MeasurementStateFlags.Normal);
-
-                    if (valueGroup.SourceTarget?.excludedFlags > uint.MinValue)
-                        values = values.Where(value => ((uint)value.Flags & valueGroup.SourceTarget.excludedFlags) == 0);
-
-                    series.datapoints = values.Select(dataValue => dataValue.TimeSeriesValue).ToList();
-                });
-
-                return result.Where(values => !values.dropEmptySeries || values.datapoints.Count > 0).ToList();
+                dropEmptySeries = true;
+                target.target = target.target.ReplaceCaseInsensitive(DropEmptySeriesCommand, "");
             }
 
-            // TODO: JRC - suggest renaming 'isPhasor' parameter to 'dataType' and making it a string,
-            // then check value, e.g., "PhasorValue" or "DataSourceValue", and query the following
-            // from an updated IDataSourceValue interface function - can lookup type based on the
-            // value of 'dataType' and then call the following generic processQuery with type:
+            if (target.target.ToLowerInvariant().Contains(IncludePeaksCommand))
+            {
+                includePeaks = true;
+                target.target = target.target.ReplaceCaseInsensitive(IncludePeaksCommand, "");
+            }
 
-            return request.isPhasor ? 
-                processQuery<PhasorValue>() :
-                processQuery<DataSourceValue>();
-        },
-        cancellationToken);
+            QueryParameters parameters = new()
+            {
+                SourceTarget = target,
+                StartTime = startTime,
+                StopTime = stopTime,
+                Interval = request.interval,
+                IncludePeaks = includePeaks,
+                DropEmptySeries = dropEmptySeries,
+                MetadataSelection = target.metadataSelection,
+                CancellationToken = cancellationToken
+            };
+
+            // Parse target expressions
+            ParsedTarget<T>[] targets = ParseTargets<T>(target.target);
+
+            // Query data source returning data as a map of point tags to data
+            Dictionary<string, DataSourceValueGroup<T>> pointData = QueryDataSourceGroupingByTarget(targets, parameters);
+
+            // Execute series functions against queried data for each target
+            IEnumerable<DataSourceValueGroup<T>> groups = ExecuteSeriesFunctions(targets, pointData, Metadata, cancellationToken);
+
+            // Add each group to the overall list
+            valueGroups.AddRange(groups);
+        }
+
+        // Establish result series sequentially so that order remains consistent between calls
+        List<TimeSeriesValues> result = valueGroups.Select(valueGroup => new TimeSeriesValues
+        {
+            target = valueGroup.Target,
+            rootTarget = valueGroup.RootTarget,
+            meta = valueGroup.metadata,
+            dropEmptySeries = valueGroup.DropEmptySeries,
+            refId = valueGroup.refId
+        }).ToList();
+
+        // Apply any encountered ad-hoc filters
+        if (request.adhocFilters?.Count > 0)
+        {
+            foreach (AdHocFilter filter in request.adhocFilters)
+                result = result.Where(values => isFilterMatch(values.rootTarget, filter)).ToList();
+        }
+
+        // Process series data in parallel
+        Parallel.ForEach(result, new ParallelOptions { CancellationToken = cancellationToken }, series =>
+        {
+            // For deferred enumerations, any work to be done is left till last moment - in this case "ToList()" invokes actual operation                    
+            DataSourceValueGroup<T> valueGroup = valueGroups.First(group => group.Target.Equals(series.target));
+            IEnumerable<T> values = valueGroup.Source;
+
+            if (valueGroup.SourceTarget?.excludeNormalFlags ?? false)
+                values = values.Where(value => value.Flags != MeasurementStateFlags.Normal);
+
+            if (valueGroup.SourceTarget?.excludedFlags > uint.MinValue)
+                values = values.Where(value => ((uint)value.Flags & valueGroup.SourceTarget.excludedFlags) == 0);
+
+            series.datapoints = values.Select(dataValue => dataValue.TimeSeriesValue).ToList();
+        });
+
+        return result.Where(values => !values.dropEmptySeries || values.datapoints.Count > 0).ToList();
 
         bool isFilterMatch(string target, AdHocFilter filter)
         {
@@ -262,238 +250,22 @@ public abstract partial class GrafanaDataSourceBase
         }
     }
 
-    private Dictionary<string, DataSourceValueGroup<DataSourceValue>> GetTargetValueData(string[] targets, QueryParameters queryData)
+    private Dictionary<string, DataSourceValueGroup<T>> QueryDataSourceGroupingByTarget<T>(ParsedTarget<T>[] parsedTargets, QueryParameters parameters) where T : IDataSourceValue
     {
-        if (targets.Length == 0)
-            return new Dictionary<string, DataSourceValueGroup<DataSourceValue>>();
+        if (parsedTargets.Length == 0)
+            return new Dictionary<string, DataSourceValueGroup<T>>();
 
-        Dictionary<ulong, string> targetMap = new();
+        IDataSourceValue<T> instance = DataSourceValue.Default<T>();
 
-        // Expand target set to include point tags for all parsed inputs
-        HashSet<string> targetSet = new();
-
-        foreach (string target in targets)
-            targetSet.UnionWith(TargetCache<string[]>.GetOrAdd(target, () => GetPointTags(target, Metadata)));
-
-        // Reduce all targets down to a dictionary of point ID's mapped to point tags
-        foreach (string target in targetSet)
-        {
-            MeasurementKey key = TargetCache<MeasurementKey>.GetOrAdd(target, () => target.KeyFromTag(Metadata));
-
-            if (key == MeasurementKey.Undefined)
-            {
-                Tuple<MeasurementKey, string> result = TargetCache<Tuple<MeasurementKey, string>>.GetOrAdd($"signalID@{target}", () => target.KeyAndTagFromSignalID(Metadata));
-
-                key = result.Item1;
-                string pointTag = result.Item2;
-
-                if (key == MeasurementKey.Undefined)
-                {
-                    result = TargetCache<Tuple<MeasurementKey, string>>.GetOrAdd($"key@{target}", () =>
-                    {
-                        MeasurementKey.TryParse(target, out MeasurementKey parsedKey);
-
-                        return new Tuple<MeasurementKey, string>(parsedKey, parsedKey.TagFromKey(Metadata));
-                    });
-
-                    key = result.Item1;
-                    pointTag = result.Item2;
-
-                    if (key != MeasurementKey.Undefined)
-                        targetMap[key.ID] = pointTag;
-                }
-                else
-                {
-                    targetMap[key.ID] = pointTag;
-                }
-            }
-            else
-            {
-                targetMap[key.ID] = target;
-            }
-        }
+        // Get ID to target map for all parsed targets used to query data source
+        (Dictionary<ulong, string> targetMap, object state) = instance.GetIDTargetMap(Metadata, parsedTargets.GetDataTargets());
 
         // Query underlying data source for each target - to prevent parallel read from data source we enumerate immediately
-        List<DataSourceValue> dataValues = QueryDataSourceValues(queryData.StartTime, queryData.StopTime, queryData.Interval, queryData.IncludePeaks, targetMap)
-            .TakeWhile(_ => !queryData.CancellationToken.IsCancellationRequested).ToList();
+        List<DataSourceValue> dataValues = QueryDataSourceValues(parameters.StartTime, parameters.StopTime, parameters.Interval, parameters.IncludePeaks, targetMap)
+            .TakeWhile(_ => !parameters.CancellationToken.IsCancellationRequested).ToList();
 
-        return targetMap.ToDictionary(kvp => kvp.Value, kvp => {
-            IEnumerable<DataSourceValue> filteredValues = dataValues.Where(dataValue => dataValue.Target.Equals(kvp.Value));
-
-            return new DataSourceValueGroup<DataSourceValue>
-            {
-                Target = kvp.Value,
-                RootTarget = kvp.Value,
-                SourceTarget = queryData.SourceTarget,
-                Source = filteredValues,
-                DropEmptySeries = queryData.DropEmptySeries,
-                refId = queryData.SourceTarget.refId,
-                metadata = GetMetadata(kvp.Value, queryData.MetadataSelection)
-            };
-        });
-    }
-
-    private Dictionary<string, DataSourceValueGroup<PhasorValue>> GetTargetPhasorData(string[] targets, QueryParameters queryData)
-    {
-        if (targets.Length == 0)
-            return new Dictionary<string, DataSourceValueGroup<PhasorValue>>();
-
-        Dictionary<int, PhasorInfo> phasorTargets = new();
-        Dictionary<ulong, string> targetMap = new();
-
-        foreach (string targetLabel in targets)
-        {
-            if (targetLabel.StartsWith("FILTER ", StringComparison.OrdinalIgnoreCase) && AdapterBase.ParseFilterExpression(targetLabel.SplitAlias(out _), out string tableName, out string exp, out string sortField, out int takeCount))
-            {
-                foreach (DataRow row in Metadata.Tables[tableName].Select(exp, sortField).Take(takeCount))
-                {
-                    int targetId = Convert.ToInt32(row["ID"]);
-
-                    phasorTargets[Convert.ToInt32(targetId)] = new PhasorInfo
-                    {
-                        Label = row["Label"].ToString(),
-                        Phase = "",
-                        Magnitude = ""
-                    };
-                }
-
-                continue;
-            }
-
-            // Get phasor id
-            DataRow[] phasorRows = Metadata.Tables["Phasor"].Select($"Label = '{targetLabel}'");
-
-            if (phasorRows.Length == 0)
-                throw new Exception($"Unable to find label {targetLabel}");
-
-            foreach (DataRow row in phasorRows)
-            {
-                int targetId = Convert.ToInt32(phasorRows[0]["ID"]);
-
-                phasorTargets[targetId] = new PhasorInfo
-                {
-                    Label = row["Label"].ToString(),
-                    Phase = "",
-                    Magnitude = ""
-                };
-
-                DataRow[] measurementRows = Metadata.Tables["ActiveMeasurements"].Select($"PhasorID = '{targetId}'");
-
-                if (measurementRows.Length < 2)
-                    throw new Exception($"Did not locate both magnitude and phase for {phasorTargets[targetId].Label} with {targetId} id");
-
-                foreach (DataRow pointRow in measurementRows)
-                {
-                    ulong id = Convert.ToUInt64(pointRow["ID"].ToString().Split(':')[1]);
-                    string pointTag = pointRow["PointTag"].ToString();
-
-                    targetMap[id] = pointTag;
-
-                    if (pointRow["SignalType"].ToString().EndsWith("PH"))
-                    {
-                        phasorTargets[targetId] = new PhasorInfo
-                        {
-                            Label = phasorTargets[targetId].Label,
-                            Phase = pointTag,
-                            Magnitude = phasorTargets[targetId].Magnitude,
-                        };
-                    }
-
-                    if (pointRow["SignalType"].ToString().EndsWith("PM"))
-                    {
-                        phasorTargets[targetId] = new PhasorInfo
-                        {
-                            Label = phasorTargets[targetId].Label,
-                            Magnitude = pointTag,
-                            Phase = phasorTargets[targetId].Phase,
-                        };
-                    }
-                }
-            }
-        }
-
-        // Query underlying data source for each target - to prevent parallel read from data source we enumerate immediately
-        List<DataSourceValue> dataValues = QueryDataSourceValues(queryData.StartTime, queryData.StopTime, queryData.Interval, queryData.IncludePeaks, targetMap)
-            .TakeWhile(_ => !queryData.CancellationToken.IsCancellationRequested).ToList();
-
-        return phasorTargets.ToDictionary(target => target.Value.Label, target =>
-        {
-            IEnumerable<DataSourceValue> filteredMagnitudes = dataValues.Where(dataValue => dataValue.Target.Equals(target.Value.Magnitude));
-            List<DataSourceValue> filteredPhases = dataValues.Where(dataValue => dataValue.Target.Equals(target.Value.Phase)).ToList();
-            IEnumerable<PhasorValue> phasorValues = GeneratePhasorValues();
-
-            List<PhasorValue> GeneratePhasorValues()
-            {
-                List<PhasorValue> values = new();
-                int index = 0;
-
-                foreach (DataSourceValue mag in filteredMagnitudes)
-                {
-                    if (index >= filteredPhases.Count)
-                        continue;
-
-                    PhasorValue phasor = new()
-                    {
-                        MagnitudeTarget = target.Value.Magnitude,
-                        AngleTarget = target.Value.Phase,
-                        Flags = mag.Flags,
-                        Time = mag.Time,
-                        Magnitude = mag.Value,
-                        Angle = filteredPhases[index].Value
-                    };
-
-                    index++;
-
-                    values.Add(phasor);
-                }
-                return values;
-            }
-
-            return new DataSourceValueGroup<PhasorValue>
-            {
-                Target = $"{target.Value.Magnitude};{target.Value.Phase}",
-                RootTarget = target.Value.Label,
-                SourceTarget = queryData.SourceTarget,
-                Source = phasorValues,
-                DropEmptySeries = queryData.DropEmptySeries,
-                refId = queryData.SourceTarget.refId,
-                metadata = GetMetadata(target.Value.Label, queryData.MetadataSelection, true)
-            };
-        });
-    }
-
-    private Dictionary<string, string> GetMetadata(string rootTarget, Dictionary<string, List<string>> metadataSelection, bool isPhasor = false)
-    {
-        // Create a new dictionary to hold the metadata values
-        Dictionary<string, string> metadataDict = new();
-
-        // Return an empty dictionary if metadataSelection is null or empty
-        if (metadataSelection is null || metadataSelection.Count == 0)
-        {
-            return metadataDict;
-        }
-
-        // Iterate through selections
-        foreach (KeyValuePair<string, List<string>> entry in metadataSelection)
-        {
-            string table = entry.Key;
-            List<string> values = entry.Value;
-            string selectQuery = isPhasor ? $"Label = '{rootTarget}'" : $"PointTag = '{rootTarget}'";
-            DataRow[] rows = Metadata.Tables[table].Select(selectQuery);
-
-            // Populate the entry dictionary with the metadata values
-            foreach (string value in values)
-            {
-                string metadataValue = string.Empty;
-
-                if (rows.Length > 0)
-                    metadataValue = rows[0][value].ToString();
-
-                metadataDict[value] = metadataValue;
-            }
-        }
-
-        return metadataDict;
+        // Get map of targets to data source value groups
+        return instance.GetTargetDataSourceValueMap(dataValues, Metadata, parameters, targetMap, state);
     }
 
     #endregion

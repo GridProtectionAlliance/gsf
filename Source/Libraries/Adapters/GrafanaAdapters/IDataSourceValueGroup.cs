@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  PhasorValue.cs - Gbtc
+//  DataSourceValueGroup.cs - Gbtc
 //
-//  Copyright © 2023, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,66 +16,55 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  08/23/2023 - Timothy Liakh
+//  02/14/2017 - J. Ritchie Carroll
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-using GSF.TimeSeries;
 using System.Collections.Generic;
 
 namespace GrafanaAdapters;
 
 /// <summary>
-/// Represents an individual time-series phasor value from a data source.
+/// Defines a interface that represents an enumeration of T for a given target.
 /// </summary>
-public partial struct PhasorValue
+/// <remarks>
+/// This is a group construct keyed on <see cref="Target"/> for data source value enumerations.
+/// </remarks>
+public interface IDataSourceValueGroup
 {
     /// <summary>
-    /// Query magnitude target, e.g., a point-tag.
+    /// Gets or sets target, e.g., a point-tag, representative of all <see cref="Source"/> values.
     /// </summary>
-    public string MagnitudeTarget;
+    string Target { get; set; }
 
     /// <summary>
-    /// Query angle target, e.g., a point-tag.
+    /// Gets or sets the root target expression, without any referenced series functions.
     /// </summary>
-    public string AngleTarget;
+    string RootTarget { get; set; }
 
     /// <summary>
-    /// Queried magnitude value.
+    /// Gets or sets a reference to the original target that was the source of these results.
     /// </summary>
-    public double Magnitude;
+    Target SourceTarget { get; set; }
 
     /// <summary>
-    /// Queried angle value.
+    /// Gets or sets data source values enumerable.
     /// </summary>
-    public double Angle;
+    public IEnumerable<IDataSourceValue> Source { get; set; }
 
     /// <summary>
-    /// Timestamp, in Unix epoch milliseconds, of queried value.
+    /// Gets or sets flag that determines if empty series are produced.
     /// </summary>
-    public double Time;
+    bool DropEmptySeries { get; set; }
 
     /// <summary>
-    /// Flags for queried value.
+    /// Gets or sets a refID for a specific Grafana Query.
     /// </summary>
-    public MeasurementStateFlags Flags;
-}
+    string refId { get; set; }
 
-/// <summary>
-/// Helper class to compare two <see cref="PhasorValue"/> instances.
-/// </summary>
-public class PhasorValueComparer : IComparer<PhasorValue>
-{
-    /// <inheritdoc />
-    public int Compare(PhasorValue x, PhasorValue y)
-    {
-        int result = x.Magnitude.CompareTo(y.Magnitude);
-
-        if (result != 0)
-            return result;
-
-        result = x.Angle.CompareTo(y.Angle);
-        return result != 0 ? result : x.Time.CompareTo(y.Time);
-    }
+    /// <summary>
+    /// Gets or sets a refID for a specific Grafana Query.
+    /// </summary>
+    Dictionary<string, string> metadata { get; set; }
 }

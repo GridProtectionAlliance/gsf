@@ -25,62 +25,61 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
-namespace GrafanaAdapters.GrafanaFunctionsCore
+namespace GrafanaAdapters.GrafanaFunctionsCore;
+
+/// <summary>
+/// Represents the base functionality for any Grafana function.
+/// </summary>
+public abstract class GrafanaFunctionBase<T> : IGrafanaFunction<T> where T : IDataSourceValue
 {
-    /// <summary>
-    /// Represents the base functionality for any Grafana function.
-    /// </summary>
-    public abstract class GrafanaFunctionBase<T> : IGrafanaFunction<T> where T : IDataSourceValue
+    private Regex m_regex;
+
+    /// <inheritdoc />
+    public abstract string Name { get; }
+
+    /// <inheritdoc />
+    public abstract string Description { get; }
+
+    /// <inheritdoc />
+    public virtual string[] Aliases => null;
+
+    /// <inheritdoc />
+    public virtual Regex Regex => m_regex ??= GetRegex();
+
+    private Regex GetRegex()
     {
-        private Regex m_regex;
+        if (Aliases is null || Aliases.Length == 0)
+            return GenerateFunctionRegex(Name);
 
-        /// <inheritdoc />
-        public abstract string Name { get; }
+        string[] functionNames = new string[Aliases.Length + 1];
 
-        /// <inheritdoc />
-        public abstract string Description { get; }
+        functionNames[0] = Name;
+        Array.Copy(Aliases, 0, functionNames, 1, Aliases.Length);
 
-        /// <inheritdoc />
-        public virtual string[] Aliases => null;
+        return GenerateFunctionRegex(functionNames);
+    }
 
-        /// <inheritdoc />
-        public virtual Regex Regex => m_regex ??= GetRegex();
+    /// <inheritdoc />
+    public virtual FunctionOperations SupportedFunctionOperations => DefaultFunctionOperations;
 
-        private Regex GetRegex()
-        {
-            if (Aliases is null || Aliases.Length == 0)
-                return GenerateFunctionRegex(Name);
+    /// <inheritdoc />
+    public virtual FunctionOperations PublishedFunctionOperations => DefaultFunctionOperations;
 
-            string[] functionNames = new string[Aliases.Length + 1];
+    /// <inheritdoc />
+    public abstract List<IParameter> Parameters { get; }
 
-            functionNames[0] = Name;
-            Array.Copy(Aliases, 0, functionNames, 1, Aliases.Length);
+    /// <inheritdoc />
+    public abstract DataSourceValueGroup<T> Compute(List<IParameter> parameters);
 
-            return GenerateFunctionRegex(functionNames);
-        }
+    /// <inheritdoc />
+    public virtual DataSourceValueGroup<T> ComputeSlice(List<IParameter> parameters)
+    {
+        return Compute(parameters);
+    }
 
-        /// <inheritdoc />
-        public virtual FunctionOperations SupportedFunctionOperations => DefaultFunctionOperations;
-
-        /// <inheritdoc />
-        public virtual FunctionOperations PublishedFunctionOperations => DefaultFunctionOperations;
-
-        /// <inheritdoc />
-        public abstract List<IParameter> Parameters { get; }
-
-        /// <inheritdoc />
-        public abstract DataSourceValueGroup<T> Compute(List<IParameter> parameters);
-
-        /// <inheritdoc />
-        public DataSourceValueGroup<T> ComputeSlice(List<IParameter> parameters)
-        {
-            return Compute(parameters);
-        }
-
-        /// <inheritdoc />
-        public DataSourceValueGroup<T> ComputeSet(List<IParameter> parameters)
-        {
-            return Compute(parameters);
-        }
+    /// <inheritdoc />
+    public virtual DataSourceValueGroup<T> ComputeSet(List<IParameter> parameters)
+    {
+        return Compute(parameters);
     }
 }

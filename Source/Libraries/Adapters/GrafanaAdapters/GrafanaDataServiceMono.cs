@@ -94,7 +94,11 @@ namespace GrafanaAdapters
         /// <param name="request">Query request.</param>
         public string GetMetadata(Target request)
         {
-            return m_dataSource.GetMetadata(request).Result;
+            // TODO: JRC - fix this if 'isPhasor' gets updated to 'dataType'
+            if (request.isPhasor)
+                return m_dataSource.GetMetadata<PhasorValue>(request).Result;
+
+            return await m_dataSource.GetMetadata<DataSourceValue>(request).Result;
         }
 
         /// <summary>

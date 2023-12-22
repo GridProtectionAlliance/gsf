@@ -22,16 +22,28 @@
 //******************************************************************************************************
 
 using GSF.TimeSeries;
-using System;
 using System.Collections.Generic;
-using System.Data;
 
 namespace GrafanaAdapters;
 
 /// <summary>
 /// Represents an individual time-series value from a data source.
 /// </summary>
-public struct DataSourceValue : IDataSourceValue
+/// <remarks>
+/// <para>
+/// This is the standard data source value structure for common time-series
+/// values used by Grafana.
+/// </para>
+/// <para>
+/// Static helper methods are associated with this structure to facilitate
+/// common operations for any <see cref="IDataSourceValue"/> type, e.g.,
+/// getting the default instance for a specific data source type:
+///  type implementation, see:
+/// * <see cref="Default{T}"/>
+/// * <see cref="Default(string)"/>
+/// </para>
+/// </remarks>
+public partial struct DataSourceValue
 {
     /// <summary>
     /// Query target, e.g., a point-tag.
@@ -52,30 +64,14 @@ public struct DataSourceValue : IDataSourceValue
     /// Flags for queried value.
     /// </summary>
     public MeasurementStateFlags Flags;
-
-    /// <inheritdoc />
-    readonly double IDataSourceValue.Time => Time;
-
-    /// <inheritdoc />
-    readonly double[] IDataSourceValue.TimeSeriesValue => new[] { Value, Time };
-
-    /// <inheritdoc />
-    readonly MeasurementStateFlags IDataSourceValue.Flags => Flags;
-
-    DataRow[] IDataSourceValue.LookupMetadata(DataSet metadata, string target)
-    {
-        return metadata?.Tables["ActiveMeasurements"].Select($"PointTag = '{target}'") ?? Array.Empty<DataRow>();
-    }
 }
 
 /// <summary>
-/// Helper class to compare two data sources
+/// Helper class to compare two <see cref="DataSourceValue"/> instances.
 /// </summary>
 public class DataSourceValueComparer : IComparer<DataSourceValue>
 {
-    /// <summary>
-    /// Compare function
-    /// </summary>
+    /// <inheritdoc />
     public int Compare(DataSourceValue x, DataSourceValue y)
     {
         int result = x.Value.CompareTo(y.Value);

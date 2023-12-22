@@ -27,23 +27,48 @@ using System.Threading;
 
 namespace GrafanaAdapters.GrafanaFunctionsCore;
 
-internal class QueryParameters
+/// <summary>
+/// Represents the parameters of a Grafana query.
+/// </summary>
+public class QueryParameters
 {
+    /// <summary>
+    /// Gets or sets a reference to the original target that was the source of these results.
+    /// </summary>
     public Target SourceTarget { get; set; }
 
+    /// <summary>
+    /// Gets or sets start time of the query.
+    /// </summary>
     public DateTime StartTime { get; set; }
 
+    /// <summary>
+    /// Gets or sets stop time of the query.
+    /// </summary>
     public DateTime StopTime { get; set; }
 
+    /// <summary>
+    /// Gets or sets the interval of the query.
+    /// </summary>
     public string Interval { get; set; }
 
+    /// <summary>
+    /// Gets or sets a flag that indicates whether to include the peaks of the query.
+    /// </summary>
     public bool IncludePeaks { get; set; }
 
+    /// <summary>
+    /// Gets or sets a flag that indicates whether to include empty series in the query.
+    /// </summary>
     public bool DropEmptySeries { get; set; }
 
-    public bool IsPhasor { get; set; }
-
+    /// <summary>
+    /// Gets or sets metadata selection dictionary for the query.
+    /// </summary>
     public Dictionary<string, List<string>> MetadataSelection { get; set; }
 
+    /// <summary>
+    /// Gets or sets the cancellation token for the query.
+    /// </summary>
     public CancellationToken CancellationToken { get; set; }
 }

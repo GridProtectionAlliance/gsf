@@ -42,10 +42,10 @@ internal class Parameter<T> : IParameter<T>
 
     public string ParameterTypeName => ParameterType.Name;
 
-    private (T value, bool success) LookupMetadata<TDataSourceValue>(TDataSourceValue instance, DataSet dataSourceMetadata, Dictionary<string, string> metadata, string value, string target) where TDataSourceValue : IDataSourceValue
+    private (T value, bool success) LookupMetadata<TDataSourceValue>(DataSet metadata, Dictionary<string, string> metadataMap, string value, string target) where TDataSourceValue : IDataSourceValue
     {
         // Attempt to find in dictionary
-        if (metadata.Count != 0 && metadata.TryGetValue(value, out string metaValue))
+        if (metadataMap.Count != 0 && metadataMap.TryGetValue(value, out string metaValue))
         {
             try
             {
@@ -54,17 +54,16 @@ internal class Parameter<T> : IParameter<T>
             }
             catch 
             {
-                return (default(T), false);
+                return (default, false);
             }
         }
 
         // Not found, lookup in metadata
-        instance ??= (TDataSourceValue)Activator.CreateInstance(typeof(TDataSourceValue));
-        DataRow[] rows = instance.LookupMetadata(dataSourceMetadata, target);
+        DataRow[] rows = DataSourceValue.Default<TDataSourceValue>().LookupMetadata(metadata, target);
 
         // Not valid
         if (!(rows.Length > 0 && rows[0].Table.Columns.Contains(value)))
-            return (default(T), false);
+            return (default, false);
 
         // Found, attempt to convert
         string foundValue = rows[0][value].ToString();
@@ -75,7 +74,7 @@ internal class Parameter<T> : IParameter<T>
         }
         catch 
         {
-            return (default(T), false);
+            return (default, false);
         }
     }
 
@@ -89,7 +88,7 @@ internal class Parameter<T> : IParameter<T>
     /// If nothing is found, it looks through ActiveMeasurements for it.
     /// Finally, if none of the above work it throws an error.
     /// </remarks>
-    public void SetValue<TDataSourceValue>(TDataSourceValue instance, DataSet dataSourceMetadata, object value, string target, Dictionary<string, string> metadata) where TDataSourceValue : IDataSourceValue
+    public void SetValue<TDataSourceValue>(DataSet metadata, object value, string target, Dictionary<string, string> metadataMap) where TDataSourceValue : IDataSourceValue
     {
         // No value specified
         if (value is null)
@@ -117,7 +116,7 @@ internal class Parameter<T> : IParameter<T>
         {
             strValue = strValue.Substring(1, strValue.Length - 2);
                 
-            (T value, bool success) result = LookupMetadata(instance, dataSourceMetadata, metadata, strValue, target);
+            (T value, bool success) result = LookupMetadata<TDataSourceValue>(metadata, metadataMap, strValue, target);
                 
             if (result.success)
                 strValue = result.value.ToString();
@@ -160,7 +159,7 @@ internal class Parameter<T> : IParameter<T>
         catch (Exception)
         {
             // Not proper type, check metadata
-            (T value, bool success) result = LookupMetadata(instance, dataSourceMetadata, metadata, strValue, target);
+            (T value, bool success) result = LookupMetadata<TDataSourceValue>(metadata, metadataMap, strValue, target);
 
             if (result.success)
                 Value = result.value;

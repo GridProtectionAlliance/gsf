@@ -67,12 +67,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AdHocFilter.cs" />
+    <Compile Include="DataSourceValue_AncillaryOperations.cs" />
     <Compile Include="GlobalUsings.cs" />
     <Compile Include="GrafanaFunctionsCore\GrafanaFunctionBase.cs" />
     <Compile Include="GrafanaFunctionsCore\IParameter.cs" />
     <Compile Include="GrafanaFunctionsCore\Parameter.cs" />
     <Compile Include="GrafanaFunctionsCore\QueryParameters.cs" />
     <Compile Include="IDataSourceValue.cs" />
+    <Compile Include="IDataSourceValueGroup.cs" />
     <Compile Include="Model\Annotations\AnnotationExtensions.cs" />
     <Compile Include="Model\Annotations\AnnotationRequest.cs" />
     <Compile Include="Model\Annotations\AnnotationResponse.cs" />
@@ -140,6 +142,7 @@
     <Compile Include="Model\MetaData\MetaDataTargetRequest.cs" />
     <Compile Include="Model\MetaData\MetaDataOptionsRequest.cs" />
     <Compile Include="PhasorValue.cs" />
+    <Compile Include="PhasorValue_AncillaryOperations.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QueryRequest.cs" />
     <Compile Include="Range.cs" />

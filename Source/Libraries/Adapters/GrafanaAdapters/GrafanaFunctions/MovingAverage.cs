@@ -70,19 +70,19 @@ public abstract class MovingAverage<T> : GrafanaFunctionBase<T> where T : IDataS
             List<DataSourceValue> movingAverageList = new();
 
             // Compute
-            TimeSliceScanner<DataSourceValue> scanner = new(new List<DataSourceValueGroup<DataSourceValue>> { dataSourceValues }, tolerance / SI.Milli);
-            while (!scanner.DataReadComplete)
-            {
-                IEnumerable<DataSourceValue> dataPointGroups = scanner.ReadNextTimeSlice();
-                if (!dataPointGroups.Any())
-                    continue;
+            //TimeSliceScanner<DataSourceValue> scanner = new(new List<DataSourceValueGroup<DataSourceValue>> { dataSourceValues }, tolerance / SI.Milli);
+            //while (!scanner.DataReadComplete)
+            //{
+            //    IEnumerable<DataSourceValue> dataPointGroups = scanner.ReadNextTimeSlice();
+            //    if (!dataPointGroups.Any())
+            //        continue;
 
-                DataSourceValue transformedValue = dataPointGroups.Last();
-                transformedValue.Value = dataPointGroups.Select(dataValue => { return dataValue.Value; }).Average();
-                transformedValue.Time = dataPointGroups.Select(dataValue => { return dataValue.Time; }).Average();
+            //    DataSourceValue transformedValue = dataPointGroups.Last();
+            //    transformedValue.Value = dataPointGroups.Select(dataValue => { return dataValue.Value; }).Average();
+            //    transformedValue.Time = dataPointGroups.Select(dataValue => { return dataValue.Time; }).Average();
 
-                movingAverageList.Add(transformedValue);
-            }
+            //    movingAverageList.Add(transformedValue);
+            //}
 
             // Set Values
             dataSourceValues.Target = $"{Name}({dataSourceValues.Target},{timeUnit.Unit})";
@@ -110,20 +110,20 @@ public abstract class MovingAverage<T> : GrafanaFunctionBase<T> where T : IDataS
             List<PhasorValue> movingAverageList = new();
 
             // Compute
-            TimeSliceScanner<PhasorValue> scanner = new(new List<DataSourceValueGroup<PhasorValue>> { phasorValues }, tolerance / SI.Milli);
-            while (!scanner.DataReadComplete)
-            {
-                IEnumerable<PhasorValue> dataPointGroups = scanner.ReadNextTimeSlice();
-                if (!dataPointGroups.Any())
-                    continue;
+            //TimeSliceScanner<PhasorValue> scanner = new(new List<DataSourceValueGroup<PhasorValue>> { phasorValues }, tolerance / SI.Milli);
+            //while (!scanner.DataReadComplete)
+            //{
+            //    IEnumerable<PhasorValue> dataPointGroups = scanner.ReadNextTimeSlice();
+            //    if (!dataPointGroups.Any())
+            //        continue;
 
-                PhasorValue transformedValue = dataPointGroups.Last();
-                transformedValue.Magnitude = dataPointGroups.Select(dataValue => { return dataValue.Magnitude; }).Average();
-                transformedValue.Angle = dataPointGroups.Select(dataValue => { return dataValue.Angle; }).Average();
-                transformedValue.Time = dataPointGroups.Select(dataValue => { return dataValue.Time; }).Average();
+            //    PhasorValue transformedValue = dataPointGroups.Last();
+            //    transformedValue.Magnitude = dataPointGroups.Select(dataValue => { return dataValue.Magnitude; }).Average();
+            //    transformedValue.Angle = dataPointGroups.Select(dataValue => { return dataValue.Angle; }).Average();
+            //    transformedValue.Time = dataPointGroups.Select(dataValue => { return dataValue.Time; }).Average();
 
-                movingAverageList.Add(transformedValue);
-            }
+            //    movingAverageList.Add(transformedValue);
+            //}
 
             // Set Values
             string[] labels = phasorValues.Target.Split(';');

@@ -30,6 +30,12 @@ public abstract class Label<T> : GrafanaFunctionBase<T> where T : IDataSourceVal
     public override string[] Aliases => new[] { "Name" };
 
     /// <inheritdoc />
+    public override FunctionOperations SupportedFunctionOperations => FunctionOperations.Standard;
+
+    /// <inheritdoc />
+    public override FunctionOperations PublishedFunctionOperations => FunctionOperations.Standard;
+
+    /// <inheritdoc />
     public override List<IParameter> Parameters => new()
     {
         new Parameter<string>
@@ -41,6 +47,8 @@ public abstract class Label<T> : GrafanaFunctionBase<T> where T : IDataSourceVal
 
         InputDataPointValues
     };
+
+    // TODO: JRC - Add support for label substitutions
 
     /// <inheritdoc />
     public class ComputeDataSourceValue : Label<DataSourceValue>

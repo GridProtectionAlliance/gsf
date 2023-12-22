@@ -26,85 +26,40 @@ using System.Collections.Generic;
 namespace GrafanaAdapters;
 
 /// <summary>
-/// Defines a interface that represents an enumeration of T for a given target.
-/// </summary>
-/// <remarks>
-/// This is a group construct keyed on <see cref="Target"/> for data source value enumerations.
-/// </remarks>
-public interface IDataSourceValueGroup
-{
-    /// <summary>
-    /// Query target, e.g., a point-tag, representative of all Source/> values.
-    /// </summary>
-    string Target { get; set; }
-
-    /// <summary>
-    /// Defines the root target expression, without any referenced series functions.
-    /// </summary>
-    string RootTarget { get; set; }
-
-    /// <summary>
-    /// Defines a reference to the original target that was the source of these results.
-    /// </summary>
-    Target SourceTarget { get; set; }
-
-    /// <summary>
-    /// Defines flag that determines if empty series are produced.
-    /// </summary>
-    bool DropEmptySeries { get; set; }
-
-    /// <summary>
-    /// Defines a refID for a specific Grafana Query.
-    /// </summary>
-    string refId { get; set; }
-
-    /// <summary>
-    /// Defines a refID for a specific Grafana Query.
-    /// </summary>
-    Dictionary<string, string> metadata { get; set; }
-}
-
-/// <summary>
 /// Defines a class that represents an enumeration of T for a given target.
 /// </summary>
 /// <remarks>
 /// This is a group construct keyed on <see cref="Target"/> for data source value enumerations.
 /// </remarks>
-public class DataSourceValueGroup<T> : IDataSourceValueGroup
+public class DataSourceValueGroup<T> : IDataSourceValueGroup where T : IDataSourceValue
 {
-    /// <summary>
-    /// Query target, e.g., a point-tag, representative of all <see cref="Source"/> values.
-    /// </summary>
+    /// <inheritdoc />
     public string Target { get; set; }
 
-    /// <summary>
-    /// Defines the root target expression, without any referenced series functions.
-    /// </summary>
+    /// <inheritdoc />
     public string RootTarget { get; set; }
 
-    /// <summary>
-    /// Defines a reference to the original target that was the source of these results.
-    /// </summary>
+    /// <inheritdoc />
     public Target SourceTarget { get; set; }
 
     /// <summary>
-    /// Data source values enumerable.
+    /// Gets or sets data source value enumeration for the group.
     /// </summary>
     public IEnumerable<T> Source { get; set; }
 
-    /// <summary>
-    /// Defines flag that determines if empty series are produced.
-    /// </summary>
+    IEnumerable<IDataSourceValue> IDataSourceValueGroup.Source
+    {
+        get => Source as IEnumerable<IDataSourceValue>;
+        set => Source = value as IEnumerable<T>;
+    }
+
+    /// <inheritdoc />
     public bool DropEmptySeries { get; set; }
 
-    /// <summary>
-    /// Defines a refID for a specific Grafana Query.
-    /// </summary>
+    /// <inheritdoc />
     public string refId { get; set; }
 
-    /// <summary>
-    /// Defines a refID for a specific Grafana Query.
-    /// </summary>
+    /// <inheritdoc />
     public Dictionary<string, string> metadata { get; set; }
 
     /// <summary>
