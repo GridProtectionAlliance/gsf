@@ -59,7 +59,12 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
     readonly MeasurementStateFlags IDataSourceValue.Flags => Flags;
 
     /// <inheritdoc />
-    // TODO: JRC - this lookup is problematic, phasor labels are not unique, need to lookup with an associated device ID - how does this work from UI?
+    // TODO: JRC - ERROR - this lookup is problematic, phasor labels are not unique, need to lookup with an associated device ID
+    // or device acronym. Actually, even device phasor labels are not unique, can have same label for different phases. So you
+    // need a device acronym (or ID) and the phasor ID, e.g., <DeviceAcronym>!<PhasorID>. How does this even work from UI?
+    // Do you select a device and then a phasor? I would think a simpler solution would be to filter ActiveMeasurements by phasor
+    // types, perhaps just magnitudes, then use then just use that measurement's unique point tag for metadata lookups. You could
+    // then use the PhasorID to lookup associated angle measurement as well as phasor metadata, e.g., label, phase, etc. as needed.
     public readonly DataRow[] LookupMetadata(DataSet metadata, string target)
     {
         return metadata?.Tables["Phasor"].Select($"Label = '{target}'") ?? Array.Empty<DataRow>();
@@ -71,6 +76,7 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
         Dictionary<int, PhasorInfo> phasorTargets = new();
         Dictionary<ulong, string> targetMap = new();
 
+        // TODO: JRC - based on logic issue with LookupMetadata, the following needs to be verified and reworked
         foreach (string targetLabel in targets)
         {
             if (targetLabel.StartsWith("FILTER ", StringComparison.OrdinalIgnoreCase) && AdapterBase.ParseFilterExpression(targetLabel.SplitAlias(out _), out string tableName, out string exp, out string sortField, out int takeCount))
@@ -171,8 +177,8 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
                 SourceTarget = parameters.SourceTarget,
                 Source = phasorValues,
                 DropEmptySeries = parameters.DropEmptySeries,
-                refId = parameters.SourceTarget.refId,
-                metadata = FunctionParser.GetMetadata<PhasorValue>(metadata, target.Value.Label, parameters.MetadataSelection)
+                RefID = parameters.SourceTarget.refId,
+                MetadataMap = FunctionParser.GetMetadata<PhasorValue>(metadata, target.Value.Label, parameters.MetadataSelection)
             };
 
             List<PhasorValue> generatePhasorValues()

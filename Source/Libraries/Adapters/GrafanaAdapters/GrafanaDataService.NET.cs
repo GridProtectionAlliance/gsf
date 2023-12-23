@@ -134,6 +134,7 @@ public partial class GrafanaDataService : DataService, IGrafanaDataService
     /// <summary>
     /// Queries description of available functions.
     /// </summary>
+    // TODO: JRC - suggest passing a new parameter e.g. 'string dataType' to filter function descriptions by data type, e.g., "PhasorValue" or "DataSourceValue"
     public async Task<FunctionDescription[]> GetFunctions()
     {
         return await m_dataSource.GetFunctionDescription(m_cancellationSource.Token);

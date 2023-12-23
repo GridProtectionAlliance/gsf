@@ -135,6 +135,7 @@ namespace GrafanaAdapters
         /// <summary>
         /// Queries description of available functions.
         /// </summary>
+        // TODO: JRC - suggest passing a parameter e.g. 'string dataType' to filter function descriptions by data type, e.g., "PhasorValue" or "DataSourceValue"
         public FunctionDescription[] GetFunctions()
         {
             return m_dataSource.GetFunctionDescriptions(m_cancellationSource.Token).Result;

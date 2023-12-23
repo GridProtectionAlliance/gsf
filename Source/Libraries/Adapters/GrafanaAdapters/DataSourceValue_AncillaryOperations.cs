@@ -132,8 +132,8 @@ public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
                 SourceTarget = parameters.SourceTarget,
                 Source = filteredValues,
                 DropEmptySeries = parameters.DropEmptySeries,
-                refId = parameters.SourceTarget.refId,
-                metadata = FunctionParser.GetMetadata<DataSourceValue>(metadata, kvp.Value, parameters.MetadataSelection)
+                RefID = parameters.SourceTarget.refId,
+                MetadataMap = FunctionParser.GetMetadata<DataSourceValue>(metadata, kvp.Value, parameters.MetadataSelection)
             };
         });
     }

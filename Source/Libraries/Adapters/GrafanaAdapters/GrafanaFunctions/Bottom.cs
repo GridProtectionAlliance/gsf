@@ -56,7 +56,7 @@ public abstract class Bottom<T> : GrafanaFunctionBase<T> where T : IDataSourceVa
     {
         try
         {
-            // TODO: JRC - Extract as a helper function in "FunctionModelHelper"
+            // TODO: JRC - extract as a helper function in "FunctionModelHelper"
             if (rawValue.EndsWith("%")) // Percent
             {
                 double percent = Convert.ToDouble(rawValue.TrimEnd('%')) / 100;

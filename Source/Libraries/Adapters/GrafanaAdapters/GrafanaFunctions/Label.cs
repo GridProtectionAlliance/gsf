@@ -48,7 +48,7 @@ public abstract class Label<T> : GrafanaFunctionBase<T> where T : IDataSourceVal
         InputDataPointValues
     };
 
-    // TODO: JRC - Add support for label substitutions
+    // TODO: JRC - add support for label substitutions
 
     /// <inheritdoc />
     public class ComputeDataSourceValue : Label<DataSourceValue>

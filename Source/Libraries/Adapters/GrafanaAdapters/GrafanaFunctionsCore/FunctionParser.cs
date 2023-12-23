@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -80,12 +81,20 @@ internal static class FunctionParser
 
                 paramIndex++;
             }
+        }
 
+        public ParsedTarget(ParsedTarget<T> target, List<string> baseParameter)
+        {
+            Function = target.Function;
+            GroupOperation = target.GroupOperation;
+            TargetParameter = target.TargetParameter;
+            BaseParameter = baseParameter;
+            m_pointTargets = target.m_pointTargets;
         }
     }
 
     private static IGrafanaFunction[] s_grafanaFunctions;
-    private static object s_grafanaFunctionsLock = new();
+    private static readonly object s_grafanaFunctionsLock = new();
 
     /// <summary>
     /// Parses an expression like Func1(X,Y,Z);FUNC2(D,E,F) into separate ParsedTargets
@@ -124,14 +133,6 @@ internal static class FunctionParser
         // Initialize the list with target capacity to enable index-based result assignment to maintain order
         List<List<DataSourceValueGroup<T>>> results = new(new List<DataSourceValueGroup<T>>[targets.Length]);
 
-        // TODO: JRC - Figure out where/how this should be implemented
-        // When accurate calculation results are requested, query data source at full resolution
-        //if (target.Function.Name.Equals("Interval") && ParseFloat(parameters[0]) == 0.0D)
-        //{
-        //    includePeaks = false;
-        //    interval = "0s";
-        //}
-
         // Apply the function for each targets
         Parallel.ForEach(targets, (target, _, index) =>
         {
@@ -147,81 +148,108 @@ internal static class FunctionParser
         if (target.Function is null)
             return target.DataTargets.SelectMany(valueGroup => GetPointTags(valueGroup, metadata)).Select(key => pointData[key]).ToList();
 
-        // Fetch data points query
-        List<DataSourceValueGroup<T>[]> groupedDataValues = new();
+        string functionName = target.Function.Name;
 
-        foreach (ParsedTarget<T>[] query in target.TargetParameter)
+        switch (target.GroupOperation)
         {
-            DataSourceValueGroup<T>[] queryResult = query.SelectMany(subTarget => ExecuteSeriesFunction(subTarget, pointData, metadata, cancellationToken)).ToArray();
-            groupedDataValues.Add(queryResult);
+            case FunctionOperations.Slice:
+            {
+                // Execute all series functions over time slices
+                TimeSliceScanner scanner = new(pointData.Values, ParseFloat(target.BaseParameter[0]) / SI.Milli);
+                ParsedTarget<T> sliceTarget = new(target, target.BaseParameter.Skip(1).ToList());
+                List<DataSourceValueGroup<T>> sliceResults = new();
+
+                foreach (DataSourceValueGroup<T> valueGroup in ExecuteSeriesFunctionOverTimeSlices(scanner, sliceTarget, metadata, cancellationToken))
+                {
+                    sliceResults.Add(new DataSourceValueGroup<T>
+                    {
+                        Target = $"Slice{functionName}({string.Join(", ", sliceTarget.BaseParameter)}{(sliceTarget.BaseParameter.Count > 0 ? ", " : "")}{valueGroup.Target})",
+                        RootTarget = valueGroup.RootTarget ?? valueGroup.Target,
+                        SourceTarget = valueGroup.SourceTarget,
+                        Source = valueGroup.Source,
+                        DropEmptySeries = valueGroup.DropEmptySeries
+                    });
+                }
+
+                return sliceResults;
+            }
+            case FunctionOperations.Set:
+            {
+                Dictionary<string, DataSourceValueGroup<T>>.ValueCollection values = pointData.Values;
+                DataSourceValueGroup<T> first = values.First();
+
+                // Flatten all series into a single enumerable
+                first.Source = values.AsParallel().WithCancellation(cancellationToken).SelectMany(source => source.Source);
+
+                DataSourceValueGroup<T> valueGroup = ExecuteSeriesFunction(target, new Dictionary<string, DataSourceValueGroup<T>> { { first.Target, first } }, metadata, cancellationToken).First();
+
+                valueGroup.Target = $"Set{target.Function.Name}({string.Join(", ", target.BaseParameter)}{(target.BaseParameter.Count > 0 ? ", " : "")}{first.RootTarget})";
+                
+                // Handle edge-case set operations - for these functions there is data in the target series as well
+                if (functionName is "Minimum" or "Maximum" or "Median")
+                {
+                    T dataValue = valueGroup.Source.First();
+                    valueGroup.Target = $"Set{functionName} = {dataValue.Target}";
+                    valueGroup.RootTarget = dataValue.Target;
+                }
+
+                return new List<DataSourceValueGroup<T>>(new[] { valueGroup });
+            }
+            default:
+            {
+                List<DataSourceValueGroup<T>[]> groupedDataValues = new();
+
+                foreach (ParsedTarget<T>[] query in target.TargetParameter)
+                {
+                    DataSourceValueGroup<T>[] queryResult = query.SelectMany(subTarget => ExecuteSeriesFunction(subTarget, pointData, metadata, cancellationToken)).ToArray();
+                    groupedDataValues.Add(queryResult);
+                }
+
+                // Initialize the list with placeholders to set capacity and enable index-based assignment to maintain order
+                List<DataSourceValueGroup<T>> results = new(new DataSourceValueGroup<T>[groupedDataValues.Count]);
+
+                // Apply the function, index is used to ensure the order is maintained
+                Parallel.ForEach(groupedDataValues, (dataValues, _, index) =>
+                {
+                    List<IParameter> computeParameters = GenerateParameters(metadata, target.Function, target.BaseParameter, dataValues);
+                    results[(int)index] = ComputeFunction(target.Function, target.GroupOperation, computeParameters, cancellationToken);
+                });
+
+                return results;
+            }
         }
+    }
 
-        // Initialize the list with placeholders to set capacity and enable index-based assignment to maintain order
-        List<DataSourceValueGroup<T>> results = new(new DataSourceValueGroup<T>[groupedDataValues.Count]);
-
-        // Apply the function, index is used to ensure the order is maintained
-        Parallel.ForEach(groupedDataValues, (dataValues, _, index) =>
+    // Execute series function over a set of points from each series at the same time-slice
+    private static IEnumerable<DataSourceValueGroup<T>> ExecuteSeriesFunctionOverTimeSlices<T>(TimeSliceScanner scanner, ParsedTarget<T> target, DataSet metadata, CancellationToken cancellationToken) where T : IDataSourceValue
+    {
+        while (!scanner.DataReadComplete && !cancellationToken.IsCancellationRequested)
         {
-            List<IParameter> computeParameters = GenerateParameters(metadata, target.Function, target.BaseParameter, dataValues);
-            results[(int)index] = ComputeFunction(target.Function, target.GroupOperation, computeParameters, cancellationToken);
-        });
+            Dictionary<string, DataSourceValueGroup<T>> pointData = new();
 
-        return results;
+            foreach (IGrouping<string, T> valueGroup in scanner.ReadNextTimeSlice().GroupBy(dataValue => dataValue.Target).Cast<IGrouping<string, T>>())
+            {
+                pointData[valueGroup.Key] = new DataSourceValueGroup<T>
+                {
+                    Target = valueGroup.Key,
+                    RootTarget = valueGroup.Key,
+                    Source = valueGroup
+                };
+            }
+
+            foreach (DataSourceValueGroup<T> dataValueGroup in ExecuteSeriesFunction(target, pointData, metadata, cancellationToken))
+                yield return dataValueGroup;
+        }
     }
 
     private static DataSourceValueGroup<T> ComputeFunction<T>(IGrafanaFunction<T> function, FunctionOperations groupOperation, List<IParameter> parameters, CancellationToken cancellationToken) where T : IDataSourceValue
     {
-        DataSourceValueGroup<T> computedValues;
-
-        computedValues = groupOperation switch
+        return groupOperation switch
         {
-            // TODO: JRC - Implement slice and set operations
             FunctionOperations.Slice => function.ComputeSlice(parameters),
             FunctionOperations.Set => function.ComputeSet(parameters),
             _ => function.Compute(parameters)
         };
-
-        return computedValues;
-
-    }
-    private static IEnumerable<DataSourceValueGroup<T>> ComputeSlice<T>(List<IParameter> parameters) where T : IDataSourceValue
-    {
-        // TODO: Assumed to be added by default for slice operations, need to verify
-        //parameters.Insert(0, new Parameter<double>
-        //{
-        //    Default = 0.0333,
-        //    Description = "A floating-point value that must be greater than or equal to zero that represents the desired time tolerance, in seconds, for the time slice",
-        //    Required = true
-        //});
-
-        IParameter<IDataSourceValueGroup> dataParameter = GetDataParameter(parameters);
-
-        //if (dataParameter is null)
-        //    throw new InvalidOperationException("Data parameter not found.");
-
-        //TimeSliceScanner scanner = new(dataParameter.Value, ParseFloat(parameters[0]) / SI.Milli);
-
-        //IEnumerable<DataSourceValue> readSliceValues()
-        //{
-        //    while (!scanner.DataReadComplete && !cancellationToken.IsCancellationRequested)
-        //    {
-        //        foreach (DataSourceValue dataValue in ExecuteSeriesFunctionOverSource(scanner.ReadNextTimeSlice(), seriesFunction, parameters, true))
-        //            yield return dataValue;
-        //    }
-        //}
-
-        //foreach (IGrouping<string, DataSourceValue> valueGroup in readSliceValues().GroupBy(dataValue => dataValue.Target))
-        //{
-        //    yield return new DataSourceValueGroup
-        //    {
-        //        Target = valueGroup.Key,
-        //        RootTarget = valueGroup.Key,
-        //        Source = valueGroup
-        //    };
-        //}
-
-        //return function.Compute(parameters);
-        return null;
     }
 
     private static (IGrafanaFunction<T> function, FunctionOperations groupOperation, string parameterValue) MatchFunction<T>(string expression) where T: IDataSourceValue
@@ -327,7 +355,7 @@ internal static class FunctionParser
                 }
                 else
                 {
-                    dataSourceValueParameter.SetValue<T>(metadata, dataValues[dataIndex], dataValues[dataIndex].RootTarget, dataValues[dataIndex].metadata);
+                    dataSourceValueParameter.SetValue<T>(metadata, dataValues[dataIndex], dataValues[dataIndex].RootTarget, dataValues[dataIndex].MetadataMap);
                     dataIndex++;
                 }
             }
@@ -341,7 +369,7 @@ internal static class FunctionParser
                 else
                 {
                     // Have a valid parameter, uses metadata from first 
-                    parameter.SetValue<T>(metadata, parsedParameters[paramIndex], dataValues[0]?.RootTarget, dataValues[0]?.metadata);
+                    parameter.SetValue<T>(metadata, parsedParameters[paramIndex], dataValues[0]?.RootTarget, dataValues[0]?.MetadataMap);
                     paramIndex++;
                 }
             }
@@ -435,7 +463,7 @@ internal static class FunctionParser
     /// <returns> a <see cref="IEnumerable{FunctionDescription}"/> </returns>
     public static IEnumerable<FunctionDescription> GetFunctionDescriptions()
     {
-        // TODO: JRC - Getting unique function names for the moment - this should be changed to filter by data source value type
+        // TODO: JRC - getting unique function names for the moment - this should be changed to filter by data source value type
         // since technically there could be functions that are unique to a specific data source value types
         return new HashSet<FunctionDescription>(GetGrafanaFunctions().SelectMany(function =>
         {

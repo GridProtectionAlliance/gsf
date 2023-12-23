@@ -70,7 +70,7 @@ public interface IDataSourceValue
     /// </summary>
     MeasurementStateFlags Flags { get; }
 
-    // TODO: JRC - When converting to .NET core, change methods to be static abstract
+    // TODO: JRC - when converting to .NET core, change interface methods to be static abstract
 
     /// <summary>
     /// Looks up metadata for the specified target.

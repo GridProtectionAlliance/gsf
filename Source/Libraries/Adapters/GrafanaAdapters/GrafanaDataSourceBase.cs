@@ -46,6 +46,7 @@ public abstract partial class GrafanaDataSourceBase
     // Constants
     private const string DropEmptySeriesCommand = "dropemptyseries";
     private const string IncludePeaksCommand = "includepeaks";
+    private const string FullResolutionQueryCommand = "fullresolutionquery";
 
     #endregion
 
@@ -106,9 +107,10 @@ public abstract partial class GrafanaDataSourceBase
 
         // FUTURE: Dynamic types could be supported by loading all found implementations of
         // 'IDataSourceValue' interface. In this case call to ProcessQuery<T> would be made
-        // based on value of 'dataType', i.e., DataSourceValue.Default(string), by creating
+        // based on 'Type' of 'dataType', i.e., DataSourceValue.Default(string), by creating
         // a static delegate like 'Action<Type, QueryRequest, CancellationToken>' that would
-        // call 'ProcessQuery<T>' with the appropriate type.
+        // call 'ProcessQuery<T>' with the appropriate type. Note that some functions used
+        // in 'FunctionParser', e.g., 'GetPointTags', would need to be made public.
     }
 
     private List<TimeSeriesValues> ProcessQuery<T>(QueryRequest request, CancellationToken cancellationToken) where T : IDataSourceValue
@@ -125,6 +127,7 @@ public abstract partial class GrafanaDataSourceBase
         {
             bool dropEmptySeries = false;
             bool includePeaks = false;
+            bool fullResolutionQuery = false;
 
             // Handle query commands
             if (target.target.ToLowerInvariant().Contains(DropEmptySeriesCommand))
@@ -139,12 +142,18 @@ public abstract partial class GrafanaDataSourceBase
                 target.target = target.target.ReplaceCaseInsensitive(IncludePeaksCommand, "");
             }
 
+            if (target.target.ToLowerInvariant().Contains(FullResolutionQueryCommand))
+            {
+                fullResolutionQuery = true;
+                target.target = target.target.ReplaceCaseInsensitive(FullResolutionQueryCommand, "");
+            }
+
             QueryParameters parameters = new()
             {
                 SourceTarget = target,
                 StartTime = startTime,
                 StopTime = stopTime,
-                Interval = request.interval,
+                Interval = fullResolutionQuery ? "0s" : request.interval,
                 IncludePeaks = includePeaks,
                 DropEmptySeries = dropEmptySeries,
                 MetadataSelection = target.metadataSelection,
@@ -169,9 +178,9 @@ public abstract partial class GrafanaDataSourceBase
         {
             target = valueGroup.Target,
             rootTarget = valueGroup.RootTarget,
-            meta = valueGroup.metadata,
+            meta = valueGroup.MetadataMap,
             dropEmptySeries = valueGroup.DropEmptySeries,
-            refId = valueGroup.refId
+            refId = valueGroup.RefID
         }).ToList();
 
         // Apply any encountered ad-hoc filters

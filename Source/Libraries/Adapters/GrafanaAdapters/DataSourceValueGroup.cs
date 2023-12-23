@@ -57,10 +57,10 @@ public class DataSourceValueGroup<T> : IDataSourceValueGroup where T : IDataSour
     public bool DropEmptySeries { get; set; }
 
     /// <inheritdoc />
-    public string refId { get; set; }
+    public string RefID { get; set; }
 
     /// <inheritdoc />
-    public Dictionary<string, string> metadata { get; set; }
+    public Dictionary<string, string> MetadataMap { get; set; }
 
     /// <summary>
     /// Creates a new <see cref="DataSourceValueGroup{T}"/> from this instance.
@@ -75,8 +75,8 @@ public class DataSourceValueGroup<T> : IDataSourceValueGroup where T : IDataSour
             SourceTarget = SourceTarget,
             Source = Source,
             DropEmptySeries = DropEmptySeries,
-            refId = refId,
-            metadata = metadata
+            RefID = RefID,
+            MetadataMap = MetadataMap
         };
     }
 }

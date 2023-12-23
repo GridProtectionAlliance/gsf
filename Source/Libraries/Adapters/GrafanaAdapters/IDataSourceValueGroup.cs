@@ -61,10 +61,10 @@ public interface IDataSourceValueGroup
     /// <summary>
     /// Gets or sets a refID for a specific Grafana Query.
     /// </summary>
-    string refId { get; set; }
+    string RefID { get; set; }
 
     /// <summary>
     /// Gets or sets a refID for a specific Grafana Query.
     /// </summary>
-    Dictionary<string, string> metadata { get; set; }
+    Dictionary<string, string> MetadataMap { get; set; }
 }
