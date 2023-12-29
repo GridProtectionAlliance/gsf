@@ -95,55 +95,12 @@ internal static class FunctionModelHelpers
         return value;
     }
 
-    public static double ParseFloat(string parameter, IEnumerable<DataSourceValue> source = null, bool validateGTEZero = true, bool isSliceOperation = false)
+    public static double ParseFloat(string parameter, bool validateGTEZero = true)
     {
-        double value;
-
         parameter = parameter.Trim();
 
-        Tuple<bool, double> cache = TargetCache<Tuple<bool, double>>.GetOrAdd(parameter, () =>
-        {
-            bool success = double.TryParse(parameter, out double result);
-            return new Tuple<bool, double>(success, result);
-        });
-
-        if (cache.Item1)
-        {
-            value = cache.Item2;
-        }
-        else
-        {
-            if (source is null)
-                throw new FormatException($"Could not parse '{parameter}' as a floating-point value.");
-
-            double defaultValue = 0.0D;
-            bool hasDefaultValue = false;
-
-            if (parameter.IndexOf(';') > -1)
-            {
-                string[] parts = parameter.Split(';');
-
-                if (parts.Length >= 2)
-                {
-                    parameter = parts[0].Trim();
-                    defaultValue = ParseFloat(parts[1], source, validateGTEZero, isSliceOperation);
-                    hasDefaultValue = true;
-                }
-            }
-
-            DataSourceValue result = source.FirstOrDefault(dataValue => dataValue.Target.Equals(parameter, StringComparison.OrdinalIgnoreCase));
-
-            if (string.IsNullOrEmpty(result.Target))
-            {
-                // Slice operations may not have a target for a given slice - in this case function should use a default value and not fail
-                if (isSliceOperation || hasDefaultValue)
-                    result.Value = defaultValue;
-                else
-                    throw new FormatException($"Value target '{parameter}' could not be found in dataset nor parsed as a floating-point value.");
-            }
-
-            value = result.Value;
-        }
+        if (!double.TryParse(parameter, out double value))
+            throw new FormatException($"Could not parse '{parameter}' as a floating-point value.");
 
         if (validateGTEZero && value < 0.0D)
             throw new ArgumentOutOfRangeException($"Value '{parameter}' is less than zero.");

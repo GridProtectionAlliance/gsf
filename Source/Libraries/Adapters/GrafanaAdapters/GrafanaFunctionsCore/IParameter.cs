@@ -55,7 +55,7 @@ public interface IParameter
     /// <summary>
     /// Sets the value of the parameter.
     /// </summary>
-    void SetValue<TDataSourceValue>(DataSet metadata, object value, string target, Dictionary<string, string> metadataMap) where TDataSourceValue : IDataSourceValue;
+    void SetValue<TDataSourceValue>(DataSet metadata, object value, string target, Dictionary<string, string> metadataMap) where TDataSourceValue : IDataSourceValue, new();
 }
 
 /// <summary>

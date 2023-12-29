@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using GrafanaAdapters.GrafanaFunctionsCore;
 
 namespace GrafanaAdapters.GrafanaFunctions;
@@ -36,7 +37,7 @@ public abstract class Ceiling<T> : GrafanaFunctionBase<T> where T : IDataSourceV
     public class ComputeDataSourceValue : Ceiling<DataSourceValue>
     {
         /// <inheritdoc />
-        public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
+        public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters, CancellationToken cancellationToken)
         {
             // Get Values
             DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
@@ -62,7 +63,7 @@ public abstract class Ceiling<T> : GrafanaFunctionBase<T> where T : IDataSourceV
     public class ComputePhasorValue : Ceiling<PhasorValue>
     {
         /// <inheritdoc />
-        public override DataSourceValueGroup<PhasorValue> Compute(List<IParameter> parameters)
+        public override DataSourceValueGroup<PhasorValue> Compute(List<IParameter> parameters, CancellationToken cancellationToken)
         {
             // Get Values
             DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;

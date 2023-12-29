@@ -26,12 +26,12 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using GSF;
+using GSF.Collections;
 using GSF.IO;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
@@ -69,12 +69,17 @@ internal static class FunctionParser
                 return;
             }
 
+            List<IParameter> parameters = new(Function.Parameters);
+
+            if (GroupOperation == FunctionOperations.Slice)
+                parameters.InsertRequiredSliceParameter();
+
             int paramIndex = 0;
 
             // Separate data points from params
             foreach (string parameter in SplitWithParenthesis(parameterValue, ','))
             {
-                if (Function.Parameters[paramIndex] is IParameter<IDataSourceValueGroup>)
+                if (parameters[paramIndex] is IParameter<IDataSourceValueGroup>)
                     TargetParameter.Add(ParseTargets<T>(parameter)); // Data point
                 else
                     BaseParameter.Add(parameter); // Other Parameter
@@ -86,7 +91,7 @@ internal static class FunctionParser
         public ParsedTarget(ParsedTarget<T> target, List<string> baseParameter)
         {
             Function = target.Function;
-            GroupOperation = target.GroupOperation;
+            GroupOperation = FunctionOperations.Standard;
             TargetParameter = target.TargetParameter;
             BaseParameter = baseParameter;
             m_pointTargets = target.m_pointTargets;
@@ -125,7 +130,7 @@ internal static class FunctionParser
     /// <param name="pointData">The point data.</param>
     /// <param name="metadata">The data source metadata.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    public static IEnumerable<DataSourceValueGroup<T>> ExecuteSeriesFunctions<T>(ParsedTarget<T>[] targets, Dictionary<string, DataSourceValueGroup<T>> pointData, DataSet metadata, CancellationToken cancellationToken) where T : IDataSourceValue
+    public static IEnumerable<DataSourceValueGroup<T>> ExecuteSeriesFunctions<T>(ParsedTarget<T>[] targets, Dictionary<string, DataSourceValueGroup<T>> pointData, DataSet metadata, CancellationToken cancellationToken) where T : IDataSourceValue, new()
     {
         if (cancellationToken.IsCancellationRequested)
             return null;
@@ -143,10 +148,10 @@ internal static class FunctionParser
         return results.SelectMany(enumerable => enumerable);
     }
 
-    private static List<DataSourceValueGroup<T>> ExecuteSeriesFunction<T>(ParsedTarget<T> target, Dictionary<string, DataSourceValueGroup<T>> pointData, DataSet metadata, CancellationToken cancellationToken) where T : IDataSourceValue
+    private static List<DataSourceValueGroup<T>> ExecuteSeriesFunction<T>(ParsedTarget<T> target, Dictionary<string, DataSourceValueGroup<T>> pointData, DataSet metadata, CancellationToken cancellationToken) where T : IDataSourceValue, new()
     {
         if (target.Function is null)
-            return target.DataTargets.SelectMany(valueGroup => GetPointTags(valueGroup, metadata)).Select(key => pointData[key]).ToList();
+            return target.DataTargets.SelectMany(valueGroup => GetPointTags(valueGroup, metadata)).Where(pointData.ContainsKey).Select(key => pointData[key]).ToList();
 
         string functionName = target.Function.Name;
 
@@ -221,34 +226,36 @@ internal static class FunctionParser
     }
 
     // Execute series function over a set of points from each series at the same time-slice
-    private static IEnumerable<DataSourceValueGroup<T>> ExecuteSeriesFunctionOverTimeSlices<T>(TimeSliceScanner scanner, ParsedTarget<T> target, DataSet metadata, CancellationToken cancellationToken) where T : IDataSourceValue
+    private static IEnumerable<DataSourceValueGroup<T>> ExecuteSeriesFunctionOverTimeSlices<T>(TimeSliceScanner scanner, ParsedTarget<T> target, DataSet metadata, CancellationToken cancellationToken) where T : IDataSourceValue, new()
     {
+        Dictionary<string, DataSourceValueGroup<T>> pointData = new();
+
         while (!scanner.DataReadComplete && !cancellationToken.IsCancellationRequested)
         {
-            Dictionary<string, DataSourceValueGroup<T>> pointData = new();
-
-            foreach (IGrouping<string, T> valueGroup in scanner.ReadNextTimeSlice().GroupBy(dataValue => dataValue.Target).Cast<IGrouping<string, T>>())
+            foreach (IGrouping<string, IDataSourceValue> valueGroup in scanner.ReadNextTimeSlice().GroupBy(dataValue => dataValue.Target))
             {
-                pointData[valueGroup.Key] = new DataSourceValueGroup<T>
+                DataSourceValueGroup<T> groupPoints = pointData.GetOrAdd(valueGroup.Key, _ => new DataSourceValueGroup<T>
                 {
                     Target = valueGroup.Key,
                     RootTarget = valueGroup.Key,
-                    Source = valueGroup
-                };
-            }
+                    Source = Enumerable.Empty<T>()
+                });
 
-            foreach (DataSourceValueGroup<T> dataValueGroup in ExecuteSeriesFunction(target, pointData, metadata, cancellationToken))
-                yield return dataValueGroup;
+                groupPoints.Source = groupPoints.Source.Concat(valueGroup.Cast<T>());
+            }
         }
+
+        foreach (DataSourceValueGroup<T> dataValueGroup in ExecuteSeriesFunction(target, pointData, metadata, cancellationToken))
+            yield return dataValueGroup;
     }
 
     private static DataSourceValueGroup<T> ComputeFunction<T>(IGrafanaFunction<T> function, FunctionOperations groupOperation, List<IParameter> parameters, CancellationToken cancellationToken) where T : IDataSourceValue
     {
         return groupOperation switch
         {
-            FunctionOperations.Slice => function.ComputeSlice(parameters),
-            FunctionOperations.Set => function.ComputeSet(parameters),
-            _ => function.Compute(parameters)
+            FunctionOperations.Slice => function.ComputeSlice(parameters, cancellationToken),
+            FunctionOperations.Set => function.ComputeSet(parameters, cancellationToken),
+            _ => function.Compute(parameters, cancellationToken)
         };
     }
 
@@ -265,8 +272,12 @@ internal static class FunctionParser
             // Get the matched groups from the regex
             GroupCollection groups = function.Regex.Match(expression).Groups;
 
-            // Check if the function has a group operation prefix (will default to standard if not)
+            // Check if the function has a group operation prefix
             Enum.TryParse(groups["GroupOp"].Value, true, out FunctionOperations operation);
+
+            // Default to standard
+            if (operation == 0)
+                operation = FunctionOperations.Standard;
 
             // Verify that the function supports the requested operation
             if (!function.SupportedFunctionOperations.HasFlag(operation))
@@ -302,7 +313,7 @@ internal static class FunctionParser
     /// <param name="rootTarget">Root target to use for metadata lookup.</param>
     /// <param name="metadataSelection">Metadata selections.</param>
     /// <returns>Mapped metadata for the specified target and selections.</returns>
-    public static Dictionary<string, string> GetMetadata<T>(DataSet metadata, string rootTarget, Dictionary<string, List<string>> metadataSelection) where T : IDataSourceValue
+    public static Dictionary<string, string> GetMetadata<T>(DataSet metadata, string rootTarget, Dictionary<string, List<string>> metadataSelection) where T : IDataSourceValue, new()
     {
         // Create a new dictionary to hold the metadata values
         Dictionary<string, string> metadataMap = new();
@@ -314,7 +325,6 @@ internal static class FunctionParser
         // Iterate through selections
         foreach (KeyValuePair<string, List<string>> entry in metadataSelection)
         {
-            string table = entry.Key;
             List<string> values = entry.Value;
             DataRow[] rows = DataSourceValue.Default<T>().LookupMetadata(metadata, rootTarget);
 
@@ -333,12 +343,7 @@ internal static class FunctionParser
         return metadataMap;
     }
 
-    private static IParameter<IDataSourceValueGroup> GetDataParameter(List<IParameter> parameters)
-    {
-        return parameters.FirstOrDefault(parameter => parameter is IParameter<IDataSourceValueGroup>) as IParameter<IDataSourceValueGroup>;
-    }
-
-    private static List<IParameter> GenerateParameters<T>(DataSet metadata, IGrafanaFunction<T> function, List<string> parsedParameters, DataSourceValueGroup<T>[] dataValues) where T : IDataSourceValue
+    private static List<IParameter> GenerateParameters<T>(DataSet metadata, IGrafanaFunction<T> function, List<string> parsedParameters, DataSourceValueGroup<T>[] dataValues) where T : IDataSourceValue, new()
     {
         List<IParameter> parameters = function.Parameters;
         int paramIndex = 0;
@@ -405,10 +410,31 @@ internal static class FunctionParser
 
             List<IGrafanaFunction> list = new();
 
-            foreach (Type type in implementationTypes)
+            foreach (Type type in implementationTypes.Where(type => type.GetConstructor(Type.EmptyTypes) is not null))
             {
-                if (type.GetConstructor(Type.EmptyTypes) is not null)
-                    list.Add((IGrafanaFunction)Activator.CreateInstance(type));
+                IGrafanaFunction function;
+
+                // Check for Grafana functions nested within abstract base class definition
+                if (type.ContainsGenericParameters)
+                {
+                    if (!type.IsNested || !type.DeclaringType!.IsGenericType)
+                        continue;
+
+                    // Must contain at least one generic argument because IsGenericType is true
+                    Type[] constraints = type.DeclaringType.GetGenericArguments()[0].GetGenericParameterConstraints();
+
+                    if (constraints.Length != 1 || constraints[0] != typeof(IDataSourceValue))
+                        continue;
+
+                    // Assign a specific type to abstract parent class so nested type can be constructed
+                    function = (IGrafanaFunction)Activator.CreateInstance(type.MakeGenericType(typeof(DataSourceValue)));
+                }
+                else
+                {
+                    function = (IGrafanaFunction)Activator.CreateInstance(type);
+                }
+
+                list.Add(function);
             }
 
             Interlocked.Exchange(ref s_grafanaFunctions, list.ToArray());

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
 using GrafanaAdapters.GrafanaFunctionsCore;
 
 namespace GrafanaAdapters.GrafanaFunctions;
@@ -54,7 +55,7 @@ public abstract class Label<T> : GrafanaFunctionBase<T> where T : IDataSourceVal
     public class ComputeDataSourceValue : Label<DataSourceValue>
     {
         /// <inheritdoc />
-        public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
+        public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters, CancellationToken cancellationToken)
         {
             // Get Values
             string label = (parameters[0] as IParameter<string>).Value;
@@ -71,7 +72,7 @@ public abstract class Label<T> : GrafanaFunctionBase<T> where T : IDataSourceVal
     public class ComputePhasorValue : Label<PhasorValue>
     {
         /// <inheritdoc />
-        public override DataSourceValueGroup<PhasorValue> Compute(List<IParameter> parameters)
+        public override DataSourceValueGroup<PhasorValue> Compute(List<IParameter> parameters, CancellationToken cancellationToken)
         {
             // Get Values
             string label = (parameters[0] as IParameter<string>).Value;

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using GrafanaAdapters.GrafanaFunctionsCore;
 
 namespace GrafanaAdapters.GrafanaFunctions;
@@ -36,7 +37,7 @@ public abstract class AbsoluteValue<T> : GrafanaFunctionBase<T> where T : IDataS
     public class ComputeDataSourceValue : AbsoluteValue<DataSourceValue>
     {
         /// <inheritdoc />
-        public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
+        public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters, CancellationToken cancellationToken)
         {
             // Get Values
             DataSourceValueGroup<DataSourceValue> dataSourceValues =
@@ -63,7 +64,7 @@ public abstract class AbsoluteValue<T> : GrafanaFunctionBase<T> where T : IDataS
     public class ComputePhasorValue : AbsoluteValue<PhasorValue>
     {
         /// <inheritdoc />
-        public override DataSourceValueGroup<PhasorValue> Compute(List<IParameter> parameters)
+        public override DataSourceValueGroup<PhasorValue> Compute(List<IParameter> parameters, CancellationToken cancellationToken)
         {
             // Get Values
             DataSourceValueGroup<PhasorValue> phasorValues =

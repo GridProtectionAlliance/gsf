@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System.Collections.Generic;
+using System.Linq;
 
 namespace GrafanaAdapters;
 
@@ -49,8 +50,8 @@ public class DataSourceValueGroup<T> : IDataSourceValueGroup where T : IDataSour
 
     IEnumerable<IDataSourceValue> IDataSourceValueGroup.Source
     {
-        get => Source as IEnumerable<IDataSourceValue>;
-        set => Source = value as IEnumerable<T>;
+        get => Source.Cast<IDataSourceValue>();
+        set => Source = value.Cast<T>();
     }
 
     /// <inheritdoc />

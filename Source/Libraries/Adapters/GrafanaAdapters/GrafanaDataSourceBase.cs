@@ -113,7 +113,7 @@ public abstract partial class GrafanaDataSourceBase
         // in 'FunctionParser', e.g., 'GetPointTags', would need to be made public.
     }
 
-    private List<TimeSeriesValues> ProcessQuery<T>(QueryRequest request, CancellationToken cancellationToken) where T : IDataSourceValue
+    private List<TimeSeriesValues> ProcessQuery<T>(QueryRequest request, CancellationToken cancellationToken) where T : IDataSourceValue, new()
     {
         DateTime startTime = request.range.from.ParseJsonTimestamp();
         DateTime stopTime = request.range.to.ParseJsonTimestamp();
@@ -159,6 +159,12 @@ public abstract partial class GrafanaDataSourceBase
                 MetadataSelection = target.metadataSelection,
                 CancellationToken = cancellationToken
             };
+
+            // TODO: JRC - this no longer operates as a depth-first recursive expression parser, as a result
+            // a query expression like the following no longer works: F3(F1(expr1), F2(expr2))
+            // Currently, behavior will only return results for the first function, e.g., F3(F1(expr1))
+            // To change this from a top-level only parser to a depth-first parser, the following code
+            // would need to be called again, recursively for each function in the expression:
 
             // Parse target expressions
             ParsedTarget<T>[] targets = ParseTargets<T>(target.target);
@@ -259,7 +265,7 @@ public abstract partial class GrafanaDataSourceBase
         }
     }
 
-    private Dictionary<string, DataSourceValueGroup<T>> QueryDataSourceGroupingByTarget<T>(ParsedTarget<T>[] parsedTargets, QueryParameters parameters) where T : IDataSourceValue
+    private Dictionary<string, DataSourceValueGroup<T>> QueryDataSourceGroupingByTarget<T>(ParsedTarget<T>[] parsedTargets, QueryParameters parameters) where T : IDataSourceValue, new()
     {
         if (parsedTargets.Length == 0)
             return new Dictionary<string, DataSourceValueGroup<T>>();

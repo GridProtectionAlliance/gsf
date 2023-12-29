@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using GrafanaAdapters.GrafanaFunctionsCore;
 
 namespace GrafanaAdapters.GrafanaFunctions;
@@ -35,7 +36,7 @@ public abstract class Maximum<T> : GrafanaFunctionBase<T> where T : IDataSourceV
     public class ComputeDataSourceValue : Maximum<DataSourceValue>
     {
         /// <inheritdoc />
-        public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
+        public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters, CancellationToken cancellationToken)
         {
             // Get Values
             DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
@@ -55,7 +56,7 @@ public abstract class Maximum<T> : GrafanaFunctionBase<T> where T : IDataSourceV
     public class ComputePhasorValue : Maximum<PhasorValue>
     {
         /// <inheritdoc />
-        public override DataSourceValueGroup<PhasorValue> Compute(List<IParameter> parameters)
+        public override DataSourceValueGroup<PhasorValue> Compute(List<IParameter> parameters, CancellationToken cancellationToken)
         {
             // Get Values
             DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;

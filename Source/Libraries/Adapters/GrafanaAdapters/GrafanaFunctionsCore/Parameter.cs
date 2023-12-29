@@ -42,7 +42,7 @@ internal class Parameter<T> : IParameter<T>
 
     public string ParameterTypeName => ParameterType.Name;
 
-    private (T value, bool success) LookupMetadata<TDataSourceValue>(DataSet metadata, Dictionary<string, string> metadataMap, string value, string target) where TDataSourceValue : IDataSourceValue
+    private (T value, bool success) LookupMetadata<TDataSourceValue>(DataSet metadata, Dictionary<string, string> metadataMap, string value, string target) where TDataSourceValue : IDataSourceValue, new()
     {
         // Attempt to find in dictionary
         if (metadataMap.Count != 0 && metadataMap.TryGetValue(value, out string metaValue))
@@ -88,7 +88,7 @@ internal class Parameter<T> : IParameter<T>
     /// If nothing is found, it looks through ActiveMeasurements for it.
     /// Finally, if none of the above work it throws an error.
     /// </remarks>
-    public void SetValue<TDataSourceValue>(DataSet metadata, object value, string target, Dictionary<string, string> metadataMap) where TDataSourceValue : IDataSourceValue
+    public void SetValue<TDataSourceValue>(DataSet metadata, object value, string target, Dictionary<string, string> metadataMap) where TDataSourceValue : IDataSourceValue, new()
     {
         // No value specified
         if (value is null)

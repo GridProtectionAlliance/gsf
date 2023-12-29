@@ -143,11 +143,11 @@ public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
     /// </summary>
     /// <typeparam name="T">data source type.</typeparam>
     /// <returns>Default instance of specified data source type.</returns>
-    public static IDataSourceValue<T> Default<T>() where T : IDataSourceValue
+    public static IDataSourceValue<T> Default<T>() where T : IDataSourceValue, new()
     {
         // Caching default instances of data source value types so expensive reflection is only done once
         return s_dataSourceValueTypeMap.GetOrAdd(typeof(T), _ =>
-            typeof(T).GetField("Default").GetValue(null) as IDataSourceValue) as IDataSourceValue<T>;
+            typeof(IDataSourceValue).GetProperty("Default")!.GetValue(new T()) as IDataSourceValue) as IDataSourceValue<T>;
     }
 
     /// <summary>
@@ -163,6 +163,6 @@ public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
 
         // Caching default instances of data source value types so expensive reflection is only done once
         return s_dataSourceValueTypeNameMap.GetOrAdd(typeName, _ =>
-            GetLocalType(typeName).GetField("Default").GetValue(null) as IDataSourceValue);
+            typeof(IDataSourceValue).GetProperty("Default")!.GetValue(Activator.CreateInstance(GetLocalType(typeName))) as IDataSourceValue);
     }
 }

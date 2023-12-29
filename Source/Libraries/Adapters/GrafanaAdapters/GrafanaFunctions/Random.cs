@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using GrafanaAdapters.GrafanaFunctionsCore;
 
 namespace GrafanaAdapters.GrafanaFunctions;
@@ -90,7 +91,7 @@ public abstract class Random<T> : GrafanaFunctionBase<T> where T : IDataSourceVa
     public class ComputeDataSourceValue : Random<DataSourceValue>
     {
         /// <inheritdoc />
-        public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
+        public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters, CancellationToken cancellationToken)
         {
             // Get Values
             string rawValue = (parameters[0] as IParameter<string>).Value;
@@ -135,7 +136,7 @@ public abstract class Random<T> : GrafanaFunctionBase<T> where T : IDataSourceVa
     public class ComputePhasorValue : Random<PhasorValue>
     {
         /// <inheritdoc />
-        public override DataSourceValueGroup<PhasorValue> Compute(List<IParameter> parameters)
+        public override DataSourceValueGroup<PhasorValue> Compute(List<IParameter> parameters, CancellationToken cancellationToken)
         {
             // Get Values
             string rawValue = (parameters[0] as IParameter<string>).Value;

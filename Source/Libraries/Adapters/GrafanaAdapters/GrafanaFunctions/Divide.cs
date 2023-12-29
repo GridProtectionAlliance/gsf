@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using GrafanaAdapters.GrafanaFunctionsCore;
 
 namespace GrafanaAdapters.GrafanaFunctions;
@@ -41,7 +42,7 @@ public abstract class Divide<T> : GrafanaFunctionBase<T> where T : IDataSourceVa
     public class ComputeDataSourceValue : Divide<DataSourceValue>
     {
         /// <inheritdoc />
-        public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
+        public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters, CancellationToken cancellationToken)
         {
             // Get Values
             double value = (parameters[0] as IParameter<double>).Value;
@@ -68,7 +69,7 @@ public abstract class Divide<T> : GrafanaFunctionBase<T> where T : IDataSourceVa
     public class ComputePhasorValue : Divide<PhasorValue>
     {
         /// <inheritdoc />
-        public override DataSourceValueGroup<PhasorValue> Compute(List<IParameter> parameters)
+        public override DataSourceValueGroup<PhasorValue> Compute(List<IParameter> parameters, CancellationToken cancellationToken)
         {
             // Get Values
             double value = (parameters[0] as IParameter<double>).Value;

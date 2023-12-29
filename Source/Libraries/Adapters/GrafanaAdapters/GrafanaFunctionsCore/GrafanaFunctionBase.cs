@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace GrafanaAdapters.GrafanaFunctionsCore;
 
@@ -69,17 +70,17 @@ public abstract class GrafanaFunctionBase<T> : IGrafanaFunction<T> where T : IDa
     public abstract List<IParameter> Parameters { get; }
 
     /// <inheritdoc />
-    public abstract DataSourceValueGroup<T> Compute(List<IParameter> parameters);
+    public abstract DataSourceValueGroup<T> Compute(List<IParameter> parameters, CancellationToken cancellationToken);
 
     /// <inheritdoc />
-    public virtual DataSourceValueGroup<T> ComputeSlice(List<IParameter> parameters)
+    public virtual DataSourceValueGroup<T> ComputeSlice(List<IParameter> parameters, CancellationToken cancellationToken)
     {
-        return Compute(parameters);
+        return Compute(parameters, cancellationToken);
     }
 
     /// <inheritdoc />
-    public virtual DataSourceValueGroup<T> ComputeSet(List<IParameter> parameters)
+    public virtual DataSourceValueGroup<T> ComputeSet(List<IParameter> parameters, CancellationToken cancellationToken)
     {
-        return Compute(parameters);
+        return Compute(parameters, cancellationToken);
     }
 }

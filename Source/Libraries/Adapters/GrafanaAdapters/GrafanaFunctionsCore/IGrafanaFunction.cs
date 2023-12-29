@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace GrafanaAdapters.GrafanaFunctionsCore;
 
@@ -36,15 +37,15 @@ public enum FunctionOperations
     /// <summary>
     /// The function can perform standard per-trend operations.
     /// </summary>
-    Standard,
+    Standard = 0x1,
     /// <summary>
     /// The function can perform slice-based group operations.
     /// </summary>
-    Slice,
+    Slice = 0x2,
     /// <summary>
     /// The function can perform set-based group operations.
     /// </summary>
-    Set
+    Set = 0x4
 }
 
 /// <summary>
@@ -97,30 +98,33 @@ public interface IGrafanaFunction<T> : IGrafanaFunction where T : IDataSourceVal
     /// Executes the computation for the Grafana function.
     /// </summary>
     /// <param name="parameters">The input parameters for the computation.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A sequence of computed data source parameters.</returns>
-    DataSourceValueGroup<T> Compute(List<IParameter> parameters);
+    DataSourceValueGroup<T> Compute(List<IParameter> parameters, CancellationToken cancellationToken);
 
     /// <summary>
     /// Executes a custom slice computation for the Grafana function.
     /// </summary>
     /// <param name="parameters">The input parameters for the computation.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A sequence of computed data source parameters.</returns>
     /// <remarks>
     /// This method is used to support custom slice computations for functions that
     /// need special handling for slice operations. By default, this method will call
     /// <see cref="Compute"/> to perform the computation.
     /// </remarks>
-    DataSourceValueGroup<T> ComputeSlice(List<IParameter> parameters);
+    DataSourceValueGroup<T> ComputeSlice(List<IParameter> parameters, CancellationToken cancellationToken);
 
     /// <summary>
     /// Executes a custom set computation for the Grafana function.
     /// </summary>
     /// <param name="parameters">The input parameters for the computation.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A sequence of computed data source parameters.</returns>
     /// <remarks>
     /// This method is used to support custom set computations for functions that
     /// need special handling for set operations. By default, this method will call
     /// <see cref="Compute"/> to perform the computation.
     /// </remarks>
-    DataSourceValueGroup<T> ComputeSet(List<IParameter> parameters);
+    DataSourceValueGroup<T> ComputeSet(List<IParameter> parameters, CancellationToken cancellationToken);
 }

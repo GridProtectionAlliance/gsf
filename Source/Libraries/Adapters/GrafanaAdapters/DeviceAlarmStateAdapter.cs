@@ -44,6 +44,7 @@ using System.Text;
 using System.Timers;
 using AlarmStateRecord = GrafanaAdapters.AlarmState;
 using ConnectionStringParser = GSF.Configuration.ConnectionStringParser<GSF.TimeSeries.Adapters.ConnectionStringParameterAttribute>;
+using Timer = System.Timers.Timer;
 
 namespace GrafanaAdapters;
 

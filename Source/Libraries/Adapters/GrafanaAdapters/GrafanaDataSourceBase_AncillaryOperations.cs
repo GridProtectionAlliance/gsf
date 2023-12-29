@@ -340,7 +340,7 @@ partial class GrafanaDataSourceBase
         },
         cancellationToken);
 
-        bool hasRequiredMetadataSourceColumns(DataTable table) =>
+        static bool hasRequiredMetadataSourceColumns(DataTable table) =>
             table.Columns.Contains("ID") &&
             table.Columns.Contains("SignalID") &&
             table.Columns.Contains("PointTag") &&
@@ -393,7 +393,7 @@ partial class GrafanaDataSourceBase
     /// Queries openHistorian as a Grafana metadata source.
     /// </summary>
     /// <param name="request">Query request.</param>
-    public virtual Task<string> GetMetadata<T>(Target request) where T : IDataSourceValue
+    public virtual Task<string> GetMetadata<T>(Target request) where T : IDataSourceValue, new()
     {
         return Task.Factory.StartNew(() =>
         {

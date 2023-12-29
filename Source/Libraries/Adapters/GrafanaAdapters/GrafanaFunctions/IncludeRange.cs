@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using GrafanaAdapters.GrafanaFunctionsCore;
 
 namespace GrafanaAdapters.GrafanaFunctions;
@@ -66,7 +67,7 @@ public abstract class IncludeRange<T> : GrafanaFunctionBase<T> where T : IDataSo
     public class ComputeDataSourceValue : IncludeRange<DataSourceValue>
     {
         /// <inheritdoc />
-        public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters)
+        public override DataSourceValueGroup<DataSourceValue> Compute(List<IParameter> parameters, CancellationToken cancellationToken)
         {
             // Get Values
             double low = (parameters[0] as IParameter<double>).Value;
@@ -90,7 +91,7 @@ public abstract class IncludeRange<T> : GrafanaFunctionBase<T> where T : IDataSo
     public class ComputePhasorValue : IncludeRange<PhasorValue>
     {
         /// <inheritdoc />
-        public override DataSourceValueGroup<PhasorValue> Compute(List<IParameter> parameters)
+        public override DataSourceValueGroup<PhasorValue> Compute(List<IParameter> parameters, CancellationToken cancellationToken)
         {
             // Get Values
             double low = (parameters[0] as IParameter<double>).Value;
