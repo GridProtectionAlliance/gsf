@@ -21,25 +21,30 @@
 //
 //******************************************************************************************************
 
-namespace GrafanaAdapters;
+namespace GrafanaAdapters.Model.Functions;
 
 /// <summary>
-/// Describes a Grafana Function Parameter.
+/// Describes a Grafana function parameter.
 /// </summary>
 public class ParameterDescription
 {
     /// <summary>
-    /// The Description of the Parameter
+    /// Gets or sets the name of the parameter.
+    /// </summary>
+    public string Name { get; set; }
+
+    /// <summary>
+    /// Gets or sets the description of the parameter.
     /// </summary>
     public string Description { get; set; }
 
     /// <summary>
-    /// Indicates if this Parameter is required 
+    /// Gets or sets flag indicating if parameter is required.
     /// </summary>
     public bool Required { get; set; }
 
     /// <summary>
-    /// Derscribes the type of the parameter.
+    /// Gets or sets the type name of the parameter.
     /// </summary>
     public string ParameterTypeName { get; set; }
 

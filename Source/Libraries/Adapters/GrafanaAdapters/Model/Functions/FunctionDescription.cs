@@ -21,7 +21,7 @@
 //
 //******************************************************************************************************
 
-namespace GrafanaAdapters;
+namespace GrafanaAdapters.Model.Functions;
 
 /// <summary>
 /// Describes a Grafana Function.
@@ -29,17 +29,17 @@ namespace GrafanaAdapters;
 public class FunctionDescription
 {
     /// <summary>
-    /// gets the Name of the Function
+    /// Gets or sets the name of the function.
     /// </summary>
     public string Name { get; set; }
 
     /// <summary>
-    /// Gets the Description of the Function
+    /// Gets or sets the description of the function.
     /// </summary>
     public string Description { get; set; }
 
     /// <summary>
-    /// gets the Descritpion for the available Parameters.
+    /// Gets or sets the parameter descriptions for the function.
     /// </summary>
     public ParameterDescription[] Parameters { get; set; }
 }

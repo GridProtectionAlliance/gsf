@@ -27,6 +27,11 @@ using System.Collections.Generic;
 using System.ServiceModel;
 using System.ServiceModel.Web;
 using System.Threading.Tasks;
+using GrafanaAdapters.Model.Annotations;
+using GrafanaAdapters.Model.Common;
+using GrafanaAdapters.Model.Database;
+using GrafanaAdapters.Model.Functions;
+using GrafanaAdapters.Model.MetaData;
 
 namespace GrafanaAdapters;
 

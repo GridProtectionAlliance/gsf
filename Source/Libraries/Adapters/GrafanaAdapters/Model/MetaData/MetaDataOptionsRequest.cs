@@ -21,7 +21,7 @@
 //
 //******************************************************************************************************
 
-namespace GrafanaAdapters;
+namespace GrafanaAdapters.Model.MetaData;
 
 /// <summary>
 /// Represents a request object for available metadata options.

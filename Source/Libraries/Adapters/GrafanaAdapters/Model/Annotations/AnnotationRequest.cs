@@ -21,7 +21,9 @@
 //
 //******************************************************************************************************
 
-namespace GrafanaAdapters;
+using GrafanaAdapters.Model.Common;
+
+namespace GrafanaAdapters.Model.Annotations;
 
 /// <summary>
 /// Defines a Grafana annotation request.
@@ -29,17 +31,17 @@ namespace GrafanaAdapters;
 public class AnnotationRequest
 {
     /// <summary>
-    /// Annotation request details.
+    /// Gets or sets annotation request details.
     /// </summary>
     public string annotationQuery { get; set; }
 
     /// <summary>
-    /// Request range.
+    /// Gets or sets request range.
     /// </summary>
     public Range range { get; set; }
 
     /// <summary>
-    /// Relative request range.
+    /// Gets or sets relative request range.
     /// </summary>
     public RangeRaw rangeRaw { get; set; }
 }

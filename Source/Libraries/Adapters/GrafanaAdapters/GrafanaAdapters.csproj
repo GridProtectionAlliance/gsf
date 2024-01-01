@@ -49,15 +49,27 @@
     <Reference Include="Ciloci.Flee">
       <HintPath>..\..\..\Dependencies\FLEE\Ciloci.Flee.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=8.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\..\..\Dependencies\NuGet\Microsoft.Bcl.AsyncInterfaces.8.0.0\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\..\..\Dependencies\NuGet\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Linq.Async, Version=6.0.0.0, Culture=neutral, PublicKeyToken=94bc3704cddfc263, processorArchitecture=MSIL">
+      <HintPath>..\..\..\Dependencies\NuGet\System.Linq.Async.6.0.1\lib\net48\System.Linq.Async.dll</HintPath>
+    </Reference>
     <Reference Include="System.Runtime.Caching" />
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\..\Dependencies\NuGet\System.Runtime.CompilerServices.Unsafe.4.5.3\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.ServiceModel.Web" />
+    <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\..\..\Dependencies\NuGet\System.Threading.Tasks.Extensions.4.5.4\lib\net461\System.Threading.Tasks.Extensions.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -66,72 +78,79 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AdHocFilter.cs" />
-    <Compile Include="DataSourceValue_AncillaryOperations.cs" />
+    <Compile Include="Model\Common\AdHocFilter.cs" />
+    <Compile Include="DataSources\DataSourceValue_AncillaryOperations.cs" />
     <Compile Include="GlobalUsings.cs" />
-    <Compile Include="GrafanaFunctionsCore\GrafanaFunctionBase.cs" />
-    <Compile Include="GrafanaFunctionsCore\IParameter.cs" />
-    <Compile Include="GrafanaFunctionsCore\Parameter.cs" />
-    <Compile Include="GrafanaFunctionsCore\QueryParameters.cs" />
-    <Compile Include="IDataSourceValue.cs" />
-    <Compile Include="IDataSourceValueGroup.cs" />
+    <Compile Include="FunctionParsing\ParameterDefinition.cs" />
+    <Compile Include="FunctionParsing\GrafanaFunctionBase.cs" />
+    <Compile Include="FunctionParsing\IParameter.cs" />
+    <Compile Include="FunctionParsing\IsExternalInit.cs" />
+    <Compile Include="FunctionParsing\ParameterDefinitions.cs" />
+    <Compile Include="FunctionParsing\ValueMutableParameter.cs" />
+    <Compile Include="FunctionParsing\ParsedGrafanaFunction.cs" />
+    <Compile Include="FunctionParsing\QueryParameters.cs" />
+    <Compile Include="Functions\Evaluate.cs" />
+    <Compile Include="DataSources\IDataSourceValue.cs" />
+    <Compile Include="DataSources\IDataSourceValueGroup.cs" />
     <Compile Include="Model\Annotations\AnnotationExtensions.cs" />
     <Compile Include="Model\Annotations\AnnotationRequest.cs" />
     <Compile Include="Model\Annotations\AnnotationResponse.cs" />
     <Compile Include="Model\Annotations\AnnotationType.cs" />
-    <Compile Include="Column.cs" />
-    <Compile Include="DataSourceValueGroup.cs" />
+    <Compile Include="Model\Common\Column.cs" />
+    <Compile Include="DataSources\DataSourceValueGroup.cs" />
     <Compile Include="DeviceAlarmStateAdapter.cs" />
-    <Compile Include="DeviceGroupModel.cs" />
-    <Compile Include="DeviceStateModels.cs" />
+    <Compile Include="Model\Database\AlarmDevice.cs" />
+    <Compile Include="Model\Database\AlarmState.cs" />
+    <Compile Include="Model\Database\DeviceGroup.cs" />
+    <Compile Include="Model\Database\AlarmDeviceStateView.cs" />
     <Compile Include="GrafanaDataService.cs" />
     <Compile Include="GrafanaDataService.NET.cs" />
     <Compile Include="GrafanaDataServiceMono.cs" />
     <Compile Include="GrafanaDataSourceBase.cs" />
     <Compile Include="GrafanaDataSourceBase_AncillaryOperations.cs" />
-    <Compile Include="GrafanaFunctionsCore\FunctionParser.cs" />
-    <Compile Include="GrafanaFunctionsCore\FunctionModelHelpers.cs" />
-    <Compile Include="GrafanaFunctionsCore\IGrafanaFunction.cs" />
-    <Compile Include="GrafanaFunctionsCore\TargetTimeUnit.cs" />
-    <Compile Include="GrafanaFunctionsCore\TimeConversion.cs" />
-    <Compile Include="GrafanaFunctions\AbsoluteValue.cs" />
-    <Compile Include="GrafanaFunctions\Add.cs" />
-    <Compile Include="GrafanaFunctions\Average.cs" />
-    <Compile Include="GrafanaFunctions\Bottom.cs" />
-    <Compile Include="GrafanaFunctions\Ceiling.cs" />
-    <Compile Include="GrafanaFunctions\Count.cs" />
-    <Compile Include="GrafanaFunctions\Derivative.cs" />
-    <Compile Include="GrafanaFunctions\Difference.cs" />
-    <Compile Include="GrafanaFunctions\Distinct.cs" />
-    <Compile Include="GrafanaFunctions\Divide.cs" />
-    <Compile Include="GrafanaFunctions\ExcludeRange.cs" />
-    <Compile Include="GrafanaFunctions\FilterNaN.cs" />
-    <Compile Include="GrafanaFunctions\First.cs" />
-    <Compile Include="GrafanaFunctions\Floor.cs" />
-    <Compile Include="GrafanaFunctions\IncludeRange.cs" />
-    <Compile Include="GrafanaFunctions\Interval.cs" />
-    <Compile Include="GrafanaFunctions\Label.cs" />
-    <Compile Include="GrafanaFunctions\Last.cs" />
-    <Compile Include="GrafanaFunctions\Maximum.cs" />
-    <Compile Include="GrafanaFunctions\Median.cs" />
-    <Compile Include="GrafanaFunctions\Minimum.cs" />
-    <Compile Include="GrafanaFunctions\Mode.cs" />
-    <Compile Include="GrafanaFunctions\Modulo.cs" />
-    <Compile Include="GrafanaFunctions\MovingAverage.cs" />
-    <Compile Include="GrafanaFunctions\Multiply.cs" />
-    <Compile Include="GrafanaFunctions\Percentile.cs" />
-    <Compile Include="GrafanaFunctions\Random.cs" />
-    <Compile Include="GrafanaFunctions\Range.cs" />
-    <Compile Include="GrafanaFunctions\Round.cs" />
-    <Compile Include="GrafanaFunctions\StandardDeviation.cs" />
-    <Compile Include="GrafanaFunctions\Subtract.cs" />
-    <Compile Include="GrafanaFunctions\TimeDifference.cs" />
-    <Compile Include="GrafanaFunctions\TimeIntegration.cs" />
-    <Compile Include="GrafanaFunctions\Top.cs" />
-    <Compile Include="GrafanaFunctions\Total.cs" />
-    <Compile Include="GrafanaFunctions\Truncate.cs" />
-    <Compile Include="GrafanaFunctions\UnwrapAngle.cs" />
-    <Compile Include="GrafanaFunctions\WrapAngle.cs" />
+    <Compile Include="FunctionParsing\FunctionParser.cs" />
+    <Compile Include="FunctionParsing\Common.cs" />
+    <Compile Include="FunctionParsing\IGrafanaFunction.cs" />
+    <Compile Include="FunctionParsing\TargetTimeUnit.cs" />
+    <Compile Include="FunctionParsing\TimeConversion.cs" />
+    <Compile Include="Functions\AbsoluteValue.cs" />
+    <Compile Include="Functions\Add.cs" />
+    <Compile Include="Functions\Average.cs" />
+    <Compile Include="Functions\Bottom.cs" />
+    <Compile Include="Functions\Ceiling.cs" />
+    <Compile Include="Functions\Count.cs" />
+    <Compile Include="Functions\Derivative.cs" />
+    <Compile Include="Functions\Difference.cs" />
+    <Compile Include="Functions\Distinct.cs" />
+    <Compile Include="Functions\Divide.cs" />
+    <Compile Include="Functions\ExcludeRange.cs" />
+    <Compile Include="Functions\FilterNaN.cs" />
+    <Compile Include="Functions\First.cs" />
+    <Compile Include="Functions\Floor.cs" />
+    <Compile Include="Functions\IncludeRange.cs" />
+    <Compile Include="Functions\Interval.cs" />
+    <Compile Include="Functions\Label.cs" />
+    <Compile Include="Functions\Last.cs" />
+    <Compile Include="Functions\Maximum.cs" />
+    <Compile Include="Functions\Median.cs" />
+    <Compile Include="Functions\Minimum.cs" />
+    <Compile Include="Functions\Mode.cs" />
+    <Compile Include="Functions\Modulo.cs" />
+    <Compile Include="Functions\MovingAverage.cs" />
+    <Compile Include="Functions\Multiply.cs" />
+    <Compile Include="Functions\Percentile.cs" />
+    <Compile Include="Functions\Random.cs" />
+    <Compile Include="Functions\Range.cs" />
+    <Compile Include="Functions\Round.cs" />
+    <Compile Include="Functions\StandardDeviation.cs" />
+    <Compile Include="Functions\Subtract.cs" />
+    <Compile Include="Functions\TimeDifference.cs" />
+    <Compile Include="Functions\TimeIntegration.cs" />
+    <Compile Include="Functions\Top.cs" />
+    <Compile Include="Functions\Total.cs" />
+    <Compile Include="Functions\Truncate.cs" />
+    <Compile Include="Functions\UnwrapAngle.cs" />
+    <Compile Include="Functions\WrapAngle.cs" />
     <Compile Include="IGrafanaDataService.cs" />
     <Compile Include="IGrafanaDataService.NET.cs" />
     <Compile Include="IGrafanaDataServiceMono.cs" />
@@ -141,18 +160,18 @@
     <Compile Include="Model\Functions\FunctionDescription.cs" />
     <Compile Include="Model\MetaData\MetaDataTargetRequest.cs" />
     <Compile Include="Model\MetaData\MetaDataOptionsRequest.cs" />
-    <Compile Include="PhasorValue.cs" />
-    <Compile Include="PhasorValue_AncillaryOperations.cs" />
+    <Compile Include="DataSources\PhasorValue.cs" />
+    <Compile Include="DataSources\PhasorValue_AncillaryOperations.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="QueryRequest.cs" />
-    <Compile Include="Range.cs" />
-    <Compile Include="RangeRaw.cs" />
-    <Compile Include="Table.cs" />
-    <Compile Include="LocationRequest.cs" />
-    <Compile Include="Target.cs" />
+    <Compile Include="Model\Common\QueryRequest.cs" />
+    <Compile Include="Model\Common\Range.cs" />
+    <Compile Include="Model\Common\RangeRaw.cs" />
+    <Compile Include="Model\Common\Table.cs" />
+    <Compile Include="Model\Common\LocationRequest.cs" />
+    <Compile Include="Model\Common\Target.cs" />
     <Compile Include="TargetCache.cs" />
-    <Compile Include="DataSourceValue.cs" />
-    <Compile Include="TimeSeriesValues.cs" />
+    <Compile Include="DataSources\DataSourceValue.cs" />
+    <Compile Include="Model\Common\TimeSeriesValues.cs" />
     <Compile Include="TimeSliceScanner.cs" />
   </ItemGroup>
   <ItemGroup>

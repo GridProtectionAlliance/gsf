@@ -28,6 +28,7 @@ using System.Data;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using GrafanaAdapters.Model.Common;
 using GSF.Drawing;
 using GSF.Geo;
 using Newtonsoft.Json;

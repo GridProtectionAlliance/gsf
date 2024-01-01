@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using GrafanaAdapters.DataSources;
 
 namespace GrafanaAdapters;
 

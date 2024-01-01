@@ -21,7 +21,7 @@
 //
 //******************************************************************************************************
 
-namespace GrafanaAdapters;
+namespace GrafanaAdapters.Model.Annotations;
 
 /// <summary>
 /// Defines a Grafana annotation response.

@@ -21,17 +21,21 @@
 //
 //******************************************************************************************************
 
-using GSF;
 using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
 using GSF.Web;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using GrafanaAdapters.GrafanaFunctionsCore;
-using static GrafanaAdapters.GrafanaFunctionsCore.FunctionParser;
+using GrafanaAdapters.DataSources;
+using GrafanaAdapters.FunctionParsing;
+using GrafanaAdapters.Model.Annotations;
+using GrafanaAdapters.Model.Common;
 
 namespace GrafanaAdapters;
 
@@ -41,17 +45,6 @@ namespace GrafanaAdapters;
 [Serializable]
 public abstract partial class GrafanaDataSourceBase
 {
-    #region [ Members ]
-
-    // Constants
-    private const string DropEmptySeriesCommand = "dropemptyseries";
-    private const string IncludePeaksCommand = "includepeaks";
-    private const string FullResolutionQueryCommand = "fullresolutionquery";
-
-    #endregion
-
-    #region [ Properties ]
-
     /// <summary>
     /// Gets or sets instance name for this <see cref="GrafanaDataSourceBase"/> implementation.
     /// </summary>
@@ -65,55 +58,42 @@ public abstract partial class GrafanaDataSourceBase
     /// <summary>
     /// Gets or sets maximum number of search targets to return during a search query.
     /// </summary>
-    public int MaximumSearchTargetsPerRequest { get; set; } = 200;
+    public virtual int MaximumSearchTargetsPerRequest { get; set; } = 200;
 
     /// <summary>
     /// Gets or sets maximum number of annotations to return during an annotations query.
     /// </summary>
-    public int MaximumAnnotationsPerRequest { get; set; } = 100;
-
-    #endregion
-
-    #region [ Methods ]
+    public virtual int MaximumAnnotationsPerRequest { get; set; } = 100;
 
     /// <summary>
     /// Starts a query that will read data source values, given a set of point IDs and targets, over a time range.
     /// </summary>
-    /// <param name="startTime">Start-time for query.</param>
-    /// <param name="stopTime">Stop-time for query.</param>
-    /// <param name="interval">Interval from Grafana request.</param>
-    /// <param name="includePeaks">Flag that determines if decimated data should include min/max interval peaks over provided time range.</param>
+    /// <param name="parameters">Query parameters.</param>
     /// <param name="targetMap">Set of IDs with associated targets to query.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Queried data source data in terms of value and time.</returns>
-    protected internal abstract IEnumerable<DataSourceValue> QueryDataSourceValues(DateTime startTime, DateTime stopTime, string interval, bool includePeaks, Dictionary<ulong, string> targetMap);
+    protected internal abstract IEnumerable<DataSourceValue> QueryDataSourceValues(QueryParameters parameters, Dictionary<ulong, string> targetMap, CancellationToken cancellationToken);
 
     /// <summary>
     /// Queries data source returning data as Grafana time-series data set.
     /// </summary>
     /// <param name="request">Query request.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    public Task<List<TimeSeriesValues>> Query(QueryRequest request, CancellationToken cancellationToken)
+    public async Task<List<TimeSeriesValues>> Query(QueryRequest request, CancellationToken cancellationToken)
     {
         if (!string.IsNullOrWhiteSpace(request.format) && !request.format.Equals("json", StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException("Only JSON formatted query requests are currently supported.");
 
         // TODO: JRC - suggest renaming 'request.isPhasor' parameter to 'request.dataType' and making it a string, then check value, e.g., "PhasorValue" or "DataSourceValue"
 
-        // Task allows processing of multiple simultaneous queries
-        return Task.Factory.StartNew(() => request.isPhasor ? 
-                ProcessQuery<PhasorValue>(request, cancellationToken) : 
-                ProcessQuery<DataSourceValue>(request, cancellationToken),
-        cancellationToken);
+        return request.isPhasor ? 
+            await ProcessQueryRequest<PhasorValue>(request, cancellationToken) : 
+            await ProcessQueryRequest<DataSourceValue>(request, cancellationToken);
 
-        // FUTURE: Dynamic types could be supported by loading all found implementations of
-        // 'IDataSourceValue' interface. In this case call to ProcessQuery<T> would be made
-        // based on 'Type' of 'dataType', i.e., DataSourceValue.Default(string), by creating
-        // a static delegate like 'Action<Type, QueryRequest, CancellationToken>' that would
-        // call 'ProcessQuery<T>' with the appropriate type. Note that some functions used
-        // in 'FunctionParser', e.g., 'GetPointTags', would need to be made public.
+        // FUTURE: Dynamic types could be supported by loading all found implementations of 'IDataSourceValue' interface.
     }
 
-    private List<TimeSeriesValues> ProcessQuery<T>(QueryRequest request, CancellationToken cancellationToken) where T : IDataSourceValue, new()
+    private async Task<List<TimeSeriesValues>> ProcessQueryRequest<T>(QueryRequest request, CancellationToken cancellationToken) where T : struct, IDataSourceValue<T>
     {
         DateTime startTime = request.range.from.ParseJsonTimestamp();
         DateTime stopTime = request.range.to.ParseJsonTimestamp();
@@ -121,34 +101,60 @@ public abstract partial class GrafanaDataSourceBase
         foreach (Target target in request.targets)
             target.target = target.target?.Trim() ?? "";
 
-        List<DataSourceValueGroup<T>> valueGroups = new();
+        List<QueryParameters> targetQueryParameters = new();
 
         foreach (Target target in request.targets)
         {
-            bool dropEmptySeries = false;
-            bool includePeaks = false;
-            bool fullResolutionQuery = false;
+            string expression = target.target;
 
-            // Handle query commands
-            if (target.target.ToLowerInvariant().Contains(DropEmptySeriesCommand))
+            // Parse and cache any query commands found in target expression
+            (bool dropEmptySeries, bool includePeaks, bool fullResolutionQuery, string imports, string updatedExpression) = TargetCache<(bool, bool, bool, string, string)>.GetOrAdd(expression, () =>
             {
-                dropEmptySeries = true;
-                target.target = target.target.ReplaceCaseInsensitive(DropEmptySeriesCommand, "");
-            }
+                bool dropEmptySeries = false;
+                bool includePeaks = false;
+                bool fullResolutionQuery = false;
+                string imports = string.Empty;
 
-            if (target.target.ToLowerInvariant().Contains(IncludePeaksCommand))
-            {
-                includePeaks = true;
-                target.target = target.target.ReplaceCaseInsensitive(IncludePeaksCommand, "");
-            }
+                Match commandMatch = s_dropEmptySeriesCommand.Match(expression);
 
-            if (target.target.ToLowerInvariant().Contains(FullResolutionQueryCommand))
-            {
-                fullResolutionQuery = true;
-                target.target = target.target.ReplaceCaseInsensitive(FullResolutionQueryCommand, "");
-            }
+                if (commandMatch.Success)
+                {
+                    dropEmptySeries = true;
+                    expression = expression.Replace(commandMatch.Value, "");
+                }
 
-            QueryParameters parameters = new()
+                commandMatch = s_includePeaksCommand.Match(expression);
+
+                if (commandMatch.Success)
+                {
+                    includePeaks = true;
+                    expression = expression.Replace(commandMatch.Value, "");
+                }
+
+                commandMatch = s_fullResolutionQueryCommand.Match(expression);
+
+                if (commandMatch.Success)
+                {
+                    fullResolutionQuery = true;
+                    expression = expression.Replace(commandMatch.Value, "");
+                }
+
+                commandMatch = s_importsCommand.Match(expression);
+
+                if (commandMatch.Success)
+                {
+                    string result = commandMatch.Result("${Expression}");
+                    imports = result.Trim();
+                    expression = expression.Replace(commandMatch.Value, "");
+                }
+
+                return (dropEmptySeries, includePeaks, fullResolutionQuery, imports, expression);
+            });
+
+            target.target = updatedExpression;
+
+            // Create query parameters for each target
+            targetQueryParameters.Add(new QueryParameters
             {
                 SourceTarget = target,
                 StartTime = startTime,
@@ -156,28 +162,16 @@ public abstract partial class GrafanaDataSourceBase
                 Interval = fullResolutionQuery ? "0s" : request.interval,
                 IncludePeaks = includePeaks,
                 DropEmptySeries = dropEmptySeries,
+                Imports = imports,
                 MetadataSelection = target.metadataSelection,
-                CancellationToken = cancellationToken
-            };
-
-            // TODO: JRC - this no longer operates as a depth-first recursive expression parser, as a result
-            // a query expression like the following no longer works: F3(F1(expr1), F2(expr2))
-            // Currently, behavior will only return results for the first function, e.g., F3(F1(expr1))
-            // To change this from a top-level only parser to a depth-first parser, the following code
-            // would need to be called again, recursively for each function in the expression:
-
-            // Parse target expressions
-            ParsedTarget<T>[] targets = ParseTargets<T>(target.target);
-
-            // Query data source returning data as a map of point tags to data
-            Dictionary<string, DataSourceValueGroup<T>> pointData = QueryDataSourceGroupingByTarget(targets, parameters);
-
-            // Execute series functions against queried data for each target
-            IEnumerable<DataSourceValueGroup<T>> groups = ExecuteSeriesFunctions(targets, pointData, Metadata, cancellationToken);
-
-            // Add each group to the overall list
-            valueGroups.AddRange(groups);
+            });
         }
+
+        List<DataSourceValueGroup<T>> valueGroups = new();
+
+        // Query each target
+        foreach (QueryParameters parameters in targetQueryParameters)
+            valueGroups.AddRange(await QueryTarget<T>(parameters, cancellationToken).ToListAsync(cancellationToken));
 
         // Establish result series sequentially so that order remains consistent between calls
         List<TimeSeriesValues> result = valueGroups.Select(valueGroup => new TimeSeriesValues
@@ -193,13 +187,12 @@ public abstract partial class GrafanaDataSourceBase
         if (request.adhocFilters?.Count > 0)
         {
             foreach (AdHocFilter filter in request.adhocFilters)
-                result = result.Where(values => isFilterMatch(values.rootTarget, filter)).ToList();
+                result = result.Where(values => IsFilterMatch(values.rootTarget, filter)).ToList();
         }
 
         // Process series data in parallel
         Parallel.ForEach(result, new ParallelOptions { CancellationToken = cancellationToken }, series =>
         {
-            // For deferred enumerations, any work to be done is left till last moment - in this case "ToList()" invokes actual operation                    
             DataSourceValueGroup<T> valueGroup = valueGroups.First(group => group.Target.Equals(series.target));
             IEnumerable<T> values = valueGroup.Source;
 
@@ -209,53 +202,245 @@ public abstract partial class GrafanaDataSourceBase
             if (valueGroup.SourceTarget?.excludedFlags > uint.MinValue)
                 values = values.Where(value => ((uint)value.Flags & valueGroup.SourceTarget.excludedFlags) == 0);
 
+            // For deferred enumerations, function operations are executed here by ToList() at last moment
             series.datapoints = values.Select(dataValue => dataValue.TimeSeriesValue).ToList();
         });
 
         return result.Where(values => !values.dropEmptySeries || values.datapoints.Count > 0).ToList();
+    }
 
-        bool isFilterMatch(string target, AdHocFilter filter)
+    // This function is re-entrant so that it operates with functions as a depth-first recursive expression parser
+    private async IAsyncEnumerable<DataSourceValueGroup<T>> QueryTarget<T>(QueryParameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken) where T : struct, IDataSourceValue<T>
+    {
+        // A single target might look like the following - nested functions with multiple targets are supported:
+        // PPA:15; STAT:20; SETSUM(COUNT(PPA:8; PPA:9; PPA:10)); FILTER ActiveMeasurements WHERE SignalType IN ('IPHA', 'VPHA'); RANGE(PPA:99; SUM(FILTER ActiveMeasurements WHERE SignalType = 'FREQ'; STAT:12))
+        string queryExpression = parameters.SourceTarget.target;
+
+        HashSet<string> targetSet = new(new[] { queryExpression }, StringComparer.OrdinalIgnoreCase); // Targets include user provided input, so casing is ignored
+
+        // Parse out and cache any top-level grafana functions found in target expression
+        (ParsedGrafanaFunction<T>[] grafanaFunctions, HashSet<string> reducedTargetSet) = TargetCache<(ParsedGrafanaFunction<T>[], HashSet<string>)>.GetOrAdd($"{queryExpression}-{typeof(T).FullName}", () =>
         {
-            // Default to positive match on failures
-            return TargetCache<bool>.GetOrAdd($"filter!{filter.key}{filter.@operator}{filter.value}", () =>
+            ParsedGrafanaFunction<T>[] matchedFunctions = FunctionParser.MatchFunctions<T>(queryExpression);
+            HashSet<string> reducedTargetSet = new(StringComparer.OrdinalIgnoreCase);
+
+            if (matchedFunctions.Length > 0)
             {
-                try
-                {
-                    DataRow metadata = lookupTargetMetadata(target);
+                // Reduce target to non-function expressions - important so later split on ';' succeeds properly
+                string reducedTarget = queryExpression;
 
-                    if (metadata is null)
-                        return true;
+                foreach (string functionExpression in matchedFunctions.Select(function => function.MatchedValue))
+                    reducedTarget = reducedTarget.Replace(functionExpression, "");
 
-                    dynamic left = metadata[filter.key];
-                    dynamic right = Convert.ChangeType(filter.value, metadata.Table.Columns[filter.key].DataType);
+                if (!string.IsNullOrWhiteSpace(reducedTarget))
+                    reducedTargetSet.Add(reducedTarget);
+            }
+            else
+            {
+                reducedTargetSet.Add(queryExpression);
+            }
 
-                    return filter.@operator switch
-                    {
-                        "=" => left == right,
-                        "==" => left == right,
-                        "!=" => left != right,
-                        "<>" => left != right,
-                        "<" => left < right,
-                        "<=" => left <= right,
-                        ">" => left > right,
-                        ">=" => left >= right,
-                        _ => true
-                    };
-                }
-                catch
-                {
-                    return true;
-                }
-            });
+            return (matchedFunctions, reducedTargetSet);
+        });
+
+        if (grafanaFunctions.Length > 0)
+        {
+            // Execute each top-level grafana function, sub-functions are executed in a recursive call (depth first)
+            foreach (ParsedGrafanaFunction<T> parsedFunction in grafanaFunctions)
+            {
+                // ExecuteGrafanaFunction calls QueryTarget in order to process sub-functions or acquire needed data at final depth
+                await foreach (DataSourceValueGroup<T> valueGroup in ExecuteGrafanaFunction(parsedFunction, parameters, cancellationToken))
+                    yield return valueGroup;
+            }
+
+            // Further operations use reduced target set that exclude any now handled grafana functions
+            targetSet = reducedTargetSet;
         }
 
-        DataRow lookupTargetMetadata(string target)
+        // Query any remaining targets
+        if (targetSet.Count == 0)
+            yield break;
+
+        // Split remaining targets on semi-colon, this way even multiple filter expressions can be used as inputs to functions
+        string[] allTargets = targetSet.Select(target => target.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)).SelectMany(currentTargets => currentTargets).ToArray();
+
+        // Expand target set to include point tags for all parsed inputs
+        foreach (string target in allTargets)
         {
-            return TargetCache<DataRow>.GetOrAdd(target, () =>
+            targetSet.UnionWith(TargetCache<string[]>.GetOrAdd(target, () =>
+            {
+                // Parse target expression into individual point tags - this will convert filter expressions into point tags
+                MeasurementKey[] results = AdapterBase.ParseInputMeasurementKeys(Metadata, false, target.SplitAlias(out string alias));
+
+                if (!string.IsNullOrWhiteSpace(alias) && results.Length == 1)
+                    return new[] { $"{alias}={results[0].TagFromKey(Metadata)}" };
+
+                return results.Select(key => key.TagFromKey(Metadata)).ToArray();
+            }));
+        }
+
+        // Target set may now contain both original expressions, e.g., Guid (signal ID) or measurement key (source:ID), and newly
+        // parsed individual point tags. For the final point list we are only interested in the point tags. Convert all remaining
+        // targets to point tags, removing any duplicates, and create a map of the queryable data source point IDs to point tags:
+        (Dictionary<ulong, string> targetMap, object state) = default(T).GetIDTargetMap(Metadata, targetSet);
+
+        // Query underlying data source for each target enumerating immediately to prevent multiple enumerations as each yielded
+        // call to GetTargetDataSourceValueGroup filters out data source values for the specified target. Note that filter logic
+        // can be custom for the data source type, so moving any filtering code here is not an option. Also, since this function
+        // result is being enumerated immediately, any benefit to using an IAsyncEnumerable here is lost.
+        List<DataSourceValue> dataValues = QueryDataSourceValues(parameters, targetMap, cancellationToken).ToList();
+
+        // Expose each target as a data source value group
+        foreach (KeyValuePair<ulong, string> target in targetMap)
+            yield return default(T).GetTargetDataSourceValueGroup(target, dataValues, Metadata, parameters, state);
+    }
+
+    private async IAsyncEnumerable<DataSourceValueGroup<T>> ExecuteGrafanaFunction<T>(ParsedGrafanaFunction<T> parsedFunction, QueryParameters queryParameters, [EnumeratorCancellation] CancellationToken cancellationToken) where T : struct, IDataSourceValue<T>
+    {
+        IGrafanaFunction<T> seriesFunction = parsedFunction.Function;
+        string expression = parsedFunction.Expression;
+        GroupOperations groupOperation = parsedFunction.GroupOperation;
+
+        // Parse out function parameters and target expression
+        (string[] functionParameters, string updatedExpression) = TargetCache<(string[], string)>.GetOrAdd(expression, () =>
+        {
+            // Check if function defines any custom parameter parsing
+            List<string> parsedParameters = seriesFunction.ParseParameters(ref expression);
+
+            if (parsedParameters is null)
+            {
+                parsedParameters = new List<string>();
+
+                // Extract any required function parameters
+                int requiredParameters = seriesFunction.RequiredParameterCount;
+
+                if (requiredParameters > 0)
+                {
+                    int index = 0;
+
+                    for (int i = 0; i < requiredParameters && index > -1; i++)
+                        index = expression.IndexOf(',', index + 1);
+
+                    if (index > -1)
+                        parsedParameters.AddRange(expression.Substring(0, index).Split(','));
+
+                    if (parsedParameters.Count == requiredParameters)
+                        expression = expression.Substring(index + 1).Trim();
+                    else
+                        throw new FormatException($"Expected {requiredParameters + 1} parameters, received {parsedParameters.Count + 1} in: {seriesFunction.Name}({expression})");
+                }
+
+                // Extract any provided optional function parameters
+                int optionalParameters = seriesFunction.OptionalParameterCount;
+
+                bool hasSubExpression(string target) => target.StartsWith("FILTER", StringComparison.OrdinalIgnoreCase) || target.Contains("(");
+
+                if (optionalParameters > 0)
+                {
+                    int index = expression.IndexOf(',');
+
+                    if (index > -1 && !hasSubExpression(expression.Substring(0, index)))
+                    {
+                        int lastIndex = index;
+
+                        for (int i = 1; i < optionalParameters && index > -1; i++)
+                        {
+                            index = expression.IndexOf(',', index + 1);
+
+                            if (index > -1 && hasSubExpression(expression.Substring(lastIndex + 1, index - lastIndex - 1).Trim()))
+                            {
+                                index = lastIndex;
+                                break;
+                            }
+
+                            lastIndex = index;
+                        }
+
+                        if (index > -1)
+                        {
+                            parsedParameters.AddRange(expression.Substring(0, index).Split(','));
+                            expression = expression.Substring(index + 1).Trim();
+                        }
+                    }
+                }
+
+            }
+
+            return (parsedParameters.ToArray(), expression);
+        });
+
+        // Query function expression to get series data
+        IAsyncEnumerable<DataSourceValueGroup<T>> dataset = QueryTarget<T>(queryParameters, cancellationToken);
+
+        switch (groupOperation)
+        {
+            case GroupOperations.Standard:
+                // Standard group operations are applied to each series in the data set
+                await foreach (DataSourceValueGroup<T> valueGroup in dataset)
+                {
+                    yield return new DataSourceValueGroup<T>
+                    {
+                        Target = $"{seriesFunction}({string.Join(", ", functionParameters)}{(functionParameters.Length > 0 ? ", " : "")}{valueGroup.Target})",
+                        RootTarget = valueGroup.RootTarget ?? valueGroup.Target,
+                        SourceTarget = queryParameters.SourceTarget,
+                        Source = seriesFunction.Compute(null, cancellationToken),
+                        DropEmptySeries = queryParameters.DropEmptySeries,
+                        RefID = queryParameters.SourceTarget.refId
+                    };
+                }
+                break;
+            case GroupOperations.Slice:
+                // Slice group operations are applied to the entire data set
+                break;
+            case GroupOperations.Set:
+                // Set group operations are applied to the entire data set
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(groupOperation), $"Unsupported group operation encountered: {groupOperation}");
+        }
+    }
+
+    private bool IsFilterMatch(string target, AdHocFilter filter)
+    {
+        // Default to positive match on failures
+        return TargetCache<bool>.GetOrAdd($"filter!{filter.key}{filter.@operator}{filter.value}", () =>
+        {
+            try
+            {
+                DataRow metadata = lookupTargetMetadata(target);
+
+                if (metadata is null)
+                    return true;
+
+                dynamic left = metadata[filter.key];
+                dynamic right = Convert.ChangeType(filter.value, metadata.Table.Columns[filter.key].DataType);
+
+                return filter.@operator switch
+                {
+                    "=" => left == right,
+                    "==" => left == right,
+                    "!=" => left != right,
+                    "<>" => left != right,
+                    "<" => left < right,
+                    "<=" => left <= right,
+                    ">" => left > right,
+                    ">=" => left >= right,
+                    _ => true
+                };
+            }
+            catch
+            {
+                return true;
+            }
+        });
+
+        DataRow lookupTargetMetadata(string pointTag)
+        {
+            return TargetCache<DataRow>.GetOrAdd(pointTag, () =>
             {
                 try
                 {
-                    return Metadata.Tables["ActiveMeasurements"].Select($"PointTag = '{target}'").FirstOrDefault();
+                    return Metadata.Tables["ActiveMeasurements"].Select($"PointTag = '{pointTag}'").FirstOrDefault();
                 }
                 catch
                 {
@@ -265,23 +450,9 @@ public abstract partial class GrafanaDataSourceBase
         }
     }
 
-    private Dictionary<string, DataSourceValueGroup<T>> QueryDataSourceGroupingByTarget<T>(ParsedTarget<T>[] parsedTargets, QueryParameters parameters) where T : IDataSourceValue, new()
-    {
-        if (parsedTargets.Length == 0)
-            return new Dictionary<string, DataSourceValueGroup<T>>();
-
-        IDataSourceValue<T> instance = DataSourceValue.Default<T>();
-
-        // Get ID to target map for all parsed targets used to query data source
-        (Dictionary<ulong, string> targetMap, object state) = instance.GetIDTargetMap(Metadata, parsedTargets.GetDataTargets());
-
-        // Query underlying data source for each target - to prevent parallel read from data source we enumerate immediately
-        List<DataSourceValue> dataValues = QueryDataSourceValues(parameters.StartTime, parameters.StopTime, parameters.Interval, parameters.IncludePeaks, targetMap)
-            .TakeWhile(_ => !parameters.CancellationToken.IsCancellationRequested).ToList();
-
-        // Get map of targets to data source value groups
-        return instance.GetTargetDataSourceValueMap(dataValues, Metadata, parameters, targetMap, state);
-    }
-
-    #endregion
+    // Query command regular expressions include a semi-colon prefix to help prevent possible name matches on other expressions
+    private static readonly Regex s_dropEmptySeriesCommand = new(@";\s*DropEmptySeries", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private static readonly Regex s_includePeaksCommand = new(@";\s*IncludePeaks", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private static readonly Regex s_fullResolutionQueryCommand = new(@";\s*FullResolutionQuery", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private static readonly Regex s_importsCommand = new(@";\s*Imports\s*=\s*\{(?<Expression>.+)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 }

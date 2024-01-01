@@ -28,12 +28,13 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using GrafanaAdapters.Model.Common;
 using GSF;
 using GSF.Diagnostics;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 
-namespace GrafanaAdapters;
+namespace GrafanaAdapters.Model.Annotations;
 
 /// <summary>
 /// Grafana <see cref="AnnotationRequest"/> extensions class.
@@ -358,24 +359,24 @@ public static class AnnotationRequestExtensions
     /// search algorithm that can be slow for large data sets, it is recommended that any results
     /// for calls to this function be cached to improve performance.
     /// </remarks>
-    internal static Tuple<MeasurementKey, string> KeyAndTagFromSignalID(this string signalID, DataSet source, string table = "ActiveMeasurements")
+    internal static (MeasurementKey, string) KeyAndTagFromSignalID(this string signalID, DataSet source, string table = "ActiveMeasurements")
     {
         DataRow record = signalID.MetadataRecordFromSignalID(source, table);
         string pointTag = "Undefined";
 
         if (record is null)
-            return new Tuple<MeasurementKey, string>(MeasurementKey.Undefined, pointTag);
+            return (MeasurementKey.Undefined, pointTag);
 
         try
         {
             MeasurementKey key = MeasurementKey.LookUpOrCreate(record["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), record["ID"].ToString());
             pointTag = record["PointTag"].ToNonNullString(key.ToString());
-            return new Tuple<MeasurementKey, string>(key, pointTag);
+            return (key, pointTag);
         }
         catch (Exception ex)
         {
             Logger.SwallowException(ex);
-            return new Tuple<MeasurementKey, string>(MeasurementKey.Undefined, pointTag);
+            return (MeasurementKey.Undefined, pointTag);
         }
     }
 

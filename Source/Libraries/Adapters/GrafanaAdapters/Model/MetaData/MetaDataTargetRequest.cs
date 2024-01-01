@@ -21,10 +21,10 @@
 //
 //******************************************************************************************************
 
-namespace GrafanaAdapters;
+namespace GrafanaAdapters.Model.MetaData;
 
 /// <summary>
-/// Represents a request object for metadata results for a specific Target.
+/// Represents a request object for metadata results for a specific target.
 /// </summary>
 public class MetadataTargetRequest
 {

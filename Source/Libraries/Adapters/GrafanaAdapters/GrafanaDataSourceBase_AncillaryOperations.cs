@@ -27,12 +27,18 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using GrafanaAdapters.GrafanaFunctionsCore;
+using GrafanaAdapters.DataSources;
+using GrafanaAdapters.FunctionParsing;
+using GrafanaAdapters.Model.Annotations;
+using GrafanaAdapters.Model.Common;
+using GrafanaAdapters.Model.Database;
+using GrafanaAdapters.Model.Functions;
+using GrafanaAdapters.Model.MetaData;
 using GSF;
 using GSF.Data;
 using GSF.Data.Model;
 using Newtonsoft.Json;
-using static GrafanaAdapters.GrafanaFunctionsCore.FunctionParser;
+using static GrafanaAdapters.FunctionParsing.FunctionParser;
 
 namespace GrafanaAdapters;
 
@@ -100,7 +106,7 @@ partial class GrafanaDataSourceBase
                             }
                             else
                             {
-                                if (Common.IsNumericType(table.Columns[sortField].DataType))
+                                if (GSF.Common.IsNumericType(table.Columns[sortField].DataType))
                                 {
                                     decimal parseAsNumeric(DataRow row)
                                     {
@@ -393,7 +399,7 @@ partial class GrafanaDataSourceBase
     /// Queries openHistorian as a Grafana metadata source.
     /// </summary>
     /// <param name="request">Query request.</param>
-    public virtual Task<string> GetMetadata<T>(Target request) where T : IDataSourceValue, new()
+    public virtual Task<string> GetMetadata<T>(Target request) where T : struct, IDataSourceValue
     {
         return Task.Factory.StartNew(() =>
         {

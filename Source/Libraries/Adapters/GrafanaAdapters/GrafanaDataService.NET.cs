@@ -25,6 +25,12 @@
 
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using GrafanaAdapters.DataSources;
+using GrafanaAdapters.Model.Annotations;
+using GrafanaAdapters.Model.Common;
+using GrafanaAdapters.Model.Database;
+using GrafanaAdapters.Model.Functions;
+using GrafanaAdapters.Model.MetaData;
 using GSF.Historian.DataServices;
 
 namespace GrafanaAdapters;

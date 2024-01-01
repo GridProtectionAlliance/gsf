@@ -26,6 +26,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.ServiceModel;
 using System.Threading;
+using GrafanaAdapters.DataSources;
+using GrafanaAdapters.FunctionParsing;
 using GSF;
 using GSF.Historian;
 using HistorianAdapters;
@@ -52,41 +54,20 @@ public partial class GrafanaDataService
             m_baseTicks = UnixTimeTag.BaseTicks.Value;
         }
 
-        protected internal override IEnumerable<DataSourceValue> QueryDataSourceValues(DateTime startTime, DateTime stopTime, string interval, bool includePeaks, Dictionary<ulong, string> targetMap)
+        protected internal override IEnumerable<DataSourceValue> QueryDataSourceValues(QueryParameters parameters, Dictionary<ulong, string> targetMap, CancellationToken cancellationToken)
         {
-            return m_parent.Archive.ReadData(targetMap.Keys.Select(pointID => (int)pointID), startTime, stopTime, false).Select(dataPoint => new DataSourceValue
+            foreach (IDataPoint dataPoint in m_parent.Archive.ReadData(targetMap.Keys.Select(pointID => (int)pointID), parameters.StartTime, parameters.StopTime, false))
             {
-                Target = targetMap[(ulong)dataPoint.HistorianID],
-                Value = dataPoint.Value,
-                Time = (dataPoint.Time.ToDateTime().Ticks - m_baseTicks) / (double)Ticks.PerMillisecond,
-                Flags = dataPoint.Quality.MeasurementQuality()
-            });
+                cancellationToken.ThrowIfCancellationRequested();
 
-            //if (typeof(T) == typeof(DataSourceValue))
-            //{
-            //    return m_parent.Archive.ReadData(targetMap.Keys.Select(pointID => (int)pointID), startTime, stopTime, false).Select(dataPoint => new DataSourceValue
-            //    {
-            //        Target = targetMap[(ulong)dataPoint.HistorianID],
-            //        Value = dataPoint.Value,
-            //        Time = (dataPoint.Time.ToDateTime().Ticks - m_baseTicks) / (double)Ticks.PerMillisecond,
-            //        Flags = dataPoint.Quality.MeasurementQuality()
-            //    }).Cast<T>();
-            //}
-
-            //else if (typeof(T) == typeof(PhasorValue))
-            //{
-            //    return m_parent.Archive.ReadData(targetMap.Keys.Select(pointID => (int)pointID), startTime, stopTime, false).Select(dataPoint => new PhasorValue
-            //    {
-            //        MagnitudeTarget = targetMap[(ulong)dataPoint.HistorianID],
-            //        AngleTarget = targetMap[(ulong)dataPoint.HistorianID],
-            //        Magnitude = dataPoint.Value,
-            //        Angle = dataPoint.Value,
-            //        Time = (dataPoint.Time.ToDateTime().Ticks - m_baseTicks) / (double)Ticks.PerMillisecond,
-            //        Flags = dataPoint.Quality.MeasurementQuality()
-            //    }).Cast<T>();
-            //}
-
-            //return Enumerable.Empty<DataSourceValue>();
+                yield return new DataSourceValue
+                {
+                    Target = targetMap[(ulong)dataPoint.HistorianID],
+                    Value = dataPoint.Value,
+                    Time = (dataPoint.Time.ToDateTime().Ticks - m_baseTicks) / (double)Ticks.PerMillisecond,
+                    Flags = dataPoint.Quality.MeasurementQuality()
+                };
+            }
         }
     }
 

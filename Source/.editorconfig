@@ -8,3 +8,9 @@ csharp_prefer_braces = false
 
 # VSSpell001: Spell Check
 dotnet_diagnostic.VSSpell001.severity = suggestion
+
+# IDE0300: Simplify collection initialization
+dotnet_diagnostic.IDE0300.severity = silent
+
+# IDE0028: Simplify collection initialization
+dotnet_diagnostic.IDE0028.severity = silent
