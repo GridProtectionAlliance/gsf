@@ -80,6 +80,8 @@ public class TimeSeriesValues
     /// ]
     /// </remarks>
     public List<double[]> datapoints;
+
+
 }
 
 // TODO: JRC - these classes are no longer used, I think they should be removed

@@ -20,6 +20,7 @@
 //       Generated original version of source code.
 //
 //******************************************************************************************************
+// ReSharper disable AccessToModifiedClosure
 
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
@@ -68,18 +69,18 @@ public abstract partial class GrafanaDataSourceBase
     /// <summary>
     /// Starts a query that will read data source values, given a set of point IDs and targets, over a time range.
     /// </summary>
-    /// <param name="parameters">Query parameters.</param>
+    /// <param name="queryParameters">Query parameters.</param>
     /// <param name="targetMap">Set of IDs with associated targets to query.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Queried data source data in terms of value and time.</returns>
-    protected internal abstract IEnumerable<DataSourceValue> QueryDataSourceValues(QueryParameters parameters, Dictionary<ulong, string> targetMap, CancellationToken cancellationToken);
+    protected internal abstract IEnumerable<DataSourceValue> QueryDataSourceValues(QueryParameters queryParameters, Dictionary<ulong, string> targetMap, CancellationToken cancellationToken);
 
     /// <summary>
     /// Queries data source returning data as Grafana time-series data set.
     /// </summary>
     /// <param name="request">Query request.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    public async Task<List<TimeSeriesValues>> Query(QueryRequest request, CancellationToken cancellationToken)
+    public Task<IEnumerable<TimeSeriesValues>> Query(QueryRequest request, CancellationToken cancellationToken)
     {
         if (!string.IsNullOrWhiteSpace(request.format) && !request.format.Equals("json", StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException("Only JSON formatted query requests are currently supported.");
@@ -87,73 +88,31 @@ public abstract partial class GrafanaDataSourceBase
         // TODO: JRC - suggest renaming 'request.isPhasor' parameter to 'request.dataType' and making it a string, then check value, e.g., "PhasorValue" or "DataSourceValue"
 
         return request.isPhasor ? 
-            await ProcessQueryRequest<PhasorValue>(request, cancellationToken) : 
-            await ProcessQueryRequest<DataSourceValue>(request, cancellationToken);
+            ProcessQueryRequest<PhasorValue>(request, cancellationToken) : 
+            ProcessQueryRequest<DataSourceValue>(request, cancellationToken);
 
         // FUTURE: Dynamic types could be supported by loading all found implementations of 'IDataSourceValue' interface.
     }
 
-    private async Task<List<TimeSeriesValues>> ProcessQueryRequest<T>(QueryRequest request, CancellationToken cancellationToken) where T : struct, IDataSourceValue<T>
+    private async Task<IEnumerable<TimeSeriesValues>> ProcessQueryRequest<T>(QueryRequest request, CancellationToken cancellationToken) where T : struct, IDataSourceValue<T>
     {
         DateTime startTime = request.range.from.ParseJsonTimestamp();
         DateTime stopTime = request.range.to.ParseJsonTimestamp();
 
         foreach (Target target in request.targets)
-            target.target = target.target?.Trim() ?? "";
+            target.target = target.target?.Trim() ?? string.Empty;
 
         List<QueryParameters> targetQueryParameters = new();
 
+        // Create query parameters for each target
         foreach (Target target in request.targets)
         {
-            string expression = target.target;
+            // Parse any query commands in target
+            (bool dropEmptySeries, bool includePeaks, bool fullResolutionQuery, string imports, string updatedTarget) = 
+                ParseQueryCommands(target.target);
 
-            // Parse and cache any query commands found in target expression
-            (bool dropEmptySeries, bool includePeaks, bool fullResolutionQuery, string imports, string updatedExpression) = TargetCache<(bool, bool, bool, string, string)>.GetOrAdd(expression, () =>
-            {
-                bool dropEmptySeries = false;
-                bool includePeaks = false;
-                bool fullResolutionQuery = false;
-                string imports = string.Empty;
+            target.target = updatedTarget;
 
-                Match commandMatch = s_dropEmptySeriesCommand.Match(expression);
-
-                if (commandMatch.Success)
-                {
-                    dropEmptySeries = true;
-                    expression = expression.Replace(commandMatch.Value, "");
-                }
-
-                commandMatch = s_includePeaksCommand.Match(expression);
-
-                if (commandMatch.Success)
-                {
-                    includePeaks = true;
-                    expression = expression.Replace(commandMatch.Value, "");
-                }
-
-                commandMatch = s_fullResolutionQueryCommand.Match(expression);
-
-                if (commandMatch.Success)
-                {
-                    fullResolutionQuery = true;
-                    expression = expression.Replace(commandMatch.Value, "");
-                }
-
-                commandMatch = s_importsCommand.Match(expression);
-
-                if (commandMatch.Success)
-                {
-                    string result = commandMatch.Result("${Expression}");
-                    imports = result.Trim();
-                    expression = expression.Replace(commandMatch.Value, "");
-                }
-
-                return (dropEmptySeries, includePeaks, fullResolutionQuery, imports, expression);
-            });
-
-            target.target = updatedExpression;
-
-            // Create query parameters for each target
             targetQueryParameters.Add(new QueryParameters
             {
                 SourceTarget = target,
@@ -169,52 +128,61 @@ public abstract partial class GrafanaDataSourceBase
 
         List<DataSourceValueGroup<T>> valueGroups = new();
 
-        // Query each target
-        foreach (QueryParameters parameters in targetQueryParameters)
-            valueGroups.AddRange(await QueryTarget<T>(parameters, cancellationToken).ToListAsync(cancellationToken));
+        // Query each target -- each returned value group has a 'Source' value enumerable that may contain deferred
+        // enumerations that need evaluation before the final result can be serialized and returned to Grafana
+        foreach (QueryParameters queryParameters in targetQueryParameters)
+            await foreach (DataSourceValueGroup<T> valueGroup in QueryTarget<T>(queryParameters, cancellationToken))
+                valueGroups.Add(valueGroup);
 
-        // Establish result series sequentially so that order remains consistent between calls
-        List<TimeSeriesValues> result = valueGroups.Select(valueGroup => new TimeSeriesValues
-        {
-            target = valueGroup.Target,
-            rootTarget = valueGroup.RootTarget,
-            meta = valueGroup.MetadataMap,
-            dropEmptySeries = valueGroup.DropEmptySeries,
-            refId = valueGroup.RefID
-        }).ToList();
+        // Establish one result series for each value group so that consistent order can be maintained between calls
+        TimeSeriesValues[] seriesResults = new TimeSeriesValues[valueGroups.Count];
 
-        // Apply any encountered ad-hoc filters
-        if (request.adhocFilters?.Count > 0)
+        // Process value group data in parallel
+        Parallel.ForEach(valueGroups, new ParallelOptions { CancellationToken = cancellationToken }, (valueGroup, _, index) =>
         {
-            foreach (AdHocFilter filter in request.adhocFilters)
-                result = result.Where(values => IsFilterMatch(values.rootTarget, filter)).ToList();
-        }
+            // Create a time series values query result instance that will be serialized as JSON and returned
+            // to Grafana. A time series values result is created for each value group that will hold evaluated
+            // value group results. Result series are added in the same sequence as the value groups so that
+            // order remains consistent between Grafana query calls:
+            TimeSeriesValues series = seriesResults[index] = new TimeSeriesValues
+            {
+                target = valueGroup.Target,
+                rootTarget = valueGroup.RootTarget,
+                meta = valueGroup.MetadataMap,
+                dropEmptySeries = valueGroup.DropEmptySeries,
+                refId = valueGroup.RefID
+            };
 
-        // Process series data in parallel
-        Parallel.ForEach(result, new ParallelOptions { CancellationToken = cancellationToken }, series =>
-        {
-            DataSourceValueGroup<T> valueGroup = valueGroups.First(group => group.Target.Equals(series.target));
             IEnumerable<T> values = valueGroup.Source;
 
+            // Apply any requested flag filters applied for the data source
             if (valueGroup.SourceTarget?.excludeNormalFlags ?? false)
                 values = values.Where(value => value.Flags != MeasurementStateFlags.Normal);
 
             if (valueGroup.SourceTarget?.excludedFlags > uint.MinValue)
                 values = values.Where(value => ((uint)value.Flags & valueGroup.SourceTarget.excludedFlags) == 0);
 
-            // For deferred enumerations, function operations are executed here by ToList() at last moment
+            // For deferred enumerations, function operations are executed here by ToList() at the last moment
             series.datapoints = values.Select(dataValue => dataValue.TimeSeriesValue).ToList();
         });
 
-        return result.Where(values => !values.dropEmptySeries || values.datapoints.Count > 0).ToList();
+        // Drop any empty series, if requested
+        IEnumerable<TimeSeriesValues> filteredResults = seriesResults.Where(values => !values.dropEmptySeries || values.datapoints.Count > 0);
+        
+        // Apply any encountered ad-hoc filters
+        if (request.adhocFilters?.Count > 0)
+            foreach (AdHocFilter filter in request.adhocFilters)
+                filteredResults = filteredResults.Where(values => IsFilterMatch(values.rootTarget, filter));
+
+        return filteredResults;
     }
 
     // This function is re-entrant so that it operates with functions as a depth-first recursive expression parser
-    private async IAsyncEnumerable<DataSourceValueGroup<T>> QueryTarget<T>(QueryParameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken) where T : struct, IDataSourceValue<T>
+    private async IAsyncEnumerable<DataSourceValueGroup<T>> QueryTarget<T>(QueryParameters queryParameters, [EnumeratorCancellation] CancellationToken cancellationToken) where T : struct, IDataSourceValue<T>
     {
         // A single target might look like the following - nested functions with multiple targets are supported:
         // PPA:15; STAT:20; SETSUM(COUNT(PPA:8; PPA:9; PPA:10)); FILTER ActiveMeasurements WHERE SignalType IN ('IPHA', 'VPHA'); RANGE(PPA:99; SUM(FILTER ActiveMeasurements WHERE SignalType = 'FREQ'; STAT:12))
-        string queryExpression = parameters.SourceTarget.target;
+        string queryExpression = queryParameters.SourceTarget.target;
 
         HashSet<string> targetSet = new(new[] { queryExpression }, StringComparer.OrdinalIgnoreCase); // Targets include user provided input, so casing is ignored
 
@@ -249,7 +217,7 @@ public abstract partial class GrafanaDataSourceBase
             foreach (ParsedGrafanaFunction<T> parsedFunction in grafanaFunctions)
             {
                 // ExecuteGrafanaFunction calls QueryTarget in order to process sub-functions or acquire needed data at final depth
-                await foreach (DataSourceValueGroup<T> valueGroup in ExecuteGrafanaFunction(parsedFunction, parameters, cancellationToken))
+                await foreach (DataSourceValueGroup<T> valueGroup in ExecuteGrafanaFunction(parsedFunction, queryParameters, cancellationToken))
                     yield return valueGroup;
             }
 
@@ -288,11 +256,11 @@ public abstract partial class GrafanaDataSourceBase
         // call to GetTargetDataSourceValueGroup filters out data source values for the specified target. Note that filter logic
         // can be custom for the data source type, so moving any filtering code here is not an option. Also, since this function
         // result is being enumerated immediately, any benefit to using an IAsyncEnumerable here is lost.
-        List<DataSourceValue> dataValues = QueryDataSourceValues(parameters, targetMap, cancellationToken).ToList();
+        List<DataSourceValue> dataValues = QueryDataSourceValues(queryParameters, targetMap, cancellationToken).ToList();
 
         // Expose each target as a data source value group
         foreach (KeyValuePair<ulong, string> target in targetMap)
-            yield return default(T).GetTargetDataSourceValueGroup(target, dataValues, Metadata, parameters, state);
+            yield return default(T).GetTargetDataSourceValueGroup(target, dataValues, Metadata, queryParameters, state);
     }
 
     private async IAsyncEnumerable<DataSourceValueGroup<T>> ExecuteGrafanaFunction<T>(ParsedGrafanaFunction<T> parsedFunction, QueryParameters queryParameters, [EnumeratorCancellation] CancellationToken cancellationToken) where T : struct, IDataSourceValue<T>
@@ -450,7 +418,54 @@ public abstract partial class GrafanaDataSourceBase
         }
     }
 
-    // Query command regular expressions include a semi-colon prefix to help prevent possible name matches on other expressions
+    private static (bool, bool, bool, string, string) ParseQueryCommands(string expression)
+    {
+        // Parse and cache any query commands found in target expression
+        return TargetCache<(bool, bool, bool, string, string)>.GetOrAdd(expression, () =>
+        {
+            bool dropEmptySeries = false;
+            bool includePeaks = false;
+            bool fullResolutionQuery = false;
+            string imports = string.Empty;
+
+            Match commandMatch = s_dropEmptySeriesCommand.Match(expression);
+
+            if (commandMatch.Success)
+            {
+                dropEmptySeries = true;
+                expression = expression.Replace(commandMatch.Value, "");
+            }
+
+            commandMatch = s_includePeaksCommand.Match(expression);
+
+            if (commandMatch.Success)
+            {
+                includePeaks = true;
+                expression = expression.Replace(commandMatch.Value, "");
+            }
+
+            commandMatch = s_fullResolutionQueryCommand.Match(expression);
+
+            if (commandMatch.Success)
+            {
+                fullResolutionQuery = true;
+                expression = expression.Replace(commandMatch.Value, "");
+            }
+
+            commandMatch = s_importsCommand.Match(expression);
+
+            if (commandMatch.Success)
+            {
+                string result = commandMatch.Result("${Expression}");
+                imports = result.Trim();
+                expression = expression.Replace(commandMatch.Value, "");
+            }
+
+            return (dropEmptySeries, includePeaks, fullResolutionQuery, imports, expression);
+        });
+    }
+
+    // Query command regular expressions include a semi-colon prefix to help prevent possible name matches that may occur on other expressions
     private static readonly Regex s_dropEmptySeriesCommand = new(@";\s*DropEmptySeries", RegexOptions.Compiled | RegexOptions.IgnoreCase);
     private static readonly Regex s_includePeaksCommand = new(@";\s*IncludePeaks", RegexOptions.Compiled | RegexOptions.IgnoreCase);
     private static readonly Regex s_fullResolutionQueryCommand = new(@";\s*FullResolutionQuery", RegexOptions.Compiled | RegexOptions.IgnoreCase);

@@ -40,7 +40,7 @@ namespace GrafanaAdapters
         /// Queries openHistorian as a Grafana data source.
         /// </summary>
         /// <param name="request">Query request.</param>
-        public List<TimeSeriesValues> Query(QueryRequest request)
+        public IEnumerable<TimeSeriesValues> Query(QueryRequest request)
         {
             // Abort if services are not enabled
             if (!Enabled || Archive is null)

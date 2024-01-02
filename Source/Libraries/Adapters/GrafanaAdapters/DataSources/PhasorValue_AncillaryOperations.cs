@@ -153,7 +153,7 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
         KeyValuePair<ulong, string> target,
         List<DataSourceValue> dataValues,
         DataSet metadata,
-        QueryParameters parameters,
+        QueryParameters queryParameters,
         object state
     )
     {
@@ -172,11 +172,11 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
         {
             Target = $"{phasorInfo.Magnitude};{phasorInfo.Phase}",
             RootTarget = phasorInfo.Label,
-            SourceTarget = parameters.SourceTarget,
+            SourceTarget = queryParameters.SourceTarget,
             Source = phasorValues,
-            DropEmptySeries = parameters.DropEmptySeries,
-            RefID = parameters.SourceTarget.refId,
-            MetadataMap = FunctionParser.GetMetadata<PhasorValue>(metadata, phasorInfo.Label, parameters.MetadataSelection)
+            DropEmptySeries = queryParameters.DropEmptySeries,
+            RefID = queryParameters.SourceTarget.refId,
+            MetadataMap = FunctionParser.GetMetadata<PhasorValue>(metadata, phasorInfo.Label, queryParameters.MetadataSelection)
         };
 
         List<PhasorValue> generatePhasorValues()

@@ -54,9 +54,9 @@ public partial class GrafanaDataService
             m_baseTicks = UnixTimeTag.BaseTicks.Value;
         }
 
-        protected internal override IEnumerable<DataSourceValue> QueryDataSourceValues(QueryParameters parameters, Dictionary<ulong, string> targetMap, CancellationToken cancellationToken)
+        protected internal override IEnumerable<DataSourceValue> QueryDataSourceValues(QueryParameters queryParameters, Dictionary<ulong, string> targetMap, CancellationToken cancellationToken)
         {
-            foreach (IDataPoint dataPoint in m_parent.Archive.ReadData(targetMap.Keys.Select(pointID => (int)pointID), parameters.StartTime, parameters.StopTime, false))
+            foreach (IDataPoint dataPoint in m_parent.Archive.ReadData(targetMap.Keys.Select(pointID => (int)pointID), queryParameters.StartTime, queryParameters.StopTime, false))
             {
                 cancellationToken.ThrowIfCancellationRequested();
 

@@ -106,7 +106,7 @@ public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
         KeyValuePair<ulong, string> target,
         List<DataSourceValue> dataValues,
         DataSet metadata,
-        QueryParameters parameters,
+        QueryParameters queryParameters,
         object state
     )
     {
@@ -117,11 +117,11 @@ public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
         {
             Target = target.Value,
             RootTarget = target.Value,
-            SourceTarget = parameters.SourceTarget,
+            SourceTarget = queryParameters.SourceTarget,
             Source = source,
-            DropEmptySeries = parameters.DropEmptySeries,
-            RefID = parameters.SourceTarget.refId,
-            MetadataMap = FunctionParser.GetMetadata<DataSourceValue>(metadata, target.Value, parameters.MetadataSelection)
+            DropEmptySeries = queryParameters.DropEmptySeries,
+            RefID = queryParameters.SourceTarget.refId,
+            MetadataMap = FunctionParser.GetMetadata<DataSourceValue>(metadata, target.Value, queryParameters.MetadataSelection)
         };
     }
 }

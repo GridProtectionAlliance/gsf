@@ -93,7 +93,7 @@ public interface IDataSourceValue<T> : IDataSourceValue where T : struct, IDataS
     /// <param name="target">Target for data source value group.</param>
     /// <param name="dataValues">Queried time-series data values.</param>
     /// <param name="metadata">Source metadata.</param>
-    /// <param name="parameters">Query parameters.</param>
+    /// <param name="queryParameters">Query parameters.</param>
     /// <param name="state">Intermediate state.</param>
     /// <returns>Data source value group for the specified target.</returns>
     DataSourceValueGroup<T> GetTargetDataSourceValueGroup
@@ -101,7 +101,7 @@ public interface IDataSourceValue<T> : IDataSourceValue where T : struct, IDataS
         KeyValuePair<ulong, string> target,
         List<DataSourceValue> dataValues,
         DataSet metadata,
-        QueryParameters parameters, 
+        QueryParameters queryParameters, 
         object state
     );
 }

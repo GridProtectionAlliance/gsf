@@ -46,7 +46,7 @@ public partial interface IGrafanaDataService
     /// </summary>
     /// <param name="request">Query request.</param>
     [OperationContract, WebInvoke(UriTemplate = "/query", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-    Task<List<TimeSeriesValues>> Query(QueryRequest request);
+    Task<IEnumerable<TimeSeriesValues>> Query(QueryRequest request);
 
     /// <summary>
     /// Queries openPDC alarm states as a Grafana data source.

@@ -29,27 +29,27 @@ namespace GrafanaAdapters.Model.Annotations;
 public class AnnotationResponse
 {
     /// <summary>
-    /// Annotation title.
+    /// Gets or sets annotation title.
     /// </summary>
     public string title { get; set; }
 
     /// <summary>
-    /// Annotation time.
+    /// Gets or sets annotation time.
     /// </summary>
     public double time { get; set; }
 
     /// <summary>
-    /// Annotation end time.
+    /// Gets or sets annotation end time.
     /// </summary>
     public double endTime { get; set; }
 
     /// <summary>
-    /// Annotation text.
+    /// Gets or sets annotation text.
     /// </summary>
     public string text { get; set; }
 
     /// <summary>
-    /// Annotation tags.
+    /// Gets or sets annotation tags.
     /// </summary>
     public string tags { get; set; }
 }

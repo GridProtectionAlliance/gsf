@@ -42,7 +42,7 @@ namespace GrafanaAdapters
         /// </summary>
         /// <param name="request">Query request.</param>
         [OperationContract, WebInvoke(UriTemplate = "/query", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        List<TimeSeriesValues> Query(QueryRequest request);
+        IEnumerable<TimeSeriesValues> Query(QueryRequest request);
 
         /// <summary>
         /// Queries openPDC alarm states as a Grafana data source.
