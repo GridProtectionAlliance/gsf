@@ -25,7 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using GrafanaAdapters.FunctionParsing;
+using GrafanaAdapters.Functions;
 using GrafanaAdapters.Model.Annotations;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
@@ -63,6 +63,7 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
     // then use the PhasorID to lookup associated angle measurement as well as phasor metadata, e.g., label, phase, etc. as needed.
     public readonly DataRow[] LookupMetadata(DataSet metadata, string target)
     {
+        // TODO: Cache this metadata lookup per target
         return metadata?.Tables["Phasor"].Select($"Label = '{target}'") ?? Array.Empty<DataRow>();
     }
 
@@ -176,7 +177,7 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
             Source = phasorValues,
             DropEmptySeries = queryParameters.DropEmptySeries,
             RefID = queryParameters.SourceTarget.refId,
-            MetadataMap = FunctionParser.GetMetadata<PhasorValue>(metadata, phasorInfo.Label, queryParameters.MetadataSelection)
+            MetadataMap = metadata.GetMetadataMap<PhasorValue>(phasorInfo.Label, queryParameters)
         };
 
         List<PhasorValue> generatePhasorValues()
@@ -206,4 +207,9 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
             return values;
         }
     }
+
+    /// <inheritdoc />
+    public readonly ParameterDefinition<IEnumerable<PhasorValue>> DataSourceValuesParameterDefinition => s_dataSourceValuesParameterDefinition;
+
+    private static readonly ParameterDefinition<IEnumerable<PhasorValue>> s_dataSourceValuesParameterDefinition = DataSourceValuesParameterDefinition<PhasorValue>();
 }

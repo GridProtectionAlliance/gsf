@@ -27,7 +27,7 @@ using System.Linq;
 using System.ServiceModel;
 using System.Threading;
 using GrafanaAdapters.DataSources;
-using GrafanaAdapters.FunctionParsing;
+using GrafanaAdapters.Functions;
 using GSF;
 using GSF.Historian;
 using HistorianAdapters;
@@ -54,12 +54,10 @@ public partial class GrafanaDataService
             m_baseTicks = UnixTimeTag.BaseTicks.Value;
         }
 
-        protected internal override IEnumerable<DataSourceValue> QueryDataSourceValues(QueryParameters queryParameters, Dictionary<ulong, string> targetMap, CancellationToken cancellationToken)
+        protected override IEnumerable<DataSourceValue> QueryDataSourceValues(QueryParameters queryParameters, Dictionary<ulong, string> targetMap, CancellationToken cancellationToken)
         {
             foreach (IDataPoint dataPoint in m_parent.Archive.ReadData(targetMap.Keys.Select(pointID => (int)pointID), queryParameters.StartTime, queryParameters.StopTime, false))
             {
-                cancellationToken.ThrowIfCancellationRequested();
-
                 yield return new DataSourceValue
                 {
                     Target = targetMap[(ulong)dataPoint.HistorianID],

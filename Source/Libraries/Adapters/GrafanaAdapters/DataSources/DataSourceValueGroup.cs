@@ -22,7 +22,6 @@
 //******************************************************************************************************
 
 using System.Collections.Generic;
-using System.Linq;
 using GrafanaAdapters.Model.Common;
 
 namespace GrafanaAdapters.DataSources;
@@ -33,36 +32,42 @@ namespace GrafanaAdapters.DataSources;
 /// <remarks>
 /// This is a group construct keyed on <see cref="Target"/> for data source value enumerations.
 /// </remarks>
-public class DataSourceValueGroup<T> : IDataSourceValueGroup where T : struct, IDataSourceValue
+public class DataSourceValueGroup<T> where T : struct, IDataSourceValue
 {
-    /// <inheritdoc />
+    /// <summary>
+    /// Gets or sets target, e.g., a point-tag, representative of all <see cref="Source"/> values.
+    /// </summary>
     public string Target { get; set; }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Gets or sets the root target expression, without any referenced series functions.
+    /// </summary>
     public string RootTarget { get; set; }
 
-    /// <inheritdoc />
-    public Target SourceTarget { get; set; }
+    /// <summary>
+    /// Gets or sets a reference to the original target that was the source of these results.
+    /// </summary>
+    public Target SourceTarget { get; init; }
 
     /// <summary>
-    /// Gets or sets data source value enumeration for the group.
+    /// Gets or sets data source values enumerable.
     /// </summary>
     public IEnumerable<T> Source { get; set; }
 
-    IEnumerable<IDataSourceValue> IDataSourceValueGroup.Source
-    {
-        get => Source.Cast<IDataSourceValue>();
-        set => Source = value.Cast<T>();
-    }
+    /// <summary>
+    /// Gets or sets flag that determines if empty series are produced.
+    /// </summary>
+    public bool DropEmptySeries { get; init; }
 
-    /// <inheritdoc />
-    public bool DropEmptySeries { get; set; }
+    /// <summary>
+    /// Gets or sets a refID for a specific Grafana Query.
+    /// </summary>
+    public string RefID { get; init; }
 
-    /// <inheritdoc />
-    public string RefID { get; set; }
-
-    /// <inheritdoc />
-    public Dictionary<string, string> MetadataMap { get; set; }
+    /// <summary>
+    /// Gets or sets a refID for a specific Grafana Query.
+    /// </summary>
+    public Dictionary<string, string> MetadataMap { get; init; }
 
     /// <summary>
     /// Creates a new <see cref="DataSourceValueGroup{T}"/> from this instance.

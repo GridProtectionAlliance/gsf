@@ -1,3 +1,3 @@
 // Global using directives
 
-global using static GrafanaAdapters.FunctionParsing.Common;
+global using static GrafanaAdapters.Functions.Common;

@@ -25,7 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using GrafanaAdapters.FunctionParsing;
+using GrafanaAdapters.Functions;
 using GrafanaAdapters.Model.Annotations;
 using GSF.TimeSeries;
 
@@ -49,6 +49,7 @@ public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
     /// <inheritdoc />
     public readonly DataRow[] LookupMetadata(DataSet metadata, string target)
     {
+        // TODO: Cache this metadata lookup per target
         return metadata?.Tables["ActiveMeasurements"].Select($"PointTag = '{target}'") ?? Array.Empty<DataRow>();
     }
 
@@ -110,7 +111,8 @@ public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
         object state
     )
     {
-        // Extract data source values for the specified target
+        // Extract data source values for the specified target - this is necessary since point tags are queried in bulk,
+        // however, we use an enumerable to defer the actual filter processing to later in the pipeline
         IEnumerable<DataSourceValue> source = dataValues.Where(dataValue => dataValue.Target.Equals(target.Value));
 
         return new DataSourceValueGroup<DataSourceValue>
@@ -121,7 +123,12 @@ public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
             Source = source,
             DropEmptySeries = queryParameters.DropEmptySeries,
             RefID = queryParameters.SourceTarget.refId,
-            MetadataMap = FunctionParser.GetMetadata<DataSourceValue>(metadata, target.Value, queryParameters.MetadataSelection)
+            MetadataMap = metadata.GetMetadataMap<DataSourceValue>(target.Value, queryParameters)
         };
     }
+
+    /// <inheritdoc />
+    public readonly ParameterDefinition<IEnumerable<DataSourceValue>> DataSourceValuesParameterDefinition => s_dataSourceValuesParameterDefinition;
+
+    private static readonly ParameterDefinition<IEnumerable<DataSourceValue>> s_dataSourceValuesParameterDefinition = DataSourceValuesParameterDefinition<DataSourceValue>();
 }

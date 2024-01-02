@@ -24,6 +24,7 @@
 
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
+using GSF.Units;
 using GSF.Web;
 using System;
 using System.Collections.Generic;
@@ -34,7 +35,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using GrafanaAdapters.DataSources;
-using GrafanaAdapters.FunctionParsing;
+using GrafanaAdapters.Functions;
 using GrafanaAdapters.Model.Annotations;
 using GrafanaAdapters.Model.Common;
 
@@ -73,7 +74,7 @@ public abstract partial class GrafanaDataSourceBase
     /// <param name="targetMap">Set of IDs with associated targets to query.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Queried data source data in terms of value and time.</returns>
-    protected internal abstract IEnumerable<DataSourceValue> QueryDataSourceValues(QueryParameters queryParameters, Dictionary<ulong, string> targetMap, CancellationToken cancellationToken);
+    protected abstract IEnumerable<DataSourceValue> QueryDataSourceValues(QueryParameters queryParameters, Dictionary<ulong, string> targetMap, CancellationToken cancellationToken);
 
     /// <summary>
     /// Queries data source returning data as Grafana time-series data set.
@@ -108,10 +109,8 @@ public abstract partial class GrafanaDataSourceBase
         foreach (Target target in request.targets)
         {
             // Parse any query commands in target
-            (bool dropEmptySeries, bool includePeaks, bool fullResolutionQuery, string imports, string updatedTarget) = 
+            (bool dropEmptySeries, bool includePeaks, bool fullResolutionQuery, string imports, target.target) = 
                 ParseQueryCommands(target.target);
-
-            target.target = updatedTarget;
 
             targetQueryParameters.Add(new QueryParameters
             {
@@ -131,7 +130,7 @@ public abstract partial class GrafanaDataSourceBase
         // Query each target -- each returned value group has a 'Source' value enumerable that may contain deferred
         // enumerations that need evaluation before the final result can be serialized and returned to Grafana
         foreach (QueryParameters queryParameters in targetQueryParameters)
-            await foreach (DataSourceValueGroup<T> valueGroup in QueryTarget<T>(queryParameters, cancellationToken))
+            await foreach (DataSourceValueGroup<T> valueGroup in QueryTarget<T>(queryParameters, queryParameters.SourceTarget.target, cancellationToken))
                 valueGroups.Add(valueGroup);
 
         // Establish one result series for each value group so that consistent order can be maintained between calls
@@ -178,18 +177,16 @@ public abstract partial class GrafanaDataSourceBase
     }
 
     // This function is re-entrant so that it operates with functions as a depth-first recursive expression parser
-    private async IAsyncEnumerable<DataSourceValueGroup<T>> QueryTarget<T>(QueryParameters queryParameters, [EnumeratorCancellation] CancellationToken cancellationToken) where T : struct, IDataSourceValue<T>
+    private async IAsyncEnumerable<DataSourceValueGroup<T>> QueryTarget<T>(QueryParameters queryParameters, string queryExpression, [EnumeratorCancellation] CancellationToken cancellationToken) where T : struct, IDataSourceValue<T>
     {
         // A single target might look like the following - nested functions with multiple targets are supported:
         // PPA:15; STAT:20; SETSUM(COUNT(PPA:8; PPA:9; PPA:10)); FILTER ActiveMeasurements WHERE SignalType IN ('IPHA', 'VPHA'); RANGE(PPA:99; SUM(FILTER ActiveMeasurements WHERE SignalType = 'FREQ'; STAT:12))
-        string queryExpression = queryParameters.SourceTarget.target;
-
         HashSet<string> targetSet = new(new[] { queryExpression }, StringComparer.OrdinalIgnoreCase); // Targets include user provided input, so casing is ignored
 
         // Parse out and cache any top-level grafana functions found in target expression
         (ParsedGrafanaFunction<T>[] grafanaFunctions, HashSet<string> reducedTargetSet) = TargetCache<(ParsedGrafanaFunction<T>[], HashSet<string>)>.GetOrAdd($"{queryExpression}-{typeof(T).FullName}", () =>
         {
-            ParsedGrafanaFunction<T>[] matchedFunctions = FunctionParser.MatchFunctions<T>(queryExpression);
+            ParsedGrafanaFunction<T>[] matchedFunctions = FunctionParsing.MatchFunctions<T>(queryExpression);
             HashSet<string> reducedTargetSet = new(StringComparer.OrdinalIgnoreCase);
 
             if (matchedFunctions.Length > 0)
@@ -216,7 +213,7 @@ public abstract partial class GrafanaDataSourceBase
             // Execute each top-level grafana function, sub-functions are executed in a recursive call (depth first)
             foreach (ParsedGrafanaFunction<T> parsedFunction in grafanaFunctions)
             {
-                // ExecuteGrafanaFunction calls QueryTarget in order to process sub-functions or acquire needed data at final depth
+                // ExecuteGrafanaFunction calls QueryTarget (this function) in order to process sub-functions or query needed data at final depth
                 await foreach (DataSourceValueGroup<T> valueGroup in ExecuteGrafanaFunction(parsedFunction, queryParameters, cancellationToken))
                     yield return valueGroup;
             }
@@ -258,113 +255,106 @@ public abstract partial class GrafanaDataSourceBase
         // result is being enumerated immediately, any benefit to using an IAsyncEnumerable here is lost.
         List<DataSourceValue> dataValues = QueryDataSourceValues(queryParameters, targetMap, cancellationToken).ToList();
 
-        // Expose each target as a data source value group
+        // Transpose each target into a data source value group along with its associated queried values
         foreach (KeyValuePair<ulong, string> target in targetMap)
             yield return default(T).GetTargetDataSourceValueGroup(target, dataValues, Metadata, queryParameters, state);
     }
 
     private async IAsyncEnumerable<DataSourceValueGroup<T>> ExecuteGrafanaFunction<T>(ParsedGrafanaFunction<T> parsedFunction, QueryParameters queryParameters, [EnumeratorCancellation] CancellationToken cancellationToken) where T : struct, IDataSourceValue<T>
     {
-        IGrafanaFunction<T> seriesFunction = parsedFunction.Function;
-        string expression = parsedFunction.Expression;
+        IGrafanaFunction<T> function = parsedFunction.Function;
         GroupOperations groupOperation = parsedFunction.GroupOperation;
+        string queryExpression = parsedFunction.Expression;
+        string functionName = function.Name;
 
         // Parse out function parameters and target expression
-        (string[] functionParameters, string updatedExpression) = TargetCache<(string[], string)>.GetOrAdd(expression, () =>
-        {
-            // Check if function defines any custom parameter parsing
-            List<string> parsedParameters = seriesFunction.ParseParameters(ref expression);
-
-            if (parsedParameters is null)
-            {
-                parsedParameters = new List<string>();
-
-                // Extract any required function parameters
-                int requiredParameters = seriesFunction.RequiredParameterCount;
-
-                if (requiredParameters > 0)
-                {
-                    int index = 0;
-
-                    for (int i = 0; i < requiredParameters && index > -1; i++)
-                        index = expression.IndexOf(',', index + 1);
-
-                    if (index > -1)
-                        parsedParameters.AddRange(expression.Substring(0, index).Split(','));
-
-                    if (parsedParameters.Count == requiredParameters)
-                        expression = expression.Substring(index + 1).Trim();
-                    else
-                        throw new FormatException($"Expected {requiredParameters + 1} parameters, received {parsedParameters.Count + 1} in: {seriesFunction.Name}({expression})");
-                }
-
-                // Extract any provided optional function parameters
-                int optionalParameters = seriesFunction.OptionalParameterCount;
-
-                bool hasSubExpression(string target) => target.StartsWith("FILTER", StringComparison.OrdinalIgnoreCase) || target.Contains("(");
-
-                if (optionalParameters > 0)
-                {
-                    int index = expression.IndexOf(',');
-
-                    if (index > -1 && !hasSubExpression(expression.Substring(0, index)))
-                    {
-                        int lastIndex = index;
-
-                        for (int i = 1; i < optionalParameters && index > -1; i++)
-                        {
-                            index = expression.IndexOf(',', index + 1);
-
-                            if (index > -1 && hasSubExpression(expression.Substring(lastIndex + 1, index - lastIndex - 1).Trim()))
-                            {
-                                index = lastIndex;
-                                break;
-                            }
-
-                            lastIndex = index;
-                        }
-
-                        if (index > -1)
-                        {
-                            parsedParameters.AddRange(expression.Substring(0, index).Split(','));
-                            expression = expression.Substring(index + 1).Trim();
-                        }
-                    }
-                }
-
-            }
-
-            return (parsedParameters.ToArray(), expression);
-        });
+        (string[] parsedParameters, queryExpression) = function.ParseParameters(queryExpression, groupOperation);
 
         // Query function expression to get series data
-        IAsyncEnumerable<DataSourceValueGroup<T>> dataset = QueryTarget<T>(queryParameters, cancellationToken);
+        IAsyncEnumerable<DataSourceValueGroup<T>> dataset = QueryTarget<T>(queryParameters, queryExpression, cancellationToken);
 
         switch (groupOperation)
         {
             case GroupOperations.Standard:
-                // Standard group operations are applied to each series in the data set
+            {
                 await foreach (DataSourceValueGroup<T> valueGroup in dataset)
                 {
+                    string rootTarget = valueGroup.RootTarget ?? valueGroup.Target;
+                    Dictionary<string, string> metadataMap = Metadata.GetMetadataMap<T>(rootTarget, queryParameters);
+                    Parameters parameters = function.GenerateParameters(parsedParameters, valueGroup.Source, rootTarget, Metadata, metadataMap);
+
                     yield return new DataSourceValueGroup<T>
                     {
-                        Target = $"{seriesFunction}({string.Join(", ", functionParameters)}{(functionParameters.Length > 0 ? ", " : "")}{valueGroup.Target})",
-                        RootTarget = valueGroup.RootTarget ?? valueGroup.Target,
+                        Target = $"{functionName}({string.Join(", ", parsedParameters)}{(parsedParameters.Length > 0 ? ", " : "")}{valueGroup.Target})",
+                        RootTarget = rootTarget,
                         SourceTarget = queryParameters.SourceTarget,
-                        Source = seriesFunction.Compute(null, cancellationToken),
+                        Source = function.Compute(parameters, cancellationToken),
                         DropEmptySeries = queryParameters.DropEmptySeries,
-                        RefID = queryParameters.SourceTarget.refId
+                        RefID = queryParameters.SourceTarget.refId,
+                        MetadataMap = metadataMap
                     };
                 }
+
                 break;
+            }
             case GroupOperations.Slice:
-                // Slice group operations are applied to the entire data set
+            {
+                TimeSliceScanner<T> scanner = new(dataset.ToEnumerable(), ParseFloat(parsedParameters[0]) / SI.Milli);
+                parsedParameters = parsedParameters.Skip(1).ToArray();
+
+                foreach (DataSourceValueGroup<T> valueGroup in function.ComputeSlice(scanner, queryParameters, queryExpression, Metadata, parsedParameters, cancellationToken))
+                {
+                    string rootTarget = valueGroup.RootTarget ?? valueGroup.Target;
+
+                    yield return new DataSourceValueGroup<T>
+                    {
+                        Target = $"Slice{functionName}({string.Join(", ", parsedParameters)}{(parsedParameters.Length > 0 ? ", " : "")}{valueGroup.Target})",
+                        RootTarget = rootTarget,
+                        SourceTarget = queryParameters.SourceTarget,
+                        Source = valueGroup.Source,
+                        DropEmptySeries = queryParameters.DropEmptySeries,
+                        RefID = queryParameters.SourceTarget.refId,
+                        MetadataMap = Metadata.GetMetadataMap<T>(rootTarget, queryParameters)
+                    };
+                }
+
                 break;
+            }
             case GroupOperations.Set:
-                // Set group operations are applied to the entire data set
+            {
+                // Flatten all series into a single enumerable
+                string rootTarget = queryExpression;
+                ParallelQuery<T> dataSourceValues = dataset.ToEnumerable().AsParallel().WithCancellation(cancellationToken).SelectMany(source => source.Source);
+                Dictionary<string, string> metadataMap = Metadata.GetMetadataMap<T>(rootTarget, queryParameters);
+                Parameters parameters = function.GenerateParameters(parsedParameters, dataSourceValues, rootTarget, Metadata, metadataMap);
+
+                DataSourceValueGroup<T> valueGroup = new()
+                {
+                    Target = $"Set{functionName}({string.Join(", ", parsedParameters)}{(parsedParameters.Length > 0 ? ", " : "")}{queryExpression})",
+                    RootTarget = rootTarget,
+                    SourceTarget = queryParameters.SourceTarget,
+                    Source = function.ComputeSet(parameters, cancellationToken),
+                    DropEmptySeries = queryParameters.DropEmptySeries,
+                    RefID = queryParameters.SourceTarget.refId,
+                    MetadataMap = metadataMap
+                };
+
+                // Handle edge-case set operations - for these functions there is data in the target series as well
+                if (functionName is "Minimum" or "Maximum" or "Median")
+                {
+                    T dataValue = valueGroup.Source.First();
+                    valueGroup.Target = $"Set{functionName} = {dataValue.Target}";
+                    valueGroup.RootTarget = dataValue.Target;
+                }
+
+                yield return valueGroup;
+
                 break;
+            }
             default:
+            {
                 throw new ArgumentOutOfRangeException(nameof(groupOperation), $"Unsupported group operation encountered: {groupOperation}");
+            }
         }
     }
 

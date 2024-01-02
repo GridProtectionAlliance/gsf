@@ -28,7 +28,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using GrafanaAdapters.DataSources;
-using GrafanaAdapters.FunctionParsing;
+using GrafanaAdapters.Functions;
 using GrafanaAdapters.Model.Annotations;
 using GrafanaAdapters.Model.Common;
 using GrafanaAdapters.Model.Database;
@@ -38,7 +38,7 @@ using GSF;
 using GSF.Data;
 using GSF.Data.Model;
 using Newtonsoft.Json;
-using static GrafanaAdapters.FunctionParsing.FunctionParser;
+using Common = GSF.Common;
 
 namespace GrafanaAdapters;
 
@@ -106,7 +106,7 @@ partial class GrafanaDataSourceBase
                             }
                             else
                             {
-                                if (GSF.Common.IsNumericType(table.Columns[sortField].DataType))
+                                if (Common.IsNumericType(table.Columns[sortField].DataType))
                                 {
                                     decimal parseAsNumeric(DataRow row)
                                     {
@@ -361,7 +361,7 @@ partial class GrafanaDataSourceBase
     // TODO: JRC - suggest passing a parameter e.g. 'dataType' string to filter function descriptions by data type, e.g., "PhasorValue" or "DataSourceValue"
     public virtual Task<FunctionDescription[]> GetFunctionDescription(CancellationToken cancellationToken)
     {
-        return Task.Factory.StartNew(() => GetFunctionDescriptions().ToArray(), cancellationToken);
+        return Task.Factory.StartNew(() => FunctionParsing.GetFunctionDescriptions().ToArray(), cancellationToken);
     }
 
     /// <summary>
@@ -427,13 +427,13 @@ partial class GrafanaDataSourceBase
             }
 
             // TODO: JRC - verify this is correct - this assumes that the target is a normal data source value
-            ParsedTarget<DataSourceValue>[] targets = ParseTargets<DataSourceValue>(request.target.Trim());
-            
-            string[] rootTargets = targets.SelectMany(target => target.DataTargets).ToArray();
+            //ParsedTarget<DataSourceValue>[] targets = ParseTargets<DataSourceValue>(request.target.Trim());
+
+            string[] rootTargets = null; // targets.SelectMany(target => target.DataTargets).ToArray();
 
             foreach (string rootTarget in rootTargets)
             {
-                KeyValuePair<string, string> data = FunctionParser.GetMetadata<T>(Metadata, rootTarget, request.metadataSelection).FirstOrDefault();
+                KeyValuePair<string, string> data = Metadata.GetMetadataMap<T>(rootTarget, request.metadataSelection).FirstOrDefault();
                 result.Add(data.Value);
             }
 

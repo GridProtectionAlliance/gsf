@@ -23,7 +23,7 @@
 
 using System.Collections.Generic;
 using System.Data;
-using GrafanaAdapters.FunctionParsing;
+using GrafanaAdapters.Functions;
 using GSF.TimeSeries;
 
 namespace GrafanaAdapters.DataSources;
@@ -104,4 +104,9 @@ public interface IDataSourceValue<T> : IDataSourceValue where T : struct, IDataS
         QueryParameters queryParameters, 
         object state
     );
+
+    /// <summary>
+    /// Gets the parameter definition for data source values.
+    /// </summary>
+    ParameterDefinition<IEnumerable<T>> DataSourceValuesParameterDefinition { get; }
 }
