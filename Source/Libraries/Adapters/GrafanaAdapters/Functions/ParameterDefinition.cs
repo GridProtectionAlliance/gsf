@@ -50,4 +50,15 @@ public readonly struct ParameterDefinition<T> : IParameter<T>
 
     /// <inheritdoc />
     public bool IsDefinition => true;
+
+    /// <inheritdoc />
+    public IMutableParameter<T> CreateParameter()
+    {
+        return new Parameter<T>(this);
+    }
+
+    IMutableParameter IParameter.CreateParameter()
+    {
+        return new Parameter<T>(this);
+    }
 }

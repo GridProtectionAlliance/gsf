@@ -21,10 +21,7 @@
 //
 //******************************************************************************************************
 
-using GrafanaAdapters.DataSources;
 using System;
-using System.Collections.Generic;
-using System.Data;
 
 namespace GrafanaAdapters.Functions;
 
@@ -57,7 +54,8 @@ public interface IParameter
     /// Gets flag that indicates if parameter is a definition.
     /// </summary>
     /// <remarks>
-    /// Definition parameters are used to define function parameters, not hold values for function evaluation.
+    /// Definition parameters are used to define function parameters,
+    /// not hold values for function evaluation.
     /// </remarks>
     bool IsDefinition { get; }
 
@@ -65,18 +63,30 @@ public interface IParameter
     /// Gets default value of the parameter.
     /// </summary>
     object Default { get; }
+
+    /// <summary>
+    /// Creates a new mutable parameter from its definition.
+    /// </summary>
+    /// <returns>New mutable parameter.</returns>
+    IMutableParameter CreateParameter();
 }
 
 /// <summary>
 /// Represents a typed parameter with a default value.
 /// </summary>
 /// <typeparam name="T">The type of the parameter.</typeparam>
-public interface IParameter<out T> : IParameter
+public interface IParameter<T> : IParameter
 {
     /// <summary>
-    /// Gets default value of the parameter.
+    /// Gets default typed value of the parameter.
     /// </summary>
     new T Default { get; }
+
+    /// <summary>
+    /// Creates a new typed mutable parameter from its definition.
+    /// </summary>
+    /// <returns>New typed mutable parameter.</returns>
+    new IMutableParameter<T> CreateParameter();
 }
 
 /// <summary>
@@ -88,17 +98,6 @@ public interface IMutableParameter : IParameter
     /// Gets or sets the actual value of the parameter.
     /// </summary>
     object Value { get; set; }
-
-    /// <summary>
-    /// Converts parsed value to the mutable parameter type.
-    /// </summary>
-    /// <typeparam name="T">The type of the data source value.</typeparam>
-    /// <param name="value">Parsed value to convert.</param>
-    /// <param name="target">Associated target.</param>
-    /// <param name="dataSourceValues">Data source values.</param>
-    /// <param name="metadata">Metadata associated with the target.</param>
-    /// <param name="metadataMap">Metadata map.</param>
-    void ConvertParsedValue<T>(string value, string target, IEnumerable<T> dataSourceValues, DataSet metadata, Dictionary<string, string> metadataMap) where T : struct, IDataSourceValue<T>;
 }
 
 /// <summary>
@@ -108,7 +107,7 @@ public interface IMutableParameter : IParameter
 public interface IMutableParameter<T> : IMutableParameter, IParameter<T>
 {
     /// <summary>
-    /// Gets or sets the actual value of the parameter.
+    /// Gets or sets the actual typed value of the parameter.
     /// </summary>
     new T Value { get; set; }
 }

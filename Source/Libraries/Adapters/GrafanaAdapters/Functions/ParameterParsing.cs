@@ -24,18 +24,25 @@
 
 using GrafanaAdapters.DataSources;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
-using System.Reflection;
-using System.Reflection.Emit;
+using GSF;
 
 namespace GrafanaAdapters.Functions;
 
 internal static class ParameterParsing
 {
+    /// <summary>
+    /// Parses function parameters from a given expression as an array of strings.
+    /// </summary>
+    /// <param name="function">Target function.</param>
+    /// <param name="expression">Expression to parse.</param>
+    /// <param name="groupOperation">Group operation.</param>
+    /// <returns>Function parameters parsed from a given expression.</returns>
+    /// <exception cref="FormatException">Expected parameters did not match those received.</exception>
     public static (string[] parsedParameters, string updatedExpression) ParseParameters(this IGrafanaFunction function, string expression, GroupOperations groupOperation)
     {
         return TargetCache<(string[], string)>.GetOrAdd(expression, () =>
@@ -112,10 +119,21 @@ internal static class ParameterParsing
         }
     }
 
-    public static Parameters GenerateParameters<T>(this IGrafanaFunction<T> function, string[] parsedParameters, IEnumerable<T> dataSourceValues, string rootTarget, DataSet metadata, Dictionary<string, string> metadataMap) where T : struct, IDataSourceValue<T>
+    /// <summary>
+    /// Generates a list of value mutable parameters from parsed parameters.
+    /// </summary>
+    /// <typeparam name="TDataSourceValue">The type of the data source value.</typeparam>
+    /// <param name="function">Target function.</param>
+    /// <param name="parsedParameters">Parsed parameters.</param>
+    /// <param name="dataSourceValues">Data source values.</param>
+    /// <param name="rootTarget">Root target.</param>
+    /// <param name="metadata">Metadata.</param>
+    /// <param name="metadataMap">Metadata map.</param>
+    /// <returns>List of value mutable parameters from parsed parameters.</returns>
+    public static Parameters GenerateParameters<TDataSourceValue>(this IGrafanaFunction<TDataSourceValue> function, string[] parsedParameters, IEnumerable<TDataSourceValue> dataSourceValues, string rootTarget, DataSet metadata, Dictionary<string, string> metadataMap) where TDataSourceValue : struct, IDataSourceValue<TDataSourceValue>
     {
         // Generate a list of value mutable parameters
-        Parameters parameters = function.GetMutableParameters();
+        Parameters parameters = function.ParameterDefinitions.CreateParameters();
         int index = 0;
 
         Debug.Assert(parameters.Count == function.RequiredParameterCount + function.OptionalParameterCount + 1, $"Expected {function.RequiredParameterCount + function.OptionalParameterCount + 1} parameters, received {parameters.Count} in: {function.Name}({string.Join(",", parsedParameters)})");
@@ -134,7 +152,7 @@ internal static class ParameterParsing
                 Debug.Assert(parameter is IParameter<IEnumerable<IDataSourceValue>>, $"Last parameter is not a data source value of type '{typeof(IEnumerable<IDataSourceValue>).Name}'.");
 
                 // Replace last parameter with data source type specific parameter with associated values
-                parameters[i] = new Parameter<IEnumerable<T>>(default(T).DataSourceValuesParameterDefinition)
+                parameters[i] = new Parameter<IEnumerable<TDataSourceValue>>(default(TDataSourceValue).DataSourceValuesParameterDefinition)
                 {
                     Value = dataSourceValues
                 };
@@ -145,64 +163,160 @@ internal static class ParameterParsing
             // Parameter
             if (index < parsedParameters.Length)
                 parameter.ConvertParsedValue(parsedParameters[index++], rootTarget, dataSourceValues, metadata, metadataMap);
-            else
+        
+        #if DEBUG
+            // Required parameters were already validated in ParseParameters - this is a sanity check
+            else if (parameter.Required)
                 Debug.Fail($"Expected {function.RequiredParameterCount} parameters, received {index} in: {function.Name}({string.Join(",", parsedParameters)})");
+        #endif
         }
 
         return parameters;
     }
 
-    // We cache object factory functions by type so they are only created once
-    private static readonly ConcurrentDictionary<Type, Func<IParameter, IMutableParameter>> s_mutableParameterFactories = new();
-
-    // Since value mutable parameters need to be created at each function call and we only have the 'Type' property of the IParameter
-    // interface to create the 'Parameter<T>' type, i.e., a specific type 'T' is not available for compiler, we generate a fast object
-    // creation factory function. This is faster than using the 'Activator.CreateInstance', even after dictionary cache lookup, because
-    // the IL is highly specific to task and does not incur overhead of type validations. Note that on .NET Core the performance of
-    // 'Activator.CreateInstance' is at least three times slower than the generated IL, as compared to at least four times slower on
-    // .NET Framework -- with this the dictionary lookup eats into performance gains more for .NET Core environments.
-    // https://andrewlock.net/benchmarking-4-reflection-methods-for-calling-a-constructor-in-dotnet/
-    public static Func<IParameter, IMutableParameter> GetMutableParameterFactory(Type parameterType)
+    /// <summary>
+    /// Converts parsed value to the mutable parameter type for a given data source value type.
+    /// </summary>
+    /// <typeparam name="TDataSourceValue">The type of the data source value.</typeparam>
+    /// <param name="parameter">Mutable parameter to hold the converted data.</param>
+    /// <param name="value">Parsed value to convert.</param>
+    /// <param name="target">Associated target.</param>
+    /// <param name="dataSourceValues">Data source values.</param>
+    /// <param name="metadata">Source metadata.</param>
+    /// <param name="metadataMap">Metadata map associated with the target.</param>
+    /// <remarks>
+    /// This function is used to convert the parsed value to the parameter type.
+    /// If the type of value provided and expected match, then it directly converts.
+    /// If the types do not match, then it first searches through the provided metadata.
+    /// If nothing is found, it looks through ActiveMeasurements for it.
+    /// Finally, if none of the above work it throws an error.
+    /// </remarks>
+    public static void ConvertParsedValue<TDataSourceValue>(this IMutableParameter parameter, string value, string target, IEnumerable<TDataSourceValue> dataSourceValues, DataSet metadata, Dictionary<string, string> metadataMap) where TDataSourceValue : struct, IDataSourceValue<TDataSourceValue>
     {
-        // This function creates generated IL given a specific type creating a function that operates similar to
-        // the following where type 'T' would be known at compile-time:
-        //
-        //    private IMutableParameter CreateMutableParameter<T>(IParameter parameter) =>
-        //        return new Parameter<T>((ParameterDefinition<T>)parameter);
-        //
-        // Here is the equivalent of the generated IL using the slower 'Activator.CreateInstance':
-        //
-        //    private static IMutableParameter CreateMutableParameter(IParameter parameter) => 
-        //        (IMutableParameter)Activator.CreateInstance(typeof(Parameter<>).MakeGenericType(parameter.Type), parameter);
-        //
-        return s_mutableParameterFactories.GetOrAdd(parameterType, _ =>
+        // No value specified
+        if (string.IsNullOrWhiteSpace(value))
         {
-            // Create specific types for the generic parameter definition and value mutable parameter
-            Type parameterDefinitionType = typeof(ParameterDefinition<>).MakeGenericType(parameterType);
-            Type mutableParameterType = typeof(Parameter<>).MakeGenericType(parameterType);
-            ConstructorInfo constructor = mutableParameterType.GetConstructor(new[] { parameterDefinitionType });
+            // Required -> error
+            if (parameter.Required)
+                throw new ArgumentException($"Required '{parameter.Name}' parameter of type '{parameter.Type.Name}' is missing.");
 
-            Debug.Assert(constructor is not null, $"No constructor exists for type '{mutableParameterType.Name}' with 'ParameterDefinition<T>' parameter");
+            // Not required -> default
+            parameter.Value = parameter.Default;
+            return;
+        }
 
-            // Generate a dynamic method that will construct a new instance of the value mutable parameter type, this
-            // will be a new constructor for the Parameter<T> type that takes a single IParameter argument
-            DynamicMethod method = new("ctor_type$" + mutableParameterType.Name, mutableParameterType, new[] { typeof(IParameter) }, mutableParameterType);
-            ILGenerator generator = method.GetILGenerator();
+        // Check if metadata is requested
+        if (value.StartsWith("{") && value.EndsWith("}"))
+        {
+            value = value.Substring(1, value.Length - 2);
 
-            // Load the first method argument (which is an IParameter) onto the stack
-            generator.Emit(OpCodes.Ldarg_0);
+            (string value, bool success) lookup = LookupMetadata<TDataSourceValue>(value, target, metadata, metadataMap);
 
-            // Since IParameter references a ParameterDefinition<T>, which is a struct, we need to use Unbox_Any
-            // which pops and unboxes item on the stack into the specified type, pushing result onto the stack
-            generator.Emit(OpCodes.Unbox_Any, parameterDefinitionType);
+            if (lookup.success)
+                value = lookup.value;
+        }
 
-            // Call the Parameter<T> constructor - single ParameterDefinition<T> parameter is ready on the stack
-            generator.Emit(OpCodes.Newobj, constructor);
+        // String type
+        if (parameter.Type == typeof(string))
+        {
+            parameter.Value = value;
+            return;
+        }
 
-            // Return the new object - since Parameter<T> implements IMutableParameter, CLR handles the cast
-            generator.Emit(OpCodes.Ret);
+        // Time Unit - enum has a custom parse operation
+        if (parameter.Type == typeof(TargetTimeUnit))
+        {
+            parameter.Value = TargetTimeUnit.TryParse(value, out TargetTimeUnit timeUnit) ? 
+                timeUnit : parameter.Default;
 
-            return (Func<IParameter, IMutableParameter>)method.CreateDelegate(typeof(Func<IParameter, IMutableParameter>));
-        });
+            return;
+        }
+
+        // Other types
+        object result;
+
+        // Attempt to convert to the parameter type
+        if (value[0].IsNumeric())
+        {
+            try
+            {
+                // Convert.ChangeType is faster for numeric types
+                result = Convert.ChangeType(value, parameter.Type);
+            }
+            catch
+            {
+                result = null;
+            }
+        }
+        else
+        {
+            // ConvertToType uses a TypeConverter which works for most types, including enums
+            // Note that this function returns null if conversion fails
+            result = value.ConvertToType(parameter.Type);
+        }
+
+        // If conversion fails, check if value is a named target
+        if (result is null && char.IsLetter(value[0]))
+        {
+            object defaultValue = default;
+            bool hasDefaultValue = false;
+            string[] targets = null;
+
+            // Named target parameters can optionally specify multiple fall-back series and one final
+            // default constant value each separated by a semi-colon to use when the named target series
+            // is not available, e.g.: Top(T1;T2;5, T1;T2;T3)
+            if (value.IndexOf(';') > -1)
+            {
+                string[] parts = value.Split(';');
+
+                if (parts.Length >= 2)
+                {
+                    targets = new string[parts.Length - 1];
+                    Array.Copy(parts, 0, targets, 0, targets.Length);
+                    defaultValue = parts[parts.Length - 1].ConvertToType(parameter.Type);
+                    hasDefaultValue = true;
+                }
+            }
+
+            targets ??= new[] { value };
+
+            foreach (string targetName in targets)
+            {
+                // Attempt to find named target in data source values
+                TDataSourceValue sourceResult = dataSourceValues.FirstOrDefault(dataSourceValue => dataSourceValue.Target.Equals(targetName, StringComparison.OrdinalIgnoreCase));
+
+                // Data source values are structs and cannot be null so an empty target means lookup failed
+                if (string.IsNullOrEmpty(sourceResult.Target))
+                    continue;
+
+                double seriesValue = sourceResult.TimeSeriesValue[0];
+
+                result = parameter.Type.IsNumeric() ?
+                    Convert.ChangeType(seriesValue, parameter.Type) :
+                    seriesValue.ToString(CultureInfo.InvariantCulture).ConvertToType(parameter.Type);
+
+                break;
+            }
+
+            if (result is null && hasDefaultValue)
+                result = defaultValue;
+        }
+
+        parameter.Value = result ?? parameter.Default;
+    }
+
+    private static (string value, bool success) LookupMetadata<TDataSourceValue>(string value, string target, DataSet metadata, Dictionary<string, string> metadataMap) where TDataSourceValue : struct, IDataSourceValue
+    {
+        // Attempt to value find in dictionary
+        if (metadataMap.TryGetValue(value, out string metadataValue))
+            return (metadataValue, true);
+
+        // If not found in dictionary, lookup target in metadata
+        DataRow[] rows = default(TDataSourceValue).LookupMetadata(metadata, target);
+
+        if (rows.Length == 0 || !rows[0].Table.Columns.Contains(value))
+            return (default, false);
+
+        return (rows[0][value].ToString(), true);
     }
 }

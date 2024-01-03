@@ -70,20 +70,6 @@ public abstract class GrafanaFunctionBase<T> : IGrafanaFunction<T> where T : str
     public virtual ParameterDefinitions ParameterDefinitions => new();
 
     /// <inheritdoc />
-    public virtual Parameters GetMutableParameters()
-    {
-        // Cache lookups for the set of parameter factory functions per derived function type for faster performance
-        (Func<IParameter, IMutableParameter> mutableParameterFactory, IParameter parameterDefinition)[] factoryFunctionCache = TargetCache<(Func<IParameter, IMutableParameter>, IParameter)[]>.GetOrAdd(GetType().FullName, () =>
-        {
-            return ParameterDefinitions.Select(parameterDefinition => (ParameterParsing.GetMutableParameterFactory(parameterDefinition.Type), parameterDefinition)).ToArray();
-        });
-
-        // The following operates like 'ParameterDefinitions.Select(paramDef => new Parameter<T>(paramDef)).ToList()'
-        // where type 'T' would be known at compile-time:
-        return new Parameters(factoryFunctionCache.Select(item => item.mutableParameterFactory(item.parameterDefinition)));
-    }
-
-    /// <inheritdoc />
     public virtual int RequiredParameterCount => m_requiredParameterCount ??= ParameterDefinitions.Count(parameter => parameter.Required) - 1;
 
     /// <inheritdoc />

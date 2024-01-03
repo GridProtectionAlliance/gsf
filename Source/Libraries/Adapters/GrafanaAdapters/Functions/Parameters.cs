@@ -21,34 +21,32 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace GrafanaAdapters.Functions;
 
 /// <summary>
 /// Represents a collection of mutable parameters.
 /// </summary>
+/// <remarks>
+/// New instances of this class should be created by using the
+/// <see cref="ParameterDefinitions.CreateParameters"/> method.
+/// </remarks>
 public class Parameters : IList<IMutableParameter>
 {
     private readonly List<IMutableParameter> m_parameters;
+    private Dictionary<string, IMutableParameter> m_parameterNameMap;
 
-    /// <summary>
-    /// Creates a new <see cref="Parameters"/> instance.
-    /// </summary>
-    public Parameters()
-    {
-        m_parameters = new List<IMutableParameter>();
-    }
-
-    /// <summary>
-    /// Creates a new <see cref="Parameters"/> instance.
-    /// </summary>
-    /// <param name="parameters">Parameters to add to the collection.</param>
-    public Parameters(IEnumerable<IMutableParameter> parameters)
+    internal Parameters(IEnumerable<IMutableParameter> parameters)
     {
         m_parameters = new List<IMutableParameter>(parameters);
     }
+
+    private Dictionary<string, IMutableParameter> ParameterNameMap =>
+        m_parameterNameMap ??= this.ToDictionary(parameter => parameter.Name, StringComparer.OrdinalIgnoreCase);
 
     /// <inheritdoc />
     public int Count => m_parameters.Count;
@@ -56,6 +54,16 @@ public class Parameters : IList<IMutableParameter>
     /// <summary>
     /// Gets or sets the number of parameters that have been parsed.
     /// </summary>
+    /// <remarks>
+    /// The number of parameters in defined in the <see cref="Parameters"/> collection
+    /// will always match the number of parameters defined in the function definition,
+    /// optional or not, see <see cref="ParameterDefinitions"/>. This property is used
+    /// to determine the count of required and optional parameters that were actually
+    /// parsed from the user provided function expression. Note that the count does not
+    /// include the data source values expression, which is always available as the last
+    /// parameter. With this count, the function can determine which optional parameters
+    /// were parsed and are thus available for use.
+    /// </remarks>
     public int ParsedCount { get; set; }
 
     /// <inheritdoc />
@@ -69,16 +77,52 @@ public class Parameters : IList<IMutableParameter>
     }
 
     /// <summary>
-    /// Gets typed value of parameter at specified index.
+    /// Gets or sets the parameter with the specified <paramref name="name"/>.
+    /// </summary>
+    /// <param name="name">The name of the parameter to get.</param>
+    /// <returns>The parameter with the specified <paramref name="name"/>.</returns>
+    /// <remarks>
+    /// Parameter name lookup dictionary is lazy initialized. Using index-based lookups is more efficient.
+    /// </remarks>
+    /// <exception cref="KeyNotFoundException">Parameter name not found.</exception>
+    public IMutableParameter this[string name]
+    {
+        get => ParameterNameMap[name];
+        set => ParameterNameMap[name] = value;
+    }
+
+    /// <summary>
+    /// Gets typed value of parameter at specified index, if value can be cast as type.
     /// </summary>
     /// <typeparam name="T">The type of the parameter.</typeparam>
     /// <param name="index">Index of parameter to get.</param>
-    /// <returns>The typed value of parameter at specified index if can be cast to type; otherwise, default value.</returns>
+    /// <returns>
+    /// The typed value of parameter at specified index if it can be cast to type;
+    /// otherwise, default value.
+    /// </returns>
+    /// <exception cref="IndexOutOfRangeException">Index is out of range.</exception>
     public T Value<T>(int index)
     {
         return m_parameters[index] is IMutableParameter<T> typedParameter ? 
-            typedParameter.Value : 
-            default;
+            typedParameter.Value : default;
+    }
+
+    /// <summary>
+    /// Gets typed value of parameter with specified name, if name is if found and value can be cast as type.
+    /// </summary>
+    /// <typeparam name="T">The type of the parameter.</typeparam>
+    /// <param name="name">Name of parameter to get.</param>
+    /// <returns>
+    /// The typed value of parameter with the specified name if the parameter name can be found
+    /// and the value can be cast to specified type; otherwise, default value.
+    /// </returns>
+    /// <remarks>
+    /// Parameter name lookup dictionary is lazy initialized. Using index-based lookups is more efficient.
+    /// </remarks>
+    public T Value<T>(string name)
+    {
+        return ParameterNameMap.TryGetValue(name, out IMutableParameter parameter) && parameter is IMutableParameter<T> typedParameter ?
+            typedParameter.Value : default;
     }
 
     /// <inheritdoc />

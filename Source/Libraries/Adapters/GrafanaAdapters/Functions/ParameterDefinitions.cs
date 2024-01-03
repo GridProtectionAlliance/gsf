@@ -24,6 +24,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using GrafanaAdapters.DataSources;
 
 namespace GrafanaAdapters.Functions;
@@ -147,5 +148,14 @@ public class ParameterDefinitions : IReadOnlyList<IParameter>
     public static implicit operator ParameterDefinitions(List<IParameter> parameters)
     {
         return new ParameterDefinitions(parameters);
+    }
+
+    /// <summary>
+    /// Creates a set of mutable parameters from the parameter definitions.
+    /// </summary>
+    /// <returns></returns>
+    public Parameters CreateParameters()
+    {
+        return new Parameters(this.Select(parameterDefinition => parameterDefinition.CreateParameter()));
     }
 }

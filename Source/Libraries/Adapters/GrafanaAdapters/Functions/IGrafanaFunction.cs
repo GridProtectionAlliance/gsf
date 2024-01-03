@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using GrafanaAdapters.DataSources;
+using GrafanaAdapters.Functions.BuiltIn;
 
 namespace GrafanaAdapters.Functions;
 
@@ -71,6 +72,15 @@ public interface IGrafanaFunction
     /// <summary>
     /// Gets set of group operations that the Grafana function supports.
     /// </summary>
+    /// <remarks>
+    /// Unsupported operations should be taken to mean that the use of the group operation for a function is an error.
+    /// Implementors should carefully consider which group operations that a function exposes as unsupported since when
+    /// a user selects an unsupported group operation, this results in an exception. If the result of a group operation
+    /// results in the same matrix of values as a standard operation, the group operation should continue to be supported,
+    /// but can be hidden from the user by overriding the <see cref="PublishedGroupOperations"/>. Another option is to
+    /// simply ignore a group operation that is not supported by forcing supported operations. This is handled by overriding
+    /// the <see cref="CheckSupportedGroupOperation"/> method. See the <see cref="Label{T}"/> function for an example of this.
+    /// </remarks>
     GroupOperations SupportedGroupOperations { get; }
 
     /// <summary>
@@ -134,15 +144,6 @@ public interface IGrafanaFunction
 /// </summary>
 public interface IGrafanaFunction<out T> : IGrafanaFunction where T : struct, IDataSourceValue<T>
 {
-    /// <summary>
-    /// Gets a list of value mutable parameters for the Grafana function.
-    /// </summary>
-    /// <returns>New list of value mutable parameters based on the defined parameter definitions of the Grafana function.</returns>
-    /// <remarks>
-    /// This function creates a new list of value mutable parameters from the defined parameter definitions.
-    /// </remarks>
-    Parameters GetMutableParameters();
-
     /// <summary>
     /// Executes the computation for the Grafana function.
     /// </summary>
