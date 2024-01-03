@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using GrafanaAdapters.DataSources;
+using GSF.TimeSeries;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
 
@@ -31,19 +33,26 @@ public abstract class Average<T> : GrafanaFunctionBase<T> where T : struct, IDat
         /// <inheritdoc />
         public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
         {
-            //// Get Values
-            //DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>)!.Value;
+            double lastTime = 0.0D;
+            string lastTarget = null;
+            MeasurementStateFlags lastFlags = 0;
 
-            //// Compute
-            //DataSourceValue lastElement = dataSourceValues.Source.Last();
-            //lastElement.Value = dataSourceValues.Source.Select(dataValue => dataValue.Value).Average();
+            IEnumerable<double> trackedValues = GetDataSourceValues(parameters).Select(dataValue =>
+            {
+                lastTime = dataValue.Time;
+                lastTarget = dataValue.Target;
+                lastFlags = dataValue.Flags;
+                return dataValue.Value;
+            });
 
-            //// Set Values
-            //dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
-            //dataSourceValues.Source = Enumerable.Repeat(lastElement, 1);
-
-            //return dataSourceValues;
-            return null;
+            // Return immediate enumeration of computed values
+            yield return new DataSourceValue()
+            {
+                Value = trackedValues.Average(),
+                Time = lastTime,
+                Target = lastTarget,
+                Flags = lastFlags
+            };
         }
     }
 
@@ -53,23 +62,38 @@ public abstract class Average<T> : GrafanaFunctionBase<T> where T : struct, IDat
         /// <inheritdoc />
         public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
         {
-            //// Get Values
-            //DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>)!.Value;
+            double magnitudeTotal = 0.0D;
+            double angleTotal = 0.0D;
+            int count = 0;
+            
+            double lastTime = 0.0D;
+            string lastMagnitudeTarget = null;
+            string lastAngleTarget = null;
+            MeasurementStateFlags lastFlags = 0;
 
-            //// Compute
-            //PhasorValue lastElement = phasorValues.Source.Last();
+            // Immediately enumerate to compute values - only enumerate once
+            foreach (PhasorValue dataValue in GetDataSourceValues(parameters))
+            {
+                magnitudeTotal += dataValue.Magnitude;
+                angleTotal += dataValue.Angle + 180;
+                count++;
 
-            //lastElement.Magnitude = phasorValues.Source.Select(dataValue => dataValue.Magnitude).Average();
+                lastTime = dataValue.Time;
+                lastMagnitudeTarget = dataValue.MagnitudeTarget;
+                lastAngleTarget = dataValue.AngleTarget;
+                lastFlags = dataValue.Flags;
+            }
 
-            //lastElement.Angle = phasorValues.Source.Select(dataValue => dataValue.Angle).Average();
-
-            //// Set Values
-            //string[] labels = phasorValues.Target.Split(';');
-            //phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
-            //phasorValues.Source = Enumerable.Repeat(lastElement, 1);
-
-            //return phasorValues;
-            return null;
+            // Return computed results
+            yield return new PhasorValue()
+            {
+                Magnitude = magnitudeTotal / count,
+                Angle = angleTotal / count % 360 - 180,
+                Time = lastTime,
+                MagnitudeTarget = lastMagnitudeTarget,
+                AngleTarget = lastAngleTarget,
+                Flags = lastFlags
+            };
         }
     }
 }

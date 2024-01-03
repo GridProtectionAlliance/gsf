@@ -1,6 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using GrafanaAdapters.DataSources;
+using GSF.Collections;
+using GSF.TimeSeries;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
 
@@ -31,19 +34,19 @@ public abstract class Median<T> : GrafanaFunctionBase<T> where T : struct, IData
         /// <inheritdoc />
         public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
         {
-            //// Get Values
-            //DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
+            // Median uses immediate in-memory array load
+            DataSourceValue[] values = GetDataSourceValues(parameters).OrderBy(dataValue => dataValue.Value).Median();
 
-            //// Compute
-            //DataSourceValue lastElement = dataSourceValues.Source.Last();
-            //lastElement.Value = dataSourceValues.Source.Select(dataValue => { return dataValue.Value; }).Median().Average();
+            if (values.Length == 0)
+                yield break;
 
-            //// Set Values
-            //dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
-            //dataSourceValues.Source = Enumerable.Repeat(lastElement, 1);
+            // Median can return two values if there is an even number of values
+            DataSourceValue result = values.Last();
 
-            //return dataSourceValues;
-            return null;
+            if (values.Length > 1)
+                result.Value = values[0].Value + (values[1].Value - values[0].Value) / 2.0D;
+
+            yield return result;
         }
     }
 
@@ -53,21 +56,52 @@ public abstract class Median<T> : GrafanaFunctionBase<T> where T : struct, IData
         /// <inheritdoc />
         public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
         {
-            //// Get Values
-            //DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
+            List<double> magnitudes = new();
+            List<double> angles = new();
 
-            //// Compute
-            //PhasorValue lastElement = phasorValues.Source.Last();
-            //lastElement.Magnitude = phasorValues.Source.Select(dataValue => { return dataValue.Magnitude; }).Median().Average();
-            //lastElement.Angle = phasorValues.Source.Select(dataValue => { return dataValue.Angle; }).Median().Average();
+            double lastTime = 0.0D;
+            string lastMagnitudeTarget = null;
+            string lastAngleTarget = null;
+            MeasurementStateFlags lastFlags = 0;
 
-            //// Set Values
-            //string[] labels = phasorValues.Target.Split(';');
-            //phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
-            //phasorValues.Source = Enumerable.Repeat(lastElement, 1);
+            // Immediately load values in-memory only enumerating data source once
+            foreach (PhasorValue dataValue in GetDataSourceValues(parameters))
+            {
+                magnitudes.Add(dataValue.Magnitude);
+                angles.Add(dataValue.Angle);
 
-            //return phasorValues;
-            return null;
+                lastTime = dataValue.Time;
+                lastMagnitudeTarget = dataValue.MagnitudeTarget;
+                lastAngleTarget = dataValue.AngleTarget;
+                lastFlags = dataValue.Flags;
+            }
+
+            if (magnitudes.Count == 0)
+                yield break;
+
+            double[] magnitudeMedians = magnitudes.OrderBy(value => value).Median();
+            double[] angleMedians = angles.OrderBy(value => value).Median();
+
+            double magnitudeMedian = magnitudeMedians.Last();
+            double angleMedian = angleMedians.Last();
+
+            // Median can return two values if there is an even number of values
+            if (magnitudeMedians.Length > 1)
+                magnitudeMedian = magnitudeMedians[0] + (magnitudeMedians[1] - magnitudeMedians[0]) / 2.0D;
+
+            if (angleMedians.Length > 1)
+                angleMedian = angleMedians[0] + (angleMedians[1] - angleMedians[0]) / 2.0D;
+
+            // Return immediate enumeration of computed values
+            yield return new PhasorValue()
+            {
+                Magnitude = magnitudeMedian,
+                Angle = angleMedian,
+                Time = lastTime,
+                MagnitudeTarget = lastMagnitudeTarget,
+                AngleTarget = lastAngleTarget,
+                Flags = lastFlags
+            };
         }
     }
 }

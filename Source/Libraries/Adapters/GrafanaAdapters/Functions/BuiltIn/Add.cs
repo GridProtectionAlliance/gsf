@@ -26,9 +26,6 @@ public abstract class Add<T> : GrafanaFunctionBase<T> where T : struct, IDataSou
     public override string Description => "Returns a series of values that represent each of the values in the source series added with N.";
 
     /// <inheritdoc />
-    public override GroupOperations SupportedGroupOperations => GroupOperations.Standard | GroupOperations.Set;
-
-    /// <inheritdoc />
     public override GroupOperations PublishedGroupOperations => GroupOperations.Standard | GroupOperations.Set;
 
     /// <inheritdoc />
@@ -57,7 +54,7 @@ public abstract class Add<T> : GrafanaFunctionBase<T> where T : struct, IDataSou
                 Value = dataValue.Value + valueN
             };
 
-            // Returned deferred enumeration of computed values
+            // Return deferred enumeration of computed values
             foreach (DataSourceValue dataValue in GetDataSourceValues(parameters).Select(transposeCompute))
                 yield return dataValue;
         }
@@ -78,7 +75,7 @@ public abstract class Add<T> : GrafanaFunctionBase<T> where T : struct, IDataSou
                 Angle = dataValue.Angle + valueN
             };
 
-            // Returned deferred enumeration of computed values
+            // Return deferred enumeration of computed values
             foreach (PhasorValue dataValue in GetDataSourceValues(parameters).Select(transposeCompute))
                 yield return dataValue;
         }

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
 using GrafanaAdapters.DataSources;
+using GSF.Collections;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
 
@@ -31,18 +32,8 @@ public abstract class Distinct<T> : GrafanaFunctionBase<T> where T : struct, IDa
         /// <inheritdoc />
         public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
         {
-            //// Get Values
-            //DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
-
-            //// Compute
-            //IEnumerable<DataSourceValue> distinctValues = dataSourceValues.Source.GroupBy(dataValue => dataValue.Value).Select(group => group.First());
-
-            //// Set Values
-            //dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
-            //dataSourceValues.Source = distinctValues;
-
-            //return dataSourceValues;
-            return null;
+            // Return deferred enumeration of distinct values
+            return GetDataSourceValues(parameters).DistinctBy(dataValue => dataValue.Value);
         }
     }
 
@@ -52,19 +43,8 @@ public abstract class Distinct<T> : GrafanaFunctionBase<T> where T : struct, IDa
         /// <inheritdoc />
         public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
         {
-            //// Get Values
-            //DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
-
-            //// Compute
-            //IEnumerable<PhasorValue> distinctValues = phasorValues.Source.GroupBy(dataValue => dataValue.Magnitude).Select(group => group.First());
-
-            //// Set Values
-            //string[] labels = phasorValues.Target.Split(';');
-            //phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
-            //phasorValues.Source = distinctValues;
-
-            //return phasorValues;
-            return null;
+            // Return deferred enumeration of distinct magnitudes
+            return GetDataSourceValues(parameters).DistinctBy(dataValue => dataValue.Magnitude);
         }
     }
 }

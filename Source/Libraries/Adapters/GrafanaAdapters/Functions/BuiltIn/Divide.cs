@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using GrafanaAdapters.DataSources;
 
@@ -25,9 +26,6 @@ public abstract class Divide<T> : GrafanaFunctionBase<T> where T : struct, IData
     public override string Description => "Returns a series of values that represent each of the values in the source series divided with N.";
 
     /// <inheritdoc />
-    public override GroupOperations SupportedGroupOperations => GroupOperations.Standard | GroupOperations.Set;
-
-    /// <inheritdoc />
     public override GroupOperations PublishedGroupOperations => GroupOperations.Standard | GroupOperations.Set;
 
     /// <inheritdoc />
@@ -48,25 +46,17 @@ public abstract class Divide<T> : GrafanaFunctionBase<T> where T : struct, IData
         /// <inheritdoc />
         public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
         {
-            //// Get Values
-            //double value = (parameters[0] as IParameter<double>).Value;
-            //DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
+            double valueN = parameters.Value<double>(0);
 
-            //// Compute
-            //IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source.Select(dataSourceValue =>
-            //{
-            //    DataSourceValue transformedValue = dataSourceValue;
-            //    transformedValue.Value /= value;
+            // Transpose computed value
+            DataSourceValue transposeCompute(DataSourceValue dataValue) => dataValue with
+            {
+                Value = dataValue.Value / valueN
+            };
 
-            //    return transformedValue;
-            //});
-
-            //// Set Values
-            //dataSourceValues.Target = $"{dataSourceValues.Target}/{value}";
-            //dataSourceValues.Source = transformedDataSourceValues;
-
-            //return dataSourceValues;
-            return null;
+            // Return deferred enumeration of computed values
+            foreach (DataSourceValue dataValue in GetDataSourceValues(parameters).Select(transposeCompute))
+                yield return dataValue;
         }
     }
 
@@ -76,26 +66,18 @@ public abstract class Divide<T> : GrafanaFunctionBase<T> where T : struct, IData
         /// <inheritdoc />
         public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
         {
-            //// Get Values
-            //double value = (parameters[0] as IParameter<double>).Value;
-            //DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
+            double valueN = parameters.Value<double>(0);
 
-            //// Compute
-            //IEnumerable<PhasorValue> transformedPhasorValues = phasorValues.Source.Select(phasorValue =>
-            //{
-            //    PhasorValue transformedValue = phasorValue;
-            //    transformedValue.Magnitude /= value;
+            // Transpose computed value
+            PhasorValue transposeCompute(PhasorValue dataValue) => dataValue with
+            {
+                Magnitude = dataValue.Magnitude / valueN,
+                Angle = dataValue.Angle / valueN
+            };
 
-            //    return transformedValue;
-            //});
-
-            //// Set Values
-            //string[] labels = phasorValues.Target.Split(';');
-            //phasorValues.Target = $"{labels[0]}/{value};{labels[1]}/{value}";
-            //phasorValues.Source = transformedPhasorValues;
-
-            //return phasorValues;
-            return null;
+            // Return deferred enumeration of computed values
+            foreach (PhasorValue dataValue in GetDataSourceValues(parameters).Select(transposeCompute))
+                yield return dataValue;
         }
     }
 }

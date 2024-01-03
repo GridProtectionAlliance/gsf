@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using GrafanaAdapters.DataSources;
+using GSF.TimeSeries;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
 
@@ -28,19 +30,26 @@ public abstract class Count<T> : GrafanaFunctionBase<T> where T : struct, IDataS
         /// <inheritdoc />
         public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
         {
-            //// Get Values
-            //DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
+            double lastTime = 0.0D;
+            string lastTarget = null;
+            MeasurementStateFlags lastFlags = 0;
 
-            //// Compute
-            //DataSourceValue lastElement = dataSourceValues.Source.Last();
-            //lastElement.Value = dataSourceValues.Source.Count();
+            IEnumerable<double> trackedValues = GetDataSourceValues(parameters).Select(dataValue =>
+            {
+                lastTime = dataValue.Time;
+                lastTarget = dataValue.Target;
+                lastFlags = dataValue.Flags;
+                return dataValue.Value;
+            });
 
-            //// Set Values
-            //dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
-            //dataSourceValues.Source = Enumerable.Repeat(lastElement, 1);
-
-            //return dataSourceValues;
-            return null;
+            // Return immediate enumeration of computed values
+            yield return new DataSourceValue()
+            {
+                Value = trackedValues.Count(),
+                Time = lastTime,
+                Target = lastTarget,
+                Flags = lastFlags
+            };
         }
     }
 
@@ -50,21 +59,33 @@ public abstract class Count<T> : GrafanaFunctionBase<T> where T : struct, IDataS
         /// <inheritdoc />
         public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
         {
-            //// Get Values
-            //DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
+            double lastTime = 0.0D;
+            string lastMagnitudeTarget = null;
+            string lastAngleTarget = null;
+            MeasurementStateFlags lastFlags = 0;
 
-            //// Compute
-            //PhasorValue lastElement = phasorValues.Source.Last();
-            //lastElement.Magnitude = phasorValues.Source.Count();
-            //lastElement.Angle = phasorValues.Source.Count();
+            IEnumerable<double> trackedValues = GetDataSourceValues(parameters).Select(dataValue =>
+            {
+                lastTime = dataValue.Time;
+                lastMagnitudeTarget = dataValue.MagnitudeTarget;
+                lastAngleTarget = dataValue.AngleTarget;
+                lastFlags = dataValue.Flags;
+                return dataValue.Magnitude;
+            });
 
-            //// Set Values
-            //string[] labels = phasorValues.Target.Split(';');
-            //phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
-            //phasorValues.Source = Enumerable.Repeat(lastElement, 1);
+            // Only count once
+            int count = trackedValues.Count();
 
-            //return phasorValues;
-            return null;
+            // Return immediate enumeration of computed values
+            yield return new PhasorValue()
+            {
+                Magnitude = count,
+                Angle = count,
+                Time = lastTime,
+                MagnitudeTarget = lastMagnitudeTarget,
+                AngleTarget = lastAngleTarget,
+                Flags = lastFlags
+            };
         }
     }
 }

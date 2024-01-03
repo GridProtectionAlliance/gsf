@@ -1,6 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using GrafanaAdapters.DataSources;
+using GSF.Collections;
+using GSF.TimeSeries;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
 
@@ -22,40 +25,15 @@ public abstract class Mode<T> : GrafanaFunctionBase<T> where T : struct, IDataSo
     /// <inheritdoc />
     public override string Description => "Returns a single value that represents the mode of the values in the source series.";
 
-    //private static double CalculateMode(IEnumerable<double> values)
-    //{
-    //    if (!values.Any())
-    //        return 0.0;
-
-    //    var groupedValues = values
-    //        .GroupBy(v => v)
-    //        .Select(group => new { Value = group.Key, Count = group.Count() })
-    //        .ToList();
-
-    //    int maxCount = groupedValues.Max(g => g.Count);
-
-    //    return groupedValues.First(g => g.Count == maxCount).Value;
-    //}
-
     /// <inheritdoc />
     public class ComputeDataSourceValue : Mode<DataSourceValue>
     {
         /// <inheritdoc />
         public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
         {
-            //// Get Values
-            //DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
-
-            //// Compute
-            //DataSourceValue lastElement = dataSourceValues.Source.Last();
-            //lastElement.Value = CalculateMode(dataSourceValues.Source.Select(pv => pv.Value));
-
-            //// Set 
-            //dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
-            //dataSourceValues.Source = Enumerable.Repeat(lastElement, 1);
-
-            //return dataSourceValues;
-            return null;
+            // Immediately load values in-memory only enumerating data source once
+            DataSourceValue[] values = GetDataSourceValues(parameters).ToArray();
+            yield return values.MajorityBy(values.Last(), dataValue => dataValue.Value, false);
         }
     }
 
@@ -65,23 +43,42 @@ public abstract class Mode<T> : GrafanaFunctionBase<T> where T : struct, IDataSo
         /// <inheritdoc />
         public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
         {
-            //// Get Values
-            //DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
+            List<double> magnitudes = new();
+            List<double> angles = new();
 
-            //// Compute
-            //PhasorValue lastElement = phasorValues.Source.Last();
-            //lastElement.Magnitude = CalculateMode(phasorValues.Source.Select(pv => pv.Magnitude));
-            //lastElement.Angle = CalculateMode(phasorValues.Source.Select(pv => pv.Angle));
+            double lastTime = 0.0D;
+            string lastMagnitudeTarget = null;
+            string lastAngleTarget = null;
+            MeasurementStateFlags lastFlags = 0;
 
+            // Immediately load values in-memory only enumerating data source once
+            foreach (PhasorValue dataValue in GetDataSourceValues(parameters))
+            {
+                magnitudes.Add(dataValue.Magnitude);
+                angles.Add(dataValue.Angle);
 
-            //// Set Values
-            //string[] labels = phasorValues.Target.Split(';');
-            //phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
-            //phasorValues.Source = Enumerable.Repeat(lastElement, 1);
-            //;
+                lastTime = dataValue.Time;
+                lastMagnitudeTarget = dataValue.MagnitudeTarget;
+                lastAngleTarget = dataValue.AngleTarget;
+                lastFlags = dataValue.Flags;
+            }
 
-            //return phasorValues;
-            return null;
+            if (magnitudes.Count == 0)
+                yield break;
+
+            double magnitudeMode = magnitudes.Majority(false);
+            double angleMode = angles.Majority(false);
+
+            // Return immediate enumeration of computed values
+            yield return new PhasorValue()
+            {
+                Magnitude = magnitudeMode,
+                Angle = angleMode,
+                Time = lastTime,
+                MagnitudeTarget = lastMagnitudeTarget,
+                AngleTarget = lastAngleTarget,
+                Flags = lastFlags
+            };
         }
     }
 }

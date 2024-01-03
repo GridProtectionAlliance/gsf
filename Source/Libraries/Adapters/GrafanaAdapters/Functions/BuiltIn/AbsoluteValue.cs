@@ -28,9 +28,6 @@ public abstract class AbsoluteValue<T> : GrafanaFunctionBase<T> where T : struct
     public override string[] Aliases => new[] { "Abs" };
 
     /// <inheritdoc />
-    public override GroupOperations SupportedGroupOperations => GroupOperations.Standard | GroupOperations.Set;
-
-    /// <inheritdoc />
     public override GroupOperations PublishedGroupOperations => GroupOperations.Standard | GroupOperations.Set;
 
     /// <inheritdoc />
@@ -45,7 +42,7 @@ public abstract class AbsoluteValue<T> : GrafanaFunctionBase<T> where T : struct
                 Value = Math.Abs(dataValue.Value)
             };
 
-            // Returned deferred enumeration of computed values
+            // Return deferred enumeration of computed values
             foreach (DataSourceValue dataValue in GetDataSourceValues(parameters).Select(transposeCompute))
                 yield return dataValue;
         }
@@ -64,7 +61,7 @@ public abstract class AbsoluteValue<T> : GrafanaFunctionBase<T> where T : struct
                 Angle = Math.Abs(dataValue.Angle),
             };
 
-            // Returned deferred enumeration of computed values
+            // Return deferred enumeration of computed values
             foreach (PhasorValue dataValue in GetDataSourceValues(parameters).Select(transposeCompute))
                 yield return dataValue;
         }

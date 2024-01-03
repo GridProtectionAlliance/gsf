@@ -37,6 +37,7 @@ using GrafanaAdapters.Model.MetaData;
 using GSF;
 using GSF.Data;
 using GSF.Data.Model;
+using GSF.TimeSeries.Model;
 using Newtonsoft.Json;
 using Common = GSF.Common;
 
@@ -296,7 +297,7 @@ partial class GrafanaDataSourceBase
         {
             using AdoDataConnection connection = new("systemSettings");
 
-            IEnumerable<GSF.TimeSeries.Model.Device> groups = (new TableOperations<GSF.TimeSeries.Model.Device>(connection)).QueryRecordsWhere("AccessID = -99999");
+            IEnumerable<Device> groups = new TableOperations<Device>(connection).QueryRecordsWhere("AccessID = -99999");
 
             return groups.Select(item => new DeviceGroup
             {

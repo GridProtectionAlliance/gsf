@@ -28,20 +28,26 @@ public abstract class Range<T> : GrafanaFunctionBase<T> where T : struct, IDataS
         /// <inheritdoc />
         public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
         {
-            //// Get Values
-            //DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
+            DataSourceValue rangeMin = new() { Value = double.MaxValue };
+            DataSourceValue rangeMax = new() { Value = double.MinValue };
 
-            //// Compute
-            //IEnumerable<DataSourceValue> orderedValues = dataSourceValues.Source.OrderBy(dataValue => dataValue.Value);
-            //DataSourceValue lastElement = dataSourceValues.Source.Last();
-            //lastElement.Value = orderedValues.Last().Value - orderedValues.First().Value;
+            // Immediately enumerate values to find range
+            foreach (DataSourceValue dataValue in GetDataSourceValues(parameters))
+            {
+                if (dataValue.Value <= rangeMin.Value)
+                    rangeMin = dataValue;
 
-            //// Set Values
-            //dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
-            //dataSourceValues.Source = Enumerable.Repeat(lastElement, 1);
+                if (dataValue.Value >= rangeMax.Value)
+                    rangeMax = dataValue;
+            }
 
-            //return dataSourceValues;
-            return null;
+            // Do not return local default value
+            if (rangeMin.Time > 0.0D && rangeMax.Time > 0.0D)
+            {
+                DataSourceValue result = rangeMax;
+                result.Value = rangeMax.Value - rangeMin.Value;
+                yield return result;
+            }
         }
     }
 
@@ -51,24 +57,26 @@ public abstract class Range<T> : GrafanaFunctionBase<T> where T : struct, IDataS
         /// <inheritdoc />
         public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
         {
-            //// Get Values
-            //DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
+            PhasorValue rangeMin = new() { Magnitude = double.MaxValue };
+            PhasorValue rangeMax = new() { Magnitude = double.MinValue };
 
-            //// Compute
-            //IEnumerable<PhasorValue> orderedMag = phasorValues.Source.OrderBy(dataValue => dataValue.Magnitude);
-            //IEnumerable<PhasorValue> orderedAng = phasorValues.Source.OrderBy(dataValue => dataValue.Angle);
+            // Immediately enumerate values to find range - magnitude only
+            foreach (PhasorValue dataValue in GetDataSourceValues(parameters))
+            {
+                if (dataValue.Magnitude <= rangeMin.Magnitude)
+                    rangeMin = dataValue;
 
-            //PhasorValue lastElement = phasorValues.Source.Last();
-            //lastElement.Magnitude = orderedMag.Last().Magnitude - orderedMag.First().Magnitude;
-            //lastElement.Angle = orderedAng.Last().Angle - orderedAng.First().Angle;
+                if (dataValue.Magnitude >= rangeMax.Magnitude)
+                    rangeMax = dataValue;
+            }
 
-            //// Set Values
-            //string[] labels = phasorValues.Target.Split(';');
-            //phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
-            //phasorValues.Source = Enumerable.Repeat(lastElement, 1);
-
-            //return phasorValues;
-            return null;
+            // Do not return local default value
+            if (rangeMin.Time > 0.0D && rangeMax.Time > 0.0D)
+            {
+                PhasorValue result = rangeMax;
+                result.Magnitude = rangeMax.Magnitude - rangeMin.Magnitude;
+                yield return result;
+            }
         }
     }
 }

@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using GrafanaAdapters.DataSources;
 
@@ -26,9 +28,6 @@ public abstract class Ceiling<T> : GrafanaFunctionBase<T> where T : struct, IDat
     public override string[] Aliases => new[] { "Ceil" };
 
     /// <inheritdoc />
-    public override GroupOperations SupportedGroupOperations => GroupOperations.Standard | GroupOperations.Set;
-
-    /// <inheritdoc />
     public override GroupOperations PublishedGroupOperations => GroupOperations.Standard | GroupOperations.Set;
 
     /// <inheritdoc />
@@ -37,24 +36,15 @@ public abstract class Ceiling<T> : GrafanaFunctionBase<T> where T : struct, IDat
         /// <inheritdoc />
         public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
         {
-            //// Get Values
-            //DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
+            // Transpose computed value
+            DataSourceValue transposeCompute(DataSourceValue dataValue) => dataValue with
+            {
+                Value = Math.Ceiling(dataValue.Value)
+            };
 
-            //// Compute
-            //IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source.Select(dataSourceValue =>
-            //{
-            //    DataSourceValue transformedValue = dataSourceValue;
-            //    transformedValue.Value = Math.Ceiling(transformedValue.Value);
-
-            //    return transformedValue;
-            //});
-
-            //// Set Values
-            //dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
-            //dataSourceValues.Source = transformedDataSourceValues;
-
-            //return dataSourceValues;
-            return null;
+            // Return deferred enumeration of computed values
+            foreach (DataSourceValue dataValue in GetDataSourceValues(parameters).Select(transposeCompute))
+                yield return dataValue;
         }
     }
 
@@ -64,26 +54,16 @@ public abstract class Ceiling<T> : GrafanaFunctionBase<T> where T : struct, IDat
         /// <inheritdoc />
         public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
         {
-            //// Get Values
-            //DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
+            // Transpose computed value
+            PhasorValue transposeCompute(PhasorValue dataValue) => dataValue with
+            {
+                Magnitude = Math.Ceiling(dataValue.Magnitude),
+                Angle = Math.Ceiling(dataValue.Angle),
+            };
 
-            //// Compute
-            //IEnumerable<PhasorValue> transformedPhasorValues = phasorValues.Source.Select(phasorValue =>
-            //{
-            //    PhasorValue transformedValue = phasorValue;
-            //    transformedValue.Magnitude = Math.Ceiling(transformedValue.Magnitude);
-            //    transformedValue.Angle = Math.Ceiling(transformedValue.Angle);
-
-            //    return transformedValue;
-            //});
-
-            //// Set Values
-            //string[] labels = phasorValues.Target.Split(';');
-            //phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
-            //phasorValues.Source = transformedPhasorValues;
-
-            //return phasorValues;
-            return null;
+            // Return deferred enumeration of computed values
+            foreach (PhasorValue dataValue in GetDataSourceValues(parameters).Select(transposeCompute))
+                yield return dataValue;
         }
     }
 }

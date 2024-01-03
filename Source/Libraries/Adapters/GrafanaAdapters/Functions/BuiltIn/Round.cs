@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using GrafanaAdapters.DataSources;
 
@@ -24,9 +26,6 @@ public abstract class Round<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     public override string Description => "Returns a series of values that represent the rounded value, with N fractional digits, of each of the values in the source series.";
 
     /// <inheritdoc />
-    public override GroupOperations SupportedGroupOperations => GroupOperations.Standard | GroupOperations.Set;
-
-    /// <inheritdoc />
     public override GroupOperations PublishedGroupOperations => GroupOperations.Standard | GroupOperations.Set;
 
     /// <inheritdoc />
@@ -47,25 +46,17 @@ public abstract class Round<T> : GrafanaFunctionBase<T> where T : struct, IDataS
         /// <inheritdoc />
         public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
         {
-            //// Get Values
-            //DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
-            //int numberDecimals = (parameters[1] as IParameter<int>).Value;
+            int valueN = parameters.ParsedCount == 0 ? 0 : parameters.Value<int>(0);
 
-            //// Compute
-            //IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source.Select(dataSourceValue =>
-            //{
-            //    DataSourceValue transformedValue = dataSourceValue;
-            //    transformedValue.Value = Math.Round(transformedValue.Value, numberDecimals);
+            // Transpose computed value
+            DataSourceValue transposeCompute(DataSourceValue dataValue) => dataValue with
+            {
+                Value = Math.Round(dataValue.Value, valueN)
+            };
 
-            //    return transformedValue;
-            //});
-
-            //// Set Values
-            //dataSourceValues.Target = $"{Name}({dataSourceValues.Target},{numberDecimals})";
-            //dataSourceValues.Source = transformedDataSourceValues;
-
-            //return dataSourceValues;
-            return null;
+            // Return deferred enumeration of computed values
+            foreach (DataSourceValue dataValue in GetDataSourceValues(parameters).Select(transposeCompute))
+                yield return dataValue;
         }
     }
 
@@ -75,27 +66,18 @@ public abstract class Round<T> : GrafanaFunctionBase<T> where T : struct, IDataS
         /// <inheritdoc />
         public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
         {
-            //// Get Values
-            //DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
-            //int numberDecimals = (parameters[1] as IParameter<int>).Value;
+            int valueN = parameters.ParsedCount == 0 ? 0 : parameters.Value<int>(0);
 
-            //// Compute
-            //IEnumerable<PhasorValue> transformedPhasorValues = phasorValues.Source.Select(phasorValue =>
-            //{
-            //    PhasorValue transformedValue = phasorValue;
-            //    transformedValue.Magnitude = Math.Round(transformedValue.Magnitude, numberDecimals);
-            //    transformedValue.Angle = Math.Round(transformedValue.Angle, numberDecimals);
+            // Transpose computed value
+            PhasorValue transposeCompute(PhasorValue dataValue) => dataValue with
+            {
+                Magnitude = Math.Round(dataValue.Magnitude, valueN),
+                Angle = Math.Round(dataValue.Angle, valueN)
+            };
 
-            //    return transformedValue;
-            //});
-
-            //// Set Values
-            //string[] labels = phasorValues.Target.Split(';');
-            //phasorValues.Target = $"{Name}({labels[0]},{numberDecimals});{Name}({labels[1]},{numberDecimals})";
-            //phasorValues.Source = transformedPhasorValues;
-
-            //return phasorValues;
-            return null;
+            // Return deferred enumeration of computed values
+            foreach (PhasorValue dataValue in GetDataSourceValues(parameters).Select(transposeCompute))
+                yield return dataValue;
         }
     }
 }
