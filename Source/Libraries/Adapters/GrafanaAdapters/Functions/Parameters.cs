@@ -32,8 +32,20 @@ namespace GrafanaAdapters.Functions;
 /// Represents a collection of mutable parameters.
 /// </summary>
 /// <remarks>
-/// New instances of this class should be created by using the
-/// <see cref="ParameterDefinitions.CreateParameters"/> method.
+/// <para>
+/// New instances of this class should be created by using the <see cref="ParameterDefinitions.CreateParameters"/> method.
+/// </para>
+/// <para>
+/// This collection holds a distinct set of parameters generated for each function call, ensuring thread-safe operation
+/// when multiple threads execute the same function simultaneously. The <see cref="ParameterDefinitions"/> class outlines
+/// all possible parameters for a function, both required and optional, effectively determining its signature. Parameters
+/// in this collection represent the values extracted from the user-provided function expression and, when presented to a
+/// function, have already been validated and parsed by type. Additionally, the class provides access to the data source
+/// values expression; function implementations can call <see cref="GrafanaFunctionBase{T}.GetDataSourceValues"/> to get
+/// current data source values. The parameters in this collection are mutable, implying ownership by the function, and
+/// can be safely modified as needed. To identify which optional parameters have been parsed and are available, refer to
+/// the <see cref="ParsedCount"/> property.
+/// </para>
 /// </remarks>
 public class Parameters : IList<IMutableParameter>
 {
