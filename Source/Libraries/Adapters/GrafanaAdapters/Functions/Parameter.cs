@@ -32,11 +32,16 @@ namespace GrafanaAdapters.Functions;
 /// <typeparam name="T">The type of the parameter.</typeparam>
 internal class Parameter<T> : IMutableParameter<T>
 {
+    private readonly Func<string, (object, bool)> m_parse;
+
     // Create a new mutable parameter from its definition.
     public Parameter(ParameterDefinition<T> definition)
     {
         Definition = definition;
         Value = definition.Default;
+        
+        if (Definition.Parse is not null) 
+            m_parse = value => Definition.Parse(value);
     }
 
     public string Name => Definition.Name;
@@ -63,6 +68,10 @@ internal class Parameter<T> : IMutableParameter<T>
     public Type Type => Definition.Type;
 
     public bool IsDefinition => false;
+
+    public Func<string, (T, bool)> Parse => Definition.Parse;
+
+    Func<string, (object, bool)> IParameter.Parse => m_parse;
 
     IMutableParameter<T> IParameter<T>.CreateParameter()
     {

@@ -65,6 +65,14 @@ public interface IParameter
     object Default { get; }
 
     /// <summary>
+    /// Gets a custom parsing function that converts string into target type.
+    /// </summary>
+    /// <remarks>
+    /// When defined, this function is used to override default parsing behavior.
+    /// </remarks>
+    public Func<string, (object, bool)> Parse { get; }
+
+    /// <summary>
     /// Creates a new mutable parameter from its definition.
     /// </summary>
     /// <returns>New mutable parameter.</returns>
@@ -81,6 +89,14 @@ public interface IParameter<T> : IParameter
     /// Gets default typed value of the parameter.
     /// </summary>
     new T Default { get; }
+
+    /// <summary>
+    /// Gets a custom parsing function that converts string into target type.
+    /// </summary>
+    /// <remarks>
+    /// When defined, this function is used to override default parsing behavior.
+    /// </remarks>
+    new Func<string, (T, bool)> Parse { get; }
 
     /// <summary>
     /// Creates a new typed mutable parameter from its definition.

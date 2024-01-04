@@ -78,6 +78,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataSources\DataSourceCache.cs" />
     <Compile Include="DataSources\MetadataExtensions.cs" />
     <Compile Include="Functions\ParameterParsing.cs" />
     <Compile Include="Functions\Parameters.cs" />
@@ -114,7 +115,6 @@
     <Compile Include="Functions\Common.cs" />
     <Compile Include="Functions\IGrafanaFunction.cs" />
     <Compile Include="Functions\TargetTimeUnit.cs" />
-    <Compile Include="Functions\TimeConversion.cs" />
     <Compile Include="Functions\BuiltIn\AbsoluteValue.cs" />
     <Compile Include="Functions\BuiltIn\Add.cs" />
     <Compile Include="Functions\BuiltIn\Average.cs" />

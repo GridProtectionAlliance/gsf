@@ -46,6 +46,9 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
     readonly string IDataSourceValue.Target => MagnitudeTarget;
 
     /// <inheritdoc />
+    readonly double IDataSourceValue.Value => Magnitude;
+
+    /// <inheritdoc />
     readonly double IDataSourceValue.Time => Time;
 
     /// <inheritdoc />

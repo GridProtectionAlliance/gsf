@@ -316,7 +316,7 @@ partial class GrafanaDataSourceBase
 
             return !settings.ContainsKey("DeviceIDs") ?
                 new List<int>() :
-                settings["DeviceIDs"].Split(',').Select(item => ParseInt(item));
+                settings["DeviceIDs"].Split(',').Select(int.Parse);
         }
     }
 

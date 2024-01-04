@@ -35,6 +35,9 @@ namespace GrafanaAdapters.DataSources;
 public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
 {
     /// <inheritdoc />
+    readonly double IDataSourceValue.Value => Value;
+
+    /// <inheritdoc />
     readonly string IDataSourceValue.Target => Target;
 
     /// <inheritdoc />

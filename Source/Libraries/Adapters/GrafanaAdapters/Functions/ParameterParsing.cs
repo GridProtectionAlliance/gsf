@@ -216,6 +216,21 @@ internal static class ParameterParsing
                 value = lookup.value;
         }
 
+        object result;
+
+        // Check if parameter has a custom parse operation
+        if (parameter.Parse is not null)
+        {
+            (result, bool success) = parameter.Parse(value);
+
+            // If custom parsing fails, continue with default parsing
+            if (success)
+            {
+                parameter.Value = result;
+                return;
+            }
+        }
+
         // String type
         if (parameter.Type == typeof(string))
         {
@@ -223,17 +238,12 @@ internal static class ParameterParsing
             return;
         }
 
-        // Time Unit - enum has a custom parse operation
-        if (parameter.Type == typeof(TargetTimeUnit))
+        // Boolean type - use custom boolean parsing extension
+        if (parameter.Type == typeof(bool))
         {
-            parameter.Value = TargetTimeUnit.TryParse(value, out TargetTimeUnit timeUnit) ? 
-                timeUnit : parameter.Default;
-
+            parameter.Value = value.ParseBoolean();
             return;
         }
-
-        // Other types
-        object result;
 
         // Attempt to convert to the parameter type
         if (value[0].IsNumeric())

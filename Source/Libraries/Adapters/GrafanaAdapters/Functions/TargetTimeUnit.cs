@@ -49,37 +49,28 @@ public class TargetTimeUnit
     /// Tries to parse a string representation of a time unit to a <see cref="TargetTimeUnit"/>.
     /// </summary>
     /// <param name="value">The string representation of the time unit to parse.</param>
-    /// <param name="targetTimeUnit">
-    /// When this method returns, contains the <see cref="TargetTimeUnit"/> equivalent
-    /// of the time unit contained in <paramref name="value"/>, if the conversion succeeded,
-    /// or null if the conversion failed. The conversion fails if the <paramref name="value"/>
-    /// is null or is not of the correct format. This parameter is passed uninitialized.
-    /// </param>
     /// <returns>
-    /// <c>true</c> if <paramref name="value"/> was converted successfully; otherwise, <c>false</c>.
+    /// Tuple containing the <see cref="TargetTimeUnit"/> and a flag indicating if the parse was successful.
     /// </returns>
-    public static bool TryParse(string value, out TargetTimeUnit targetTimeUnit)
+    /// <remarks>
+    /// If this method succeeds, return value contains the <see cref="TargetTimeUnit"/> equivalent
+    /// of the time unit contained in <paramref name="value"/>; otherwise, <c>null</c>if the
+    /// conversion failed. The conversion fails if the <paramref name="value"/> is null or is not
+    /// in the correct format.
+    /// </remarks>
+    public static (TargetTimeUnit, bool) Parse(string value)
     {
+        TargetTimeUnit targetTimeUnit;
+
         if (Enum.TryParse(value, true, out TimeUnit timeUnit))
-        {
-            targetTimeUnit = new TargetTimeUnit { Unit = timeUnit };
-            return true;
-        }
+            return (new TargetTimeUnit { Unit = timeUnit }, true);
 
-        switch (value?.ToLowerInvariant())
+        return value?.ToLowerInvariant() switch
         {
-            case "milliseconds":
-                targetTimeUnit = new TargetTimeUnit { Unit = TimeUnit.Seconds, Factor = SI.Milli };
-                return true;
-            case "microseconds":
-                targetTimeUnit = new TargetTimeUnit { Unit = TimeUnit.Seconds, Factor = SI.Micro };
-                return true;
-            case "nanoseconds":
-                targetTimeUnit = new TargetTimeUnit { Unit = TimeUnit.Seconds, Factor = SI.Nano };
-                return true;
-        }
-
-        targetTimeUnit = null;
-        return false;
+            "milliseconds" => (new TargetTimeUnit { Unit = TimeUnit.Seconds, Factor = SI.Milli }, true),
+            "microseconds" => (new TargetTimeUnit { Unit = TimeUnit.Seconds, Factor = SI.Micro }, true),
+            "nanoseconds" => (new TargetTimeUnit { Unit = TimeUnit.Seconds, Factor = SI.Nano }, true),
+            _ => (null, false)
+        };
     }
 }

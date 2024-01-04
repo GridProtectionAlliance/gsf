@@ -104,6 +104,19 @@ public class Parameters : IList<IMutableParameter>
     }
 
     /// <summary>
+    /// Gets value of parameter at specified index.
+    /// </summary>
+    /// <param name="index">Index of parameter to get.</param>
+    /// <returns>
+    /// The value of parameter at specified index.
+    /// </returns>
+    /// <exception cref="IndexOutOfRangeException">Index is out of range.</exception>
+    public object Value(int index)
+    {
+        return m_parameters[index].Value;
+    }
+
+    /// <summary>
     /// Gets typed value of parameter at specified index, if value can be cast as type.
     /// </summary>
     /// <typeparam name="T">The type of the parameter.</typeparam>
@@ -120,7 +133,24 @@ public class Parameters : IList<IMutableParameter>
     }
 
     /// <summary>
-    /// Gets typed value of parameter with specified name, if name is if found and value can be cast as type.
+    /// Gets value of parameter with specified name, if name is found.
+    /// </summary>
+    /// <param name="name">Name of parameter to get.</param>
+    /// <returns>
+    /// The value of parameter with the specified name if the parameter name can be found;
+    /// otherwise, <c>null</c>.
+    /// </returns>
+    /// <remarks>
+    /// Parameter name lookup dictionary is lazy initialized. Using index-based lookups is more efficient.
+    /// </remarks>
+    public object Value(string name)
+    {
+        return ParameterNameMap.TryGetValue(name, out IMutableParameter parameter) ?
+            parameter.Value : null;
+    }
+
+    /// <summary>
+    /// Gets typed value of parameter with specified name, if name is found and value can be cast as type.
     /// </summary>
     /// <typeparam name="T">The type of the parameter.</typeparam>
     /// <param name="name">Name of parameter to get.</param>

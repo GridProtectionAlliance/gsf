@@ -65,37 +65,74 @@ internal static class Common
         return Type.GetType(typeName);
     }
 
-    public static int ParseInt(string parameter, bool includeZero = true)
+    // Parses a sting as positive (> 0) integer or a percentage value of total
+    public static int ParseCount(string parameter, int total)
     {
+        int count;
+
+        if (total == 0)
+            return 0;
+
         parameter = parameter.Trim();
 
-        if (!int.TryParse(parameter, out int value))
-            throw new FormatException($"Could not parse '{parameter}' as an integer value.");
-
-        if (includeZero)
+        if (parameter.EndsWith("%"))
         {
-            if (value < 0)
-                throw new ArgumentOutOfRangeException($"Value '{parameter}' is less than zero.");
+            try
+            {
+                double percent = ParsePercentage(parameter, false);
+                count = (int)(total * (percent / 100.0D));
+
+                if (count == 0)
+                    count = 1;
+            }
+            catch
+            {
+                throw new ArgumentOutOfRangeException($"Could not parse '{parameter}' as a floating-point value or percentage is outside range of greater than 0 and less than or equal to 100.");
+            }
         }
         else
         {
-            if (value <= 0)
-                throw new ArgumentOutOfRangeException($"Value '{parameter}' is less than or equal to zero.");
+            if (parameter.Contains(".") && double.TryParse(parameter, out double result))
+            {
+                // Treat fractional numbers as a percentage of length
+                if (result is > 0.0D and < 1.0D)
+                    count = (int)(total * result);
+                else
+                    count = (int)result;
+            }
+            else
+            {
+                int.TryParse(parameter, out count);
+            }
         }
 
-        return value;
+        if (count < 1)
+            throw new ArgumentOutOfRangeException($"Count '{count}' is less than one.");
+
+        return count;
     }
 
-    public static double ParseFloat(string parameter, bool validateGTEZero = true)
+    public static double ParsePercentage(string parameter, bool includeZero = true)
     {
         parameter = parameter.Trim();
 
-        if (!double.TryParse(parameter, out double value))
+        if (parameter.EndsWith("%"))
+            parameter = parameter.Substring(0, parameter.Length - 1);
+
+        if (!double.TryParse(parameter, out double percent))
             throw new FormatException($"Could not parse '{parameter}' as a floating-point value.");
 
-        if (validateGTEZero && value < 0.0D)
-            throw new ArgumentOutOfRangeException($"Value '{parameter}' is less than zero.");
+        if (includeZero)
+        {
+            if (percent is < 0.0D or > 100.0D)
+                throw new ArgumentOutOfRangeException($"Percentage '{parameter}' is outside range of 0 to 100, inclusive.");
+        }
+        else
+        {
+            if (percent is <= 0.0D or > 100.0D)
+                throw new ArgumentOutOfRangeException($"Percentage '{parameter}' is outside range of greater than 0 and less than or equal to 100.");
+        }
 
-        return value;
+        return percent;
     }
 }

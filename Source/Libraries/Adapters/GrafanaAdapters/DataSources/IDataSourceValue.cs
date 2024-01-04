@@ -42,6 +42,14 @@ public interface IDataSourceValue
     string Target { get; }
 
     /// <summary>
+    /// Gets the value of data source value.
+    /// </summary>
+    /// <remarks>
+    /// If there is more than one value, this should be the primary value.
+    /// </remarks>
+    double Value { get; }
+
+    /// <summary>
     /// Gets timestamp, in Unix epoch milliseconds, of data source value.
     /// </summary>
     double Time { get; }
