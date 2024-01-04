@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using GrafanaAdapters.DataSources;
+using GSF.TimeSeries;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
 
@@ -31,27 +33,22 @@ public abstract class Difference<T> : GrafanaFunctionBase<T> where T : struct, I
         /// <inheritdoc />
         public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
         {
-            //// Get Values
-            //DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
+            DataSourceValue lastResult = new();
 
-            //// Compute
-            //double previousValue = dataSourceValues.Source.First().Value;
-            //IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source.Skip(1).Select(dataSourceValue =>
-            //{
-            //    DataSourceValue transformedValue = dataSourceValue;
+            // Transpose computed value
+            DataSourceValue transposeCompute(DataSourceValue dataValue) => dataValue with
+            {
+                Value = dataValue.Value - lastResult.Value
+            };
 
-            //    transformedValue.Value -= previousValue;
+            // Return deferred enumeration of computed values
+            foreach (DataSourceValue dataValue in GetDataSourceValues(parameters).Select(transposeCompute))
+            {
+                if (lastResult.Time > 0.0D)
+                    yield return dataValue;
 
-            //    previousValue = dataSourceValue.Value;
-            //    return transformedValue;
-            //});
-
-            //// Set Values
-            //dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
-            //dataSourceValues.Source = transformedDataSourceValues;
-
-            //return dataSourceValues;
-            return null;
+                lastResult = dataValue;
+            }
         }
     }
 
@@ -61,31 +58,23 @@ public abstract class Difference<T> : GrafanaFunctionBase<T> where T : struct, I
         /// <inheritdoc />
         public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
         {
-            //// Get Values
-            //DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
+            PhasorValue lastResult = new();
 
-            //// Compute
-            //double previousMag = phasorValues.Source.First().Magnitude;
-            //double previousAng = phasorValues.Source.First().Angle;
-            //IEnumerable<PhasorValue> transformedPhasorValues = phasorValues.Source.Skip(1).Select(phasorValue =>
-            //{
-            //    PhasorValue transformedValue = phasorValue;
+            // Transpose computed value
+            PhasorValue transposeCompute(PhasorValue dataValue) => dataValue with
+            {
+                Magnitude = dataValue.Magnitude - lastResult.Magnitude,
+                Angle = (dataValue.Angle + 180 - (lastResult.Angle + 180)) % 360 - 180
+            };
 
-            //    transformedValue.Magnitude -= previousMag;
-            //    transformedValue.Angle -= previousAng;
+            // Return deferred enumeration of computed values
+            foreach (PhasorValue dataValue in GetDataSourceValues(parameters).Select(transposeCompute))
+            {
+                if (lastResult.Time > 0.0D)
+                    yield return dataValue;
 
-            //    previousMag = phasorValue.Magnitude;
-            //    previousAng = phasorValue.Angle;
-            //    return transformedValue;
-            //});
-
-            //// Set Values
-            //string[] labels = phasorValues.Target.Split(';');
-            //phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
-            //phasorValues.Source = transformedPhasorValues;
-
-            //return phasorValues;
-            return null;
+                lastResult = dataValue;
+            }
         }
     }
 }

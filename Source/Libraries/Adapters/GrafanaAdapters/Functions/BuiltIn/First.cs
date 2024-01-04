@@ -1,6 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
+using System.Security.Cryptography;
 using System.Threading;
 using GrafanaAdapters.DataSources;
+using GSF.Drawing;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
 
@@ -16,7 +19,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Returns: Series of values.<br/>
 /// Example: <c>First(5%, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
 /// Variants: First<br/>
-/// Execution: Immediate in-memory array load.
+/// Execution: Immediate in-memory array load for values of N greater than 1; otherwise, immediate enumeration of one.
 /// </remarks>
 public abstract class First<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {
@@ -34,44 +37,9 @@ public abstract class First<T> : GrafanaFunctionBase<T> where T : struct, IDataS
             Name = "N",
             Default = "1",
             Description = "A integer value or percent representing number or % of elements to take.",
-            Required = true
+            Required = false
         },
     };
-
-    ///// Converts value or percent to the number of points selected
-    //private static int ConvertToValue(string rawValue, int numberPoints)
-    //{
-    //    try
-    //    {
-    //        //Percent
-    //        if (rawValue.EndsWith("%"))
-    //        {
-    //            double percent = Convert.ToDouble(rawValue.TrimEnd('%')) / 100;
-    //            if (percent < 0 || percent > 1)
-    //            {
-    //                throw new Exception($"Error {rawValue} out of bounds (0 - 100).");
-    //            }
-
-    //            return Convert.ToInt32(numberPoints * percent);
-    //        }
-    //        //Number
-    //        else
-    //        {
-    //            double value = Convert.ToDouble(rawValue);
-
-    //            //Between 0-1 so count as percent
-    //            if (value > 0 && value < 1)
-    //                return Convert.ToInt32(numberPoints * value);
-
-    //            return Convert.ToInt32(value);
-    //        }
-
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        throw new Exception($"Error converting {rawValue} to {typeof(double)}.", ex);
-    //    }
-    //}
 
     /// <inheritdoc />
     public class ComputeDataSourceValue : First<DataSourceValue>
@@ -79,24 +47,7 @@ public abstract class First<T> : GrafanaFunctionBase<T> where T : struct, IDataS
         /// <inheritdoc />
         public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
         {
-            //// Get Values
-            //string rawValue = (parameters[0] as IParameter<string>).Value;
-            //DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
-            //int numberRequested = ConvertToValue(rawValue, dataSourceValues.Source.Count());
-
-            //// Requested more than accessable
-            //if (numberRequested >= dataSourceValues.Source.Count())
-            //    numberRequested = dataSourceValues.Source.Count();
-
-            //// Compute
-            //IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source.OrderBy(dataSourceValue => dataSourceValue.Time).Take(numberRequested);
-
-            //// Set Values
-            //dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
-            //dataSourceValues.Source = transformedDataSourceValues;
-
-            //return dataSourceValues;
-            return null;
+            return ComputeFirst(parameters);
         }
     }
 
@@ -106,26 +57,38 @@ public abstract class First<T> : GrafanaFunctionBase<T> where T : struct, IDataS
         /// <inheritdoc />
         public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
         {
-            //// Get Values
-            //string rawValue = (parameters[0] as IParameter<string>).Value;
-            //DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
+            return ComputeFirst(parameters);
+        }
+    }
 
-            //int numberRequested = ConvertToValue(rawValue, phasorValues.Source.Count());
+    private static IEnumerable<T> ComputeFirst(Parameters parameters)
+    {
+        IEnumerable<T> source = GetDataSourceValues(parameters);
 
-            //// Requested more than accessable
-            //if (numberRequested >= phasorValues.Source.Count())
-            //    numberRequested = phasorValues.Source.Count();
+        if (parameters.ParsedCount == 0)
+        {
+            // Short cut for only getting first value
+            using IEnumerator<T> enumerator = source.GetEnumerator();
 
-            //// Compute
-            //IEnumerable<PhasorValue> transformedPhasorValues = phasorValues.Source.OrderBy(phasorValue => phasorValue.Time).Take(numberRequested);
+            if (enumerator.MoveNext())
+                yield return enumerator.Current;
+        }
+        else
+        {
+            // Immediately load values in-memory only enumerating data source once
+            T[] values = source.ToArray();
+            int length = values.Length;
 
-            //// Set Values
-            //string[] labels = phasorValues.Target.Split(';');
-            //phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
-            //phasorValues.Source = transformedPhasorValues;
+            if (length == 0)
+                yield break;
 
-            //return phasorValues;
-            return null;
+            int count = ParseCount(parameters.Value<string>(0), length);
+
+            if (count > length)
+                count = length;
+
+            for (int i = 0; i < count; i++)
+                yield return values[i];
         }
     }
 }

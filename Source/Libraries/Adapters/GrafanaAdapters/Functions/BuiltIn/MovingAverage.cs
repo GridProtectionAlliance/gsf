@@ -44,6 +44,7 @@ public abstract class MovingAverage<T> : GrafanaFunctionBase<T> where T : struct
         {
             Name = "units",
             Default = new TargetTimeUnit { Unit = TimeUnit.Seconds },
+            Parse = TargetTimeUnit.Parse,
             Description =
                 "Specifies the type of time units and must be one of the following: Seconds, Nanoseconds, Microseconds, Milliseconds, " +
                 "Minutes, Hours, Days, Weeks, Ke (i.e., traditional Chinese unit of decimal time), Ticks (i.e., 100-nanosecond intervals), PlanckTime or " +

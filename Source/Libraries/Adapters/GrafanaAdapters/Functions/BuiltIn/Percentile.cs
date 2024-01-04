@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using GrafanaAdapters.DataSources;
 
@@ -38,62 +40,45 @@ public abstract class Percentile<T> : GrafanaFunctionBase<T> where T : struct, I
         },
     };
 
-    //// Converts value or percent to the number of points selected
-    //private static double ConvertToValue(string rawValue)
-    //{
-    //    try
-    //    {
-    //        //Percent
-    //        if (rawValue.EndsWith("%"))
-    //            return Convert.ToDouble(rawValue.TrimEnd('%'));
-
-    //        //Number
-    //        return Convert.ToDouble(rawValue);
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        throw new Exception($"Error converting {rawValue} to {typeof(double)}.", ex);
-    //    }
-    //}
-
     /// <inheritdoc />
     public class ComputeDataSourceValue : Percentile<DataSourceValue>
     {
         /// <inheritdoc />
         public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
         {
-            //// Get Values
-            //string rawValue = (parameters[0] as IParameter<string>).Value;
-            //DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
-            //double percent = ConvertToValue(rawValue);
+            // Immediately load values in-memory only enumerating data source once
+            DataSourceValue[] values = GetDataSourceValues(parameters).ToArray();
 
-            //// Compute
-            //DataSourceValue selectedElement = dataSourceValues.Source.Last();
+            if (values.Length == 0)
+                yield break;
 
-            //if (percent <= 0)
-            //    selectedElement = dataSourceValues.Source.First();
-            //else
-            //{
-            //    List<DataSourceValue> values = dataSourceValues.Source.ToList();
-            //    double n = (dataSourceValues.Source.Count() - 1) * (percent / 100.0D) + 1.0D;
-            //    int k = (int)n;
-            //    if (k >= values.Count)
-            //        k = (values.Count - 1);
-            //    DataSourceValue kData = values[k];
-            //    double d = n - k;
-            //    double k0 = values[k - 1].Value;
-            //    double k1 = kData.Value;
+            Array.Sort(values, (a, b) => a.Value < b.Value ? -1 : a.Value > b.Value ? 1 : 0);
+            int count = values.Length;
 
-            //    selectedElement.Value = k0 + d * (k1 - k0);
-            //    selectedElement.Time = kData.Time;
-            //}
+            double percent = ParsePercentage(parameters.Value<string>(0));
 
-            //// Set Values
-            //dataSourceValues.Target = $"{Name}({dataSourceValues.Target})";
-            //dataSourceValues.Source = Enumerable.Repeat(selectedElement, 1);
+            switch (percent)
+            {
+                case 0.0D:
+                    yield return values.First();
+                    break;
+                case 100.0D:
+                    yield return values.Last();
+                    break;
+                default:
+                    double n = (count - 1) * (percent / 100.0D) + 1.0D;
+                    int k = (int)n;
+                    DataSourceValue kData = values[k];
+                    double d = n - k;
+                    double k0 = values[k - 1].Value;
+                    double k1 = kData.Value;
 
-            //return dataSourceValues;
-            return null;
+                    yield return kData with
+                    {
+                        Value = k0 + d * (k1 - k0)
+                    };
+                    break;
+            }
         }
     }
 
@@ -103,37 +88,39 @@ public abstract class Percentile<T> : GrafanaFunctionBase<T> where T : struct, I
         /// <inheritdoc />
         public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
         {
-            //// Get Values
-            //string rawValue = (parameters[0] as IParameter<string>).Value;
-            //DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
-            //double percent = ConvertToValue(rawValue);
+            // Immediately load values in-memory only enumerating data source once
+            PhasorValue[] values = GetDataSourceValues(parameters).ToArray();
 
-            //// Compute
-            //PhasorValue selectedElement = phasorValues.Source.Last();
-            //if (percent <= 0)
-            //    selectedElement = phasorValues.Source.First();
-            //else
-            //{
-            //    List<PhasorValue> values = phasorValues.Source.ToList();
-            //    double n = (phasorValues.Source.Count() - 1) * (percent / 100.0D) + 1.0D;
-            //    int k = (int)n;
-            //    PhasorValue kData = values[k];
-            //    double d = n - k;
-            //    double k0 = values[k - 1].Magnitude;
-            //    double k1 = kData.Magnitude;
+            if (values.Length == 0)
+                yield break;
 
-            //    selectedElement.Magnitude = k0 + d * (k1 - k0);
-            //    selectedElement.Angle = k0 + d * (k1 - k0);
-            //    selectedElement.Time = kData.Time;
-            //}
+            Array.Sort(values, (a, b) => a.Magnitude < b.Magnitude ? -1 : a.Magnitude > b.Magnitude ? 1 : 0);
+            int count = values.Length;
 
-            //// Set Values
-            //string[] labels = phasorValues.Target.Split(';');
-            //phasorValues.Target = $"{Name}({labels[0]});{Name}({labels[1]})";
-            //phasorValues.Source = Enumerable.Repeat(selectedElement, 1);
+            double percent = ParsePercentage(parameters.Value<string>(0));
 
-            //return phasorValues;
-            return null;
+            switch (percent)
+            {
+                case 0.0D:
+                    yield return values.First();
+                    break;
+                case 100.0D:
+                    yield return values.Last();
+                    break;
+                default:
+                    double n = (count - 1) * (percent / 100.0D) + 1.0D;
+                    int k = (int)n;
+                    PhasorValue kData = values[k];
+                    double d = n - k;
+                    double k0 = values[k - 1].Magnitude;
+                    double k1 = kData.Magnitude;
+
+                    yield return kData with
+                    {
+                        Magnitude = k0 + d * (k1 - k0)
+                    };
+                    break;
+            }
         }
     }
 }

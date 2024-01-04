@@ -25,6 +25,9 @@ public abstract class Count<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     public override string Description => "Returns a single value that is the count of the values in the source series.";
 
     /// <inheritdoc />
+    public override string[] Aliases => new[] { "Length" };
+
+    /// <inheritdoc />
     public class ComputeDataSourceValue : Count<DataSourceValue>
     {
         /// <inheritdoc />
