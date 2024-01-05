@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Collections.Generic;
 using System.Data;
 using GrafanaAdapters.Functions;
@@ -39,30 +40,30 @@ public interface IDataSourceValue
     /// <remarks>
     /// If data source value has multiple targets, this should be the primary target.
     /// </remarks>
-    string Target { get; }
+    string Target { get; init; }
 
     /// <summary>
     /// Gets the value of data source value.
     /// </summary>
     /// <remarks>
-    /// If there is more than one value, this should be the primary value.
+    /// If data source has more than one value, this should be the primary value.
     /// </remarks>
-    double Value { get; }
+    double Value { get; init; }
 
     /// <summary>
-    /// Gets timestamp, in Unix epoch milliseconds, of data source value.
+    /// Gets or sets timestamp, in Unix epoch milliseconds, of data source value.
     /// </summary>
-    double Time { get; }
+    double Time { get; init; }
+
+    /// <summary>
+    /// Gets flags of data source value.
+    /// </summary>
+    MeasurementStateFlags Flags { get; init; }
 
     /// <summary>
     /// Gets time-series array values of data source value, e.g., [Value, Time].
     /// </summary>
     double[] TimeSeriesValue { get; }
-
-    /// <summary>
-    /// Gets flags of data source value.
-    /// </summary>
-    MeasurementStateFlags Flags { get; }
 
     /// <summary>
     /// Looks up metadata for the specified target.
@@ -117,4 +118,12 @@ public interface IDataSourceValue<T> : IDataSourceValue where T : struct, IDataS
     /// Gets the parameter definition for data source values.
     /// </summary>
     ParameterDefinition<IEnumerable<T>> DataSourceValuesParameterDefinition { get; }
+
+    /// <summary>
+    /// Executes provided function for data source value(s), applying the results
+    /// to a copy of the data source value and returns the new result.
+    /// </summary>
+    /// <param name="function">Function to compute.</param>
+    /// <returns>Computed result.</returns>
+    T TransposeCompute(Func<double, double> function);
 }

@@ -66,7 +66,7 @@ internal static class Common
     }
 
     // Parses a sting as positive (> 0) integer or a percentage value of total
-    public static int ParseCount(string parameter, int total)
+    public static int ParseTotal(string parameter, int total)
     {
         int count;
 

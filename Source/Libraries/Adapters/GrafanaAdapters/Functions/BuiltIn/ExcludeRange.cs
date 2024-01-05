@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Threading;
+using System.Linq;
 using GrafanaAdapters.DataSources;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
@@ -64,53 +64,28 @@ public abstract class ExcludeRange<T> : GrafanaFunctionBase<T> where T : struct,
     };
 
     /// <inheritdoc />
+    public override IEnumerable<T> Compute(Parameters parameters)
+    {
+        double low = parameters.Value<double>(0);
+        double high = parameters.Value<double>(1);
+        bool lowInclusive = parameters.Value<bool>(2);
+        bool highInclusive = parameters.ParsedCount > 3 ? parameters.Value<bool>(3) : lowInclusive;
+
+        bool filterRange(T dataValue) =>
+            (lowInclusive ? dataValue.Value <= low : dataValue.Value < low) &&
+            (highInclusive ? dataValue.Value >= high : dataValue.Value > high);
+
+        return GetDataSourceValues(parameters).Where(filterRange);
+    }
+
+    /// <inheritdoc />
     public class ComputeDataSourceValue : ExcludeRange<DataSourceValue>
     {
-        /// <inheritdoc />
-        public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
-        {
-            //// Get Values
-            //double low = (parameters[0] as IParameter<double>).Value;
-            //double high = (parameters[1] as IParameter<double>).Value;
-            //DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[2] as IParameter<IDataSourceValueGroup>).Value;
-            //bool lowInclusive = (parameters[3] as IParameter<bool>).Value;
-            //bool highInclusive = (parameters[4] as IParameter<bool>).Value;
-
-            //// Compute
-            //IEnumerable<DataSourceValue> selectedValues = dataSourceValues.Source.Where(dataValue => (lowInclusive ? dataValue.Value <= low : dataValue.Value < low) || (highInclusive ? dataValue.Value >= high : dataValue.Value > high));
-
-            //// Set Values
-            //dataSourceValues.Target = $"{low},{high},{dataSourceValues.Target},{lowInclusive},{highInclusive}";
-            //dataSourceValues.Source = selectedValues;
-
-            //return dataSourceValues;
-            return null;
-        }
     }
 
     /// <inheritdoc />
     public class ComputePhasorValue : ExcludeRange<PhasorValue>
     {
-        /// <inheritdoc />
-        public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
-        {
-            //// Get Values
-            //double low = (parameters[0] as IParameter<double>).Value;
-            //double high = (parameters[1] as IParameter<double>).Value;
-            //DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[2] as IParameter<IDataSourceValueGroup>).Value;
-            //bool lowInclusive = (parameters[3] as IParameter<bool>).Value;
-            //bool highInclusive = (parameters[4] as IParameter<bool>).Value;
-
-            //// Compute
-            //IEnumerable<PhasorValue> selectedValues = phasorValues.Source.Where(phasorValue => (lowInclusive ? phasorValue.Magnitude <= low : phasorValue.Magnitude < low) || (highInclusive ? phasorValue.Magnitude >= high : phasorValue.Magnitude > high));
-
-            //// Set Values
-            //string[] labels = phasorValues.Target.Split(';');
-            //phasorValues.Target = $"{low},{high},{labels[0]},{lowInclusive},{highInclusive};{low},{high},{labels[1]},{lowInclusive},{highInclusive}";
-            //phasorValues.Source = selectedValues;
-
-            //return phasorValues;
-            return null;
-        }
+        // Operating on magnitude only
     }
 }

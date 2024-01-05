@@ -35,19 +35,41 @@ namespace GrafanaAdapters.DataSources;
 public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
 {
     /// <inheritdoc />
-    readonly double IDataSourceValue.Value => Value;
+    string IDataSourceValue.Target
+    {
+        readonly get => Target;
+        init => Target = value;
+    }
 
     /// <inheritdoc />
-    readonly string IDataSourceValue.Target => Target;
+    double IDataSourceValue.Value
+    {
+        readonly get => Value;
+        init => Value = value;
+    }
 
     /// <inheritdoc />
-    readonly double IDataSourceValue.Time => Time;
+    double IDataSourceValue.Time
+    {
+        readonly get => Time;
+        init => Time = value;
+    }
+
+    /// <inheritdoc />
+    MeasurementStateFlags IDataSourceValue.Flags
+    {
+        readonly get => Flags;
+        init => Flags = value;
+    }
 
     /// <inheritdoc />
     readonly double[] IDataSourceValue.TimeSeriesValue => new[] { Value, Time };
 
     /// <inheritdoc />
-    readonly MeasurementStateFlags IDataSourceValue.Flags => Flags;
+    public DataSourceValue TransposeCompute(Func<double, double> function)
+    {
+        return this with { Value = function(Value) };
+    }
 
     /// <inheritdoc />
     public readonly DataRow[] LookupMetadata(DataSet metadata, string target)

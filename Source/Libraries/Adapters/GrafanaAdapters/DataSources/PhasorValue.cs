@@ -22,9 +22,25 @@
 //******************************************************************************************************
 
 using System.Collections.Generic;
+using GrafanaAdapters.Functions.BuiltIn;
 using GSF.TimeSeries;
 
 namespace GrafanaAdapters.DataSources;
+
+/// <summary>
+/// Defines a default target for a phasor value.
+/// </summary>
+public enum PhasorValueTarget
+{
+    /// <summary>
+    /// Target the magnitude components of the phasor value.
+    /// </summary>
+    Magnitude,
+    /// <summary>
+    /// Target the angle components of the phasor value.
+    /// </summary>
+    Angle
+}
 
 /// <summary>
 /// Represents an individual time-series phasor value from a data source.
@@ -60,6 +76,20 @@ public partial struct PhasorValue
     /// Flags for queried value.
     /// </summary>
     public MeasurementStateFlags Flags;
+
+    /// <summary>
+    /// Gets or sets the primary target for the phasor value.
+    /// </summary>
+    /// <remarks>
+    /// This property is used to determine which components of the phasor value to use when using the data
+    /// source as an <see cref="IDataSourceValue{T}"/>. This is useful in default function computations that
+    /// do not need to operate on both the magnitude and angle components of the phasor value. For example,
+    /// see <see cref="Minimum{T}"/> and <see cref="Maximum{T}"/> functions that only operate on magnitudes.
+    /// Primary target value defaults to <see cref="PhasorValueTarget.Magnitude"/> but can be overridden to
+    /// <see cref="PhasorValueTarget.Angle"/> if the function only needs to operate on the angle components.
+    /// See <see cref="WrapAngle{T}"/> for example of using only angle components.
+    /// </remarks>
+    public PhasorValueTarget PrimaryTarget;
 }
 
 /// <summary>

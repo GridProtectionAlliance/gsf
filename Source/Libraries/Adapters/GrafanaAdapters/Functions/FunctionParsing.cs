@@ -84,15 +84,18 @@ internal static class FunctionParsing
             // Lookup function by user provided name or alias
             if (!functionMap.TryGetValue(groups["Function"].Value, out IGrafanaFunction<T> function))
             {
+            #if DEBUG
                 Debug.Fail($"Unexpected failure to find function '{groups["Function"].Value}'.");
+            #else
                 continue;
+            #endif
             }
 
             // Check if the function has a group operation prefix, e.g., slice or set
             Enum.TryParse(groups["GroupOp"].Value, true, out GroupOperations operation);
 
-            // Verify that the function supports the requested operation, defaulting to standard
-            operation = function.CheckSupportedGroupOperation(operation);
+            // Verify that the function allows the requested operation, defaulting to standard
+            operation = function.CheckAllowedGroupOperation(operation);
 
             parsedGrafanaFunctions.Add(new ParsedGrafanaFunction<T>
             {
@@ -266,7 +269,7 @@ internal static class FunctionParsing
                 Dictionary<string, string> metadataMap = metadata.GetMetadataMap<T>(rootTarget, queryParameters);
                 Parameters parameters = function.GenerateParameters(parsedParameters, dataSourceValues, rootTarget, metadata, metadataMap);
 
-                foreach (T dataValue in function.ComputeSlice(parameters, cancellationToken))
+                foreach (T dataValue in function.ComputeSlice(parameters))
                     yield return dataValue;
             }
         }

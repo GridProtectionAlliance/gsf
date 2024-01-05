@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Threading;
+using System.Linq;
 using GrafanaAdapters.DataSources;
 using GSF.Units;
 
@@ -26,6 +26,14 @@ public abstract class TimeDifference<T> : GrafanaFunctionBase<T> where T : struc
     /// <inheritdoc />
     public override string Description => "Returns a series of values that represent the time difference, in time units, between consecutive values in the source series.";
 
+    // Slice operation has no meaning for this time-focused function and Set operation will have an aberration between series,
+    // so we override the exposed behaviors, i.e., use of Slice will produce an error and use of Set will be hidden:
+
+    /// <inheritdoc />
+    public override GroupOperations AllowedGroupOperations => GroupOperations.Standard | GroupOperations.Set;
+
+    /// <inheritdoc />
+    public override GroupOperations PublishedGroupOperations => GroupOperations.Standard;
 
     /// <inheritdoc />
     public override string[] Aliases => new[] { "TimeDiff", "Elapsed" };
@@ -47,66 +55,35 @@ public abstract class TimeDifference<T> : GrafanaFunctionBase<T> where T : struc
     };
 
     /// <inheritdoc />
+    public override IEnumerable<T> Compute(Parameters parameters)
+    {
+        TargetTimeUnit units = parameters.Value<TargetTimeUnit>(0);
+        T lastResult = new();
+
+        // Transpose computed value
+        T transposeCompute(T dataValue) => dataValue with
+        {
+            Value = TargetTimeUnit.ToTimeUnits((dataValue.Time - lastResult.Time) * SI.Milli, units)
+        };
+
+        // Return deferred enumeration of computed values
+        foreach (T dataValue in GetDataSourceValues(parameters).Select(transposeCompute))
+        {
+            if (lastResult.Time > 0.0D)
+                yield return dataValue;
+
+            lastResult = dataValue;
+        }
+    }
+
+    /// <inheritdoc />
     public class ComputeDataSourceValue : TimeDifference<DataSourceValue>
     {
-        /// <inheritdoc />
-        public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
-        {
-            //// Get Values
-            //DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
-            //TargetTimeUnit timeUnit = (parameters[1] as IParameter<TargetTimeUnit>).Value;
-
-            //// Compute
-            //double previousTime = dataSourceValues.Source.First().Time;
-            //IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source.Skip(1).Select(dataSourceValue =>
-            //{
-            //    DataSourceValue transformedValue = dataSourceValue;
-            //    transformedValue.Value = TimeConversion.ToTimeUnits((dataSourceValue.Time - previousTime) * SI.Milli, timeUnit);
-
-            //    previousTime = dataSourceValue.Time;
-            //    return transformedValue;
-            //});
-
-            //// Set Values
-            //dataSourceValues.Target = $"{Name}({dataSourceValues.Target},{timeUnit.Unit})";
-            //dataSourceValues.Source = transformedDataSourceValues;
-
-            //return dataSourceValues;
-            return null;
-        }
     }
 
     /// <inheritdoc />
     public class ComputePhasorValue : TimeDifference<PhasorValue>
     {
-        /// <inheritdoc />
-        public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
-        {
-            //// Get Values
-            //DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
-            //TargetTimeUnit timeUnit = (parameters[1] as IParameter<TargetTimeUnit>).Value;
-
-            //// Compute
-            //double previousTime = phasorValues.Source.First().Time;
-            //IEnumerable<PhasorValue> transformedPhasorValues = phasorValues.Source.Skip(1).Select(phasorValue =>
-            //{
-            //    PhasorValue transformedValue = phasorValue;
-
-            //    double timeDifference = TimeConversion.ToTimeUnits((phasorValue.Time - previousTime) * SI.Milli, timeUnit);
-            //    transformedValue.Magnitude = timeDifference;
-            //    transformedValue.Angle = timeDifference;
-
-            //    previousTime = phasorValue.Time;
-            //    return transformedValue;
-            //});
-
-            //// Set Values
-            //string[] labels = phasorValues.Target.Split(';');
-            //phasorValues.Target = $"{Name}({labels[0]},{timeUnit.Unit});{Name}({labels[1]},{timeUnit.Unit})";
-            //phasorValues.Source = transformedPhasorValues;
-
-            //return phasorValues;
-            return null;
-        }
+        // Operating on magnitude only
     }
 }

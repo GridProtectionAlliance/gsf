@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Threading;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using GrafanaAdapters.DataSources;
 using GSF.Units;
 
@@ -36,65 +37,39 @@ public abstract class WrapAngle<T> : GrafanaFunctionBase<T> where T : struct, ID
             Name = "units",
             Default = AngleUnit.Degrees,
             Description = "Specifies the type of angle units and must be one of the following: Degrees, Radians, Grads, ArcMinutes, ArcSeconds or AngularMil",
-            Required = false,
+            Required = false
         }
     };
 
     /// <inheritdoc />
+    public override IEnumerable<T> Compute(Parameters parameters)
+    {
+        AngleUnit units = parameters.Value<AngleUnit>(0);
+
+        // Transpose computed value
+        T transposeCompute(T dataValue) => dataValue with
+        {
+            Value = Angle.ConvertFrom(dataValue.Value, units).ToRange(-Math.PI, false).ConvertTo(units)
+        };
+
+        // Return deferred enumeration of computed values
+        foreach (T dataValue in GetDataSourceValues(parameters).Select(transposeCompute))
+            yield return dataValue;
+    }
+
+    /// <inheritdoc />
     public class ComputeDataSourceValue : WrapAngle<DataSourceValue>
     {
-        /// <inheritdoc />
-        public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
-        {
-            //// Get Values
-            //DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
-            //AngleUnit angleUnit = (parameters[1] as IParameter<AngleUnit>).Value;
-
-            //// Compute
-            //IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source.Select(dataSourceValue =>
-            //{
-            //    DataSourceValue transformedValue = dataSourceValue;
-            //    transformedValue.Value = Angle.ConvertFrom(dataSourceValue.Value, angleUnit).ToRange(-Math.PI, false).ConvertTo(angleUnit);
-
-            //    return transformedValue;
-            //});
-
-            //// Set Values
-            //DataSourceValueGroup<DataSourceValue> result = dataSourceValues.Clone();
-            //result.Target = $"{Name}({dataSourceValues.Target},{angleUnit})";
-            //result.Source = transformedDataSourceValues;
-
-            //return result;
-            return null;
-        }
     }
 
     /// <inheritdoc />
     public class ComputePhasorValue : WrapAngle<PhasorValue>
     {
         /// <inheritdoc />
-        public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
+        protected override IEnumerable<PhasorValue> GetDataSourceValues(Parameters parameters)
         {
-            //// Get Values
-            //DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
-            //AngleUnit angleUnit = (parameters[1] as IParameter<AngleUnit>).Value;
-
-            //// Compute
-            //IEnumerable<PhasorValue> transformedPhasorValues = phasorValues.Source.Select(phasorValue =>
-            //{
-            //    PhasorValue transformedValue = phasorValue;
-            //    transformedValue.Angle = Angle.ConvertFrom(phasorValue.Angle, angleUnit).ToRange(-Math.PI, false).ConvertTo(angleUnit);
-
-            //    return transformedValue;
-            //});
-
-            //// Set Values
-            //DataSourceValueGroup<PhasorValue> result = phasorValues.Clone();
-            //result.Target = $"{Name}({phasorValues.Target},{angleUnit})";
-            //result.Source = transformedPhasorValues;
-
-            //return result;
-            return null;
+            // Update data source values to operate on angle components of phasor values
+            return base.GetDataSourceValues(parameters).Select(PhasorValue.AngleAsTarget);
         }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Threading;
 using GrafanaAdapters.DataSources;
 using GSF.Units;
 
@@ -29,6 +28,15 @@ public abstract class Interval<T> : GrafanaFunctionBase<T> where T : struct, IDa
     /// <inheritdoc />
     public override string Description => "Returns a series of values that represent a decimated set of the values in the source series based on the specified interval N, in time units.";
 
+    // Slice operation has no meaning for this time-focused function and Set operation will have an aberration between series,
+    // so we override the exposed behaviors, i.e., use of Slice will produce an error and use of Set will be hidden:
+
+    /// <inheritdoc />
+    public override GroupOperations AllowedGroupOperations => GroupOperations.Standard | GroupOperations.Set;
+
+    /// <inheritdoc />
+    public override GroupOperations PublishedGroupOperations => GroupOperations.Standard;
+
     /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>
     {
@@ -53,77 +61,37 @@ public abstract class Interval<T> : GrafanaFunctionBase<T> where T : struct, IDa
     };
 
     /// <inheritdoc />
+    public override IEnumerable<T> Compute(Parameters parameters)
+    {
+        TargetTimeUnit units = parameters.Value<TargetTimeUnit>(1);
+        double valueN = TargetTimeUnit.FromTimeUnits(parameters.Value<double>(0), units) / SI.Milli;
+        double lastTime = 0.0D;
+
+        foreach (T dataValue in GetDataSourceValues(parameters))
+        {
+            if (lastTime > 0.0D)
+            {
+                if (dataValue.Time - lastTime > valueN)
+                {
+                    lastTime = dataValue.Time;
+                    yield return dataValue;
+                }
+            }
+            else
+            {
+                lastTime = dataValue.Time;
+                yield return dataValue;
+            }
+        }
+    }
+
+    /// <inheritdoc />
     public class ComputeDataSourceValue : Interval<DataSourceValue>
     {
-        /// <inheritdoc />
-        public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
-        {
-            //// Get Values
-            //double value = (parameters[0] as IParameter<double>).Value;
-            //DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
-            //TargetTimeUnit timeUnit = (parameters[2] as IParameter<TargetTimeUnit>).Value;
-
-            //if (value < 0)
-            //    throw new ArgumentException($"{value} must be greater than or equal to 0.");
-
-            //// Compute
-            //double timeValue = TimeConversion.FromTimeUnits(value, timeUnit) / SI.Milli;
-
-            //double previousTime = dataSourceValues.Source.First().Time;
-            //List<DataSourceValue> transformedDataSourceValues = new();
-            //foreach (DataSourceValue dataSourceValue in dataSourceValues.Source.Skip(1))
-            //{
-            //    if (dataSourceValue.Time - previousTime > timeValue)
-            //    {
-            //        previousTime = dataSourceValue.Time;
-            //        transformedDataSourceValues.Add(dataSourceValue);
-            //    }
-            //}
-
-            //// Set Values
-            //dataSourceValues.Target = $"{Name}({value},{dataSourceValues.Target},{timeUnit.Unit})";
-            //dataSourceValues.Source = transformedDataSourceValues;
-
-            //return dataSourceValues;
-            return null;
-        }
     }
 
     /// <inheritdoc />
     public class ComputePhasorValue : Interval<PhasorValue>
     {
-        /// <inheritdoc />
-        public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
-        {
-            //// Get Values
-            //double value = (parameters[0] as IParameter<double>).Value;
-            //DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
-            //TargetTimeUnit timeUnit = (parameters[2] as IParameter<TargetTimeUnit>).Value;
-
-            //if (value < 0)
-            //    throw new ArgumentException($"{value} must be greater than or equal to 0.");
-
-            //// Compute
-            //double timeValue = TimeConversion.FromTimeUnits(value, timeUnit) / SI.Milli;
-
-            //double previousTime = phasorValues.Source.First().Time;
-            //List<PhasorValue> transformedPhasorValues = new();
-            //foreach (PhasorValue phasorValue in phasorValues.Source.Skip(1))
-            //{
-            //    if (phasorValue.Time - previousTime > timeValue)
-            //    {
-            //        previousTime = phasorValue.Time;
-            //        transformedPhasorValues.Add(phasorValue);
-            //    }
-            //}
-
-            //// Set Values
-            //string[] labels = phasorValues.Target.Split(';');
-            //phasorValues.Target = $"{Name}({labels[0]},{timeUnit.Unit});{Name}({labels[1]},{timeUnit.Unit})";
-            //phasorValues.Source = transformedPhasorValues;
-
-            //return phasorValues;
-            return null;
-        }
     }
 }

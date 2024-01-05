@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Threading;
 using GrafanaAdapters.DataSources;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
@@ -26,44 +25,30 @@ public abstract class Maximum<T> : GrafanaFunctionBase<T> where T : struct, IDat
     public override string[] Aliases => new[] { "Max" };
 
     /// <inheritdoc />
+    public override IEnumerable<T> Compute(Parameters parameters)
+    {
+        T maxValue = new() { Value = double.MinValue };
+
+        // Immediately enumerate values to find maximum
+        foreach (T dataValue in GetDataSourceValues(parameters))
+        {
+            if (dataValue.Value >= maxValue.Value)
+                maxValue = dataValue;
+        }
+
+        // Return computed results
+        if (maxValue.Time > 0.0D)
+            yield return maxValue;
+    }
+
+    /// <inheritdoc />
     public class ComputeDataSourceValue : Maximum<DataSourceValue>
     {
-        /// <inheritdoc />
-        public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
-        {
-            DataSourceValue maxValue = new() { Value = double.MinValue };
-
-            // Immediately enumerate values to find maximum
-            foreach (DataSourceValue dataValue in GetDataSourceValues(parameters))
-            {
-                if (dataValue.Value >= maxValue.Value)
-                    maxValue = dataValue;
-            }
-
-            // Do not return local default value
-            if (maxValue.Time > 0.0D)
-                yield return maxValue;
-        }
     }
 
     /// <inheritdoc />
     public class ComputePhasorValue : Maximum<PhasorValue>
     {
-        /// <inheritdoc />
-        public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
-        {
-            PhasorValue maxValue = new() { Magnitude = double.MinValue };
-
-            // Immediately enumerate values to find maximum - magnitude only
-            foreach (PhasorValue dataValue in GetDataSourceValues(parameters))
-            {
-                if (dataValue.Magnitude >= maxValue.Magnitude)
-                    maxValue = dataValue;
-            }
-
-            // Do not return local default value
-            if (maxValue.Time > 0.0D)
-                yield return maxValue;
-        }
+        // Operating on magnitude only
     }
 }

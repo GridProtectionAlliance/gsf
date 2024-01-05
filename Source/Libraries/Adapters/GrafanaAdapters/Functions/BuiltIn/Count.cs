@@ -1,8 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using GrafanaAdapters.DataSources;
-using GSF.TimeSeries;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
 
@@ -28,67 +26,32 @@ public abstract class Count<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     public override string[] Aliases => new[] { "Length" };
 
     /// <inheritdoc />
+    public override IEnumerable<T> Compute(Parameters parameters)
+    {
+        T lastValue = default;
+
+        IEnumerable<int> trackedValues = GetDataSourceValues(parameters).Select(dataValue =>
+        {
+            lastValue = dataValue;
+            return 0;
+        });
+
+        // Immediately enumerate to compute values
+        double count = trackedValues.Count();
+
+        // Return computed results
+        if (lastValue.Time > 0.0D)
+            yield return lastValue with { Value = count };
+    }
+
+    /// <inheritdoc />
     public class ComputeDataSourceValue : Count<DataSourceValue>
     {
-        /// <inheritdoc />
-        public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
-        {
-            double lastTime = 0.0D;
-            string lastTarget = null;
-            MeasurementStateFlags lastFlags = 0;
-
-            IEnumerable<double> trackedValues = GetDataSourceValues(parameters).Select(dataValue =>
-            {
-                lastTime = dataValue.Time;
-                lastTarget = dataValue.Target;
-                lastFlags = dataValue.Flags;
-                return dataValue.Value;
-            });
-
-            // Return immediate enumeration of computed values
-            yield return new DataSourceValue()
-            {
-                Value = trackedValues.Count(),
-                Time = lastTime,
-                Target = lastTarget,
-                Flags = lastFlags
-            };
-        }
     }
 
     /// <inheritdoc />
     public class ComputePhasorValue : Count<PhasorValue>
     {
-        /// <inheritdoc />
-        public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
-        {
-            double lastTime = 0.0D;
-            string lastMagnitudeTarget = null;
-            string lastAngleTarget = null;
-            MeasurementStateFlags lastFlags = 0;
-
-            IEnumerable<double> trackedValues = GetDataSourceValues(parameters).Select(dataValue =>
-            {
-                lastTime = dataValue.Time;
-                lastMagnitudeTarget = dataValue.MagnitudeTarget;
-                lastAngleTarget = dataValue.AngleTarget;
-                lastFlags = dataValue.Flags;
-                return dataValue.Magnitude;
-            });
-
-            // Only count once
-            int count = trackedValues.Count();
-
-            // Return immediate enumeration of computed values
-            yield return new PhasorValue()
-            {
-                Magnitude = count,
-                Angle = count,
-                Time = lastTime,
-                MagnitudeTarget = lastMagnitudeTarget,
-                AngleTarget = lastAngleTarget,
-                Flags = lastFlags
-            };
-        }
+        // Operating on magnitude only
     }
 }

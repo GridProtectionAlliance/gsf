@@ -43,19 +43,67 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
     };
 
     /// <inheritdoc />
-    readonly string IDataSourceValue.Target => MagnitudeTarget;
+    string IDataSourceValue.Target
+    {
+        readonly get => PrimaryTarget == PhasorValueTarget.Magnitude ? MagnitudeTarget : AngleTarget;
+        init
+        {
+            if (PrimaryTarget == PhasorValueTarget.Magnitude)
+                MagnitudeTarget = value;
+            else
+                AngleTarget = value;
+        }
+    }
 
     /// <inheritdoc />
-    readonly double IDataSourceValue.Value => Magnitude;
+    double IDataSourceValue.Value
+    {
+        readonly get => PrimaryTarget == PhasorValueTarget.Magnitude ? Magnitude : Angle;
+        init
+        {
+            if (PrimaryTarget == PhasorValueTarget.Magnitude)
+                Magnitude = value;
+            else
+                Angle = value;
+        }
+    }
 
     /// <inheritdoc />
-    readonly double IDataSourceValue.Time => Time;
+    double IDataSourceValue.Time
+    {
+        readonly get => Time;
+        init => Time = value;
+    }
+
+    /// <inheritdoc />
+    MeasurementStateFlags IDataSourceValue.Flags
+    {
+        readonly get => Flags;
+        init => Flags = value;
+    }
 
     /// <inheritdoc />
     readonly double[] IDataSourceValue.TimeSeriesValue => new[] { Magnitude, Angle, Time };
 
     /// <inheritdoc />
-    readonly MeasurementStateFlags IDataSourceValue.Flags => Flags;
+    public PhasorValue TransposeCompute(Func<double, double> function)
+    {
+        return this with
+        {
+            Magnitude = function(Magnitude),
+            Angle = function(Angle)
+        };
+    }
+
+    /// <summary>
+    /// Update phasor value primary target to operate on angle components.
+    /// </summary>
+    /// <param name="dataValue">Source phasor value.</param>
+    /// <returns>Phasor value updated to operate on angle components.</returns>
+    public static PhasorValue AngleAsTarget(PhasorValue dataValue) => dataValue with
+    {
+        PrimaryTarget = PhasorValueTarget.Angle
+    };
 
     /// <inheritdoc />
     // TODO: JRC - ERROR - this lookup is problematic, phasor labels are not unique, need to lookup with an associated device ID
@@ -131,7 +179,7 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
                         {
                             Label = phasorTargets[targetID].Label,
                             Phase = pointTag,
-                            Magnitude = phasorTargets[targetID].Magnitude,
+                            Magnitude = phasorTargets[targetID].Magnitude
                         };
                     }
 
@@ -141,7 +189,7 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
                         {
                             Label = phasorTargets[targetID].Label,
                             Magnitude = pointTag,
-                            Phase = phasorTargets[targetID].Phase,
+                            Phase = phasorTargets[targetID].Phase
                         };
                     }
                 }

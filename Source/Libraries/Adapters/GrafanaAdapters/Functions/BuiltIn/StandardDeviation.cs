@@ -1,9 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using GrafanaAdapters.DataSources;
 using GSF.NumericalAnalysis;
-using GSF.TimeSeries;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
 
@@ -46,31 +44,23 @@ public abstract class StandardDeviation<T> : GrafanaFunctionBase<T> where T : st
     public class ComputeDataSourceValue : StandardDeviation<DataSourceValue>
     {
         /// <inheritdoc />
-        public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
+        public override IEnumerable<DataSourceValue> Compute(Parameters parameters)
         {
             bool useSampleCalc = parameters.ParsedCount > 0 && parameters.Value<bool>(0);
-
-            double lastTime = 0.0D;
-            string lastTarget = null;
-            MeasurementStateFlags lastFlags = 0;
+            DataSourceValue lastValue = default;
 
             IEnumerable<double> trackedValues = GetDataSourceValues(parameters).Select(dataValue =>
             {
-                lastTime = dataValue.Time;
-                lastTarget = dataValue.Target;
-                lastFlags = dataValue.Flags;
+                lastValue = dataValue;
                 return dataValue.Value;
             });
 
-            // Return immediate enumeration of computed values
-            yield return new DataSourceValue()
-            {
-                // StandardDeviation uses immediate in-memory array load
-                Value = trackedValues.StandardDeviation(useSampleCalc),
-                Time = lastTime,
-                Target = lastTarget,
-                Flags = lastFlags
-            };
+            // Immediately enumerate to compute values - StandardDeviation uses immediate in-memory array load
+            double stdDev = trackedValues.StandardDeviation(useSampleCalc);
+
+            // Return computed results
+            if (lastValue.Time > 0.0D)
+                yield return lastValue with { Value = stdDev };
         }
     }
 
@@ -78,40 +68,31 @@ public abstract class StandardDeviation<T> : GrafanaFunctionBase<T> where T : st
     public class ComputePhasorValue : StandardDeviation<PhasorValue>
     {
         /// <inheritdoc />
-        public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
+        public override IEnumerable<PhasorValue> Compute(Parameters parameters)
         {
             bool useSampleCalc = parameters.ParsedCount > 0 && parameters.Value<bool>(0);
 
             List<double> magnitudes = new();
             List<double> angles = new();
-
-            double lastTime = 0.0D;
-            string lastMagnitudeTarget = null;
-            string lastAngleTarget = null;
-            MeasurementStateFlags lastFlags = 0;
+            PhasorValue lastValue = default;
 
             // Immediately load values in-memory only enumerating data source once
             foreach (PhasorValue dataValue in GetDataSourceValues(parameters))
             {
+                lastValue = dataValue;
                 magnitudes.Add(dataValue.Magnitude);
                 angles.Add(dataValue.Angle);
-
-                lastTime = dataValue.Time;
-                lastMagnitudeTarget = dataValue.MagnitudeTarget;
-                lastAngleTarget = dataValue.AngleTarget;
-                lastFlags = dataValue.Flags;
             }
 
-            // Return immediate enumeration of computed values
-            yield return new PhasorValue()
+            // Return computed results
+            if (lastValue.Time > 0.0D)
             {
-                Magnitude = magnitudes.StandardDeviation(useSampleCalc),
-                Angle = angles.StandardDeviation(useSampleCalc),
-                Time = lastTime,
-                MagnitudeTarget = lastMagnitudeTarget,
-                AngleTarget = lastAngleTarget,
-                Flags = lastFlags
-            };
+                yield return lastValue with
+                {
+                    Magnitude = magnitudes.StandardDeviation(useSampleCalc),
+                    Angle = angles.StandardDeviation(useSampleCalc)
+                };
+            }
         }
     }
 }

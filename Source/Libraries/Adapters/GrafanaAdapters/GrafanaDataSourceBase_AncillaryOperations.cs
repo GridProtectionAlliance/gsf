@@ -231,7 +231,7 @@ partial class GrafanaDataSourceBase
                     response = new AnnotationResponse
                     {
                         time = datapoint[TimeSeriesValues.Time],
-                        endTime = datapoint[TimeSeriesValues.Time],
+                        endTime = datapoint[TimeSeriesValues.Time]
                     };
                 }
                 else
@@ -239,7 +239,7 @@ partial class GrafanaDataSourceBase
                     response = new AnnotationResponse
                     {
                         time = datapoint[TimeSeriesValues.Time],
-                        endTime = values.datapoints[index + 1][TimeSeriesValues.Time],
+                        endTime = values.datapoints[index + 1][TimeSeriesValues.Time]
                     };
                 }
 

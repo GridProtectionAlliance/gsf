@@ -121,7 +121,7 @@ public abstract partial class GrafanaDataSourceBase
                 IncludePeaks = includePeaks,
                 DropEmptySeries = dropEmptySeries,
                 Imports = imports,
-                MetadataSelection = target.metadataSelection,
+                MetadataSelection = target.metadataSelection
             });
         }
 
@@ -234,6 +234,9 @@ public abstract partial class GrafanaDataSourceBase
         {
             targetSet.UnionWith(TargetCache<string[]>.GetOrAdd(target, () =>
             {
+                // TODO: JRC - if it is determined that a data source needs its own custom filter expression parser, the implementation should
+                // added to the IDataSourceValue interface and called here - the following code would then be moved to DataSourceValue
+
                 // Parse target expression into individual point tags - this will convert filter expressions into point tags
                 MeasurementKey[] results = AdapterBase.ParseInputMeasurementKeys(Metadata, false, target.SplitAlias(out string alias));
 
@@ -288,7 +291,7 @@ public abstract partial class GrafanaDataSourceBase
                         Target = $"{functionName}({string.Join(", ", parsedParameters)}{(parsedParameters.Length > 0 ? ", " : "")}{valueGroup.Target})",
                         RootTarget = rootTarget,
                         SourceTarget = queryParameters.SourceTarget,
-                        Source = function.Compute(parameters, cancellationToken),
+                        Source = function.Compute(parameters),
                         DropEmptySeries = queryParameters.DropEmptySeries,
                         RefID = queryParameters.SourceTarget.refId,
                         MetadataMap = metadataMap
@@ -299,7 +302,10 @@ public abstract partial class GrafanaDataSourceBase
             }
             case GroupOperations.Slice:
             {
-                TimeSliceScanner<T> scanner = new(dataset.ToEnumerable(), ParseFloat(parsedParameters[0]) / SI.Milli);
+                if (!double.TryParse(parsedParameters[0], out double tolerance))
+                    throw new InvalidOperationException($"Invalid slice interval specified for {functionName} function.");
+
+                TimeSliceScanner<T> scanner = new(dataset.ToEnumerable(), tolerance / SI.Milli);
                 parsedParameters = parsedParameters.Skip(1).ToArray();
 
                 foreach (DataSourceValueGroup<T> valueGroup in function.ComputeSlice(scanner, queryParameters, queryExpression, Metadata, parsedParameters, cancellationToken))
@@ -308,7 +314,7 @@ public abstract partial class GrafanaDataSourceBase
 
                     yield return new DataSourceValueGroup<T>
                     {
-                        Target = $"Slice{functionName}({string.Join(", ", parsedParameters)}{(parsedParameters.Length > 0 ? ", " : "")}{valueGroup.Target})",
+                        Target = $"Slice{functionName}({string.Join(", ", parsedParameters)}{(parsedParameters.Length > 0 ? ", " : "")}{rootTarget})",
                         RootTarget = rootTarget,
                         SourceTarget = queryParameters.SourceTarget,
                         Source = valueGroup.Source,
@@ -333,7 +339,7 @@ public abstract partial class GrafanaDataSourceBase
                     Target = $"Set{functionName}({string.Join(", ", parsedParameters)}{(parsedParameters.Length > 0 ? ", " : "")}{queryExpression})",
                     RootTarget = rootTarget,
                     SourceTarget = queryParameters.SourceTarget,
-                    Source = function.ComputeSet(parameters, cancellationToken),
+                    Source = function.ComputeSet(parameters),
                     DropEmptySeries = queryParameters.DropEmptySeries,
                     RefID = queryParameters.SourceTarget.refId,
                     MetadataMap = metadataMap

@@ -60,10 +60,8 @@ public class TargetTimeUnit
     /// </remarks>
     public static (TargetTimeUnit, bool) Parse(string value)
     {
-        TargetTimeUnit targetTimeUnit;
-
-        if (Enum.TryParse(value, true, out TimeUnit timeUnit))
-            return (new TargetTimeUnit { Unit = timeUnit }, true);
+        if (Enum.TryParse(value, true, out TimeUnit units))
+            return (new TargetTimeUnit { Unit = units }, true);
 
         return value?.ToLowerInvariant() switch
         {
@@ -72,5 +70,37 @@ public class TargetTimeUnit
             "nanoseconds" => (new TargetTimeUnit { Unit = TimeUnit.Seconds, Factor = SI.Nano }, true),
             _ => (null, false)
         };
+    }
+
+    /// <summary>
+    /// Scales the specified time, in the specified units, to a time in seconds.
+    /// </summary>
+    /// <param name="value">The double value to convert.</param>
+    /// <param name="units">The target time unit, which includes scaling factor, for the conversion.</param>
+    /// <returns>A time, in seconds, that represents the converted value.</returns>
+    public static double FromTimeUnits(double value, TargetTimeUnit units)
+    {
+        double time = Time.ConvertFrom(value, units.Unit);
+
+        if (!double.IsNaN(units.Factor))
+            time *= units.Factor;
+
+        return time;
+    }
+
+    /// <summary>
+    /// Scales a time, in seconds, to the specified units.
+    /// </summary>
+    /// <param name="value">The time, in seconds, to convert.</param>
+    /// <param name="units">The target time units, which includes scaling factor, for the conversion.</param>
+    /// <returns>A double value that represents the converted and scaled time, in the specified units.</returns>
+    public static double ToTimeUnits(double value, TargetTimeUnit units)
+    {
+        double time = new Time(value).ConvertTo(units.Unit);
+
+        if (!double.IsNaN(units.Factor))
+            time /= units.Factor;
+
+        return time;
     }
 }

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Threading;
 using GrafanaAdapters.DataSources;
 using GSF.Collections;
 
@@ -27,24 +26,20 @@ public abstract class Distinct<T> : GrafanaFunctionBase<T> where T : struct, IDa
     public override string[] Aliases => new[] { "Unique" };
 
     /// <inheritdoc />
+    public override IEnumerable<T> Compute(Parameters parameters)
+    {
+        // Return deferred enumeration of distinct values
+        return GetDataSourceValues(parameters).DistinctBy(dataValue => dataValue.Value);
+    }
+
+    /// <inheritdoc />
     public class ComputeDataSourceValue : Distinct<DataSourceValue>
     {
-        /// <inheritdoc />
-        public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
-        {
-            // Return deferred enumeration of distinct values
-            return GetDataSourceValues(parameters).DistinctBy(dataValue => dataValue.Value);
-        }
     }
 
     /// <inheritdoc />
     public class ComputePhasorValue : Distinct<PhasorValue>
     {
-        /// <inheritdoc />
-        public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
-        {
-            // Return deferred enumeration of distinct magnitudes
-            return GetDataSourceValues(parameters).DistinctBy(dataValue => dataValue.Magnitude);
-        }
+        // Operating on magnitude only
     }
 }

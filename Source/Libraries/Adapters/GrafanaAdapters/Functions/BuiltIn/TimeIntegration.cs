@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Threading;
+using System.Linq;
 using GrafanaAdapters.DataSources;
 using GSF.Units;
 
@@ -46,72 +46,34 @@ public abstract class TimeIntegration<T> : GrafanaFunctionBase<T> where T : stru
     };
 
     /// <inheritdoc />
+    public override IEnumerable<T> Compute(Parameters parameters)
+    {
+        TargetTimeUnit units = parameters.Value<TargetTimeUnit>(0);
+        T lastResult = new();
+
+        // Transpose computed value
+        T transposeCompute(T dataValue) => dataValue with
+        {
+            Value = lastResult.Value + dataValue.Value * TargetTimeUnit.ToTimeUnits((dataValue.Time - lastResult.Time) * SI.Milli, units)
+        };
+
+        // Immediately enumerate to compute values - only enumerate once
+        foreach (T dataValue in GetDataSourceValues(parameters).Select(transposeCompute))
+            lastResult = dataValue;
+
+        // Return computed value
+        if (lastResult.Time > 0.0D)
+            yield return lastResult;
+    }
+
+    /// <inheritdoc />
     public class ComputeDataSourceValue : TimeIntegration<DataSourceValue>
     {
-        /// <inheritdoc />
-        public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
-        {
-            //// Get Values
-            //DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
-            //TargetTimeUnit timeUnit = (parameters[1] as IParameter<TargetTimeUnit>).Value;
-
-            //// Compute
-            //List<DataSourceValue> datasourceValuesList = dataSourceValues.Source.ToList();
-
-            //DataSourceValue lastElement = dataSourceValues.Source.First();
-            //double previousTime = dataSourceValues.Source.First().Time;
-
-            //for (int i = 1; i < datasourceValuesList.Count; i++)
-            //{
-            //    DataSourceValue dataSourceValue = datasourceValuesList[i];
-            //    lastElement.Value += dataSourceValue.Value * TimeConversion.ToTimeUnits((dataSourceValue.Time - previousTime) * SI.Milli, timeUnit);
-
-            //    previousTime = dataSourceValue.Time;
-            //}
-
-            //// Set Values
-            //dataSourceValues.Target = $"{Name}({dataSourceValues.Target},{timeUnit.Unit})";
-            //dataSourceValues.Source = Enumerable.Repeat(lastElement, 1);
-
-            //return dataSourceValues;
-            return null;
-        }
     }
 
     /// <inheritdoc />
     public class ComputePhasorValue : TimeIntegration<PhasorValue>
     {
-        /// <inheritdoc />
-        public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
-        {
-            //// Get Values
-            //DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
-            //TargetTimeUnit timeUnit = (parameters[1] as IParameter<TargetTimeUnit>).Value;
-
-            //// Compute
-            //List<PhasorValue> phasorValuesList = phasorValues.Source.ToList();
-
-            //PhasorValue lastElement = phasorValues.Source.First();
-            //lastElement.Magnitude = 0;
-            //lastElement.Angle = 0;
-            //double previousTime = phasorValues.Source.First().Time;
-
-            //for (int i = 1; i < phasorValuesList.Count; i++)
-            //{
-            //    PhasorValue phasorValue = phasorValuesList[i];
-            //    lastElement.Magnitude += phasorValue.Magnitude * TimeConversion.ToTimeUnits((phasorValue.Time - previousTime) * SI.Milli, timeUnit);
-            //    lastElement.Angle += phasorValue.Angle * TimeConversion.ToTimeUnits((phasorValue.Time - previousTime) * SI.Milli, timeUnit);
-
-            //    previousTime = phasorValue.Time;
-            //}
-
-            //// Set Values
-            //string[] labels = phasorValues.Target.Split(';');
-            //phasorValues.Target = $"{Name}({labels[0]},{timeUnit.Unit});{Name}({labels[1]},{timeUnit.Unit})";
-            //phasorValues.Source = Enumerable.Repeat(lastElement, 1);
-
-            //return phasorValues;
-            return null;
-        }
+        // Operating on magnitude only
     }
 }

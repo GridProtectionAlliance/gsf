@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
 using GrafanaAdapters.DataSources;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
@@ -30,7 +29,7 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
     public override string[] Aliases => new[] { "Eval" };
 
     /// <inheritdoc />
-    public override GroupOperations SupportedGroupOperations => GroupOperations.Slice;
+    public override GroupOperations AllowedGroupOperations => GroupOperations.Slice;
 
     /// <inheritdoc />
     public override GroupOperations PublishedGroupOperations => GroupOperations.Standard;
@@ -102,20 +101,20 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
     }
 
     /// <inheritdoc />
-    public override GroupOperations CheckSupportedGroupOperation(GroupOperations requestedOperation)
+    public override GroupOperations CheckAllowedGroupOperation(GroupOperations requestedOperation)
     {
         // Force standard group operation to be Slice - eval only supports slice operations
         if (requestedOperation is 0 or GroupOperations.Standard)
             requestedOperation = GroupOperations.Slice;
 
-        return base.CheckSupportedGroupOperation(requestedOperation);
+        return base.CheckAllowedGroupOperation(requestedOperation);
     }
 
     /// <inheritdoc />
     public class ComputeDataSourceValue : Evaluate<DataSourceValue>
     {
         /// <inheritdoc />
-        public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
+        public override IEnumerable<DataSourceValue> Compute(Parameters parameters)
         {
             //// Get Values
             //DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
@@ -131,7 +130,7 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
     public class ComputePhasorValue : Evaluate<PhasorValue>
     {
         /// <inheritdoc />
-        public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
+        public override IEnumerable<PhasorValue> Compute(Parameters parameters)
         {
             //// Get Values
             //DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;

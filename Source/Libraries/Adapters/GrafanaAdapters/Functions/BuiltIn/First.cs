@@ -1,9 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Threading;
 using GrafanaAdapters.DataSources;
-using GSF.Drawing;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
 
@@ -38,30 +35,11 @@ public abstract class First<T> : GrafanaFunctionBase<T> where T : struct, IDataS
             Default = "1",
             Description = "A integer value or percent representing number or % of elements to take.",
             Required = false
-        },
+        }
     };
 
     /// <inheritdoc />
-    public class ComputeDataSourceValue : First<DataSourceValue>
-    {
-        /// <inheritdoc />
-        public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
-        {
-            return ComputeFirst(parameters);
-        }
-    }
-
-    /// <inheritdoc />
-    public class ComputePhasorValue : First<PhasorValue>
-    {
-        /// <inheritdoc />
-        public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
-        {
-            return ComputeFirst(parameters);
-        }
-    }
-
-    private static IEnumerable<T> ComputeFirst(Parameters parameters)
+    public override IEnumerable<T> Compute(Parameters parameters)
     {
         IEnumerable<T> source = GetDataSourceValues(parameters);
 
@@ -82,13 +60,24 @@ public abstract class First<T> : GrafanaFunctionBase<T> where T : struct, IDataS
             if (length == 0)
                 yield break;
 
-            int count = ParseCount(parameters.Value<string>(0), length);
+            int valueN = ParseTotal(parameters.Value<string>(0), length);
 
-            if (count > length)
-                count = length;
+            if (valueN > length)
+                valueN = length;
 
-            for (int i = 0; i < count; i++)
+            for (int i = 0; i < valueN; i++)
                 yield return values[i];
         }
+    }
+
+    /// <inheritdoc />
+    public class ComputeDataSourceValue : First<DataSourceValue>
+    {
+    }
+
+    /// <inheritdoc />
+    public class ComputePhasorValue : First<PhasorValue>
+    {
+        // Operating on magnitude only
     }
 }

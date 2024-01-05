@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Threading;
 using GrafanaAdapters.DataSources;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
@@ -31,7 +30,7 @@ public abstract class Label<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     public override string[] Aliases => new[] { "Name" };
 
     /// <inheritdoc />
-    public override GroupOperations SupportedGroupOperations => GroupOperations.Standard;
+    public override GroupOperations AllowedGroupOperations => GroupOperations.Standard;
 
     /// <inheritdoc />
     public override GroupOperations PublishedGroupOperations => GroupOperations.Standard;
@@ -45,11 +44,11 @@ public abstract class Label<T> : GrafanaFunctionBase<T> where T : struct, IDataS
             Default = "",
             Description = "Specifies label to be renamed to.",
             Required = true
-        },
+        }
     };
 
     /// <inheritdoc />
-    public override GroupOperations CheckSupportedGroupOperation(GroupOperations requestedOperation)
+    public override GroupOperations CheckAllowedGroupOperation(GroupOperations requestedOperation)
     {
         // Label function ignores any requested group operation instead of throwing an exception
         return GroupOperations.Standard;
@@ -61,7 +60,7 @@ public abstract class Label<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     public class ComputeDataSourceValue : Label<DataSourceValue>
     {
         /// <inheritdoc />
-        public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
+        public override IEnumerable<DataSourceValue> Compute(Parameters parameters)
         {
             //// Get Values
             //string label = (parameters[0] as IParameter<string>).Value;
@@ -79,7 +78,7 @@ public abstract class Label<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     public class ComputePhasorValue : Label<PhasorValue>
     {
         /// <inheritdoc />
-        public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
+        public override IEnumerable<PhasorValue> Compute(Parameters parameters)
         {
             //// Get Values
             //string label = (parameters[0] as IParameter<string>).Value;

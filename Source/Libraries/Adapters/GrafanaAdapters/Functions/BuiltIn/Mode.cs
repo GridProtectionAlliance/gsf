@@ -1,9 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using GrafanaAdapters.DataSources;
 using GSF.Collections;
-using GSF.TimeSeries;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
 
@@ -25,11 +23,53 @@ public abstract class Mode<T> : GrafanaFunctionBase<T> where T : struct, IDataSo
     /// <inheritdoc />
     public override string Description => "Returns a single value that represents the mode of the values in the source series.";
 
+    // TODO: JRC - consider adding a "number of bins" parameter to better estimate mode for a set double values
+
+    /*
+        Since a set of double values here are unlikely to repeat, finding mode by its classic definition, the most
+        frequently occurring value, might not be useful in this scenario. Finding a value (or values) around which
+        data is most densely clustered may be a better approach. One method is to use binning: you divide the the
+        range of data into intervals (bins) and then find the bin with the most values:
+
+            double[] data = { /* your array of doubles * / };
+            int numberOfBins = 10; // Choose a number that suits your data, perhaps parameterize this
+
+            double min = data.Min();
+            double max = data.Max();
+            double range = max - min;
+            double binSize = range / numberOfBins;
+
+            int[] bins = new int[numberOfBins];
+
+            foreach (double value in data)
+            {
+                int binIndex = (int)((value - min) / binSize);
+
+                if (binIndex == numberOfBins)
+                    binIndex--; // To handle the max value
+
+                bins[binIndex]++;
+            }
+
+            int maxBinCount = bins.Max();
+            int maxBinIndex = Array.IndexOf(bins, maxBinCount);
+            double modalRangeStart = min + maxBinIndex * binSize;
+            double modalRangeEnd = modalRangeStart + binSize;
+
+            Console.WriteLine($"Modal Range: [{modalRangeStart}, {modalRangeEnd})");
+
+        Since we want a single answer, we could take the midpoint of the modal range as our mode.
+
+        Would want this to be optional since source data could represent integer values, in which case
+        the existing algorithm would be fine. Perhaps default "numberOfBins" to 0 which would mean to
+        not use binning, i.e., instead use the existing algorithm.
+    */
+
     /// <inheritdoc />
     public class ComputeDataSourceValue : Mode<DataSourceValue>
     {
         /// <inheritdoc />
-        public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
+        public override IEnumerable<DataSourceValue> Compute(Parameters parameters)
         {
             // Immediately load values in-memory only enumerating data source once
             DataSourceValue[] values = GetDataSourceValues(parameters).ToArray();
@@ -41,26 +81,18 @@ public abstract class Mode<T> : GrafanaFunctionBase<T> where T : struct, IDataSo
     public class ComputePhasorValue : Mode<PhasorValue>
     {
         /// <inheritdoc />
-        public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
+        public override IEnumerable<PhasorValue> Compute(Parameters parameters)
         {
             List<double> magnitudes = new();
             List<double> angles = new();
-
-            double lastTime = 0.0D;
-            string lastMagnitudeTarget = null;
-            string lastAngleTarget = null;
-            MeasurementStateFlags lastFlags = 0;
+            PhasorValue lastValue = default;
 
             // Immediately load values in-memory only enumerating data source once
             foreach (PhasorValue dataValue in GetDataSourceValues(parameters))
             {
+                lastValue = dataValue;
                 magnitudes.Add(dataValue.Magnitude);
                 angles.Add(dataValue.Angle);
-
-                lastTime = dataValue.Time;
-                lastMagnitudeTarget = dataValue.MagnitudeTarget;
-                lastAngleTarget = dataValue.AngleTarget;
-                lastFlags = dataValue.Flags;
             }
 
             if (magnitudes.Count == 0)
@@ -69,16 +101,15 @@ public abstract class Mode<T> : GrafanaFunctionBase<T> where T : struct, IDataSo
             double magnitudeMode = magnitudes.Majority(false);
             double angleMode = angles.Majority(false);
 
-            // Return immediate enumeration of computed values
-            yield return new PhasorValue()
+            // Return computed results
+            if (lastValue.Time > 0.0D)
             {
-                Magnitude = magnitudeMode,
-                Angle = angleMode,
-                Time = lastTime,
-                MagnitudeTarget = lastMagnitudeTarget,
-                AngleTarget = lastAngleTarget,
-                Flags = lastFlags
-            };
+                yield return lastValue with
+                {
+                    Magnitude = magnitudeMode,
+                    Angle = angleMode
+                };
+            }
         }
     }
 }

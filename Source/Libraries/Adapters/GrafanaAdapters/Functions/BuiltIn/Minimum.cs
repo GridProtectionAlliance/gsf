@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Threading;
 using GrafanaAdapters.DataSources;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
@@ -26,44 +25,30 @@ public abstract class Minimum<T> : GrafanaFunctionBase<T> where T : struct, IDat
     public override string[] Aliases => new[] { "Min" };
 
     /// <inheritdoc />
+    public override IEnumerable<T> Compute(Parameters parameters)
+    {
+        T minValue = new() { Value = double.MaxValue };
+
+        // Immediately enumerate values to find minimum
+        foreach (T dataValue in GetDataSourceValues(parameters))
+        {
+            if (dataValue.Value <= minValue.Value)
+                minValue = dataValue;
+        }
+
+        // Return computed results
+        if (minValue.Time > 0.0D)
+            yield return minValue;
+    }
+
+    /// <inheritdoc />
     public class ComputeDataSourceValue : Minimum<DataSourceValue>
     {
-        /// <inheritdoc />
-        public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
-        {
-            DataSourceValue minValue = new() { Value = double.MaxValue };
-
-            // Immediately enumerate values to find minimum
-            foreach (DataSourceValue dataValue in GetDataSourceValues(parameters))
-            {
-                if (dataValue.Value <= minValue.Value)
-                    minValue = dataValue;
-            }
-
-            // Do not return local default value
-            if (minValue.Time > 0.0D)
-                yield return minValue;
-        }
     }
 
     /// <inheritdoc />
     public class ComputePhasorValue : Minimum<PhasorValue>
     {
-        /// <inheritdoc />
-        public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
-        {
-            PhasorValue minValue = new() { Magnitude = double.MaxValue };
-
-            // Immediately enumerate values to find minimum - magnitude only
-            foreach (PhasorValue dataValue in GetDataSourceValues(parameters))
-            {
-                if (dataValue.Magnitude <= minValue.Magnitude)
-                    minValue = dataValue;
-            }
-
-            // Do not return local default value
-            if (minValue.Time > 0.0D)
-                yield return minValue;
-        }
+        // Operating on magnitude only
     }
 }

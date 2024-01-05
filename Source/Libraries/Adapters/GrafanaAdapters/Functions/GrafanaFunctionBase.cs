@@ -24,7 +24,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using GrafanaAdapters.DataSources;
 
 namespace GrafanaAdapters.Functions;
@@ -47,20 +46,20 @@ public abstract class GrafanaFunctionBase<T> : IGrafanaFunction<T> where T : str
     public virtual string[] Aliases => null;
 
     /// <inheritdoc />
-    public virtual GroupOperations SupportedGroupOperations => DefaultGroupOperations;
+    public virtual GroupOperations AllowedGroupOperations => DefaultGroupOperations;
 
     /// <inheritdoc />
     public virtual GroupOperations PublishedGroupOperations => DefaultGroupOperations;
 
     /// <inheritdoc />
-    public virtual GroupOperations CheckSupportedGroupOperation(GroupOperations requestedOperation)
+    public virtual GroupOperations CheckAllowedGroupOperation(GroupOperations requestedOperation)
     {
         // Default to standard
         if (requestedOperation == 0)
             requestedOperation = GroupOperations.Standard;
 
         // Verify that the function supports the requested operation
-        if (!SupportedGroupOperations.HasFlag(requestedOperation))
+        if (!AllowedGroupOperations.HasFlag(requestedOperation))
             throw new InvalidOperationException($"Function '{Name}' does not support '{requestedOperation}' function operations.");
 
         return requestedOperation;
@@ -82,29 +81,40 @@ public abstract class GrafanaFunctionBase<T> : IGrafanaFunction<T> where T : str
     }
 
     /// <inheritdoc />
-    public abstract IEnumerable<T> Compute(Parameters parameters, CancellationToken cancellationToken);
+    public abstract IEnumerable<T> Compute(Parameters parameters);
 
     /// <inheritdoc />
-    public virtual IEnumerable<T> ComputeSlice(Parameters parameters, CancellationToken cancellationToken)
+    public virtual IEnumerable<T> ComputeSlice(Parameters parameters)
     {
-        return Compute(parameters, cancellationToken);
+        return Compute(parameters);
     }
 
     /// <inheritdoc />
-    public virtual IEnumerable<T> ComputeSet(Parameters parameters, CancellationToken cancellationToken)
+    public virtual IEnumerable<T> ComputeSet(Parameters parameters)
     {
-        return Compute(parameters, cancellationToken);
+        return Compute(parameters);
     }
 
     /// <summary>
-    /// Gets data source values from provided parameters.
+    /// Gets data source values enumeration found in the provided parameters.
     /// </summary>
     /// <param name="parameters">Input parameters.</param>
     /// <returns>Data source values from provided parameters.</returns>
     /// <exception cref="InvalidOperationException">Last parameter is not a data source value of type <see cref="IEnumerable{T}"/>.</exception>
-    protected static IEnumerable<T> GetDataSourceValues(Parameters parameters)
+    protected virtual IEnumerable<T> GetDataSourceValues(Parameters parameters)
     {
         return (parameters.LastOrDefault() as IMutableParameter<IEnumerable<T>>)?.Value ??
             throw new InvalidOperationException($"Last parameter is not a data source value of type '{typeof(IEnumerable<T>).Name}'.");
+    }
+
+    /// <summary>
+    /// Executes specified function against data source values enumeration using provided parameters.
+    /// </summary>
+    /// <param name="function">Function to execute.</param>
+    /// <param name="parameters">Input parameters.</param>
+    /// <returns>Deferred enumeration of computed values.</returns>
+    protected virtual IEnumerable<T> ExecuteFunction(Func<double, double> function, Parameters parameters)
+    {
+        return GetDataSourceValues(parameters).Select(dataValue => dataValue.TransposeCompute(function));
     }
 }

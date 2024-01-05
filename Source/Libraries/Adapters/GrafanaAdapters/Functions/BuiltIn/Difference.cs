@@ -1,8 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using GrafanaAdapters.DataSources;
-using GSF.TimeSeries;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
 
@@ -27,54 +25,47 @@ public abstract class Difference<T> : GrafanaFunctionBase<T> where T : struct, I
     /// <inheritdoc />
     public override string[] Aliases => new[] { "Diff" };
 
+    /// <summary>
+    /// Computes the difference between the current value and the last value.
+    /// </summary>
+    /// <param name="currentValue">Source value.</param>
+    /// <param name="lastValue">Last result.</param>
+    /// <returns>Calculated difference.</returns>
+    protected abstract T TransposeCompute(T currentValue, T lastValue);
+
+    /// <inheritdoc />
+    public override IEnumerable<T> Compute(Parameters parameters)
+    {
+        T lastValue = new();
+
+        // Return deferred enumeration of computed values
+        foreach (T dataValue in GetDataSourceValues(parameters).Select(dataValue => TransposeCompute(dataValue, lastValue)))
+        {
+            if (lastValue.Time > 0.0D)
+                yield return dataValue;
+
+            lastValue = dataValue;
+        }
+    }
+
     /// <inheritdoc />
     public class ComputeDataSourceValue : Difference<DataSourceValue>
     {
         /// <inheritdoc />
-        public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
+        protected override DataSourceValue TransposeCompute(DataSourceValue currentValue, DataSourceValue lastValue) => currentValue with
         {
-            DataSourceValue lastResult = new();
-
-            // Transpose computed value
-            DataSourceValue transposeCompute(DataSourceValue dataValue) => dataValue with
-            {
-                Value = dataValue.Value - lastResult.Value
-            };
-
-            // Return deferred enumeration of computed values
-            foreach (DataSourceValue dataValue in GetDataSourceValues(parameters).Select(transposeCompute))
-            {
-                if (lastResult.Time > 0.0D)
-                    yield return dataValue;
-
-                lastResult = dataValue;
-            }
-        }
+            Value = currentValue.Value - lastValue.Value
+        };
     }
 
     /// <inheritdoc />
     public class ComputePhasorValue : Difference<PhasorValue>
     {
         /// <inheritdoc />
-        public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
+        protected override PhasorValue TransposeCompute(PhasorValue currentValue, PhasorValue lastValue) => currentValue with
         {
-            PhasorValue lastResult = new();
-
-            // Transpose computed value
-            PhasorValue transposeCompute(PhasorValue dataValue) => dataValue with
-            {
-                Magnitude = dataValue.Magnitude - lastResult.Magnitude,
-                Angle = (dataValue.Angle + 180 - (lastResult.Angle + 180)) % 360 - 180
-            };
-
-            // Return deferred enumeration of computed values
-            foreach (PhasorValue dataValue in GetDataSourceValues(parameters).Select(transposeCompute))
-            {
-                if (lastResult.Time > 0.0D)
-                    yield return dataValue;
-
-                lastResult = dataValue;
-            }
-        }
+            Magnitude = currentValue.Magnitude - lastValue.Magnitude,
+            Angle = (currentValue.Angle + 180 - (lastValue.Angle + 180)) % 360 - 180
+        };
     }
 }

@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using GrafanaAdapters.DataSources;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
@@ -31,39 +29,18 @@ public abstract class Ceiling<T> : GrafanaFunctionBase<T> where T : struct, IDat
     public override GroupOperations PublishedGroupOperations => GroupOperations.Standard | GroupOperations.Set;
 
     /// <inheritdoc />
+    public override IEnumerable<T> Compute(Parameters parameters)
+    {
+        return ExecuteFunction(Math.Ceiling, parameters);
+    }
+
+    /// <inheritdoc />
     public class ComputeDataSourceValue : Ceiling<DataSourceValue>
     {
-        /// <inheritdoc />
-        public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
-        {
-            // Transpose computed value
-            DataSourceValue transposeCompute(DataSourceValue dataValue) => dataValue with
-            {
-                Value = Math.Ceiling(dataValue.Value)
-            };
-
-            // Return deferred enumeration of computed values
-            foreach (DataSourceValue dataValue in GetDataSourceValues(parameters).Select(transposeCompute))
-                yield return dataValue;
-        }
     }
 
     /// <inheritdoc />
     public class ComputePhasorValue : Ceiling<PhasorValue>
     {
-        /// <inheritdoc />
-        public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
-        {
-            // Transpose computed value
-            PhasorValue transposeCompute(PhasorValue dataValue) => dataValue with
-            {
-                Magnitude = Math.Ceiling(dataValue.Magnitude),
-                Angle = Math.Ceiling(dataValue.Angle),
-            };
-
-            // Return deferred enumeration of computed values
-            foreach (PhasorValue dataValue in GetDataSourceValues(parameters).Select(transposeCompute))
-                yield return dataValue;
-        }
     }
 }

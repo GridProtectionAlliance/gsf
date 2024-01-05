@@ -1,9 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using GrafanaAdapters.DataSources;
 using GSF.Collections;
-using GSF.TimeSeries;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
 
@@ -32,7 +30,7 @@ public abstract class Median<T> : GrafanaFunctionBase<T> where T : struct, IData
     public class ComputeDataSourceValue : Median<DataSourceValue>
     {
         /// <inheritdoc />
-        public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
+        public override IEnumerable<DataSourceValue> Compute(Parameters parameters)
         {
             // Median uses immediate in-memory array load
             DataSourceValue[] values = GetDataSourceValues(parameters).OrderBy(dataValue => dataValue.Value).Median();
@@ -54,26 +52,18 @@ public abstract class Median<T> : GrafanaFunctionBase<T> where T : struct, IData
     public class ComputePhasorValue : Median<PhasorValue>
     {
         /// <inheritdoc />
-        public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
+        public override IEnumerable<PhasorValue> Compute(Parameters parameters)
         {
             List<double> magnitudes = new();
             List<double> angles = new();
-
-            double lastTime = 0.0D;
-            string lastMagnitudeTarget = null;
-            string lastAngleTarget = null;
-            MeasurementStateFlags lastFlags = 0;
+            PhasorValue lastValue = default;
 
             // Immediately load values in-memory only enumerating data source once
             foreach (PhasorValue dataValue in GetDataSourceValues(parameters))
             {
+                lastValue = dataValue;
                 magnitudes.Add(dataValue.Magnitude);
                 angles.Add(dataValue.Angle);
-
-                lastTime = dataValue.Time;
-                lastMagnitudeTarget = dataValue.MagnitudeTarget;
-                lastAngleTarget = dataValue.AngleTarget;
-                lastFlags = dataValue.Flags;
             }
 
             if (magnitudes.Count == 0)
@@ -92,16 +82,15 @@ public abstract class Median<T> : GrafanaFunctionBase<T> where T : struct, IData
             if (angleMedians.Length > 1)
                 angleMedian = angleMedians[0] + (angleMedians[1] - angleMedians[0]) / 2.0D;
 
-            // Return immediate enumeration of computed values
-            yield return new PhasorValue()
+            // Return computed results
+            if (lastValue.Time > 0.0D)
             {
-                Magnitude = magnitudeMedian,
-                Angle = angleMedian,
-                Time = lastTime,
-                MagnitudeTarget = lastMagnitudeTarget,
-                AngleTarget = lastAngleTarget,
-                Flags = lastFlags
-            };
+                yield return lastValue with
+                {
+                    Magnitude = magnitudeMedian,
+                    Angle = angleMedian
+                };
+            }
         }
     }
 }

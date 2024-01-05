@@ -23,7 +23,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using GrafanaAdapters.DataSources;
 using GrafanaAdapters.Functions.BuiltIn;
 
@@ -70,18 +69,19 @@ public interface IGrafanaFunction
     string[] Aliases { get; }
 
     /// <summary>
-    /// Gets set of group operations that the Grafana function supports.
+    /// Gets set of group operations that the Grafana function allows.
     /// </summary>
     /// <remarks>
-    /// Unsupported operations should be taken to mean that the use of the group operation for a function is an error.
-    /// Implementors should carefully consider which group operations that a function exposes as unsupported since when
-    /// a user selects an unsupported group operation, this results in an exception. If the result of a group operation
-    /// results in the same matrix of values as a standard operation, the group operation should continue to be supported,
-    /// but can be hidden from the user by overriding the <see cref="PublishedGroupOperations"/>. Another option is to
-    /// simply ignore a group operation that is not supported by forcing supported operations. This is handled by overriding
-    /// the <see cref="CheckSupportedGroupOperation"/> method. See the <see cref="Label{T}"/> function for an example of this.
+    /// Operations that are not allowed should be taken to mean that the use of the group operation for a function is an
+    /// error. Implementors should carefully consider which group operations that a function exposes as not allowed since
+    /// when a user selects an group operation that is not allowed, this results in an exception. If the result of a group
+    /// operation results in the same matrix of values as a standard operation, the group operation should continue to be
+    /// supported, but can be hidden from the user by overriding the <see cref="PublishedGroupOperations"/>. Another option
+    /// is to simply ignore a group operation that is not supported by forcing supported operations. This is handled by
+    /// overriding the <see cref="CheckAllowedGroupOperation"/> method. See the <see cref="Label{T}"/> function for an
+    /// example of this.
     /// </remarks>
-    GroupOperations SupportedGroupOperations { get; }
+    GroupOperations AllowedGroupOperations { get; }
 
     /// <summary>
     /// Gets set of group operations that the Grafana function exposes publicly.
@@ -89,7 +89,7 @@ public interface IGrafanaFunction
     GroupOperations PublishedGroupOperations { get; }
 
     /// <summary>
-    /// Checks if function supports requested group operation against <see cref="SupportedGroupOperations"/>.
+    /// Checks if function allows requested group operation against <see cref="AllowedGroupOperations"/> property.
     /// </summary>
     /// <param name="requestedOperation">Requested operation.</param>
     /// <returns>Supported operation.</returns>
@@ -97,7 +97,7 @@ public interface IGrafanaFunction
     /// <remarks>
     /// If the requested operation is <c>0</c>, function will default to <see cref="GroupOperations.Standard"/>.
     /// </remarks>
-    GroupOperations CheckSupportedGroupOperation(GroupOperations requestedOperation);
+    GroupOperations CheckAllowedGroupOperation(GroupOperations requestedOperation);
 
     /// <summary>
     /// Gets the list of defined parameter definitions for the Grafana function.
@@ -148,33 +148,30 @@ public interface IGrafanaFunction<out T> : IGrafanaFunction where T : struct, ID
     /// Executes the computation for the Grafana function.
     /// </summary>
     /// <param name="parameters">The input parameters for the computation.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A sequence of computed data source parameters.</returns>
-    IEnumerable<T> Compute(Parameters parameters, CancellationToken cancellationToken);
+    IEnumerable<T> Compute(Parameters parameters);
 
     /// <summary>
     /// Executes a custom slice computation for the Grafana function.
     /// </summary>
     /// <param name="parameters">The input parameters for the computation.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A sequence of computed data source parameters.</returns>
     /// <remarks>
     /// This method is used to support custom slice computations for functions that
     /// need special handling for slice operations. By default, this method will call
     /// <see cref="Compute"/> to perform the computation.
     /// </remarks>
-    IEnumerable<T> ComputeSlice(Parameters parameters, CancellationToken cancellationToken);
+    IEnumerable<T> ComputeSlice(Parameters parameters);
 
     /// <summary>
     /// Executes a custom set computation for the Grafana function.
     /// </summary>
     /// <param name="parameters">The input parameters for the computation.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>A sequence of computed data source parameters.</returns>
     /// <remarks>
     /// This method is used to support custom set computations for functions that
     /// need special handling for set operations. By default, this method will call
     /// <see cref="Compute"/> to perform the computation.
     /// </remarks>
-    IEnumerable<T> ComputeSet(Parameters parameters, CancellationToken cancellationToken);
+    IEnumerable<T> ComputeSet(Parameters parameters);
 }

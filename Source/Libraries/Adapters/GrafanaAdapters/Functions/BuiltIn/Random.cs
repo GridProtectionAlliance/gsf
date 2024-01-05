@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using GrafanaAdapters.DataSources;
 using GSF;
 using GSF.Collections;
@@ -49,82 +48,71 @@ public abstract class Random<T> : GrafanaFunctionBase<T> where T : struct, IData
             Default = true,
             Description = "A boolean flag which representing if time in dataset should be normalized.",
             Required = false
-        },
+        }
     };
+
+    /// <summary>
+    /// Transposes order of values in array.
+    /// </summary>
+    /// <param name="currentValue">Source value.</param>
+    /// <param name="values">Array of values.</param>
+    /// <param name="index">Index of current value.</param>
+    /// <returns>The transposed value.</returns>
+    protected abstract T TransposeCompute(T currentValue, T[] values, int index);
+
+    /// <inheritdoc />
+    public override IEnumerable<T> Compute(Parameters parameters)
+    {
+        // Immediately load values in-memory only enumerating data source once
+        T[] values = GetDataSourceValues(parameters).ToArray();
+
+        if (values.Length == 0)
+            yield break;
+
+        int valueN = ParseTotal(parameters.Value<string>(0), values.Length);
+
+        if (valueN > values.Length)
+            valueN = values.Length;
+
+        bool normalizeTime = parameters.Value<bool>(1);
+        double baseTime = values[0].Time;
+        double timeStep = (values[values.Length - 1].Time - baseTime) / (valueN - 1).NotZero(1);
+        List<int> indexes = new(Enumerable.Range(0, values.Length));
+        indexes.Scramble();
+
+        T transposeOrder(T dataValue, int index) => TransposeCompute(dataValue, values, index) with
+        {
+            Time = normalizeTime ? baseTime + index * timeStep : values[index].Time,
+        };
+
+        // Return immediate enumeration of computed values
+        foreach (T dataValue in values.Take(valueN).Select(transposeOrder))
+            yield return dataValue;
+    }
 
     /// <inheritdoc />
     public class ComputeDataSourceValue : Random<DataSourceValue>
     {
         /// <inheritdoc />
-        public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
+        protected override DataSourceValue TransposeCompute(DataSourceValue currentValue, DataSourceValue[] values, int index) => new()
         {
-            // Immediately load values in-memory only enumerating data source once
-            DataSourceValue[] values = GetDataSourceValues(parameters).ToArray();
-
-            if (values.Length == 0)
-                yield break;
-
-            int count = ParseCount(parameters.Value<string>(0), values.Length);
-
-            if (count > values.Length)
-                count = values.Length;
-
-            bool normalizeTime = parameters.ParsedCount == 1 || parameters.Value<bool>(1);
-            double baseTime = values[0].Time;
-            double timeStep = (values[values.Length - 1].Time - baseTime) / (count - 1).NotZero(1);
-            List<int> indexes = new(Enumerable.Range(0, values.Length));
-            indexes.Scramble();
-
-            DataSourceValue transposeOrder(DataSourceValue dataValue, int index) => new()
-            {
-                Value = values[index].Value,
-                Time = normalizeTime ? baseTime + index * timeStep : values[index].Time,
-                Target = values[index].Target,
-                Flags = values[index].Flags
-            };
-
-            // Return immediate enumeration of computed values
-            foreach (DataSourceValue dataValue in values.Take(count).Select(transposeOrder))
-                yield return dataValue;
-        }
+            Value = values[index].Value,
+            Target = values[index].Target,
+            Flags = values[index].Flags
+        };
     }
 
     /// <inheritdoc />
     public class ComputePhasorValue : Random<PhasorValue>
     {
         /// <inheritdoc />
-        public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
+        protected override PhasorValue TransposeCompute(PhasorValue currentValue, PhasorValue[] values, int index) => new()
         {
-            // Immediately load values in-memory only enumerating data source once
-            PhasorValue[] values = GetDataSourceValues(parameters).ToArray();
-
-            if (values.Length == 0)
-                yield break;
-
-            int count = ParseCount(parameters.Value<string>(0), values.Length);
-
-            if (count > values.Length)
-                count = values.Length;
-
-            bool normalizeTime = parameters.ParsedCount == 1 || parameters.Value<bool>(1);
-            double baseTime = values[0].Time;
-            double timeStep = (values[values.Length - 1].Time - baseTime) / (count - 1).NotZero(1);
-            List<int> indexes = new(Enumerable.Range(0, values.Length));
-            indexes.Scramble();
-
-            PhasorValue transposeOrder(PhasorValue dataValue, int index) => new()
-            {
-                Magnitude = values[index].Magnitude,
-                Angle = values[index].Angle,
-                Time = normalizeTime ? baseTime + index * timeStep : values[index].Time,
-                MagnitudeTarget = values[index].MagnitudeTarget,
-                AngleTarget = values[index].AngleTarget,
-                Flags = values[index].Flags
-            };
-
-            // Return immediate enumeration of computed values
-            foreach (PhasorValue dataValue in values.Take(count).Select(transposeOrder))
-                yield return dataValue;
-        }
+            Magnitude = values[index].Magnitude,
+            Angle = values[index].Angle,
+            MagnitudeTarget = values[index].MagnitudeTarget,
+            AngleTarget = values[index].AngleTarget,
+            Flags = values[index].Flags
+        };
     }
 }

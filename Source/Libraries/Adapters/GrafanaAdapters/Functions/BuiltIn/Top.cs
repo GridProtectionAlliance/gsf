@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using GrafanaAdapters.DataSources;
 using GSF;
 
@@ -53,68 +52,41 @@ public abstract class Top<T> : GrafanaFunctionBase<T> where T : struct, IDataSou
     };
 
     /// <inheritdoc />
+    public override IEnumerable<T> Compute(Parameters parameters)
+    {
+        // Immediately load values in-memory only enumerating data source once
+        T[] values = GetDataSourceValues(parameters).ToArray();
+
+        if (values.Length == 0)
+            yield break;
+
+        int valueN = ParseTotal(parameters.Value<string>(0), values.Length);
+
+        if (valueN > values.Length)
+            valueN = values.Length;
+
+        bool normalizeTime = parameters.Value<bool>(1);
+        double baseTime = values[0].Time;
+        double timeStep = (values[values.Length - 1].Time - baseTime) / (valueN - 1).NotZero(1);
+        Array.Sort(values, (a, b) => a.Value < b.Value ? -1 : a.Value > b.Value ? 1 : 0);
+
+        T transposeTime(T dataValue, int index) => dataValue with
+        {
+            Time = normalizeTime ? baseTime + index * timeStep : dataValue.Time
+        };
+
+        // Return immediate enumeration of computed values
+        foreach (T dataValue in values.Take(valueN).Select(transposeTime))
+            yield return dataValue;
+    }
+
+    /// <inheritdoc />
     public class ComputeDataSourceValue : Top<DataSourceValue>
     {
-        /// <inheritdoc />
-        public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
-        {
-            // Immediately load values in-memory only enumerating data source once
-            DataSourceValue[] values = GetDataSourceValues(parameters).ToArray();
-            
-            if (values.Length == 0)
-                yield break;
-
-            int count = ParseCount(parameters.Value<string>(0), values.Length);
-
-            if (count > values.Length)
-                count = values.Length;
-
-            bool normalizeTime = parameters.ParsedCount == 1 || parameters.Value<bool>(1);
-            double baseTime = values[0].Time;
-            double timeStep = (values[values.Length - 1].Time - baseTime) / (count - 1).NotZero(1);
-            Array.Sort(values, (a, b) => a.Value < b.Value ? -1 : a.Value > b.Value ? 1 : 0);
-
-            DataSourceValue transposeTime(DataSourceValue dataValue, int index) => dataValue with
-            {
-                Time = normalizeTime ? baseTime + index * timeStep : dataValue.Time
-            };
-
-            // Return immediate enumeration of computed values
-            foreach (DataSourceValue dataValue in values.Take(count).Select(transposeTime))
-                yield return dataValue;
-        }
     }
 
     /// <inheritdoc />
     public class ComputePhasorValue : Top<PhasorValue>
     {
-        /// <inheritdoc />
-        public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
-        {
-            // Immediately load values in-memory only enumerating data source once
-            PhasorValue[] values = GetDataSourceValues(parameters).ToArray();
-
-            if (values.Length == 0)
-                yield break;
-
-            int count = ParseCount(parameters.Value<string>(0), values.Length);
-
-            if (count > values.Length)
-                count = values.Length;
-
-            bool normalizeTime = parameters.ParsedCount == 1 || parameters.Value<bool>(1);
-            double baseTime = values[0].Time;
-            double timeStep = (values[values.Length - 1].Time - baseTime) / (count - 1).NotZero(1);
-            Array.Sort(values, (a, b) => a.Magnitude < b.Magnitude ? -1 : a.Magnitude > b.Magnitude ? 1 : 0);
-
-            PhasorValue transposeTime(PhasorValue dataValue, int index) => dataValue with
-            {
-                Time = normalizeTime ? baseTime + index * timeStep : dataValue.Time
-            };
-
-            // Return immediate enumeration of computed values
-            foreach (PhasorValue dataValue in values.Take(count).Select(transposeTime))
-                yield return dataValue;
-        }
     }
 }

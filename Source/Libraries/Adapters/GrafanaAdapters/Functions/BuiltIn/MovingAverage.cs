@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Threading;
 using GrafanaAdapters.DataSources;
 using GSF.Units;
 
@@ -57,7 +56,7 @@ public abstract class MovingAverage<T> : GrafanaFunctionBase<T> where T : struct
     public class ComputeDataSourceValue : MovingAverage<DataSourceValue>
     {
         /// <inheritdoc />
-        public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
+        public override IEnumerable<DataSourceValue> Compute(Parameters parameters)
         {
             //// Get Values
             //double timeValue = (parameters[0] as IParameter<double>).Value;
@@ -98,7 +97,7 @@ public abstract class MovingAverage<T> : GrafanaFunctionBase<T> where T : struct
     public class ComputePhasorValue : MovingAverage<PhasorValue>
     {
         /// <inheritdoc />
-        public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
+        public override IEnumerable<PhasorValue> Compute(Parameters parameters)
         {
             //// Get Values
             //double timeValue = (parameters[0] as IParameter<double>).Value;

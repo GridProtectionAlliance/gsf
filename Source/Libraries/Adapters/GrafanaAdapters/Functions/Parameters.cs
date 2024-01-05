@@ -41,7 +41,7 @@ namespace GrafanaAdapters.Functions;
 /// all possible parameters for a function, both required and optional, effectively determining its signature. Parameters
 /// in this collection represent the values extracted from the user-provided function expression and, when presented to a
 /// function, have already been validated and parsed by type. Additionally, the class provides access to the data source
-/// values expression; function implementations can call <see cref="GrafanaFunctionBase{T}.GetDataSourceValues"/> to get
+/// values expression; function implementations can call <see cref="GrafanaFunctionBase{T}.GetDataSourceValues(GrafanaAdapters.Functions.Parameters)"/> to get
 /// current data source values. The parameters in this collection are mutable, implying ownership by the function, and
 /// can be safely modified as needed. To identify which optional parameters have been parsed and are available, refer to
 /// the <see cref="ParsedCount"/> property.
@@ -67,14 +67,12 @@ public class Parameters : IList<IMutableParameter>
     /// Gets or sets the number of parameters that have been parsed.
     /// </summary>
     /// <remarks>
-    /// The number of parameters in defined in the <see cref="Parameters"/> collection
-    /// will always match the number of parameters defined in the function definition,
-    /// optional or not, see <see cref="ParameterDefinitions"/>. This property is used
-    /// to determine the count of required and optional parameters that were actually
-    /// parsed from the user provided function expression. Note that the count does not
-    /// include the data source values expression, which is always available as the last
-    /// parameter. With this count, the function can determine which optional parameters
-    /// were parsed and are thus available for use.
+    /// The number of parameters in defined in the <see cref="Parameters"/> collection will always match the number of
+    /// parameters defined in the function definition, optional or not, see <see cref="ParameterDefinitions"/>. This
+    /// property is used to determine the count of required and optional parameters that were actually parsed from the
+    /// user provided function expression. Note that the count does not include the data source values expression,
+    /// which is always available as the last parameter. With this count, the function can determine which optional
+    /// parameters were parsed and are thus available for use.
     /// </remarks>
     public int ParsedCount { get; set; }
 
@@ -104,31 +102,38 @@ public class Parameters : IList<IMutableParameter>
     }
 
     /// <summary>
-    /// Gets value of parameter at specified index.
+    /// Gets value of parameter at specified index, if the index is valid.
     /// </summary>
     /// <param name="index">Index of parameter to get.</param>
     /// <returns>
-    /// The value of parameter at specified index.
+    /// The value of parameter at specified index if the index is valid;
+    /// otherwise, <c>null</c>.
     /// </returns>
-    /// <exception cref="IndexOutOfRangeException">Index is out of range.</exception>
+    /// <remarks>
+    /// This function will not throw an exception if the index is invalid.
+    /// </remarks>
     public object Value(int index)
     {
-        return m_parameters[index].Value;
+        return index > -1 && index < m_parameters.Count ? 
+            m_parameters[index].Value : null;
     }
 
     /// <summary>
-    /// Gets typed value of parameter at specified index, if value can be cast as type.
+    /// Gets typed value of parameter at specified index, if the index is valid and the
+    /// value can be cast as type.
     /// </summary>
     /// <typeparam name="T">The type of the parameter.</typeparam>
     /// <param name="index">Index of parameter to get.</param>
     /// <returns>
-    /// The typed value of parameter at specified index if it can be cast to type;
-    /// otherwise, default value.
+    /// The typed value of parameter at specified index if the in index is valid and the
+    /// value can be cast to type; otherwise, default value.
     /// </returns>
-    /// <exception cref="IndexOutOfRangeException">Index is out of range.</exception>
+    /// <remarks>
+    /// This function will not throw an exception if the index is invalid.
+    /// </remarks>
     public T Value<T>(int index)
     {
-        return m_parameters[index] is IMutableParameter<T> typedParameter ? 
+        return index > -1 && index < m_parameters.Count && m_parameters[index] is IMutableParameter<T> typedParameter ? 
             typedParameter.Value : default;
     }
 
@@ -142,6 +147,7 @@ public class Parameters : IList<IMutableParameter>
     /// </returns>
     /// <remarks>
     /// Parameter name lookup dictionary is lazy initialized. Using index-based lookups is more efficient.
+    /// This function will not throw an exception if the name is not found.
     /// </remarks>
     public object Value(string name)
     {
@@ -150,7 +156,8 @@ public class Parameters : IList<IMutableParameter>
     }
 
     /// <summary>
-    /// Gets typed value of parameter with specified name, if name is found and value can be cast as type.
+    /// Gets typed value of parameter with specified name, if name is found and the
+    /// value can be cast as type.
     /// </summary>
     /// <typeparam name="T">The type of the parameter.</typeparam>
     /// <param name="name">Name of parameter to get.</param>
@@ -160,6 +167,7 @@ public class Parameters : IList<IMutableParameter>
     /// </returns>
     /// <remarks>
     /// Parameter name lookup dictionary is lazy initialized. Using index-based lookups is more efficient.
+    /// This function will not throw an exception if the name is not found.
     /// </remarks>
     public T Value<T>(string name)
     {

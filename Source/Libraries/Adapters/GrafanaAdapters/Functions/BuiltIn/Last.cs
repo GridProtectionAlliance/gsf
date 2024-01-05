@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using GrafanaAdapters.DataSources;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
@@ -36,30 +35,11 @@ public abstract class Last<T> : GrafanaFunctionBase<T> where T : struct, IDataSo
             Default = "1",
             Description = "A integer value or percent representing number or % of elements to take.",
             Required = false
-        },
+        }
     };
 
     /// <inheritdoc />
-    public class ComputeDataSourceValue : Last<DataSourceValue>
-    {
-        /// <inheritdoc />
-        public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
-        {
-            return ComputeLast(parameters);
-        }
-    }
-
-    /// <inheritdoc />
-    public class ComputePhasorValue : Last<PhasorValue>
-    {
-        /// <inheritdoc />
-        public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
-        {
-            return ComputeLast(parameters);
-        }
-    }
-
-    private static IEnumerable<T> ComputeLast(Parameters parameters)
+    public override IEnumerable<T> Compute(Parameters parameters)
     {
         IEnumerable<T> source = GetDataSourceValues(parameters);
 
@@ -70,12 +50,23 @@ public abstract class Last<T> : GrafanaFunctionBase<T> where T : struct, IDataSo
         if (length == 0)
             yield break;
 
-        int count = parameters.ParsedCount == 0 ? 1 : ParseCount(parameters.Value<string>(0), length);
+        int valueN = ParseTotal(parameters.Value<string>(0), length);
 
-        if (count > length)
-            count = length;
+        if (valueN > length)
+            valueN = length;
 
-        for (int i = 0; i < count; i++)
+        for (int i = 0; i < valueN; i++)
             yield return values[length - i - i];
+    }
+
+    /// <inheritdoc />
+    public class ComputeDataSourceValue : Last<DataSourceValue>
+    {
+    }
+
+    /// <inheritdoc />
+    public class ComputePhasorValue : Last<PhasorValue>
+    {
+        // Operating on magnitude only
     }
 }

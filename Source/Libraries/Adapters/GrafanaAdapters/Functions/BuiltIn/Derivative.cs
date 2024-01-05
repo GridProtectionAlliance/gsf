@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Threading;
+using System.Linq;
 using GrafanaAdapters.DataSources;
 using GSF.Units;
 
@@ -45,66 +45,35 @@ public abstract class Derivative<T> : GrafanaFunctionBase<T> where T : struct, I
     };
 
     /// <inheritdoc />
+    public override IEnumerable<T> Compute(Parameters parameters)
+    {
+        TargetTimeUnit units = parameters.Value<TargetTimeUnit>(0);
+        T lastResult = new();
+
+        // Transpose computed value
+        T transposeCompute(T dataValue) => dataValue with
+        {
+            Value = (dataValue.Value - lastResult.Value) / TargetTimeUnit.ToTimeUnits((dataValue.Time - lastResult.Time) * SI.Milli, units)
+        };
+
+        // Return deferred enumeration of computed values
+        foreach (T dataValue in GetDataSourceValues(parameters).Select(transposeCompute))
+        {
+            if (lastResult.Time > 0.0D)
+                yield return dataValue;
+
+            lastResult = dataValue;
+        }
+    }
+
+    /// <inheritdoc />
     public class ComputeDataSourceValue : Derivative<DataSourceValue>
     {
-        /// <inheritdoc />
-        public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
-        {
-            //// Get Values
-            //DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
-            //TargetTimeUnit timeUnit = (parameters[1] as IParameter<TargetTimeUnit>).Value;
-
-            //// Compute
-            //DataSourceValue previousData = dataSourceValues.Source.First();
-            //IEnumerable<DataSourceValue> transformedDataSourceValues = dataSourceValues.Source.Skip(1).Select(dataSourceValue =>
-            //{
-            //    DataSourceValue transformedValue = dataSourceValue;
-
-            //    transformedValue.Value = (transformedValue.Value - previousData.Value) / TimeConversion.ToTimeUnits((transformedValue.Time - previousData.Time) * SI.Milli, timeUnit);
-
-            //    previousData = dataSourceValue;
-            //    return transformedValue;
-            //});
-
-            //// Set Values
-            //dataSourceValues.Target = $"{Name}({dataSourceValues.Target},{timeUnit.Unit})";
-            //dataSourceValues.Source = transformedDataSourceValues;
-
-            //return dataSourceValues;
-            return null;
-        }
     }
 
     /// <inheritdoc />
     public class ComputePhasorValue : Derivative<PhasorValue>
     {
-        /// <inheritdoc />
-        public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
-        {
-            //// Get Values
-            //DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[0] as IParameter<IDataSourceValueGroup>).Value;
-            //TargetTimeUnit timeUnit = (parameters[1] as IParameter<TargetTimeUnit>).Value;
-
-            //// Compute
-            //PhasorValue previousData = phasorValues.Source.First();
-            //IEnumerable<PhasorValue> transformedPhasorValues = phasorValues.Source.Skip(1).Select(phasorValue =>
-            //{
-            //    PhasorValue transformedValue = phasorValue;
-
-            //    transformedValue.Magnitude = (transformedValue.Magnitude - previousData.Magnitude) / TimeConversion.ToTimeUnits((transformedValue.Time - previousData.Time) * SI.Milli, timeUnit);
-            //    transformedValue.Angle = (transformedValue.Angle - previousData.Angle) / TimeConversion.ToTimeUnits((transformedValue.Time - previousData.Time) * SI.Milli, timeUnit);
-
-            //    previousData = phasorValue;
-            //    return transformedValue;
-            //});
-
-            //// Set Values
-            //string[] labels = phasorValues.Target.Split(';');
-            //phasorValues.Target = $"{Name}({labels[0]},{timeUnit.Unit});{Name}({labels[1]},{timeUnit.Unit})";
-            //phasorValues.Source = transformedPhasorValues;
-
-            //return phasorValues;
-            return null;
-        }
+        // Operating on magnitude only
     }
 }

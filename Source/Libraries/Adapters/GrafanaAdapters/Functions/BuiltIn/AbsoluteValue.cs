@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using GrafanaAdapters.DataSources;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
@@ -31,39 +29,18 @@ public abstract class AbsoluteValue<T> : GrafanaFunctionBase<T> where T : struct
     public override GroupOperations PublishedGroupOperations => GroupOperations.Standard | GroupOperations.Set;
 
     /// <inheritdoc />
+    public override IEnumerable<T> Compute(Parameters parameters)
+    {
+        return ExecuteFunction(Math.Abs, parameters);
+    }
+
+    /// <inheritdoc />
     public class ComputeDataSourceValue : AbsoluteValue<DataSourceValue>
     {
-        /// <inheritdoc />
-        public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
-        {
-            // Transpose computed value
-            DataSourceValue transposeCompute(DataSourceValue dataValue) => dataValue with
-            {
-                Value = Math.Abs(dataValue.Value)
-            };
-
-            // Return deferred enumeration of computed values
-            foreach (DataSourceValue dataValue in GetDataSourceValues(parameters).Select(transposeCompute))
-                yield return dataValue;
-        }
     }
 
     /// <inheritdoc />
     public class ComputePhasorValue : AbsoluteValue<PhasorValue>
     {
-        /// <inheritdoc />
-        public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
-        {
-            // Transpose computed value
-            PhasorValue transposeCompute(PhasorValue dataValue) => dataValue with
-            {
-                Magnitude = Math.Abs(dataValue.Magnitude),
-                Angle = Math.Abs(dataValue.Angle),
-            };
-
-            // Return deferred enumeration of computed values
-            foreach (PhasorValue dataValue in GetDataSourceValues(parameters).Select(transposeCompute))
-                yield return dataValue;
-        }
     }
 }

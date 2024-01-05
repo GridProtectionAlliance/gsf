@@ -1,6 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using GrafanaAdapters.DataSources;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
@@ -41,43 +39,19 @@ public abstract class Multiply<T> : GrafanaFunctionBase<T> where T : struct, IDa
     };
 
     /// <inheritdoc />
+    public override IEnumerable<T> Compute(Parameters parameters)
+    {
+        double valueN = parameters.Value<double>(0);
+        return ExecuteFunction(value => value * valueN, parameters);
+    }
+
+    /// <inheritdoc />
     public class ComputeDataSourceValue : Multiply<DataSourceValue>
     {
-        /// <inheritdoc />
-        public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
-        {
-            double valueN = parameters.Value<double>(0);
-
-            // Transpose computed value
-            DataSourceValue transposeCompute(DataSourceValue dataValue) => dataValue with
-            {
-                Value = dataValue.Value * valueN
-            };
-
-            // Return deferred enumeration of computed values
-            foreach (DataSourceValue dataValue in GetDataSourceValues(parameters).Select(transposeCompute))
-                yield return dataValue;
-        }
     }
 
     /// <inheritdoc />
     public class ComputePhasorValue : Multiply<PhasorValue>
     {
-        /// <inheritdoc />
-        public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
-        {
-            double valueN = parameters.Value<double>(0);
-
-            // Transpose computed value
-            PhasorValue transposeCompute(PhasorValue dataValue) => dataValue with
-            {
-                Magnitude = dataValue.Magnitude * valueN,
-                Angle = dataValue.Angle * valueN
-            };
-
-            // Return deferred enumeration of computed values
-            foreach (PhasorValue dataValue in GetDataSourceValues(parameters).Select(transposeCompute))
-                yield return dataValue;
-        }
     }
 }

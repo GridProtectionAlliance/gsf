@@ -1,6 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using GrafanaAdapters.DataSources;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
@@ -36,48 +34,24 @@ public abstract class Add<T> : GrafanaFunctionBase<T> where T : struct, IDataSou
             Name = "N",
             Default = 0,
             Description = "A floating point value representing an additive offset to be applied to each value the source series.",
-            Required = true,
+            Required = true
         }
     };
 
     /// <inheritdoc />
+    public override IEnumerable<T> Compute(Parameters parameters)
+    {
+        double valueN = parameters.Value<double>(0);
+        return ExecuteFunction(value => value + valueN, parameters);
+    }
+
+    /// <inheritdoc />
     public class ComputeDataSourceValue : Add<DataSourceValue>
     {
-        /// <inheritdoc />
-        public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
-        {
-            double valueN = parameters.Value<double>(0);
-
-            // Transpose computed value
-            DataSourceValue transposeCompute(DataSourceValue dataValue) => dataValue with
-            {
-                Value = dataValue.Value + valueN
-            };
-
-            // Return deferred enumeration of computed values
-            foreach (DataSourceValue dataValue in GetDataSourceValues(parameters).Select(transposeCompute))
-                yield return dataValue;
-        }
     }
 
     /// <inheritdoc />
     public class ComputePhasorValue : Add<PhasorValue>
     {
-        /// <inheritdoc />
-        public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
-        {
-            double valueN = parameters.Value<double>(0);
-
-            // Transpose computed value
-            PhasorValue transposeCompute(PhasorValue dataValue) => dataValue with
-            {
-                Magnitude = dataValue.Magnitude + valueN,
-                Angle = dataValue.Angle + valueN
-            };
-
-            // Return deferred enumeration of computed values
-            foreach (PhasorValue dataValue in GetDataSourceValues(parameters).Select(transposeCompute))
-                yield return dataValue;
-        }
     }
 }

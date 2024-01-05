@@ -1,8 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using GrafanaAdapters.DataSources;
-using GSF.TimeSeries;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
 
@@ -31,28 +29,22 @@ public abstract class Total<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     public class ComputeDataSourceValue : Total<DataSourceValue>
     {
         /// <inheritdoc />
-        public override IEnumerable<DataSourceValue> Compute(Parameters parameters, CancellationToken cancellationToken)
+        public override IEnumerable<DataSourceValue> Compute(Parameters parameters)
         {
-            double lastTime = 0.0D;
-            string lastTarget = null;
-            MeasurementStateFlags lastFlags = 0;
+            DataSourceValue lastValue = default;
 
             IEnumerable<double> trackedValues = GetDataSourceValues(parameters).Select(dataValue =>
             {
-                lastTime = dataValue.Time;
-                lastTarget = dataValue.Target;
-                lastFlags = dataValue.Flags;
+                lastValue = dataValue;
                 return dataValue.Value;
             });
 
-            // Return immediate enumeration of computed values
-            yield return new DataSourceValue()
-            {
-                Value = trackedValues.Sum(),
-                Time = lastTime,
-                Target = lastTarget,
-                Flags = lastFlags
-            };
+            // Immediately enumerate to compute values
+            double sum = trackedValues.Sum();
+
+            // Return computed results
+            if (lastValue.Time > 0.0D)
+                yield return lastValue with { Value = sum };
         }
     }
 
@@ -60,38 +52,29 @@ public abstract class Total<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     public class ComputePhasorValue : Total<PhasorValue>
     {
         /// <inheritdoc />
-        public override IEnumerable<PhasorValue> Compute(Parameters parameters, CancellationToken cancellationToken)
+        public override IEnumerable<PhasorValue> Compute(Parameters parameters)
         {
+            PhasorValue lastValue = default;
             double magnitudeTotal = 0.0D;
             double angleTotal = 0.0D;
-
-            double lastTime = 0.0D;
-            string lastMagnitudeTarget = null;
-            string lastAngleTarget = null;
-            MeasurementStateFlags lastFlags = 0;
 
             // Immediately enumerate to compute values - only enumerate once
             foreach (PhasorValue dataValue in GetDataSourceValues(parameters))
             {
+                lastValue = dataValue;
                 magnitudeTotal += dataValue.Magnitude;
                 angleTotal += dataValue.Angle + 180;
-
-                lastTime = dataValue.Time;
-                lastMagnitudeTarget = dataValue.MagnitudeTarget;
-                lastAngleTarget = dataValue.AngleTarget;
-                lastFlags = dataValue.Flags;
             }
 
             // Return computed results
-            yield return new PhasorValue()
+            if (lastValue.Time > 0.0D)
             {
-                Magnitude = magnitudeTotal,
-                Angle = angleTotal % 360 - 180, // TODO: JRC - should we leave angle as-is for total?
-                Time = lastTime,
-                MagnitudeTarget = lastMagnitudeTarget,
-                AngleTarget = lastAngleTarget,
-                Flags = lastFlags
-            };
+                yield return lastValue with
+                {
+                    Magnitude = magnitudeTotal,
+                    Angle = angleTotal % 360 - 180
+                };
+            }
         }
     }
 }
