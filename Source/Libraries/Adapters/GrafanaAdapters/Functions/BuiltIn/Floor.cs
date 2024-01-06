@@ -17,7 +17,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 public abstract class Floor<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {
     /// <inheritdoc />
-    public override string Name => "Floor";
+    public override string Name => nameof(Floor<T>);
 
     /// <inheritdoc />
     public override string Description => "Returns a series of values that represent the smallest integral value that is less than or equal to each of the values in the source series.";
@@ -39,5 +39,6 @@ public abstract class Floor<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     /// <inheritdoc />
     public class ComputePhasorValue : Floor<PhasorValue>
     {
+        // Function computed for both magnitude and angle
     }
 }

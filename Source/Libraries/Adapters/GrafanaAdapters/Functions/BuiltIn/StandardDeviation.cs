@@ -6,7 +6,7 @@ using GSF.NumericalAnalysis;
 namespace GrafanaAdapters.Functions.BuiltIn;
 
 /// <summary>
-/// Returns a single value that represents the standard deviation of the values in the source series. Second parameter,
+/// Returns a single value that represents the standard deviation of the values in the source series. First parameter,
 /// optional, is a boolean flag representing if the sample based calculation should be used - defaults to false, which
 /// means the population based calculation should be used.
 /// </summary>
@@ -20,7 +20,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 public abstract class StandardDeviation<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {
     /// <inheritdoc />
-    public override string Name => "StandardDeviation";
+    public override string Name => nameof(StandardDeviation<T>);
 
     /// <inheritdoc />
     public override string Description => "Returns a single value that represents the standard deviation of the values in the source series.";
@@ -55,7 +55,8 @@ public abstract class StandardDeviation<T> : GrafanaFunctionBase<T> where T : st
                 return dataValue.Value;
             });
 
-            // Immediately enumerate to compute values - StandardDeviation uses immediate in-memory array load
+            // Immediately enumerate to compute values, note that function
+            // 'StandardDeviation' executes immediate in-memory array load:
             double stdDev = trackedValues.StandardDeviation(useSampleCalc);
 
             // Return computed results

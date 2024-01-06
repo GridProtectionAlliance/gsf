@@ -125,9 +125,19 @@ public interface IGrafanaFunction
     int OptionalParameterCount { get; }
 
     /// <summary>
+    /// Gets flag that determines if function result is target series for set-based group operations.
+    /// </summary>
+    /// <remarks>
+    /// For set-based group operations, there can also be data in which target series is selected,
+    /// e.g., with <see cref="Minimum{T}"/> or <see cref="Maximum{T}"/> functions.
+    /// </remarks>
+    bool ResultIsSetTargetSeries { get; }
+
+    /// <summary>
     /// Executes custom parameter parsing for the Grafana function.
     /// </summary>
-    /// <param name="expression">Expression to parse.</param>
+    /// <param name="queryParameters">Query parameters.</param>
+    /// <param name="queryExpression">Expression to parse.</param>
     /// <returns>
     /// Parameter values parsed from the expression; otherwise, <c>null</c> to use standard parsing.
     /// </returns>
@@ -136,7 +146,7 @@ public interface IGrafanaFunction
     /// have special parameter parsing requirements. By default, this method will return
     /// <c>null</c> meaning that standard parameter parsing will be used.
     /// </remarks>
-    List<string> ParseParameters(ref string expression);
+    List<string> ParseParameters(QueryParameters queryParameters, ref string queryExpression);
 }
 
 /// <summary>

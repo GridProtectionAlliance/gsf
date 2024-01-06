@@ -16,7 +16,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 public abstract class Range<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {
     /// <inheritdoc />
-    public override string Name => "Range";
+    public override string Name => nameof(Range<T>);
 
     /// <inheritdoc />
     public override string Description => "Returns a single value that represents the range, i.e., <c>maximum - minimum</c>, of the values in the source series.";

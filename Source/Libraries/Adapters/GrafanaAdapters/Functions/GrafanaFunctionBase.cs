@@ -75,7 +75,10 @@ public abstract class GrafanaFunctionBase<T> : IGrafanaFunction<T> where T : str
     public virtual int OptionalParameterCount => m_optionalParameterCount ??= ParameterDefinitions.Count(parameter => !parameter.Required);
 
     /// <inheritdoc />
-    public virtual List<string> ParseParameters(ref string expression)
+    public virtual bool ResultIsSetTargetSeries => false;
+
+    /// <inheritdoc />
+    public virtual List<string> ParseParameters(QueryParameters queryParameters, ref string queryExpression)
     {
         return null;
     }

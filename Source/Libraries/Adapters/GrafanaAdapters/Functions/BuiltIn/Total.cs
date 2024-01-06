@@ -17,7 +17,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 public abstract class Total<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {
     /// <inheritdoc />
-    public override string Name => "Total";
+    public override string Name => nameof(Total<T>);
 
     /// <inheritdoc />
     public override string Description => "Returns a single value that represents the sum of the values in the source series.";

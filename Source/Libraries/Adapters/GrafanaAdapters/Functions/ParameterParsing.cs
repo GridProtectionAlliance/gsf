@@ -39,78 +39,79 @@ internal static class ParameterParsing
     /// Parses function parameters from a given expression as an array of strings.
     /// </summary>
     /// <param name="function">Target function.</param>
-    /// <param name="expression">Expression to parse.</param>
+    /// <param name="queryParameters">Query parameters.</param>
+    /// <param name="queryExpression">Expression to parse.</param>
     /// <param name="groupOperation">Group operation.</param>
     /// <returns>Function parameters parsed from a given expression.</returns>
     /// <exception cref="FormatException">Expected parameters did not match those received.</exception>
-    public static (string[] parsedParameters, string updatedExpression) ParseParameters(this IGrafanaFunction function, string expression, GroupOperations groupOperation)
+    public static (string[] parsedParameters, string queryExpression) ParseParameters(this IGrafanaFunction function, QueryParameters queryParameters, string queryExpression, GroupOperations groupOperation)
     {
-        return TargetCache<(string[], string)>.GetOrAdd(expression, () =>
+        return TargetCache<(string[], string)>.GetOrAdd(queryExpression, () =>
         {
             // Check if function defines any custom parameter parsing
-            List<string> parsedParameters = function.ParseParameters(ref expression);
+            List<string> parsedParameters = function.ParseParameters(queryParameters, ref queryExpression);
 
-            if (parsedParameters is null)
+            if (parsedParameters is not null)
+                return (parsedParameters.ToArray(), queryExpression);
+
+            parsedParameters = new List<string>();
+
+            // Extract any required function parameters
+            int requiredParameters = function.RequiredParameterCount;
+
+            // Any slice operation adds one required parameter for time tolerance
+            if (groupOperation == GroupOperations.Slice)
+                requiredParameters++;
+
+            if (requiredParameters > 0)
             {
-                parsedParameters = new List<string>();
+                int index = 0;
 
-                // Extract any required function parameters
-                int requiredParameters = function.RequiredParameterCount;
+                for (int i = 0; i < requiredParameters && index > -1; i++)
+                    index = queryExpression.IndexOf(',', index + 1);
 
-                // Any slice operation adds one required parameter for time tolerance
-                if (groupOperation == GroupOperations.Slice)
-                    requiredParameters++;
+                if (index > -1)
+                    parsedParameters.AddRange(queryExpression.Substring(0, index).Split(','));
 
-                if (requiredParameters > 0)
+                if (parsedParameters.Count == requiredParameters)
+                    queryExpression = queryExpression.Substring(index + 1).Trim();
+                else
+                    throw new FormatException($"Expected {requiredParameters + 1} parameters, received {parsedParameters.Count + 1} in: {function.Name}({queryExpression})");
+            }
+
+            // Extract any provided optional function parameters
+            int optionalParameters = function.OptionalParameterCount;
+
+            if (optionalParameters > 0)
+            {
+                int index = queryExpression.IndexOf(',');
+
+                if (index > -1 && !hasSubExpression(queryExpression.Substring(0, index)))
                 {
-                    int index = 0;
+                    int lastIndex = index;
 
-                    for (int i = 0; i < requiredParameters && index > -1; i++)
-                        index = expression.IndexOf(',', index + 1);
+                    for (int i = 1; i < optionalParameters && index > -1; i++)
+                    {
+                        index = queryExpression.IndexOf(',', index + 1);
+
+                        if (index > -1 && hasSubExpression(queryExpression.Substring(lastIndex + 1, index - lastIndex - 1).Trim()))
+                        {
+                            index = lastIndex;
+                            break;
+                        }
+
+                        lastIndex = index;
+                    }
 
                     if (index > -1)
-                        parsedParameters.AddRange(expression.Substring(0, index).Split(','));
-
-                    if (parsedParameters.Count == requiredParameters)
-                        expression = expression.Substring(index + 1).Trim();
-                    else
-                        throw new FormatException($"Expected {requiredParameters + 1} parameters, received {parsedParameters.Count + 1} in: {function.Name}({expression})");
-                }
-
-                // Extract any provided optional function parameters
-                int optionalParameters = function.OptionalParameterCount;
-
-                if (optionalParameters > 0)
-                {
-                    int index = expression.IndexOf(',');
-
-                    if (index > -1 && !hasSubExpression(expression.Substring(0, index)))
                     {
-                        int lastIndex = index;
-
-                        for (int i = 1; i < optionalParameters && index > -1; i++)
-                        {
-                            index = expression.IndexOf(',', index + 1);
-
-                            if (index > -1 && hasSubExpression(expression.Substring(lastIndex + 1, index - lastIndex - 1).Trim()))
-                            {
-                                index = lastIndex;
-                                break;
-                            }
-
-                            lastIndex = index;
-                        }
-
-                        if (index > -1)
-                        {
-                            parsedParameters.AddRange(expression.Substring(0, index).Split(','));
-                            expression = expression.Substring(index + 1).Trim();
-                        }
+                        parsedParameters.AddRange(queryExpression.Substring(0, index).Split(','));
+                        queryExpression = queryExpression.Substring(index + 1).Trim();
                     }
                 }
             }
 
-            return (parsedParameters.ToArray(), expression);
+            return (parsedParameters.ToArray(), queryExpression);
         });
 
         static bool hasSubExpression(string target)

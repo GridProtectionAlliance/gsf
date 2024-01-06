@@ -12,7 +12,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Grads, ArcMinutes, ArcSeconds or AngularMil - defaults to Degrees.
 /// </summary>
 /// <remarks>
-/// Signature: <c>WrapAngle(expression, [units = Degrees])</c><br/>
+/// Signature: <c>WrapAngle([units = Degrees], expression)</c><br/>
 /// Returns: Series of values.<br/>
 /// Example: <c>WrapAngle(Radians, FILTER TOP 5 ActiveMeasurements WHERE SignalType LIKE '%PHA')</c><br/>
 /// Variants: WrapAngle, Wrap<br/>
@@ -21,7 +21,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 public abstract class WrapAngle<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {
     /// <inheritdoc />
-    public override string Name => "WrapAngle";
+    public override string Name => nameof(WrapAngle<T>);
 
     /// <inheritdoc />
     public override string Description => "Returns a series of values that represent an adjusted set of angles that are wrapped.";

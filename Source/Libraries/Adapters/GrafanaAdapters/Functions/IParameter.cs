@@ -60,6 +60,14 @@ public interface IParameter
     bool IsDefinition { get; }
 
     /// <summary>
+    /// Gets flag that indicates if parameter is internal.
+    /// </summary>
+    /// <remarks>
+    /// Internal parameters are not exposed to the user.
+    /// </remarks>
+    public bool Internal { get; }
+
+    /// <summary>
     /// Gets default value of the parameter.
     /// </summary>
     object Default { get; }

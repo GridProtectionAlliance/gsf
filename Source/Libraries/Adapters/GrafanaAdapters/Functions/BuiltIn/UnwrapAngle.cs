@@ -21,7 +21,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 public abstract class UnwrapAngle<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {
     /// <inheritdoc />
-    public override string Name => "UnwrapAngle";
+    public override string Name => nameof(UnwrapAngle<T>);
 
     /// <inheritdoc />
     public override string Description => "Returns a series of values that represent an adjusted set of angles that are unwrapped.";

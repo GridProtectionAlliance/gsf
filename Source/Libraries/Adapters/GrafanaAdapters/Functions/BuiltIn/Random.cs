@@ -24,7 +24,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 public abstract class Random<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {
     /// <inheritdoc />
-    public override string Name => "Random";
+    public override string Name => nameof(Random<T>);
 
     /// <inheritdoc />
     public override string Description => "Returns a series of N, or N% of total, values that are a random sample of the values in the source series.";
@@ -65,19 +65,20 @@ public abstract class Random<T> : GrafanaFunctionBase<T> where T : struct, IData
     {
         // Immediately load values in-memory only enumerating data source once
         T[] values = GetDataSourceValues(parameters).ToArray();
+        int length = values.Length;
 
-        if (values.Length == 0)
+        if (length == 0)
             yield break;
 
-        int valueN = ParseTotal(parameters.Value<string>(0), values.Length);
+        int valueN = ParseTotal(parameters.Value<string>(0), length);
 
-        if (valueN > values.Length)
-            valueN = values.Length;
+        if (valueN > length)
+            valueN = length;
 
         bool normalizeTime = parameters.Value<bool>(1);
         double baseTime = values[0].Time;
-        double timeStep = (values[values.Length - 1].Time - baseTime) / (valueN - 1).NotZero(1);
-        List<int> indexes = new(Enumerable.Range(0, values.Length));
+        double timeStep = (values[length - 1].Time - baseTime) / (valueN - 1).NotZero(1);
+        List<int> indexes = new(Enumerable.Range(0, length));
         indexes.Scramble();
 
         T transposeOrder(T dataValue, int index) => TransposeCompute(dataValue, values, index) with

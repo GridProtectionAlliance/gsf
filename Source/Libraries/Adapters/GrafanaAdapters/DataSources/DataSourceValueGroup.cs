@@ -65,7 +65,7 @@ public class DataSourceValueGroup<T> where T : struct, IDataSourceValue
     public string RefID { get; init; }
 
     /// <summary>
-    /// Gets or sets a refID for a specific Grafana Query.
+    /// TODO: Update this
     /// </summary>
     public Dictionary<string, string> MetadataMap { get; init; }
 

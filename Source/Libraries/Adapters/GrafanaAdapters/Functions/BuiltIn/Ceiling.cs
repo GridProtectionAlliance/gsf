@@ -17,7 +17,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 public abstract class Ceiling<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {
     /// <inheritdoc />
-    public override string Name => "Ceiling";
+    public override string Name => nameof(Ceiling<T>);
 
     /// <inheritdoc />
     public override string Description => "Returns a series of values that represent the smallest integral value that is greater than or equal to each of the values in the source series.";
@@ -42,5 +42,6 @@ public abstract class Ceiling<T> : GrafanaFunctionBase<T> where T : struct, IDat
     /// <inheritdoc />
     public class ComputePhasorValue : Ceiling<PhasorValue>
     {
+        // Function computed for both magnitude and angle
     }
 }

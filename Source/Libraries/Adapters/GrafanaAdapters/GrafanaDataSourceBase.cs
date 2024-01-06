@@ -36,6 +36,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using GrafanaAdapters.DataSources;
 using GrafanaAdapters.Functions;
+using GrafanaAdapters.Functions.BuiltIn;
 using GrafanaAdapters.Model.Annotations;
 using GrafanaAdapters.Model.Common;
 
@@ -197,6 +198,14 @@ public abstract partial class GrafanaDataSourceBase
                 foreach (string functionExpression in matchedFunctions.Select(function => function.MatchedValue))
                     reducedTarget = reducedTarget.Replace(functionExpression, "");
 
+                // FUTURE: as a convenience to the end user, it should be possible here to check for any named targets in the
+                // function expressions and make sure they get added to the reduced target set -- note: because of the recursive
+                // nature of this function, only the top-level named targets would be checked. Doing this would allow targets that
+                // were only defined as named targets to be queried without the user having to additionally specify them in the
+                // query expression. This would not, however, prevent the data from being trended. In order to prevent named
+                // targets from appearing in the trended data (at least for those that were not already in the query results),
+                // named targets would have to be tracked here and removed from the trended data before exiting this function.
+
                 if (!string.IsNullOrWhiteSpace(reducedTarget))
                     reducedTargetSet.Add(reducedTarget);
             }
@@ -271,11 +280,21 @@ public abstract partial class GrafanaDataSourceBase
         string functionName = function.Name;
 
         // Parse out function parameters and target expression
-        (string[] parsedParameters, queryExpression) = function.ParseParameters(queryExpression, groupOperation);
+        (string[] parsedParameters, queryExpression) = function.ParseParameters(queryParameters, queryExpression, groupOperation);
 
         // Query function expression to get series data
         IAsyncEnumerable<DataSourceValueGroup<T>> dataset = QueryTarget<T>(queryParameters, queryExpression, cancellationToken);
 
+        // Handle series renaming operations as a special case
+        if (function is Label<T>)
+        {
+            await foreach (DataSourceValueGroup<T> valueGroup in dataset.RenameSeries(queryParameters, Metadata, parsedParameters, cancellationToken))
+                yield return valueGroup;
+
+            yield break;
+        }
+
+        // Handle function based on selected group operation
         switch (groupOperation)
         {
             case GroupOperations.Standard:
@@ -345,8 +364,8 @@ public abstract partial class GrafanaDataSourceBase
                     MetadataMap = metadataMap
                 };
 
-                // Handle edge-case set operations - for these functions there is data in the target series as well
-                if (functionName is "Minimum" or "Maximum" or "Median")
+                // Handle set operations for functions where there is data in the target series as well, e.g., Min or Max
+                if (function.ResultIsSetTargetSeries)
                 {
                     T dataValue = valueGroup.Source.First();
                     valueGroup.Target = $"Set{functionName} = {dataValue.Target}";

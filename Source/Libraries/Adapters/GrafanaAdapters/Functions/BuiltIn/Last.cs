@@ -21,7 +21,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 public abstract class Last<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {
     /// <inheritdoc />
-    public override string Name => "Last";
+    public override string Name => nameof(Last<T>);
 
     /// <inheritdoc />
     public override string Description => "Returns a series of N, or N% of total, values from the end of the source series.";

@@ -18,7 +18,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 public abstract class Subtract<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {
     /// <inheritdoc />
-    public override string Name => "Subtract";
+    public override string Name => nameof(Subtract<T>);
 
     /// <inheritdoc />
     public override string Description => "Returns a series of values that represent each of the values in the source series subtracted with N.";
@@ -32,7 +32,7 @@ public abstract class Subtract<T> : GrafanaFunctionBase<T> where T : struct, IDa
         new ParameterDefinition<double>
         {
             Name = "N",
-            Default = 0,
+            Default = 0.0D,
             Description = "A floating point value representing an subtractive offset to be applied to each value the source series.",
             Required = true
         }
@@ -53,5 +53,6 @@ public abstract class Subtract<T> : GrafanaFunctionBase<T> where T : struct, IDa
     /// <inheritdoc />
     public class ComputePhasorValue : Subtract<PhasorValue>
     {
+        // Function computed for both magnitude and angle
     }
 }

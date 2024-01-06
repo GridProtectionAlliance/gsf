@@ -17,7 +17,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 public abstract class AbsoluteValue<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {
     /// <inheritdoc />
-    public override string Name => "AbsoluteValue";
+    public override string Name => nameof(AbsoluteValue<T>);
 
     /// <inheritdoc />
     public override string Description => "Returns a series of values that represent the absolute value each of the values in the source series.";
@@ -42,5 +42,6 @@ public abstract class AbsoluteValue<T> : GrafanaFunctionBase<T> where T : struct
     /// <inheritdoc />
     public class ComputePhasorValue : AbsoluteValue<PhasorValue>
     {
+        // Function computed for both magnitude and angle
     }
 }

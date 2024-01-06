@@ -22,7 +22,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 public abstract class ExcludeRange<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {
     /// <inheritdoc />
-    public override string Name => "ExcludeRange";
+    public override string Name => nameof(ExcludeRange<T>);
 
     /// <inheritdoc />
     public override string Description => "Returns a series of values that represent a filtered set of the values in the source series where each value falls outside the specified low and high.";
@@ -36,14 +36,14 @@ public abstract class ExcludeRange<T> : GrafanaFunctionBase<T> where T : struct,
         new ParameterDefinition<double>
         {
             Name = "low",
-            Default = 0,
+            Default = 0.0D,
             Description = "A floating point value representing the low end of the range allowed in the return series.",
             Required = true
         },
         new ParameterDefinition<double>
         {
             Name = "high",
-            Default = 0,
+            Default = 0.0D,
             Description = "A floating point value representing the high end of the range allowed in the return series.",
             Required = true
         },

@@ -18,10 +18,13 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 public abstract class Mode<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {
     /// <inheritdoc />
-    public override string Name => "Mode";
+    public override string Name => nameof(Mode<T>);
 
     /// <inheritdoc />
     public override string Description => "Returns a single value that represents the mode of the values in the source series.";
+
+    /// <inheritdoc />
+    public override bool ResultIsSetTargetSeries => true;
 
     // TODO: JRC - consider adding a "number of bins" parameter to better estimate mode for a set double values
 

@@ -17,7 +17,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 public abstract class Truncate<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {
     /// <inheritdoc />
-    public override string Name => "Truncate";
+    public override string Name => nameof(Truncate<T>);
 
     /// <inheritdoc />
     public override string Description => "Returns a series of values that represent the integral part of each of the values in the source series.";
@@ -42,5 +42,6 @@ public abstract class Truncate<T> : GrafanaFunctionBase<T> where T : struct, IDa
     /// <inheritdoc />
     public class ComputePhasorValue : Truncate<PhasorValue>
     {
+        // Function computed for both magnitude and angle
     }
 }

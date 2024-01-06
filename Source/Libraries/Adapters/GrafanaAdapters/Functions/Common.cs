@@ -47,7 +47,7 @@ internal static class Common
     {
         parameters.Insert(0, new ParameterDefinition<double>()
         {
-            Default = 0.0333,
+            Default = 0.0333D,
             Description = "A floating-point value that must be greater than or equal to zero that represents the desired time tolerance, in seconds, for the time slice",
             Required = true
         });

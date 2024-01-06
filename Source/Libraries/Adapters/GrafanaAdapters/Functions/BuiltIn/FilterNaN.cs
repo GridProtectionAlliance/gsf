@@ -18,7 +18,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 public abstract class FilterNaN<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {
     /// <inheritdoc />
-    public override string Name => "FilterNaN";
+    public override string Name => nameof(FilterNaN<T>);
 
     /// <inheritdoc />
     public override string Description => "Returns a series of values that represent a filtered set of the values in the source series where each value is a real number, i.e., value is not NaN.";

@@ -21,7 +21,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 public abstract class First<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {
     /// <inheritdoc />
-    public override string Name => "First";
+    public override string Name => nameof(First<T>);
 
     /// <inheritdoc />
     public override string Description => "Returns a series of N, or N% of total, values from the start of the source series.";

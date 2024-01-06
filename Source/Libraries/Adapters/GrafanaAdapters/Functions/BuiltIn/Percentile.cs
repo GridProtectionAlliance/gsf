@@ -19,7 +19,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 public abstract class Percentile<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {
     /// <inheritdoc />
-    public override string Name => "Percentile";
+    public override string Name => nameof(Percentile<T>);
 
     /// <inheritdoc />
     public override string Description => "Returns a series of N, or N% of total, values from the start of the source series.";
@@ -44,8 +44,9 @@ public abstract class Percentile<T> : GrafanaFunctionBase<T> where T : struct, I
     {
         // Immediately load values in-memory only enumerating data source once
         T[] values = GetDataSourceValues(parameters).ToArray();
+        int length = values.Length;
 
-        if (values.Length == 0)
+        if (length == 0)
             yield break;
 
         Array.Sort(values, (a, b) => a.Value < b.Value ? -1 : a.Value > b.Value ? 1 : 0);
@@ -61,7 +62,7 @@ public abstract class Percentile<T> : GrafanaFunctionBase<T> where T : struct, I
                 yield return values.Last();
                 break;
             default:
-                double n = (values.Length - 1) * (valueN / 100.0D) + 1.0D;
+                double n = (length - 1) * (valueN / 100.0D) + 1.0D;
                 int k = (int)n;
                 T kData = values[k];
                 double d = n - k;

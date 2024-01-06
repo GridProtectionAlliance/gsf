@@ -14,14 +14,17 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// <remarks>
 /// Signature: <c>Label(value, expression)</c><br/>
 /// Returns: Series of values.<br/>
-/// Example: <c>Label('AvgFreq', SetAvg(FILTER TOP 20 ActiveMeasurements WHERE SignalType='FREQ'))</c><br/>
+/// Example 1: <c>Label('AvgFreq', SetAvg(FILTER TOP 20 ActiveMeasurements WHERE SignalType='FREQ'))</c>
+/// Example 2: <c>Label("{Alias} {EngineeringUnits}", Shelby=GPA_SHELBY:FREQ)</c>
+/// Example 3: <c>Label({AlternateTag}, FILTER TOP 10 ActiveMeasurements WHERE SignalType LIKE '%PH%')</c>
+/// Example 4: <c>Label('Shelby {ScadaTags.CircuitName} MW', FILTER ScadaTags WHERE SignalType='MW' AND Substation='SHELBY')</c>
 /// Variants: Label, Name<br/>
 /// Execution: Deferred enumeration.
 /// </remarks>
 public abstract class Label<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {
     /// <inheritdoc />
-    public override string Name => "Label";
+    public override string Name => nameof(Label<T>);
 
     /// <inheritdoc />
     public override string Description => "Renames a series with the specified label value.";
@@ -42,7 +45,7 @@ public abstract class Label<T> : GrafanaFunctionBase<T> where T : struct, IDataS
         {
             Name = "value",
             Default = "",
-            Description = "Specifies label to be renamed to.",
+            Description = "A string expression representing a new label for a target series.",
             Required = true
         }
     };
@@ -54,41 +57,21 @@ public abstract class Label<T> : GrafanaFunctionBase<T> where T : struct, IDataS
         return GroupOperations.Standard;
     }
 
-    // TODO: JRC - add support for label substitutions
+    /// <inheritdoc />
+    public override IEnumerable<T> Compute(Parameters parameters)
+    {
+        // Label function performs no computation, it only renames series,
+        // operation is handled as a special case by the base class
+        return GetDataSourceValues(parameters);
+    }
 
     /// <inheritdoc />
     public class ComputeDataSourceValue : Label<DataSourceValue>
     {
-        /// <inheritdoc />
-        public override IEnumerable<DataSourceValue> Compute(Parameters parameters)
-        {
-            //// Get Values
-            //string label = (parameters[0] as IParameter<string>).Value;
-            //DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
-
-            //// Set Values
-            //dataSourceValues.Target = $"{label}";
-
-            //return dataSourceValues;
-            return null;
-        }
     }
 
     /// <inheritdoc />
     public class ComputePhasorValue : Label<PhasorValue>
     {
-        /// <inheritdoc />
-        public override IEnumerable<PhasorValue> Compute(Parameters parameters)
-        {
-            //// Get Values
-            //string label = (parameters[0] as IParameter<string>).Value;
-            //DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
-
-            //// Set Values
-            //phasorValues.Target = $"{label}";
-
-            //return phasorValues;
-            return null;
-        }
     }
 }

@@ -1,138 +1,93 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using GrafanaAdapters.DataSources;
-using GSF.Units;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
 
-// TODO: JRC - this description is invalid
 /// <summary>
-/// Returns a single value that represents the time-based integration, i.e., the sum of <c>V(n) * (T(n) - T(n-1))</c> where time difference is
-/// calculated in the specified time units, of the values in the source series. The units parameter, optional, specifies the type of time units
-/// and must be one of the following: Seconds, Nanoseconds, Microseconds, Milliseconds, Minutes, Hours, Days, Weeks, Ke (i.e., traditional
-/// Chinese unit of decimal time), Ticks (i.e., 100-nanosecond intervals), PlanckTime or AtomicUnitsOfTime - defaults to Hours.
+/// Returns a series of values that represent the moving average of the values in the source series.
+/// The windowSize parameter, optional, is a positive integer value representing a total number of windows
+/// to use for the moving average. If no windowSize is provided, the default value is the square root of
+/// the total input values in the series. The windowSize can either be constant value or a named target
+/// available from the expression. Function operates using a simple moving average (SMA) algorithm.
 /// </summary>
 /// <remarks>
-/// Signature: <c>TimeIntegration([units = Hours], expression)</c><br/>
-/// Returns: Single value.<br/>
-/// Example: <c>TimeIntegration(FILTER ActiveMeasurements WHERE SignalType='CALC' AND PointTag LIKE '%-MW:%')</c><br/>
-/// Variants: TimeIntegration, TimeInt<br/>
-/// Execution: Immediate enumeration.
+/// Signature: <c>MovingAverage([windowSize = sqrt(len)], expression)</c><br/>
+/// Returns: Series of values.<br/>
+/// Example: <c>MovingAvg(150, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
+/// Variants: MovingAverage, MovingAvg, MovingMean, SimpleMovingAverage, SMA<br/>
+/// Execution: Immediate in-memory array load.
 /// </remarks>
 public abstract class MovingAverage<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {
     /// <inheritdoc />
-    public override string Name => "MovingAverage";
+    public override string Name => nameof(MovingAverage<T>);
 
     /// <inheritdoc />
-    public override string Description => "Returns a series of value that represent the moving average of the initial data.";
+    public override string Description => "Returns a series of values that represent the simple moving average (SMA) of the values in the source series.";
 
     /// <inheritdoc />
-    public override string[] Aliases => new[] { "RollingAverage", "MovingAvg", "RollingAvg", "MovingMean", "RollingMean" };
+    public override string[] Aliases => new[] { "MovingAvg", "MovingMean", "SimpleMovingAverage", "SMA" };
 
     /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>
     {
-        new ParameterDefinition<double>
+        new ParameterDefinition<int>
         {
-            Name = "interval",
-            Default = 0,
-            Description = "A floating point value representing the time interval to average.",
-            Required = true
-        },
-        new ParameterDefinition<TargetTimeUnit>
-        {
-            Name = "units",
-            Default = new TargetTimeUnit { Unit = TimeUnit.Seconds },
-            Parse = TargetTimeUnit.Parse,
-            Description =
-                "Specifies the type of time units and must be one of the following: Seconds, Nanoseconds, Microseconds, Milliseconds, " +
-                "Minutes, Hours, Days, Weeks, Ke (i.e., traditional Chinese unit of decimal time), Ticks (i.e., 100-nanosecond intervals), PlanckTime or " +
-                "AtomicUnitsOfTime - defaults to Seconds.",
+            Name = "windowSize",
+            Default = -1,
+            Description = "An integer value representing the total number of windows to use for the moving average.",
             Required = false
         }
     };
 
     /// <inheritdoc />
+    public override IEnumerable<T> Compute(Parameters parameters)
+    {
+        IEnumerable<T> source = GetDataSourceValues(parameters);
+
+        // Immediately load values in-memory only enumerating data source once
+        T[] values = source.ToArray();
+        int length = values.Length;
+
+        if (length == 0)
+            yield break;
+
+        int windowSize = parameters.Value<int>(0);
+
+        if (windowSize < 1)
+            windowSize = (int)Math.Sqrt(length);
+
+        if (windowSize > length)
+            windowSize = length;
+
+        int windowCount = length - windowSize + 1;
+        double windowSum = 0.0D;
+
+        // Initialize the sum of the first window
+        for (int i = 0; i < windowSize; i++)
+            windowSum += values[i].Value;
+
+        // Calculate the moving average for each window
+        for (int i = 0; i < windowCount; i++)
+        {
+            yield return values[i] with { Value = windowSum / windowSize };
+
+            // Update the sum to reflect the new window
+            if (i + windowSize < values.Length)
+                windowSum = windowSum - values[i].Value + values[i + windowSize].Value;
+        }
+    }
+
+    /// <inheritdoc />
     public class ComputeDataSourceValue : MovingAverage<DataSourceValue>
     {
-        /// <inheritdoc />
-        public override IEnumerable<DataSourceValue> Compute(Parameters parameters)
-        {
-            //// Get Values
-            //double timeValue = (parameters[0] as IParameter<double>).Value;
-            //DataSourceValueGroup<DataSourceValue> dataSourceValues = (DataSourceValueGroup<DataSourceValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
-            //TargetTimeUnit timeUnit = (parameters[2] as IParameter<TargetTimeUnit>).Value;
-
-            //Time timeObj = TimeConversion.FromTimeUnits(timeValue, timeUnit);
-            //double tolerance = timeObj.ConvertTo(TimeUnit.Seconds);
-
-            //List<DataSourceValue> dataSourceValuesList = dataSourceValues.Source.ToList();
-            //List<DataSourceValue> movingAverageList = new();
-
-            //// Compute
-            ////TimeSliceScanner<DataSourceValue> scanner = new(new List<DataSourceValueGroup<DataSourceValue>> { dataSourceValues }, tolerance / SI.Milli);
-            ////while (!scanner.DataReadComplete)
-            ////{
-            ////    IEnumerable<DataSourceValue> dataPointGroups = scanner.ReadNextTimeSlice();
-            ////    if (!dataPointGroups.Any())
-            ////        continue;
-
-            ////    DataSourceValue transformedValue = dataPointGroups.Last();
-            ////    transformedValue.Value = dataPointGroups.Select(dataValue => { return dataValue.Value; }).Average();
-            ////    transformedValue.Time = dataPointGroups.Select(dataValue => { return dataValue.Time; }).Average();
-
-            ////    movingAverageList.Add(transformedValue);
-            ////}
-
-            //// Set Values
-            //dataSourceValues.Target = $"{Name}({dataSourceValues.Target},{timeUnit.Unit})";
-            //dataSourceValues.Source = movingAverageList;
-
-            //return dataSourceValues;
-            return null;
-        }
     }
 
     /// <inheritdoc />
     public class ComputePhasorValue : MovingAverage<PhasorValue>
     {
-        /// <inheritdoc />
-        public override IEnumerable<PhasorValue> Compute(Parameters parameters)
-        {
-            //// Get Values
-            //double timeValue = (parameters[0] as IParameter<double>).Value;
-            //DataSourceValueGroup<PhasorValue> phasorValues = (DataSourceValueGroup<PhasorValue>)(parameters[1] as IParameter<IDataSourceValueGroup>).Value;
-            //TargetTimeUnit timeUnit = (parameters[2] as IParameter<TargetTimeUnit>).Value;
-
-            //Time timeObj = TimeConversion.FromTimeUnits(timeValue, timeUnit);
-            //double tolerance = timeObj.ConvertTo(TimeUnit.Seconds);
-
-            //List<PhasorValue> phasorSourceValuesList = phasorValues.Source.ToList();
-            //List<PhasorValue> movingAverageList = new();
-
-            //// Compute
-            ////TimeSliceScanner<PhasorValue> scanner = new(new List<DataSourceValueGroup<PhasorValue>> { phasorValues }, tolerance / SI.Milli);
-            ////while (!scanner.DataReadComplete)
-            ////{
-            ////    IEnumerable<PhasorValue> dataPointGroups = scanner.ReadNextTimeSlice();
-            ////    if (!dataPointGroups.Any())
-            ////        continue;
-
-            ////    PhasorValue transformedValue = dataPointGroups.Last();
-            ////    transformedValue.Magnitude = dataPointGroups.Select(dataValue => { return dataValue.Magnitude; }).Average();
-            ////    transformedValue.Angle = dataPointGroups.Select(dataValue => { return dataValue.Angle; }).Average();
-            ////    transformedValue.Time = dataPointGroups.Select(dataValue => { return dataValue.Time; }).Average();
-
-            ////    movingAverageList.Add(transformedValue);
-            ////}
-
-            //// Set Values
-            //string[] labels = phasorValues.Target.Split(';');
-            //phasorValues.Target = $"{Name}({labels[0]},{timeUnit.Unit});{Name}({labels[1]},{timeUnit.Unit})";
-            //phasorValues.Source = movingAverageList;
-
-            //return phasorValues;
-            return null;
-        }
+        // Operating on magnitude only
     }
 }

@@ -18,7 +18,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 public abstract class Divide<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {
     /// <inheritdoc />
-    public override string Name => "Divide";
+    public override string Name => nameof(Divide<T>);
 
     /// <inheritdoc />
     public override string Description => "Returns a series of values that represent each of the values in the source series divided with N.";
@@ -32,7 +32,7 @@ public abstract class Divide<T> : GrafanaFunctionBase<T> where T : struct, IData
         new ParameterDefinition<double>
         {
             Name = "N",
-            Default = 0,
+            Default = 1.0D,
             Description = "A floating point value representing an divisive offset to be applied to each value the source series.",
             Required = true
         }
@@ -53,5 +53,6 @@ public abstract class Divide<T> : GrafanaFunctionBase<T> where T : struct, IData
     /// <inheritdoc />
     public class ComputePhasorValue : Divide<PhasorValue>
     {
+        // Function computed for both magnitude and angle
     }
 }

@@ -69,6 +69,8 @@ internal class Parameter<T> : IMutableParameter<T>
 
     public bool IsDefinition => false;
 
+    public bool Internal => Definition.Internal;
+
     public Func<string, (T, bool)> Parse => Definition.Parse;
 
     Func<string, (object, bool)> IParameter.Parse => m_parse;

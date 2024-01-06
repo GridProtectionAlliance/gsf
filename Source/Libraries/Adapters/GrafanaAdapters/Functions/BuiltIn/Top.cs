@@ -24,7 +24,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 public abstract class Top<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {
     /// <inheritdoc />
-    public override string Name => "Top";
+    public override string Name => nameof(Top<T>);
 
     /// <inheritdoc />
     public override string Description => "Returns a series of N, or N% of total, values that are the largest in the source series.";
@@ -56,18 +56,19 @@ public abstract class Top<T> : GrafanaFunctionBase<T> where T : struct, IDataSou
     {
         // Immediately load values in-memory only enumerating data source once
         T[] values = GetDataSourceValues(parameters).ToArray();
+        int length = values.Length;
 
-        if (values.Length == 0)
+        if (length == 0)
             yield break;
 
-        int valueN = ParseTotal(parameters.Value<string>(0), values.Length);
+        int valueN = ParseTotal(parameters.Value<string>(0), length);
 
-        if (valueN > values.Length)
-            valueN = values.Length;
+        if (valueN > length)
+            valueN = length;
 
         bool normalizeTime = parameters.Value<bool>(1);
         double baseTime = values[0].Time;
-        double timeStep = (values[values.Length - 1].Time - baseTime) / (valueN - 1).NotZero(1);
+        double timeStep = (values[length - 1].Time - baseTime) / (valueN - 1).NotZero(1);
         Array.Sort(values, (a, b) => a.Value < b.Value ? -1 : a.Value > b.Value ? 1 : 0);
 
         T transposeTime(T dataValue, int index) => dataValue with

@@ -21,7 +21,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 public abstract class TimeIntegration<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {
     /// <inheritdoc />
-    public override string Name => "TimeIntegration";
+    public override string Name => nameof(TimeIntegration<T>);
 
     /// <inheritdoc />
     public override string Description => "Returns a single value that represents the time-based integration.";
@@ -40,7 +40,7 @@ public abstract class TimeIntegration<T> : GrafanaFunctionBase<T> where T : stru
             Description =
                 "Specifies the type of time units and must be one of the following: Seconds, Nanoseconds, Microseconds, Milliseconds, " +
                 "Minutes, Hours, Days, Weeks, Ke (i.e., traditional Chinese unit of decimal time), Ticks (i.e., 100-nanosecond intervals), PlanckTime or " +
-                "AtomicUnitsOfTime - defaults to Seconds.",
+                "AtomicUnitsOfTime - defaults to Hours.",
             Required = false
         }
     };

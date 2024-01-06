@@ -18,7 +18,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 public abstract class Round<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {
     /// <inheritdoc />
-    public override string Name => "Round";
+    public override string Name => nameof(Round<T>);
 
     /// <inheritdoc />
     public override string Description => "Returns a series of values that represent the rounded value, with N fractional digits, of each of the values in the source series.";
@@ -53,5 +53,6 @@ public abstract class Round<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     /// <inheritdoc />
     public class ComputePhasorValue : Round<PhasorValue>
     {
+        // Function computed for both magnitude and angle
     }
 }

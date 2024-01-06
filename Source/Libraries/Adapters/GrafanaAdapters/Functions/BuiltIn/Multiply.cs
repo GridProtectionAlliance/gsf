@@ -18,7 +18,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 public abstract class Multiply<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {
     /// <inheritdoc />
-    public override string Name => "Multiply";
+    public override string Name => nameof(Multiply<T>);
 
     /// <inheritdoc />
     public override string Description => "Returns a series of values that represent each of the values in the source series multiplied by N.";
@@ -32,7 +32,7 @@ public abstract class Multiply<T> : GrafanaFunctionBase<T> where T : struct, IDa
         new ParameterDefinition<double>
         {
             Name = "N",
-            Default = 0,
+            Default = 1.0D,
             Description = "A floating point value representing an multiplicative offset to be applied to each value the source series.",
             Required = true
         }
@@ -53,5 +53,6 @@ public abstract class Multiply<T> : GrafanaFunctionBase<T> where T : struct, IDa
     /// <inheritdoc />
     public class ComputePhasorValue : Multiply<PhasorValue>
     {
+        // Function computed for both magnitude and angle
     }
 }

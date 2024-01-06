@@ -17,7 +17,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 public abstract class Average<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {
     /// <inheritdoc />
-    public override string Name => "Average";
+    public override string Name => nameof(Average<T>);
 
     /// <inheritdoc />
     public override string Description => "Returns a single value that represents the mean of the values in the source series.";

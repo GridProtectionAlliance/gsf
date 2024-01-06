@@ -17,7 +17,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 public abstract class Distinct<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {
     /// <inheritdoc />
-    public override string Name => "Distinct";
+    public override string Name => nameof(Distinct<T>);
 
     /// <inheritdoc />
     public override string Description => "Returns a series of values that represent the unique set of values in the source series.";

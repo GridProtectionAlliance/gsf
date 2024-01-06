@@ -52,6 +52,9 @@ public readonly struct ParameterDefinition<T> : IParameter<T>
     public bool IsDefinition => true;
 
     /// <inheritdoc />
+    public bool Internal { get; init; }
+
+    /// <inheritdoc />
     public Func<string, (T, bool)> Parse { get; init; }
 
     Func<string, (object, bool)> IParameter.Parse => null;

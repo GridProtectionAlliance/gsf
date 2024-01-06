@@ -23,7 +23,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 public abstract class Interval<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {
     /// <inheritdoc />
-    public override string Name => "Interval";
+    public override string Name => nameof(Interval<T>);
 
     /// <inheritdoc />
     public override string Description => "Returns a series of values that represent a decimated set of the values in the source series based on the specified interval N, in time units.";
@@ -43,7 +43,7 @@ public abstract class Interval<T> : GrafanaFunctionBase<T> where T : struct, IDa
         new ParameterDefinition<double>
         {
             Name = "N",
-            Default = 0,
+            Default = 1.0D,
             Description = "A floating-point value that must be greater than or equal to zero that represents the desired time interval",
             Required = true
         },

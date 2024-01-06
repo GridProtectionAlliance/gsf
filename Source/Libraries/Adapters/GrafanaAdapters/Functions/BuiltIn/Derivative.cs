@@ -21,7 +21,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 public abstract class Derivative<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {
     /// <inheritdoc />
-    public override string Name => "Derivative";
+    public override string Name => nameof(Derivative<T>);
 
     /// <inheritdoc />
     public override string Description => "Returns a series of values that represent the rate of change, per time units, for the difference between consecutive values in the source series.";

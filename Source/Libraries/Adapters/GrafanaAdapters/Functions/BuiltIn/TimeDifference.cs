@@ -21,7 +21,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 public abstract class TimeDifference<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {
     /// <inheritdoc />
-    public override string Name => "TimeDifference";
+    public override string Name => nameof(TimeDifference<T>);
 
     /// <inheritdoc />
     public override string Description => "Returns a series of values that represent the time difference, in time units, between consecutive values in the source series.";

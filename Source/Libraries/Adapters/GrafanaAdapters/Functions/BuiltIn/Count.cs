@@ -17,7 +17,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 public abstract class Count<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {
     /// <inheritdoc />
-    public override string Name => "Count";
+    public override string Name => nameof(Count<T>);
 
     /// <inheritdoc />
     public override string Description => "Returns a single value that is the count of the values in the source series.";

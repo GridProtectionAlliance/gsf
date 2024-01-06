@@ -16,13 +16,16 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 public abstract class Minimum<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {
     /// <inheritdoc />
-    public override string Name => "Minimum";
+    public override string Name => nameof(Minimum<T>);
 
     /// <inheritdoc />
     public override string Description => "Returns a single value that is the minimum of the values in the source series.";
 
     /// <inheritdoc />
     public override string[] Aliases => new[] { "Min" };
+
+    /// <inheritdoc />
+    public override bool ResultIsSetTargetSeries => true;
 
     /// <inheritdoc />
     public override IEnumerable<T> Compute(Parameters parameters)

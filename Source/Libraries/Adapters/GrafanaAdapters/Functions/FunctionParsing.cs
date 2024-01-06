@@ -27,9 +27,12 @@ using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using GrafanaAdapters.DataSources;
+using GrafanaAdapters.Model.Annotations;
 using GrafanaAdapters.Model.Functions;
 using GSF;
 using GSF.IO;
@@ -197,6 +200,8 @@ internal static class FunctionParsing
     // Gets the <see cref="FunctionDescription"/> for all available functions.
     public static IEnumerable<FunctionDescription> GetFunctionDescriptions()
     {
+        static bool published(IParameter parameter) => !parameter.Internal;
+
         // TODO: JRC - getting unique function names for the moment - this should be changed to filter by data source value type
         // since technically there could be functions that are unique to a specific data source value types
         return new HashSet<FunctionDescription>(GetGrafanaFunctions().SelectMany(function =>
@@ -207,7 +212,7 @@ internal static class FunctionParsing
             {
                 descriptions.Add(new FunctionDescription
                 {
-                    Parameters = function.ParameterDefinitions.Select(parameter => new ParameterDescription
+                    Parameters = function.ParameterDefinitions.Where(published).Select(parameter => new ParameterDescription
                     {
                         Name = parameter.Name,
                         Description = parameter.Description,
@@ -226,7 +231,7 @@ internal static class FunctionParsing
 
                 descriptions.Add(new FunctionDescription
                 {
-                    Parameters = parameters.Select(parameter => new ParameterDescription
+                    Parameters = parameters.Where(published).Select(parameter => new ParameterDescription
                     {
                         Name = parameter.Name,
                         Description = parameter.Description,
@@ -242,7 +247,7 @@ internal static class FunctionParsing
             {
                 descriptions.Add(new FunctionDescription
                 {
-                    Parameters = function.ParameterDefinitions.Select(parameter => new ParameterDescription
+                    Parameters = function.ParameterDefinitions.Where(published).Select(parameter => new ParameterDescription
                     {
                         Name = parameter.Name,
                         Description = parameter.Description,
@@ -282,6 +287,156 @@ internal static class FunctionParsing
                 RootTarget = valueGroup.Key,
                 Source = valueGroup
             };
+        }
+    }
+
+    // Handle series rename operations for Grafana functions - this is a special case for handling the Label function
+    public static async IAsyncEnumerable<DataSourceValueGroup<T>> RenameSeries<T>(this IAsyncEnumerable<DataSourceValueGroup<T>> dataset, QueryParameters queryParameters, DataSet metadata, string[] parsedParameters, [EnumeratorCancellation] CancellationToken cancellationToken) where T : struct, IDataSourceValue<T>
+    {
+        string labelExpression = parsedParameters[0].Trim();
+
+        if (labelExpression.StartsWith("\"") || labelExpression.StartsWith("'"))
+            labelExpression = labelExpression.Substring(1, labelExpression.Length - 2);
+
+        HashSet<string> uniqueLabelSet = new(StringComparer.OrdinalIgnoreCase);
+        int index = 1;
+
+        await foreach (DataSourceValueGroup<T> valueGroup in dataset.WithCancellation(cancellationToken))
+        {
+            string rootTarget = valueGroup.RootTarget;
+
+            string seriesLabel = TargetCache<string>.GetOrAdd($"{labelExpression}@{rootTarget}", () =>
+            {
+                // If label expression does not contain any substitutions, just return the expression
+                if (labelExpression.IndexOf('{') < 0)
+                    return labelExpression;
+
+                Dictionary<string, string> substitutions = new(StringComparer.OrdinalIgnoreCase);
+                Regex fieldExpression = new(@"\{(?<Field>[^}]+)\}", RegexOptions.Compiled);
+
+                // Handle substitutions for each tag defined in the rootTarget
+                foreach (string item in rootTarget.Split(';'))
+                {
+                    // Load {alias} substitutions - alias values are for tags that have been assigned an alias, e.g.:
+                    // for 'x=TAGNAME', the alias would be 'x' and the target would be 'TAGNAME'
+                    string target = item.SplitAlias(out string alias);
+
+                    if (substitutions.TryGetValue("alias", out string substitution))
+                    {
+                        // Pattern for multiple alias substitutions is: {alias}, {alias}, {alias}, ...
+                        // This handles the case where multiple tags exist in the single root target
+                        // and each one has am assigned alias
+                        if (!string.IsNullOrWhiteSpace(alias))
+                            substitutions["alias"] = string.IsNullOrWhiteSpace(substitution) ? alias : $"{substitution}, {alias}";
+                    }
+                    else
+                    {
+                        substitutions.Add("alias", alias ?? "");
+                    }
+
+                    // Check all substitution fields for table name specifications (ActiveMeasurements assumed)
+                    HashSet<string> tableNames = new(new[] { "ActiveMeasurements" }, StringComparer.OrdinalIgnoreCase);
+                    MatchCollection fields = fieldExpression.Matches(labelExpression);
+
+                    foreach (Match match in fields)
+                    {
+                        string field = match.Result("${Field}");
+
+                        // Check if specified field substitution has a table name prefix
+                        string[] components = field.Split('.');
+
+                        if (components.Length == 2)
+                            tableNames.Add(components[0]);
+                    }
+
+                    // Load field substitutions for each table name from metadata
+                    foreach (string tableName in tableNames)
+                    {
+                        // ActiveMeasurements view fields are added as non-prefixed field name substitutions
+                        if (tableName.Equals("ActiveMeasurements", StringComparison.OrdinalIgnoreCase))
+                            LoadFieldSubstitutions(metadata, substitutions, target, tableName, false);
+
+                        // All other table fields are added with table name as the prefix {table.field}
+                        LoadFieldSubstitutions(metadata, substitutions, target, tableName, true);
+                    }
+                }
+
+                string derivedLabel = labelExpression;
+
+                foreach (KeyValuePair<string, string> substitution in substitutions)
+                    derivedLabel = derivedLabel.ReplaceCaseInsensitive($"{{{substitution.Key}}}", substitution.Value);
+
+                if (derivedLabel.Equals(labelExpression, StringComparison.Ordinal))
+                    derivedLabel = $"{labelExpression}{(index > 1 ? $" {index}" : "")}";
+
+                index++;
+                return derivedLabel;
+            });
+
+            // Verify that series label is unique
+            while (uniqueLabelSet.Contains(seriesLabel))
+                seriesLabel = $"{seriesLabel}\u00A0"; // non-breaking space
+
+            uniqueLabelSet.Add(seriesLabel);
+
+            yield return new DataSourceValueGroup<T>
+            {
+                Target = seriesLabel,
+                RootTarget = valueGroup.RootTarget,
+                SourceTarget = queryParameters.SourceTarget,
+                Source = valueGroup.Source,
+                DropEmptySeries = queryParameters.DropEmptySeries,
+                RefID = queryParameters.SourceTarget.refId
+            };
+        }
+    }
+
+    private static void LoadFieldSubstitutions(DataSet metadata, Dictionary<string, string> substitutions, string target, string tableName, bool usePrefix)
+    {
+        DataRow record = target.MetadataRecordFromTag(metadata, tableName);
+        string prefix = usePrefix ? $"{tableName}." : "";
+
+        if (record is null)
+        {
+            // Apply empty field substitutions when point tag metadata is not found
+            foreach (string fieldName in metadata.Tables[tableName].Columns.Cast<DataColumn>().Select(column => column.ColumnName))
+            {
+                string columnName = $"{prefix}{fieldName}";
+
+                if (columnName.Equals("PointTag", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                if (!substitutions.ContainsKey(columnName))
+                    substitutions.Add(columnName, "");
+            }
+
+            if (usePrefix)
+                return;
+
+            if (substitutions.TryGetValue("PointTag", out string substitution))
+                substitutions["PointTag"] = $"{substitution}, {target}";
+            else
+                substitutions.Add("PointTag", target);
+        }
+        else
+        {
+            foreach (string fieldName in record.Table.Columns.Cast<DataColumn>().Select(column => column.ColumnName))
+            {
+                string columnName = $"{prefix}{fieldName}";
+                string columnValue = record[fieldName].ToString();
+
+                if (substitutions.TryGetValue(columnName, out string substitution))
+                {
+                    // Pattern for multiple field substitutions is: {field}, {field}, {field}, ...
+                    // This handles the case where multiple tags exist in the single root target
+                    if (!string.IsNullOrWhiteSpace(columnValue))
+                        substitutions[columnName] = string.IsNullOrWhiteSpace(substitution) ? columnValue : $"{substitution}, {columnValue}";
+                }
+                else
+                {
+                    substitutions.Add(columnName, columnValue);
+                }
+            }
         }
     }
 }

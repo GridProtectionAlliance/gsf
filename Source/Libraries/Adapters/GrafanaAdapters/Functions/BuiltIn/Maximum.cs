@@ -16,13 +16,16 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 public abstract class Maximum<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {
     /// <inheritdoc />
-    public override string Name => "Maximum";
+    public override string Name => nameof(Maximum<T>);
 
     /// <inheritdoc />
     public override string Description => " Returns a single value that is the maximum of the values in the source series.";
 
     /// <inheritdoc />
     public override string[] Aliases => new[] { "Max" };
+
+    /// <inheritdoc />
+    public override bool ResultIsSetTargetSeries => true;
 
     /// <inheritdoc />
     public override IEnumerable<T> Compute(Parameters parameters)

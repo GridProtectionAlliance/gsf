@@ -18,13 +18,16 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 public abstract class Median<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {
     /// <inheritdoc />
-    public override string Name => "Median";
+    public override string Name => nameof(Median<T>);
 
     /// <inheritdoc />
     public override string Description => "Returns a single value that represents the median of the values in the source series.";
 
     /// <inheritdoc />
     public override string[] Aliases => new[] { "Med", "Mid" };
+
+    /// <inheritdoc />
+    public override bool ResultIsSetTargetSeries => true;
 
     /// <inheritdoc />
     public class ComputeDataSourceValue : Median<DataSourceValue>
@@ -34,14 +37,15 @@ public abstract class Median<T> : GrafanaFunctionBase<T> where T : struct, IData
         {
             // Median uses immediate in-memory array load
             DataSourceValue[] values = GetDataSourceValues(parameters).OrderBy(dataValue => dataValue.Value).Median();
+            int length = values.Length;
 
-            if (values.Length == 0)
+            if (length == 0)
                 yield break;
 
             // Median can return two values if there is an even number of values
             DataSourceValue result = values.Last();
 
-            if (values.Length > 1)
+            if (length > 1)
                 result.Value = values[0].Value + (values[1].Value - values[0].Value) / 2.0D;
 
             yield return result;
@@ -54,9 +58,9 @@ public abstract class Median<T> : GrafanaFunctionBase<T> where T : struct, IData
         /// <inheritdoc />
         public override IEnumerable<PhasorValue> Compute(Parameters parameters)
         {
+            PhasorValue lastValue = default;
             List<double> magnitudes = new();
             List<double> angles = new();
-            PhasorValue lastValue = default;
 
             // Immediately load values in-memory only enumerating data source once
             foreach (PhasorValue dataValue in GetDataSourceValues(parameters))
