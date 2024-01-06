@@ -279,16 +279,17 @@ public abstract partial class GrafanaDataSourceBase
         string queryExpression = parsedFunction.Expression;
         string functionName = function.Name;
 
-        // Parse out function parameters and target expression
+        // Parse out function parameters and remaining query expression (typically a filter expression)
         (string[] parsedParameters, queryExpression) = function.ParseParameters(queryParameters, queryExpression, groupOperation);
 
-        // Query function expression to get series data
+        // Reenter query function with remaining query expression to get data - at the bottom of the recursion,
+        // this will return time-series data queried from the derived class using 'QueryDataSourceValues':
         IAsyncEnumerable<DataSourceValueGroup<T>> dataset = QueryTarget<T>(queryParameters, queryExpression, cancellationToken);
 
         // Handle series renaming operations as a special case
         if (function is Label<T>)
         {
-            await foreach (DataSourceValueGroup<T> valueGroup in dataset.RenameSeries(queryParameters, Metadata, parsedParameters, cancellationToken))
+            await foreach (DataSourceValueGroup<T> valueGroup in dataset.RenameSeries(queryParameters, Metadata, parsedParameters[0], cancellationToken))
                 yield return valueGroup;
 
             yield break;

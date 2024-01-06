@@ -42,27 +42,30 @@ internal static class ParameterParsing
     /// <param name="queryParameters">Query parameters.</param>
     /// <param name="queryExpression">Expression to parse.</param>
     /// <param name="groupOperation">Group operation.</param>
-    /// <returns>Function parameters parsed from a given expression.</returns>
+    /// <returns>
+    /// A tuple of parsed parameters and any remaining query expression.
+    /// Remaining query expression is typically the filter expression.
+    /// </returns>
     /// <exception cref="FormatException">Expected parameters did not match those received.</exception>
     public static (string[] parsedParameters, string queryExpression) ParseParameters(this IGrafanaFunction function, QueryParameters queryParameters, string queryExpression, GroupOperations groupOperation)
     {
         return TargetCache<(string[], string)>.GetOrAdd(queryExpression, () =>
         {
             // Check if function defines any custom parameter parsing
-            List<string> parsedParameters = function.ParseParameters(queryParameters, ref queryExpression);
+            (List<string> parsedParameters, queryExpression) = function.ParseParameters(queryParameters, queryExpression);
 
             if (parsedParameters is not null)
                 return (parsedParameters.ToArray(), queryExpression);
 
             parsedParameters = new List<string>();
 
-            // Extract any required function parameters
             int requiredParameters = function.RequiredParameterCount;
 
             // Any slice operation adds one required parameter for time tolerance
             if (groupOperation == GroupOperations.Slice)
                 requiredParameters++;
 
+            // Extract any required function parameters - this does not include the filter expression
             if (requiredParameters > 0)
             {
                 int index = 0;
@@ -74,9 +77,16 @@ internal static class ParameterParsing
                     parsedParameters.AddRange(queryExpression.Substring(0, index).Split(','));
 
                 if (parsedParameters.Count == requiredParameters)
+                {
+                    // Separate any remaining query expression from required parameters,
+                    // this could be optional parameters or the filter expression
                     queryExpression = queryExpression.Substring(index + 1).Trim();
+                }
                 else
+                {
+                    // Offset counts for filter expression in error message not included in required parameters for better user feedback
                     throw new FormatException($"Expected {requiredParameters + 1} parameters, received {parsedParameters.Count + 1} in: {function.Name}({queryExpression})");
+                }
             }
 
             // Extract any provided optional function parameters
@@ -121,7 +131,7 @@ internal static class ParameterParsing
     }
 
     /// <summary>
-    /// Generates a list of value mutable parameters from parsed parameters.
+    /// Generates a typed list of value mutable parameters from parsed parameters.
     /// </summary>
     /// <typeparam name="TDataSourceValue">The type of the data source value.</typeparam>
     /// <param name="function">Target function.</param>
@@ -261,8 +271,8 @@ internal static class ParameterParsing
         }
         else
         {
-            // ConvertToType uses a TypeConverter which works for most types, including enums
-            // Note that this function returns null if conversion fails
+            // ConvertToType uses a TypeConverter which works for most types, including enums,
+            // note that this function returns null if conversion fails
             result = value.ConvertToType(parameter.Type);
         }
 

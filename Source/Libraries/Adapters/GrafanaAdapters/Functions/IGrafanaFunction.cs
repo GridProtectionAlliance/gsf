@@ -139,14 +139,15 @@ public interface IGrafanaFunction
     /// <param name="queryParameters">Query parameters.</param>
     /// <param name="queryExpression">Expression to parse.</param>
     /// <returns>
-    /// Parameter values parsed from the expression; otherwise, <c>null</c> to use standard parsing.
+    /// A tuple of parsed parameters and any remaining query expression (typically the filter expression)
+    /// after parsing parameters. Tuple of <c>(null, null)</c> should be returned to use standard parsing.
     /// </returns>
     /// <remarks>
-    /// This method is used to support custom parameter parsing for functions that may
-    /// have special parameter parsing requirements. By default, this method will return
-    /// <c>null</c> meaning that standard parameter parsing will be used.
+    /// This method is used to support custom parameter parsing for functions that may have special parameter
+    /// parsing requirements. By default, this method will return a tuple of <c>(null, null)</c> meaning that
+    /// standard parameter parsing will be used.
     /// </remarks>
-    List<string> ParseParameters(QueryParameters queryParameters, ref string queryExpression);
+    (List<string> parsedParameters, string queryExpression) ParseParameters(QueryParameters queryParameters, string queryExpression);
 }
 
 /// <summary>

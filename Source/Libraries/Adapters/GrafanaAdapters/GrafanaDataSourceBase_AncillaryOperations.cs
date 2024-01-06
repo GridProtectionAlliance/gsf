@@ -441,4 +441,22 @@ partial class GrafanaDataSourceBase
             return JsonConvert.SerializeObject(result);
         });
     }
+
+    /// <summary>
+    /// Reloads Grafana functions cache.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This function is used to support dynamic function loading for Grafana functions.
+    /// Function would only need to be called when a new function is added to Grafana at
+    /// run-time and user wanted to use new installed function without restarting host.
+    /// </para>
+    /// <para>
+    /// Suggest making this option available via web-based endpoint for administrators.
+    /// </para>
+    /// </remarks>
+    public void ReloadGrafanaFunctions()
+    {
+        FunctionParsing.ReloadGrafanaFunctions();
+    }
 }

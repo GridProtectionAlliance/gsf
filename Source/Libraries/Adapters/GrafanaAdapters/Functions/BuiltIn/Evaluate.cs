@@ -12,16 +12,35 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 
 /// <summary>
 /// Returns a single value that represents the evaluation of an expression over a slice of the values in the source series.
+/// The <c>sliceTolerance</c> parameter is a floating-point value that must be greater than or equal to zero that represents
+/// the desired time tolerance, in seconds, for the time slice. The <c>evalExpression</c> parameter must always be expressed
+/// in braces, e.g., <c>{ expression }</c>; expression is strongly typed, but not case sensitive; expression is expected to
+/// return a value that can be evaluated as a floating-point number. Aliases of target tag names are used as variable names
+/// in the <c>evalExpression</c>  when defined. If no alias is defined, all non-valid characters will be removed from target
+/// tag name, for example, variable name for tag <c>PMU.032-PZR_CI:ANG</c> would be <c>PMU032PZR_CIANG</c>. All targets are
+/// also available as index suffixed variables named <c>_v</c>, for example, first and second target values are available as
+/// <c>_v0</c> and <c>_v1</c>. The <c>Evaluate</c> function is always evaluated as a slice, any specified group operation
+/// prefix will be ignored. Default system types available to expressions are <c>System.Math</c> and <c>System.DateTime</c>.
+/// See <see href="https://www.codeproject.com/Articles/19768/Flee-Fast-Lightweight-Expression-Evaluator">details</see> on
+/// valid expressions. Use the <c>Imports</c> command to define more types for <c>evalExpression</c>.
 /// </summary>
 /// <remarks>
-/// Signature: <c>Evaluate(sliceTolerance, evalExpression, filterExpression)</c>
-/// Returns: Single value per slice
-/// Example 1: <c>Evaluate(0.0333, { R* Sin(T* PI / 180)}, T=GPA_SHELBY-PA1:VH; R=GPA_SHELBY-PM1:V)</c>
-/// Example 2: <c>Eval(0.0333, { (GPA_SHELBYPA2VH - GPA_SHELBYPA1VH) % 360 - 180}, GPA_SHELBY-PA1:VH; GPA_SHELBY-PA2:VH)</c>
-/// Example 3: <c>eval(0.5, { (if (_v0 &gt; 62, _v2, if (_v0 &lt; 57, _v2, _v0)) + if (_v1 &gt; 62, _v2, if (_v1 &lt; 57, _v2, _v1))) / 2 }, FILTER TOP 3 ActiveMeasurements WHERE SignalType = 'FREQ')</c>
-/// Example 4: <c>evaluate(0.0333, { if (abs(b - a) &gt; 180, if (sign(b - a) &lt; 0, b - a + 360, b - a - 360), b - a)}, a=PMU.009-PZR.AV:ANG; b=PMU.008-PZR.AV:ANG)</c>
-/// Variants: Evaluate, Eval
+/// Signature: <c>Evaluate(sliceTolerance, evalExpression, filterExpression)</c><br/>
+/// Returns: Single value per slice<br/>
+/// Example 1: <c>Evaluate(0.0333, { R* Sin(T* PI / 180)}, T=GPA_SHELBY-PA1:VH; R=GPA_SHELBY-PM1:V)</c><br/>
+/// Example 2: <c>Eval(0.0333, { (GPA_SHELBYPA2VH - GPA_SHELBYPA1VH) % 360 - 180}, GPA_SHELBY-PA1:VH; GPA_SHELBY-PA2:VH)</c><br/>
+/// Example 3: <c>eval(0.5, { (if (_v0 &gt; 62, _v2, if (_v0 &lt; 57, _v2, _v0)) + if (_v1 &gt; 62, _v2, if (_v1 &lt; 57, _v2, _v1))) / 2 }, FILTER TOP 3 ActiveMeasurements WHERE SignalType = 'FREQ')</c><br/>
+/// Example 4: <c>evaluate(0.0333, { if (abs(b - a) &gt; 180, if (sign(b - a) &lt; 0, b - a + 360, b - a - 360), b - a)}, a=PMU.009-PZR.AV:ANG; b=PMU.008-PZR.AV:ANG)</c><br/>
+/// Variants: Evaluate, Eval<br/>
 /// Execution: Deferred enumeration
+/// <para>
+/// The following special command-level parameter is available to the <c>Evaluate</c> function: <c>Imports={expr}</c><br/>
+/// This command adds custom .NET type imports that can be used with the <c>Evaluate</c> function. <c>expr</c>defines a
+/// key-value pair definition of assembly name, i.e., <c>AssemblyName</c> = DLL filename without suffix, and type name, i.e.,
+/// <c>TypeName</c> = fully qualified case-sensitive type name, to be imported. Key-value pairs are separated with commas and
+/// multiple imports are by separated semi-colons. <c>expr</c> must be surrounded by braces. Example:
+/// <c>; imports={AssemblyName=mscorlib, TypeName=System.TimeSpan; AssemblyName=MyCode, TypeName=MyCode.MyClass}</c>
+/// </para>
 /// </remarks>
 public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {
@@ -43,7 +62,7 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
     /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>
     {
-        // Slice tolerance added automatically by Grafana function handling
+        // Required slice tolerance parameter added automatically by Grafana function handling
         new ParameterDefinition<string>
         {
             Name = "evalExpression",
@@ -51,6 +70,10 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
             Description = "A string representing expression to be evaluated. Parameter must always be expressed in braces, e.g., { expression }. Expression is strongly typed, but not case sensitive; expression is expected to return a value that can be evaluated as a floating-point number.",
             Required = true
         },
+        // The 'imports' parameter is not provided as a user-provided parameter expression to the eval function since
+        // its signature is already complex enough -- so any needed imports are defined as a command-level parameter.
+        // Here we define an internal parameter to hold any defined command-level imports, but the value is added
+        // manually to the parameters list, see 'ParseParameters' override below.
         new ParameterDefinition<string>
         {
             Name = "imports",
@@ -76,11 +99,12 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
     {
         string expression = parameters.Value<string>(0);
 
-        // Get the cached expression context
+        // Build and cache an expression context
         ExpressionContext context = TargetCache<ExpressionContext>.GetOrAdd(expression, () =>
         {
             ExpressionContext expressionContext = new();
 
+            // Add default imports
             expressionContext.Imports.AddType(typeof(Math));
             expressionContext.Imports.AddType(typeof(DateTime));
 
@@ -146,7 +170,7 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
                 context.Variables[$"_v{index++}"] = dataValue.Value;
             }
 
-            // Compile the expression if it has not been compiled already
+            // Compile and cache the expression (only compiled once per expression)
             IDynamicExpression dynamicExpression = TargetCache<IDynamicExpression>.GetOrAdd(expression, () => context.CompileDynamic(expression));
 
             // Return evaluated expression
@@ -159,7 +183,8 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
     }
 
     /// <inheritdoc />
-    public override List<string> ParseParameters(QueryParameters queryParameters, ref string queryExpression)
+    // 'Evaluate' function has special parameter parsing requirements, so we override the default implementation
+    public override (List<string>, string) ParseParameters(QueryParameters queryParameters, string queryExpression)
     {
         List<string> parsedParameters = new();
 
@@ -186,18 +211,18 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
 
                 lastIndex = queryExpression.IndexOf(',', endBrace);
 
-                if (lastIndex < 0)
+                if (lastIndex < 0) // No filter expression provided
                     throw new FormatException($"Expected 3 parameters, received 2 in: Evaluate({queryExpression})");
 
                 lastIndex++;
             }
             else
             {
+                // First parameter is slice tolerance
                 int nextIndex = queryExpression.IndexOf(',', lastIndex);
 
                 if (nextIndex < 0)
                     break;
-
 
                 parsedParameters.Add(queryExpression.Substring(lastIndex, nextIndex - lastIndex));
                 lastIndex = nextIndex + 1;
@@ -205,14 +230,21 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
         }
 
         if (parsedParameters.Count == 2)
+        {
+            // Separate remaining query expression from required parameters, in this case, this is the filter expression
             queryExpression = queryExpression.Substring(lastIndex).Trim();
+        }
         else
+        {
+            // Offset counts for expected filter expression in error message for better user feedback
             throw new FormatException($"Expected 3 parameters, received {parsedParameters.Count + 1} in: Evaluate({queryExpression})");
+        }
 
-        // Add command-level imports to parsed parameters
+        // Add command-level type imports to parsed parameters, this becomes an internal parameter
         parsedParameters.Add(queryParameters.Imports);
 
-        return parsedParameters;
+        // Return parsed parameters and remaining query expression
+        return (parsedParameters, queryExpression);
     }
 
     /// <inheritdoc />

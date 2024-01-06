@@ -83,6 +83,8 @@
   <ItemGroup>
     <Compile Include="DataSources\DataSourceCache.cs" />
     <Compile Include="DataSources\MetadataExtensions.cs" />
+    <Compile Include="Functions\BuiltIn\Sqrt.cs" />
+    <Compile Include="Functions\BuiltIn\Pow.cs" />
     <Compile Include="Functions\BuiltIn\RollingAverage.cs" />
     <Compile Include="Functions\ParameterParsing.cs" />
     <Compile Include="Functions\Parameters.cs" />

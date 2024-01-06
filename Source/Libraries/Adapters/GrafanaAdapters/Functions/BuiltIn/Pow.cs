@@ -1,30 +1,28 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using GrafanaAdapters.DataSources;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
 
 /// <summary>
-/// Returns a series of values that represent each of the values in the source series modulo by N.
-/// N is a floating point value representing a divisive factor to be applied to each value the source series.
+/// Returns a series of values that represent each of the values in the source series raised to the power of N.
+/// N is a floating point value representing an exponent used to raise each value of the source series to the specified power.
 /// N can either be constant value or a named target available from the expression.
 /// </summary>
 /// <remarks>
-/// Signature: <c>Modulo(N, expression)</c><br/>
+/// Signature: <c>Pow(N, expression)</c><br/>
 /// Returns: Series of values.<br/>
-/// Example: <c>Mod(2, FILTER ActiveMeasurements WHERE SignalType='CALC')</c><br/>
-/// Variants: Modulo, Modulus, Mod<br/>
+/// Example: <c>Pow(2, FILTER ActiveMeasurements WHERE SignalType='CALC')</c><br/>
+/// Variants: Pow<br/>
 /// Execution: Deferred enumeration.
 /// </remarks>
-public abstract class Modulo<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
+public abstract class Pow<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {
     /// <inheritdoc />
-    public override string Name => nameof(Modulo<T>);
+    public override string Name => nameof(Pow<T>);
 
     /// <inheritdoc />
-    public override string Description => "Returns a series of values that represent each of the values in the source series modulo by N.";
-
-    /// <inheritdoc />
-    public override string[] Aliases => new[] { "Modulus", "Mod" };
+    public override string Description => "Returns a series of values that represent each of the values in the source series raised to the power of N.";
 
     /// <inheritdoc />
     // Hiding slice operation since result matrix would be the same when tolerance matches data rate
@@ -37,7 +35,7 @@ public abstract class Modulo<T> : GrafanaFunctionBase<T> where T : struct, IData
         {
             Name = "N",
             Default = 1.0D,
-            Description = "A floating point value representing a divisive factor to be applied to each value the source series.",
+            Description = "A floating point value representing an exponent used to raise each value of the source series to the specified power.",
             Required = true
         }
     };
@@ -46,16 +44,16 @@ public abstract class Modulo<T> : GrafanaFunctionBase<T> where T : struct, IData
     public override IEnumerable<T> Compute(Parameters parameters)
     {
         double valueN = parameters.Value<double>(0);
-        return ExecuteFunction(value => value % valueN, parameters);
+        return ExecuteFunction(value => Math.Pow(value, valueN), parameters);
     }
 
     /// <inheritdoc />
-    public class ComputeDataSourceValue : Modulo<DataSourceValue>
+    public class ComputeDataSourceValue : Pow<DataSourceValue>
     {
     }
 
     /// <inheritdoc />
-    public class ComputePhasorValue : Modulo<PhasorValue>
+    public class ComputePhasorValue : Pow<PhasorValue>
     {
         // Function computed for both magnitude and angle
     }

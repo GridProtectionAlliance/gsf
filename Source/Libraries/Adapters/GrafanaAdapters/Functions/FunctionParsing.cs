@@ -291,10 +291,8 @@ internal static class FunctionParsing
     }
 
     // Handle series rename operations for Grafana functions - this is a special case for handling the Label function
-    public static async IAsyncEnumerable<DataSourceValueGroup<T>> RenameSeries<T>(this IAsyncEnumerable<DataSourceValueGroup<T>> dataset, QueryParameters queryParameters, DataSet metadata, string[] parsedParameters, [EnumeratorCancellation] CancellationToken cancellationToken) where T : struct, IDataSourceValue<T>
+    public static async IAsyncEnumerable<DataSourceValueGroup<T>> RenameSeries<T>(this IAsyncEnumerable<DataSourceValueGroup<T>> dataset, QueryParameters queryParameters, DataSet metadata, string labelExpression, [EnumeratorCancellation] CancellationToken cancellationToken) where T : struct, IDataSourceValue<T>
     {
-        string labelExpression = parsedParameters[0].Trim();
-
         if (labelExpression.StartsWith("\"") || labelExpression.StartsWith("'"))
             labelExpression = labelExpression.Substring(1, labelExpression.Length - 2);
 

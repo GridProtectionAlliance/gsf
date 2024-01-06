@@ -24,6 +24,7 @@ public abstract class Subtract<T> : GrafanaFunctionBase<T> where T : struct, IDa
     public override string Description => "Returns a series of values that represent each of the values in the source series subtracted with N.";
 
     /// <inheritdoc />
+    // Hiding slice operation since result matrix would be the same when tolerance matches data rate
     public override GroupOperations PublishedGroupOperations => GroupOperations.Standard | GroupOperations.Set;
 
     /// <inheritdoc />

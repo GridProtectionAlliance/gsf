@@ -23,6 +23,7 @@ public abstract class Floor<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     public override string Description => "Returns a series of values that represent the smallest integral value that is less than or equal to each of the values in the source series.";
 
     /// <inheritdoc />
+    // Hiding slice operation since result matrix would be the same when tolerance matches data rate
     public override GroupOperations PublishedGroupOperations => GroupOperations.Standard | GroupOperations.Set;
 
     /// <inheritdoc />

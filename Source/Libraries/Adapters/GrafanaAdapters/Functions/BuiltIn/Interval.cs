@@ -28,10 +28,9 @@ public abstract class Interval<T> : GrafanaFunctionBase<T> where T : struct, IDa
     /// <inheritdoc />
     public override string Description => "Returns a series of values that represent a decimated set of the values in the source series based on the specified interval N, in time units.";
 
+    /// <inheritdoc />
     // Slice operation has no meaning for this time-focused function and Set operation will have an aberration between series,
     // so we override the exposed behaviors, i.e., use of Slice will produce an error and use of Set will be hidden:
-
-    /// <inheritdoc />
     public override GroupOperations AllowedGroupOperations => GroupOperations.Standard | GroupOperations.Set;
 
     /// <inheritdoc />
@@ -93,5 +92,23 @@ public abstract class Interval<T> : GrafanaFunctionBase<T> where T : struct, IDa
     /// <inheritdoc />
     public class ComputePhasorValue : Interval<PhasorValue>
     {
+    }
+
+    /// <inheritdoc />
+    // 'Interval' function has special 'N' parameter requirements for zero value, so we override the default parsing implementation
+    public override (List<string>, string) ParseParameters(QueryParameters queryParameters, string queryExpression)
+    {
+        // First parameter is interval value
+        int index = queryExpression.IndexOf(',');
+
+        // When 'Interval' function 'N' parameter is zero, user is requesting to query data source at full resolution
+        if (index > -1 && double.TryParse(queryExpression.Substring(0, index), out double valueN) && valueN == 0.0D)
+        {
+            queryParameters.IncludePeaks = false;
+            queryParameters.Interval = "0s";
+        }
+
+        // Continue with default parameter parsing
+        return (null, null);
     }
 }
