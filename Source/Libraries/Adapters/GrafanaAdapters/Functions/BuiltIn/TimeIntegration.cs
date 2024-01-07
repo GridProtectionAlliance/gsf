@@ -1,5 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using GrafanaAdapters.DataSources;
 using GSF.Units;
 
@@ -46,7 +49,7 @@ public abstract class TimeIntegration<T> : GrafanaFunctionBase<T> where T : stru
     };
 
     /// <inheritdoc />
-    public override IEnumerable<T> Compute(Parameters parameters)
+    public override async IAsyncEnumerable<T> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         TargetTimeUnit units = parameters.Value<TargetTimeUnit>(0);
         T lastResult = new();
@@ -58,7 +61,7 @@ public abstract class TimeIntegration<T> : GrafanaFunctionBase<T> where T : stru
         };
 
         // Immediately enumerate to compute values - only enumerate once
-        foreach (T dataValue in GetDataSourceValues(parameters).Select(transposeCompute))
+        await foreach (T dataValue in GetDataSourceValues(parameters).Select(transposeCompute).WithCancellation(cancellationToken))
             lastResult = dataValue;
 
         // Return computed value

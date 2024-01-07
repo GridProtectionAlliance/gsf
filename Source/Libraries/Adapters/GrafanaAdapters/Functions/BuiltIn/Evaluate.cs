@@ -6,7 +6,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
 
@@ -95,7 +97,7 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
     }
 
     /// <inheritdoc />
-    public override IEnumerable<T> Compute(Parameters parameters)
+    public override async IAsyncEnumerable<T> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         string expression = parameters.Value<string>(0);
 
@@ -137,6 +139,8 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
         static string getCleanIdentifier(string target) =>
             Regex.Replace(target, @"[^A-Z0-9_]", "", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
+        T[] dataValues = await GetDataSourceValues(parameters).ToArrayAsync(cancellationToken);
+
         lock (context)
         {
             // Clear existing variables - missing values will be exposed as NaN
@@ -148,7 +152,7 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
             int index = 0;
 
             // Load each target as variable name with its current slice value
-            foreach (T dataValue in GetDataSourceValues(parameters))
+            foreach (T dataValue in dataValues)
             {
                 lastValue = dataValue;
 

@@ -24,8 +24,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.ServiceModel;
 using System.Threading;
+using System.Threading.Tasks;
 using GrafanaAdapters.DataSources;
 using GrafanaAdapters.Functions;
 using GSF;
@@ -54,9 +56,9 @@ public partial class GrafanaDataService
             m_baseTicks = UnixTimeTag.BaseTicks.Value;
         }
 
-        protected override IEnumerable<DataSourceValue> QueryDataSourceValues(QueryParameters queryParameters, Dictionary<ulong, string> targetMap, CancellationToken cancellationToken)
+        protected override async IAsyncEnumerable<DataSourceValue> QueryDataSourceValues(QueryParameters queryParameters, Dictionary<ulong, string> targetMap, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            foreach (IDataPoint dataPoint in m_parent.Archive.ReadData(targetMap.Keys.Select(pointID => (int)pointID), queryParameters.StartTime, queryParameters.StopTime, false))
+            await foreach (IDataPoint dataPoint in m_parent.Archive.ReadData(targetMap.Keys.Select(pointID => (int)pointID), queryParameters.StartTime, queryParameters.StopTime, false).ToAsyncEnumerable().WithCancellation(cancellationToken))
             {
                 yield return new DataSourceValue
                 {

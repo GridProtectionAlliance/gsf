@@ -42,7 +42,6 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
         public string Phase;
     };
 
-    /// <inheritdoc />
     string IDataSourceValue.Target
     {
         readonly get => PrimaryTarget == PhasorValueTarget.Magnitude ? MagnitudeTarget : AngleTarget;
@@ -55,7 +54,6 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
         }
     }
 
-    /// <inheritdoc />
     double IDataSourceValue.Value
     {
         readonly get => PrimaryTarget == PhasorValueTarget.Magnitude ? Magnitude : Angle;
@@ -68,22 +66,38 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
         }
     }
 
-    /// <inheritdoc />
     double IDataSourceValue.Time
     {
         readonly get => Time;
         init => Time = value;
     }
 
-    /// <inheritdoc />
     MeasurementStateFlags IDataSourceValue.Flags
     {
         readonly get => Flags;
         init => Flags = value;
     }
 
-    /// <inheritdoc />
     readonly double[] IDataSourceValue.TimeSeriesValue => new[] { Magnitude, Angle, Time };
+
+    /// <inheritdoc />
+    public int CompareTo(PhasorValue other)
+    {
+        int result = Magnitude.CompareTo(other.Magnitude);
+
+        if (result != 0)
+            return result;
+
+        result = Angle.CompareTo(other.Angle);
+        
+        return result != 0 ? result : Time.CompareTo(other.Time);
+    }
+
+    /// <inheritdoc />
+    public bool Equals(PhasorValue other)
+    {
+        return CompareTo(other) == 0;
+    }
 
     /// <inheritdoc />
     public PhasorValue TransposeCompute(Func<double, double> function)
@@ -118,7 +132,6 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
         return metadata?.Tables["Phasor"].Select($"Label = '{target}'") ?? Array.Empty<DataRow>();
     }
 
-    /// <inheritdoc />
     readonly (Dictionary<ulong, string>, object) IDataSourceValue.GetIDTargetMap(DataSet metadata, HashSet<string> targetSet)
     {
         Dictionary<int, PhasorInfo> phasorTargets = new();
@@ -199,68 +212,73 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
         return (targetMap, phasorTargets);
     }
 
-    /// <inheritdoc />
-    DataSourceValueGroup<PhasorValue> IDataSourceValue<PhasorValue>.GetTargetDataSourceValueGroup
-    (
-        KeyValuePair<ulong, string> target,
-        List<DataSourceValue> dataValues,
-        DataSet metadata,
-        QueryParameters queryParameters,
-        object state
-    )
+    void IDataSourceValue<PhasorValue>.AssignValueToTargetList(DataSourceValue dataValue, List<PhasorValue> targetValues, object state)
     {
-        if (state is not Dictionary<int, PhasorInfo> phasorTargets)
-            throw new NullReferenceException("Invalid state type or phasor targets are null");
-
-        // TODO: JRC - validate that this phasor info lookup is correct
-        if (!phasorTargets.TryGetValue(Convert.ToInt32(target.Key), out PhasorInfo phasorInfo))
-            throw new NullReferenceException($"Unable to find phasor info for target '{target.Value}'");
-
-        IEnumerable<DataSourceValue> filteredMagnitudes = dataValues.Where(dataValue => dataValue.Target.Equals(phasorInfo.Magnitude));
-        List<DataSourceValue> filteredPhases = dataValues.Where(dataValue => dataValue.Target.Equals(phasorInfo.Phase)).ToList();
-        IEnumerable<PhasorValue> phasorValues = generatePhasorValues();
-
-        return new DataSourceValueGroup<PhasorValue>
-        {
-            Target = $"{phasorInfo.Magnitude};{phasorInfo.Phase}",
-            RootTarget = phasorInfo.Label,
-            SourceTarget = queryParameters.SourceTarget,
-            Source = phasorValues,
-            DropEmptySeries = queryParameters.DropEmptySeries,
-            RefID = queryParameters.SourceTarget.refId,
-            MetadataMap = metadata.GetMetadataMap<PhasorValue>(phasorInfo.Label, queryParameters)
-        };
-
-        List<PhasorValue> generatePhasorValues()
-        {
-            List<PhasorValue> values = new();
-            int index = 0;
-
-            foreach (DataSourceValue mag in filteredMagnitudes)
-            {
-                if (index >= filteredPhases.Count)
-                    continue;
-
-                PhasorValue phasor = new()
-                {
-                    MagnitudeTarget = phasorInfo.Magnitude,
-                    AngleTarget = phasorInfo.Phase,
-                    Flags = mag.Flags,
-                    Time = mag.Time,
-                    Magnitude = mag.Value,
-                    Angle = filteredPhases[index].Value
-                };
-
-                index++;
-
-                values.Add(phasor);
-            }
-            return values;
-        }
+        // TODO: JRC - associate same queried angle measurement values to their its associated magnitudes - only add a single grouped pair to target values collection
     }
 
-    /// <inheritdoc />
-    public readonly ParameterDefinition<IEnumerable<PhasorValue>> DataSourceValuesParameterDefinition => s_dataSourceValuesParameterDefinition;
+    //DataSourceValueGroup<PhasorValue> IDataSourceValue<PhasorValue>.GetTargetDataSourceValueGroup
+    //(
+    //    KeyValuePair<ulong, string> target,
+    //    IAsyncEnumerable<DataSourceValue> dataValues,
+    //    DataSet metadata,
+    //    QueryParameters queryParameters,
+    //    object state,
+    //    CancellationToken cancellationToken
+    //)
+    //{
+    //    //if (state is not Dictionary<int, PhasorInfo> phasorTargets)
+    //    //    throw new NullReferenceException("Invalid state type or phasor targets are null");
 
-    private static readonly ParameterDefinition<IEnumerable<PhasorValue>> s_dataSourceValuesParameterDefinition = DataSourceValuesParameterDefinition<PhasorValue>();
+    //    //if (!phasorTargets.TryGetValue(Convert.ToInt32(target.Key), out PhasorInfo phasorInfo))
+    //    //    throw new NullReferenceException($"Unable to find phasor info for target '{target.Value}'");
+
+    //    //DataSourceValue[] dataSourceValues = await dataValues.ToArrayAsync(cancellationToken);
+    //    //IEnumerable<DataSourceValue> filteredMagnitudes = dataSourceValues.Where(dataValue => dataValue.Target.Equals(phasorInfo.Magnitude));
+    //    //DataSourceValue[] filteredPhases = dataSourceValues.Where(dataValue => dataValue.Target.Equals(phasorInfo.Phase)).ToArray();
+    //    //IEnumerable<PhasorValue> phasorValues = generatePhasorValues();
+
+    //    //return new DataSourceValueGroup<PhasorValue>
+    //    //{
+    //    //    Target = $"{phasorInfo.Magnitude};{phasorInfo.Phase}",
+    //    //    RootTarget = phasorInfo.Label,
+    //    //    SourceTarget = queryParameters.SourceTarget,
+    //    //    Source = phasorValues.ToAsyncEnumerable(),
+    //    //    DropEmptySeries = queryParameters.DropEmptySeries,
+    //    //    RefID = queryParameters.SourceTarget.refId,
+    //    //    MetadataMap = metadata.GetMetadataMap<PhasorValue>(phasorInfo.Label, queryParameters)
+    //    //};
+
+    //    //List<PhasorValue> generatePhasorValues()
+    //    //{
+    //    //    List<PhasorValue> values = new();
+    //    //    int index = 0;
+
+    //    //    foreach (DataSourceValue mag in filteredMagnitudes)
+    //    //    {
+    //    //        if (index >= filteredPhases.Length)
+    //    //            continue;
+
+    //    //        PhasorValue phasor = new()
+    //    //        {
+    //    //            MagnitudeTarget = phasorInfo.Magnitude,
+    //    //            AngleTarget = phasorInfo.Phase,
+    //    //            Flags = mag.Flags,
+    //    //            Time = mag.Time,
+    //    //            Magnitude = mag.Value,
+    //    //            Angle = filteredPhases[index].Value
+    //    //        };
+
+    //    //        index++;
+
+    //    //        values.Add(phasor);
+    //    //    }
+    //    //    return values;
+    //    //}
+    //}
+
+    /// <inheritdoc />
+    public readonly ParameterDefinition<IAsyncEnumerable<PhasorValue>> DataSourceValuesParameterDefinition => s_dataSourceValuesParameterDefinition;
+
+    private static readonly ParameterDefinition<IAsyncEnumerable<PhasorValue>> s_dataSourceValuesParameterDefinition = DataSourceValuesParameterDefinition<PhasorValue>();
 }

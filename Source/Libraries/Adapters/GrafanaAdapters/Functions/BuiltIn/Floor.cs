@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using GrafanaAdapters.DataSources;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
@@ -27,7 +28,7 @@ public abstract class Floor<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     public override GroupOperations PublishedGroupOperations => GroupOperations.Standard | GroupOperations.Set;
 
     /// <inheritdoc />
-    public override IEnumerable<T> Compute(Parameters parameters)
+    public override IAsyncEnumerable<T> ComputeAsync(Parameters parameters, CancellationToken cancellationToken)
     {
         return ExecuteFunction(Math.Floor, parameters);
     }

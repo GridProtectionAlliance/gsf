@@ -35,10 +35,10 @@ namespace GrafanaAdapters.DataSources;
 public interface IDataSourceValue
 {
     /// <summary>
-    /// Gets the query target, e.g., a point-tag.
+    /// Gets the query targetValues, e.g., a point-tag.
     /// </summary>
     /// <remarks>
-    /// If data source value has multiple targets, this should be the primary target.
+    /// If data source value has multiple targets, this should be the primary targetValues.
     /// </remarks>
     string Target { get; init; }
 
@@ -66,16 +66,16 @@ public interface IDataSourceValue
     double[] TimeSeriesValue { get; }
 
     /// <summary>
-    /// Looks up metadata for the specified target.
+    /// Looks up metadata for the specified targetValues.
     /// </summary>
     /// <param name="metadata">Metadata data set.</param>
     /// <param name="target">Target to lookup.</param>
-    /// <returns>Filtered metadata rows for the specified target.</returns>
+    /// <returns>Filtered metadata rows for the specified targetValues.</returns>
     // TODO: JRC - results of this function should be cached for performance (caching internal to function is OK)
     DataRow[] LookupMetadata(DataSet metadata, string target);
 
     /// <summary>
-    /// Gets the ID to target map for the specified metadata and targets along with any intermediate state.
+    /// Gets the ID to targetValues map for the specified metadata and targets along with any intermediate state.
     /// </summary>
     /// <param name="metadata">Source metadata.</param>
     /// <param name="targetSet">Target set to query.</param>
@@ -83,7 +83,7 @@ public interface IDataSourceValue
     /// <remarks>
     /// For a given data source type, this function will be called once per query to build a map of IDs to
     /// targets. Since this step involves the metadata lookups for targets, any intermediate state can be
-    /// used with the <see cref="IDataSourceValue{T}.GetTargetDataSourceValueGroup"/> function to avoid any
+    /// used with the <see cref="IDataSourceValue{T}.AssignValueToTargetList"/> function to avoid any
     /// redundant metadata lookups after the data query operation.
     /// </remarks>
     (Dictionary<ulong, string> targetMap, object state) GetIDTargetMap(DataSet metadata, HashSet<string> targetSet);
@@ -93,37 +93,30 @@ public interface IDataSourceValue
 /// Defines an interface for a typed data source value.
 /// </summary>
 /// <typeparam name="T">Target <see cref="IDataSourceValue"/> type.</typeparam>
-public interface IDataSourceValue<T> : IDataSourceValue where T : struct, IDataSourceValue
+public interface IDataSourceValue<T> : IDataSourceValue, IComparable<T>, IEquatable<T> where T : struct, IDataSourceValue
 {
     /// <summary>
-    /// Gets the target to data source value group mpa for the specified queried data values, metadata,
-    /// query parameters, target map and any intermediate state.
+    /// Assign queried data source value to target values list.
     /// </summary>
-    /// <param name="target">Target for data source value group.</param>
-    /// <param name="dataValues">Queried time-series data values.</param>
-    /// <param name="metadata">Source metadata.</param>
-    /// <param name="queryParameters">Query parameters.</param>
-    /// <param name="state">Intermediate state.</param>
-    /// <returns>Data source value group for the specified target.</returns>
-    DataSourceValueGroup<T> GetTargetDataSourceValueGroup
-    (
-        KeyValuePair<ulong, string> target,
-        List<DataSourceValue> dataValues,
-        DataSet metadata,
-        QueryParameters queryParameters, 
-        object state
-    );
+    /// <param name="dataValue"></param>
+    /// <param name="targetValues"></param>
+    /// <param name="state"></param>
+    void AssignValueToTargetList(DataSourceValue dataValue, List<T> targetValues, object state);
 
     /// <summary>
     /// Gets the parameter definition for data source values.
     /// </summary>
-    ParameterDefinition<IEnumerable<T>> DataSourceValuesParameterDefinition { get; }
+    ParameterDefinition<IAsyncEnumerable<T>> DataSourceValuesParameterDefinition { get; }
 
     /// <summary>
-    /// Executes provided function for data source value(s), applying the results
+    /// Executes provided function for data source fields, applying the results
     /// to a copy of the data source value and returns the new result.
     /// </summary>
     /// <param name="function">Function to compute.</param>
     /// <returns>Computed result.</returns>
+    /// <remarks>
+    /// This function is used to compute a new data source value, applying the
+    /// values to all fields in the data source.
+    /// </remarks>
     T TransposeCompute(Func<double, double> function);
 }

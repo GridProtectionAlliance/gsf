@@ -1,5 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using GrafanaAdapters.DataSources;
 using GSF.Collections;
 
@@ -33,10 +36,10 @@ public abstract class Median<T> : GrafanaFunctionBase<T> where T : struct, IData
     public class ComputeDataSourceValue : Median<DataSourceValue>
     {
         /// <inheritdoc />
-        public override IEnumerable<DataSourceValue> Compute(Parameters parameters)
+        public override async IAsyncEnumerable<DataSourceValue> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             // Median uses immediate in-memory array load
-            DataSourceValue[] values = GetDataSourceValues(parameters).OrderBy(dataValue => dataValue.Value).Median();
+            DataSourceValue[] values = (await GetDataSourceValues(parameters).OrderBy(dataValue => dataValue.Value).ToArrayAsync(cancellationToken)).Median();
             int length = values.Length;
 
             if (length == 0)
@@ -56,14 +59,14 @@ public abstract class Median<T> : GrafanaFunctionBase<T> where T : struct, IData
     public class ComputePhasorValue : Median<PhasorValue>
     {
         /// <inheritdoc />
-        public override IEnumerable<PhasorValue> Compute(Parameters parameters)
+        public override async IAsyncEnumerable<PhasorValue> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             PhasorValue lastValue = default;
             List<double> magnitudes = new();
             List<double> angles = new();
 
             // Immediately load values in-memory only enumerating data source once
-            foreach (PhasorValue dataValue in GetDataSourceValues(parameters))
+            await foreach (PhasorValue dataValue in GetDataSourceValues(parameters).WithCancellation(cancellationToken))
             {
                 lastValue = dataValue;
                 magnitudes.Add(dataValue.Magnitude);

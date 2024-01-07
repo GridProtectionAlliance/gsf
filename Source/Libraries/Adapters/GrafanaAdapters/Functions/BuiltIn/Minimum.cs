@@ -1,4 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using GrafanaAdapters.DataSources;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
@@ -28,12 +31,12 @@ public abstract class Minimum<T> : GrafanaFunctionBase<T> where T : struct, IDat
     public override bool ResultIsSetTargetSeries => true;
 
     /// <inheritdoc />
-    public override IEnumerable<T> Compute(Parameters parameters)
+    public override async IAsyncEnumerable<T> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         T minValue = new() { Value = double.MaxValue };
 
         // Immediately enumerate values to find minimum
-        foreach (T dataValue in GetDataSourceValues(parameters))
+        await foreach (T dataValue in GetDataSourceValues(parameters).WithCancellation(cancellationToken))
         {
             if (dataValue.Value <= minValue.Value)
                 minValue = dataValue;

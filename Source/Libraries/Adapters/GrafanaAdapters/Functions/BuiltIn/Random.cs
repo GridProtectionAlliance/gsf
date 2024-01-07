@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using GrafanaAdapters.DataSources;
 using GSF;
 using GSF.Collections;
@@ -61,10 +63,10 @@ public abstract class Random<T> : GrafanaFunctionBase<T> where T : struct, IData
     protected abstract T TransposeCompute(T currentValue, T[] values, int index);
 
     /// <inheritdoc />
-    public override IEnumerable<T> Compute(Parameters parameters)
+    public override async IAsyncEnumerable<T> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         // Immediately load values in-memory only enumerating data source once
-        T[] values = GetDataSourceValues(parameters).ToArray();
+        T[] values = await GetDataSourceValues(parameters).ToArrayAsync(cancellationToken);
         int length = values.Length;
 
         if (length == 0)

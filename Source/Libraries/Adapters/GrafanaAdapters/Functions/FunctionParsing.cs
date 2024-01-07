@@ -264,22 +264,22 @@ internal static class FunctionParsing
     }
 
     // Execute Grafana function over a set of points from each series at the same time-slice
-    public static IEnumerable<DataSourceValueGroup<T>> ComputeSlice<T>(this IGrafanaFunction<T> function, TimeSliceScanner<T> scanner, QueryParameters queryParameters, string rootTarget, DataSet metadata, string[] parsedParameters, CancellationToken cancellationToken) where T : struct, IDataSourceValue<T>
+    public static async IAsyncEnumerable<DataSourceValueGroup<T>> ComputeSliceAsync<T>(this IGrafanaFunction<T> function, TimeSliceScannerAsync<T> scanner, QueryParameters queryParameters, string rootTarget, DataSet metadata, string[] parsedParameters, [EnumeratorCancellation] CancellationToken cancellationToken) where T : struct, IDataSourceValue<T>
     {
-        IEnumerable<T> readSliceValues()
+        async IAsyncEnumerable<T> readSliceValues()
         {
-            while (!scanner.DataReadComplete && !cancellationToken.IsCancellationRequested)
+            while (!scanner.DataReadComplete)
             {
-                IEnumerable<T> dataSourceValues = scanner.ReadNextTimeSlice();
+                IAsyncEnumerable<T> dataSourceValues = await scanner.ReadNextTimeSliceAsync();
                 Dictionary<string, string> metadataMap = metadata.GetMetadataMap<T>(rootTarget, queryParameters);
-                Parameters parameters = function.GenerateParameters(parsedParameters, dataSourceValues, rootTarget, metadata, metadataMap);
+                Parameters parameters = await function.GenerateParametersAsync(parsedParameters, dataSourceValues, rootTarget, metadata, metadataMap, cancellationToken);
 
-                foreach (T dataValue in function.ComputeSlice(parameters))
+                await foreach (T dataValue in function.ComputeSliceAsync(parameters, cancellationToken))
                     yield return dataValue;
             }
         }
 
-        foreach (IGrouping<string, T> valueGroup in readSliceValues().GroupBy(dataValue => dataValue.Target))
+        await foreach (IAsyncGrouping<string, T> valueGroup in readSliceValues().GroupBy(dataValue => dataValue.Target).WithCancellation(cancellationToken))
         {
             yield return new DataSourceValueGroup<T>
             {

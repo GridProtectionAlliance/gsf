@@ -1,4 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using GrafanaAdapters.DataSources;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
@@ -22,13 +25,13 @@ public abstract class Range<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     public override string Description => "Returns a single value that represents the range, i.e., <c>maximum - minimum</c>, of the values in the source series.";
 
     /// <inheritdoc />
-    public override IEnumerable<T> Compute(Parameters parameters)
+    public override async IAsyncEnumerable<T> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         T rangeMin = new() { Value = double.MaxValue };
         T rangeMax = new() { Value = double.MinValue };
 
         // Immediately enumerate values to find range
-        foreach (T dataValue in GetDataSourceValues(parameters))
+        await foreach (T dataValue in GetDataSourceValues(parameters).WithCancellation(cancellationToken))
         {
             if (dataValue.Value <= rangeMin.Value)
                 rangeMin = dataValue;

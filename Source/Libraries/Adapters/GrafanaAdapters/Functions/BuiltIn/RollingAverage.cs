@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using GrafanaAdapters.DataSources;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
@@ -43,15 +45,13 @@ public abstract class RollingAverage<T> : GrafanaFunctionBase<T> where T : struc
     };
 
     /// <inheritdoc />
-    public override IEnumerable<T> Compute(Parameters parameters)
+    public override async IAsyncEnumerable<T> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        IEnumerable<T> source = GetDataSourceValues(parameters);
-
         // Immediately load values in-memory only enumerating data source once
     #if NET
-        ReadOnlySpan<T> values = source.ToArray();
+        ReadOnlySpan<T> values = await GetDataSourceValues(parameters).ToArrayAsync(cancellationToken);
     #else
-        T[] values = source.ToArray();
+        T[] values = await GetDataSourceValues(parameters).ToArrayAsync(cancellationToken);
     #endif
         int length = values.Length;
 

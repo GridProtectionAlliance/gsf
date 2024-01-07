@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using GrafanaAdapters.DataSources;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
@@ -26,18 +28,18 @@ public abstract class Count<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     public override string[] Aliases => new[] { "Length" };
 
     /// <inheritdoc />
-    public override IEnumerable<T> Compute(Parameters parameters)
+    public override async IAsyncEnumerable<T> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         T lastValue = default;
 
-        IEnumerable<int> trackedValues = GetDataSourceValues(parameters).Select(dataValue =>
+        IAsyncEnumerable<int> trackedValues = GetDataSourceValues(parameters).Select(dataValue =>
         {
             lastValue = dataValue;
             return 0;
         });
 
         // Immediately enumerate to compute values
-        double count = trackedValues.Count();
+        double count = await trackedValues.CountAsync(cancellationToken);
 
         // Return computed results
         if (lastValue.Time > 0.0D)

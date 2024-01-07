@@ -52,7 +52,7 @@ public class DataSourceValueGroup<T> where T : struct, IDataSourceValue
     /// <summary>
     /// Gets or sets data source values enumerable.
     /// </summary>
-    public IEnumerable<T> Source { get; set; }
+    public IAsyncEnumerable<T> Source { get; set; }
 
     /// <summary>
     /// Gets or sets flag that determines if empty series are produced.

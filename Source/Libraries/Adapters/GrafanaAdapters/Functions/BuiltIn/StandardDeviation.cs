@@ -1,5 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using GrafanaAdapters.DataSources;
 using GSF.NumericalAnalysis;
 
@@ -44,20 +47,19 @@ public abstract class StandardDeviation<T> : GrafanaFunctionBase<T> where T : st
     public class ComputeDataSourceValue : StandardDeviation<DataSourceValue>
     {
         /// <inheritdoc />
-        public override IEnumerable<DataSourceValue> Compute(Parameters parameters)
+        public override async IAsyncEnumerable<DataSourceValue> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             bool useSampleCalc = parameters.ParsedCount > 0 && parameters.Value<bool>(0);
             DataSourceValue lastValue = default;
 
-            IEnumerable<double> trackedValues = GetDataSourceValues(parameters).Select(dataValue =>
+            IAsyncEnumerable<double> trackedValues = GetDataSourceValues(parameters).Select(dataValue =>
             {
                 lastValue = dataValue;
                 return dataValue.Value;
             });
 
-            // Immediately enumerate to compute values, note that function
-            // 'StandardDeviation' executes immediate in-memory array load:
-            double stdDev = trackedValues.StandardDeviation(useSampleCalc);
+            // Immediately enumerate to array to compute values
+            double stdDev = (await trackedValues.ToArrayAsync(cancellationToken)).StandardDeviation(useSampleCalc);
 
             // Return computed results
             if (lastValue.Time > 0.0D)
@@ -69,7 +71,7 @@ public abstract class StandardDeviation<T> : GrafanaFunctionBase<T> where T : st
     public class ComputePhasorValue : StandardDeviation<PhasorValue>
     {
         /// <inheritdoc />
-        public override IEnumerable<PhasorValue> Compute(Parameters parameters)
+        public override async IAsyncEnumerable<PhasorValue> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             bool useSampleCalc = parameters.ParsedCount > 0 && parameters.Value<bool>(0);
 
@@ -78,7 +80,7 @@ public abstract class StandardDeviation<T> : GrafanaFunctionBase<T> where T : st
             PhasorValue lastValue = default;
 
             // Immediately load values in-memory only enumerating data source once
-            foreach (PhasorValue dataValue in GetDataSourceValues(parameters))
+            await foreach (PhasorValue dataValue in GetDataSourceValues(parameters).WithCancellation(cancellationToken))
             {
                 lastValue = dataValue;
                 magnitudes.Add(dataValue.Magnitude);

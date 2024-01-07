@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using GrafanaAdapters.DataSources;
 
 namespace GrafanaAdapters.Functions;
@@ -84,18 +85,18 @@ public abstract class GrafanaFunctionBase<T> : IGrafanaFunction<T> where T : str
     }
 
     /// <inheritdoc />
-    public abstract IEnumerable<T> Compute(Parameters parameters);
+    public abstract IAsyncEnumerable<T> ComputeAsync(Parameters parameters, CancellationToken cancellationToken);
 
     /// <inheritdoc />
-    public virtual IEnumerable<T> ComputeSlice(Parameters parameters)
+    public virtual IAsyncEnumerable<T> ComputeSliceAsync(Parameters parameters, CancellationToken cancellationToken)
     {
-        return Compute(parameters);
+        return ComputeAsync(parameters, cancellationToken);
     }
 
     /// <inheritdoc />
-    public virtual IEnumerable<T> ComputeSet(Parameters parameters)
+    public virtual IAsyncEnumerable<T> ComputeSetAsync(Parameters parameters, CancellationToken cancellationToken)
     {
-        return Compute(parameters);
+        return ComputeAsync(parameters, cancellationToken);
     }
 
     /// <summary>
@@ -103,11 +104,11 @@ public abstract class GrafanaFunctionBase<T> : IGrafanaFunction<T> where T : str
     /// </summary>
     /// <param name="parameters">Input parameters.</param>
     /// <returns>Data source values from provided parameters.</returns>
-    /// <exception cref="InvalidOperationException">Last parameter is not a data source value of type <see cref="IEnumerable{T}"/>.</exception>
-    protected virtual IEnumerable<T> GetDataSourceValues(Parameters parameters)
+    /// <exception cref="InvalidOperationException">Last parameter is not a data source value of type <see cref="IAsyncEnumerable{T}"/>.</exception>
+    protected virtual IAsyncEnumerable<T> GetDataSourceValues(Parameters parameters)
     {
-        return (parameters.LastOrDefault() as IMutableParameter<IEnumerable<T>>)?.Value ??
-            throw new InvalidOperationException($"Last parameter is not a data source value of type '{typeof(IEnumerable<T>).Name}'.");
+        return (parameters.LastOrDefault() as IMutableParameter<IAsyncEnumerable<T>>)?.Value ??
+            throw new InvalidOperationException($"Last parameter is not a data source value of type '{typeof(IAsyncEnumerable<T>).Name}'.");
     }
 
     /// <summary>
@@ -116,7 +117,7 @@ public abstract class GrafanaFunctionBase<T> : IGrafanaFunction<T> where T : str
     /// <param name="function">Function to execute.</param>
     /// <param name="parameters">Input parameters.</param>
     /// <returns>Deferred enumeration of computed values.</returns>
-    protected virtual IEnumerable<T> ExecuteFunction(Func<double, double> function, Parameters parameters)
+    protected virtual IAsyncEnumerable<T> ExecuteFunction(Func<double, double> function, Parameters parameters)
     {
         return GetDataSourceValues(parameters).Select(dataValue => dataValue.TransposeCompute(function));
     }

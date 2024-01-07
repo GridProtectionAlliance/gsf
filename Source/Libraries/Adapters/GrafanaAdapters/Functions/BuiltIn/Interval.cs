@@ -1,4 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using GrafanaAdapters.DataSources;
 using GSF.Units;
 
@@ -60,13 +63,13 @@ public abstract class Interval<T> : GrafanaFunctionBase<T> where T : struct, IDa
     };
 
     /// <inheritdoc />
-    public override IEnumerable<T> Compute(Parameters parameters)
+    public override async IAsyncEnumerable<T> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         TargetTimeUnit units = parameters.Value<TargetTimeUnit>(1);
         double valueN = TargetTimeUnit.FromTimeUnits(parameters.Value<double>(0), units) / SI.Milli;
         double lastTime = 0.0D;
 
-        foreach (T dataValue in GetDataSourceValues(parameters))
+        await foreach (T dataValue in GetDataSourceValues(parameters).WithCancellation(cancellationToken))
         {
             if (lastTime > 0.0D)
             {

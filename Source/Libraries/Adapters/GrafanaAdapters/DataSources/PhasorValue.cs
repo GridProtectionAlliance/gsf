@@ -21,7 +21,6 @@
 //
 //******************************************************************************************************
 
-using System.Collections.Generic;
 using GrafanaAdapters.Functions.BuiltIn;
 using GSF.TimeSeries;
 
@@ -90,22 +89,4 @@ public partial struct PhasorValue
     /// See <see cref="WrapAngle{T}"/> for example of using only angle components.
     /// </remarks>
     public PhasorValueTarget PrimaryTarget;
-}
-
-/// <summary>
-/// Helper class to compare two <see cref="PhasorValue"/> instances.
-/// </summary>
-public class PhasorValueComparer : IComparer<PhasorValue>
-{
-    /// <inheritdoc />
-    public int Compare(PhasorValue x, PhasorValue y)
-    {
-        int result = x.Magnitude.CompareTo(y.Magnitude);
-
-        if (result != 0)
-            return result;
-
-        result = x.Angle.CompareTo(y.Angle);
-        return result != 0 ? result : x.Time.CompareTo(y.Time);
-    }
 }

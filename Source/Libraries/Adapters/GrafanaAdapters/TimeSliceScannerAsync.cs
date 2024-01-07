@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  TimeSliceScanner.cs - Gbtc
+//  TimeSliceScannerAsync.cs - Gbtc
 //
-//  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2024, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,13 +16,16 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  05/12/2017 - J. Ritchie Carroll
+//  01/06/2024 - J. Ritchie Carroll
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using GrafanaAdapters.DataSources;
 
 namespace GrafanaAdapters;
@@ -30,40 +33,15 @@ namespace GrafanaAdapters;
 /// <summary>
 /// Reads series of <see cref="IDataSourceValue{T}"/> instances for the same time interval.
 /// </summary>
-public class TimeSliceScanner<T> where T : struct, IDataSourceValue<T>
+public class TimeSliceScannerAsync<T> where T : struct, IDataSourceValue<T>
 {
-    #region [ Members ]
+    private readonly List<IAsyncEnumerator<T>> m_enumerators;
 
-    // Fields
-    private readonly List<IEnumerator<T>> m_enumerators;
-
-    #endregion
-
-    #region [ Constructors ]
-
-    /// <summary>
-    /// Creates a new <see cref="TimeSliceScanner{T}"/>.
-    /// </summary>
-    /// <param name="dataSources">Set of <see cref="DataSourceValueGroup{T}"/> series to scan.</param>
-    /// <param name="tolerance">Time tolerance for data slices in Unix epoch milliseconds.</param>
-    public TimeSliceScanner(IEnumerable<DataSourceValueGroup<T>> dataSources, double tolerance = 0.0D)
+    private TimeSliceScannerAsync(List<IAsyncEnumerator<T>> enumerators, double tolerance)
     {
-        m_enumerators = new List<IEnumerator<T>>();
+        m_enumerators = enumerators;
         Tolerance = tolerance;
-
-        foreach (DataSourceValueGroup<T> group in dataSources)
-        {
-            IEnumerator<T> enumerator = group.Source.GetEnumerator();
-
-            // Add enumerator to the list if it has at least one value
-            if (enumerator.MoveNext())
-                m_enumerators.Add(enumerator);
-        }
     }
-
-    #endregion
-
-    #region [ Properties ]
 
     /// <summary>
     /// Gets a flag that determines if data read has been completed.
@@ -75,10 +53,6 @@ public class TimeSliceScanner<T> where T : struct, IDataSourceValue<T>
     /// </summary>
     public double Tolerance { get; }
 
-    #endregion
-
-    #region [ Methods ]
-
     /// <summary>
     /// Reads next time slice from the series set.
     /// </summary>
@@ -87,29 +61,29 @@ public class TimeSliceScanner<T> where T : struct, IDataSourceValue<T>
     /// otherwise, <c>false</c> to publish all series values since last slice.
     /// </param>
     /// <returns>Next time slice.</returns>
-    public IEnumerable<T> ReadNextTimeSlice(bool lastValue = true)
+    public async Task<IAsyncEnumerable<T>> ReadNextTimeSliceAsync(bool lastValue = true)
     {
         if (lastValue)
         {
             Dictionary<string, T> nextSlice = new(StringComparer.OrdinalIgnoreCase);
-            ReadNextTimeSlice(value => nextSlice[value.Target] = value);
-            return nextSlice.Values;
+            await ReadNextTimeSliceAsync(value => nextSlice[value.Target] = value);
+            return nextSlice.Values.ToAsyncEnumerable();
         }
         else
         {
             List<T> nextSlice = new();
-            ReadNextTimeSlice(value => nextSlice.Add(value));
-            return nextSlice;
+            await ReadNextTimeSliceAsync(value => nextSlice.Add(value));
+            return nextSlice.ToAsyncEnumerable();
         }
     }
 
-    private void ReadNextTimeSlice(Action<T> addValue)
+    private async Task ReadNextTimeSliceAsync(Action<T> addValue)
     {
         T dataPoint;
         double publishTime = double.MaxValue;
 
         // Find minimum publication time for current values
-        foreach (IEnumerator<T> enumerator in m_enumerators)
+        foreach (IAsyncEnumerator<T> enumerator in m_enumerators)
         {
             dataPoint = enumerator.Current;
 
@@ -123,7 +97,7 @@ public class TimeSliceScanner<T> where T : struct, IDataSourceValue<T>
         int index = 0;
 
         // Publish all values at the current time
-        foreach (IEnumerator<T> enumerator in m_enumerators)
+        foreach (IAsyncEnumerator<T> enumerator in m_enumerators)
         {
             bool enumerationComplete = false;
             dataPoint = enumerator.Current;
@@ -131,7 +105,7 @@ public class TimeSliceScanner<T> where T : struct, IDataSourceValue<T>
             if (dataPoint.Time <= publishTime)
             {
                 // Attempt to advance to next data point, tracking completed enumerators
-                if (!enumerator.MoveNext())
+                if (!await enumerator.MoveNextAsync())
                 {
                     enumerationComplete = true;
                     completed.Add(index);
@@ -146,7 +120,7 @@ public class TimeSliceScanner<T> where T : struct, IDataSourceValue<T>
                     {
                         addValue(enumerator.Current);
 
-                        if (!enumerator.MoveNext())
+                        if (!await enumerator.MoveNextAsync())
                         {
                             completed.Add(index);
                             break;
@@ -166,10 +140,36 @@ public class TimeSliceScanner<T> where T : struct, IDataSourceValue<T>
 
         // Remove highest numeric indexes first to retain source index integrity
         for (int i = completed.Count - 1; i >= 0; i--)
-            m_enumerators.RemoveAt(completed[i]);
+        {
+            int indexToRemove = completed[i];
+            await m_enumerators[indexToRemove].DisposeAsync();
+            m_enumerators.RemoveAt(indexToRemove);
+        }
 
         completed.Clear();
     }
 
-    #endregion
+    /// <summary>
+    /// Creates a new <see cref="TimeSliceScannerAsync{T}"/>.
+    /// </summary>
+    /// <param name="dataSources">Set of <see cref="DataSourceValueGroup{T}"/> series to scan.</param>
+    /// <param name="tolerance">Time tolerance for data slices in Unix epoch milliseconds.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    public static async ValueTask<TimeSliceScannerAsync<T>> Create(IAsyncEnumerable<DataSourceValueGroup<T>> dataSources, double tolerance, CancellationToken cancellationToken)
+    {
+        List<IAsyncEnumerator<T>> enumerators = new();
+
+        await foreach (DataSourceValueGroup<T> group in dataSources.WithCancellation(cancellationToken))
+        {
+            IAsyncEnumerator<T> enumerator = group.Source.GetAsyncEnumerator(cancellationToken);
+
+            // Add enumerator to the list if it has at least one value
+            if (await enumerator.MoveNextAsync())
+                enumerators.Add(enumerator);
+            else
+                await enumerator.DisposeAsync();
+        }
+
+        return new TimeSliceScannerAsync<T>(enumerators, tolerance);
+    }
 }

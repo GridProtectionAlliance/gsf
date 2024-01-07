@@ -1,5 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using GrafanaAdapters.DataSources;
 using GSF.Units;
 
@@ -54,24 +57,24 @@ public abstract class TimeDifference<T> : GrafanaFunctionBase<T> where T : struc
     };
 
     /// <inheritdoc />
-    public override IEnumerable<T> Compute(Parameters parameters)
+    public override async IAsyncEnumerable<T> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         TargetTimeUnit units = parameters.Value<TargetTimeUnit>(0);
-        T lastResult = new();
+        double lastTime = new();
 
         // Transpose computed value
         T transposeCompute(T dataValue) => dataValue with
         {
-            Value = TargetTimeUnit.ToTimeUnits((dataValue.Time - lastResult.Time) * SI.Milli, units)
+            Value = TargetTimeUnit.ToTimeUnits((dataValue.Time - lastTime) * SI.Milli, units)
         };
 
         // Return deferred enumeration of computed values
-        foreach (T dataValue in GetDataSourceValues(parameters).Select(transposeCompute))
+        await foreach (T dataValue in GetDataSourceValues(parameters).Select(transposeCompute).WithCancellation(cancellationToken))
         {
-            if (lastResult.Time > 0.0D)
+            if (lastTime > 0.0D)
                 yield return dataValue;
 
-            lastResult = dataValue;
+            lastTime = dataValue.Time;
         }
     }
 

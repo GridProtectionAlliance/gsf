@@ -29,6 +29,8 @@ using System.Data;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using GSF;
 
 namespace GrafanaAdapters.Functions;
@@ -140,8 +142,9 @@ internal static class ParameterParsing
     /// <param name="rootTarget">Root target.</param>
     /// <param name="metadata">Metadata.</param>
     /// <param name="metadataMap">Metadata map.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>List of value mutable parameters from parsed parameters.</returns>
-    public static Parameters GenerateParameters<TDataSourceValue>(this IGrafanaFunction<TDataSourceValue> function, string[] parsedParameters, IEnumerable<TDataSourceValue> dataSourceValues, string rootTarget, DataSet metadata, Dictionary<string, string> metadataMap) where TDataSourceValue : struct, IDataSourceValue<TDataSourceValue>
+    public static async ValueTask<Parameters> GenerateParametersAsync<TDataSourceValue>(this IGrafanaFunction<TDataSourceValue> function, string[] parsedParameters, IAsyncEnumerable<TDataSourceValue> dataSourceValues, string rootTarget, DataSet metadata, Dictionary<string, string> metadataMap, CancellationToken cancellationToken) where TDataSourceValue : struct, IDataSourceValue<TDataSourceValue>
     {
         // Generate a list of value mutable parameters
         Parameters parameters = function.ParameterDefinitions.CreateParameters();
@@ -163,7 +166,7 @@ internal static class ParameterParsing
                 Debug.Assert(parameter is IParameter<IEnumerable<IDataSourceValue>>, $"Last parameter is not a data source value of type '{typeof(IEnumerable<IDataSourceValue>).Name}'.");
 
                 // Replace last parameter with data source type specific parameter with associated values
-                parameters[i] = new Parameter<IEnumerable<TDataSourceValue>>(default(TDataSourceValue).DataSourceValuesParameterDefinition)
+                parameters[i] = new Parameter<IAsyncEnumerable<TDataSourceValue>>(default(TDataSourceValue).DataSourceValuesParameterDefinition)
                 {
                     Value = dataSourceValues
                 };
@@ -173,7 +176,7 @@ internal static class ParameterParsing
 
             // Parameter
             if (index < parsedParameters.Length)
-                parameter.ConvertParsedValue(parsedParameters[index++], rootTarget, dataSourceValues, metadata, metadataMap);
+                await parameter.ConvertParsedValueAsync(parsedParameters[index++], rootTarget, dataSourceValues, metadata, metadataMap, cancellationToken);
         
         #if DEBUG
             // Required parameters were already validated in ParseParameters - this is a sanity check
@@ -195,6 +198,7 @@ internal static class ParameterParsing
     /// <param name="dataSourceValues">Data source values.</param>
     /// <param name="metadata">Source metadata.</param>
     /// <param name="metadataMap">Metadata map associated with the target.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <remarks>
     /// This function is used to convert the parsed value to the parameter type.
     /// If the type of value provided and expected match, then it directly converts.
@@ -202,7 +206,7 @@ internal static class ParameterParsing
     /// If nothing is found, it looks through ActiveMeasurements for it.
     /// Finally, if none of the above work it throws an error.
     /// </remarks>
-    public static void ConvertParsedValue<TDataSourceValue>(this IMutableParameter parameter, string value, string target, IEnumerable<TDataSourceValue> dataSourceValues, DataSet metadata, Dictionary<string, string> metadataMap) where TDataSourceValue : struct, IDataSourceValue<TDataSourceValue>
+    public static async ValueTask ConvertParsedValueAsync<TDataSourceValue>(this IMutableParameter parameter, string value, string target, IAsyncEnumerable<TDataSourceValue> dataSourceValues, DataSet metadata, Dictionary<string, string> metadataMap, CancellationToken cancellationToken) where TDataSourceValue : struct, IDataSourceValue<TDataSourceValue>
     {
         // No value specified
         if (string.IsNullOrWhiteSpace(value))
@@ -304,7 +308,7 @@ internal static class ParameterParsing
             foreach (string targetName in targets)
             {
                 // Attempt to find named target in data source values
-                TDataSourceValue sourceResult = dataSourceValues.FirstOrDefault(dataSourceValue => dataSourceValue.Target.Equals(targetName, StringComparison.OrdinalIgnoreCase));
+                TDataSourceValue sourceResult = await dataSourceValues.FirstOrDefaultAsync(dataSourceValue => dataSourceValue.Target.Equals(targetName, StringComparison.OrdinalIgnoreCase), cancellationToken);
 
                 // Data source values are structs and cannot be null so an empty target means lookup failed
                 if (string.IsNullOrEmpty(sourceResult.Target))

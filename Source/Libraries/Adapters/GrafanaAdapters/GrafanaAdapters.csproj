@@ -180,7 +180,7 @@
     <Compile Include="TargetCache.cs" />
     <Compile Include="DataSources\DataSourceValue.cs" />
     <Compile Include="Model\Common\TimeSeriesValues.cs" />
-    <Compile Include="TimeSliceScanner.cs" />
+    <Compile Include="TimeSliceScannerAsync.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\GSF.Core\GSF.Core.csproj">

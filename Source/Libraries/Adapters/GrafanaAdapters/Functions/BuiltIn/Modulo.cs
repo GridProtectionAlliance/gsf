@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
 using GrafanaAdapters.DataSources;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
@@ -43,7 +44,7 @@ public abstract class Modulo<T> : GrafanaFunctionBase<T> where T : struct, IData
     };
 
     /// <inheritdoc />
-    public override IEnumerable<T> Compute(Parameters parameters)
+    public override IAsyncEnumerable<T> ComputeAsync(Parameters parameters, CancellationToken cancellationToken)
     {
         double valueN = parameters.Value<double>(0);
         return ExecuteFunction(value => value % valueN, parameters);

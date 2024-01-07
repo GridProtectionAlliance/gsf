@@ -1,5 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using GrafanaAdapters.DataSources;
 using GSF.Collections;
 
@@ -72,10 +75,10 @@ public abstract class Mode<T> : GrafanaFunctionBase<T> where T : struct, IDataSo
     public class ComputeDataSourceValue : Mode<DataSourceValue>
     {
         /// <inheritdoc />
-        public override IEnumerable<DataSourceValue> Compute(Parameters parameters)
+        public override async IAsyncEnumerable<DataSourceValue> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             // Immediately load values in-memory only enumerating data source once
-            DataSourceValue[] values = GetDataSourceValues(parameters).ToArray();
+            DataSourceValue[] values = await GetDataSourceValues(parameters).ToArrayAsync(cancellationToken);
             yield return values.MajorityBy(values.Last(), dataValue => dataValue.Value, false);
         }
     }
@@ -84,14 +87,14 @@ public abstract class Mode<T> : GrafanaFunctionBase<T> where T : struct, IDataSo
     public class ComputePhasorValue : Mode<PhasorValue>
     {
         /// <inheritdoc />
-        public override IEnumerable<PhasorValue> Compute(Parameters parameters)
+        public override async IAsyncEnumerable<PhasorValue> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             List<double> magnitudes = new();
             List<double> angles = new();
             PhasorValue lastValue = default;
 
             // Immediately load values in-memory only enumerating data source once
-            foreach (PhasorValue dataValue in GetDataSourceValues(parameters))
+            await foreach (PhasorValue dataValue in GetDataSourceValues(parameters).WithCancellation(cancellationToken))
             {
                 lastValue = dataValue;
                 magnitudes.Add(dataValue.Magnitude);

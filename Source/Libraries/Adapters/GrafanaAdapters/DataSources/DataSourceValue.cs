@@ -21,7 +21,6 @@
 //
 //******************************************************************************************************
 
-using System.Collections.Generic;
 using GSF.TimeSeries;
 
 namespace GrafanaAdapters.DataSources;
@@ -54,17 +53,4 @@ public partial struct DataSourceValue
     /// Flags for queried value.
     /// </summary>
     public MeasurementStateFlags Flags;
-}
-
-/// <summary>
-/// Helper class to compare two <see cref="DataSourceValue"/> instances.
-/// </summary>
-public class DataSourceValueComparer : IComparer<DataSourceValue>
-{
-    /// <inheritdoc />
-    public int Compare(DataSourceValue x, DataSourceValue y)
-    {
-        int result = x.Value.CompareTo(y.Value);
-        return result != 0 ? result : x.Time.CompareTo(y.Time);
-    }
 }

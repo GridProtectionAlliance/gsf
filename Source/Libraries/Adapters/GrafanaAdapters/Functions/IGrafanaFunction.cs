@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using GrafanaAdapters.DataSources;
 using GrafanaAdapters.Functions.BuiltIn;
 
@@ -158,31 +159,34 @@ public interface IGrafanaFunction<out T> : IGrafanaFunction where T : struct, ID
     /// <summary>
     /// Executes the computation for the Grafana function.
     /// </summary>
-    /// <param name="parameters">The input parameters for the computation.</param>
+    /// <param name="parameters">Input parameters for the computation.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A sequence of computed data source parameters.</returns>
-    IEnumerable<T> Compute(Parameters parameters);
+    IAsyncEnumerable<T> ComputeAsync(Parameters parameters, CancellationToken cancellationToken);
 
     /// <summary>
     /// Executes a custom slice computation for the Grafana function.
     /// </summary>
-    /// <param name="parameters">The input parameters for the computation.</param>
+    /// <param name="parameters">Input parameters for the computation.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A sequence of computed data source parameters.</returns>
     /// <remarks>
     /// This method is used to support custom slice computations for functions that
     /// need special handling for slice operations. By default, this method will call
-    /// <see cref="Compute"/> to perform the computation.
+    /// <see cref="ComputeAsync"/> to perform the computation.
     /// </remarks>
-    IEnumerable<T> ComputeSlice(Parameters parameters);
+    IAsyncEnumerable<T> ComputeSliceAsync(Parameters parameters, CancellationToken cancellationToken);
 
     /// <summary>
     /// Executes a custom set computation for the Grafana function.
     /// </summary>
-    /// <param name="parameters">The input parameters for the computation.</param>
+    /// <param name="parameters">Input parameters for the computation.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A sequence of computed data source parameters.</returns>
     /// <remarks>
     /// This method is used to support custom set computations for functions that
     /// need special handling for set operations. By default, this method will call
-    /// <see cref="Compute"/> to perform the computation.
+    /// <see cref="ComputeAsync"/> to perform the computation.
     /// </remarks>
-    IEnumerable<T> ComputeSet(Parameters parameters);
+    IAsyncEnumerable<T> ComputeSetAsync(Parameters parameters, CancellationToken cancellationToken);
 }

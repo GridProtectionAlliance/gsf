@@ -32,12 +32,12 @@ internal static class Common
     public const GroupOperations DefaultGroupOperations = GroupOperations.Standard | GroupOperations.Slice | GroupOperations.Set;
 
     // This generates a standard data source values parameter definition - this is always the last parameter
-    public static ParameterDefinition<IEnumerable<T>> DataSourceValuesParameterDefinition<T>()
+    public static ParameterDefinition<IAsyncEnumerable<T>> DataSourceValuesParameterDefinition<T>()
     {
-        return new ParameterDefinition<IEnumerable<T>>()
+        return new ParameterDefinition<IAsyncEnumerable<T>>()
         {
             Name = "expression",
-            Default = Array.Empty<T>(),
+            Default = AsyncEnumerable.Empty<T>(),
             Description = "Input Data Points",
             Required = true
         };

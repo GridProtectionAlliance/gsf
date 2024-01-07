@@ -1,5 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using GrafanaAdapters.DataSources;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
@@ -29,18 +32,18 @@ public abstract class Total<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     public class ComputeDataSourceValue : Total<DataSourceValue>
     {
         /// <inheritdoc />
-        public override IEnumerable<DataSourceValue> Compute(Parameters parameters)
+        public override async IAsyncEnumerable<DataSourceValue> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             DataSourceValue lastValue = default;
 
-            IEnumerable<double> trackedValues = GetDataSourceValues(parameters).Select(dataValue =>
+            IAsyncEnumerable<double> trackedValues = GetDataSourceValues(parameters).Select(dataValue =>
             {
                 lastValue = dataValue;
                 return dataValue.Value;
             });
 
             // Immediately enumerate to compute values
-            double sum = trackedValues.Sum();
+            double sum = await trackedValues.SumAsync(cancellationToken);
 
             // Return computed results
             if (lastValue.Time > 0.0D)
@@ -52,14 +55,14 @@ public abstract class Total<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     public class ComputePhasorValue : Total<PhasorValue>
     {
         /// <inheritdoc />
-        public override IEnumerable<PhasorValue> Compute(Parameters parameters)
+        public override async IAsyncEnumerable<PhasorValue> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             PhasorValue lastValue = default;
             double magnitudeTotal = 0.0D;
             double angleTotal = 0.0D;
 
             // Immediately enumerate to compute values - only enumerate once
-            foreach (PhasorValue dataValue in GetDataSourceValues(parameters))
+            await foreach (PhasorValue dataValue in GetDataSourceValues(parameters).WithCancellation(cancellationToken))
             {
                 lastValue = dataValue;
                 magnitudeTotal += dataValue.Magnitude;

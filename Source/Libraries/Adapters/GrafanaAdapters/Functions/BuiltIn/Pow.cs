@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using GrafanaAdapters.DataSources;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
@@ -41,7 +42,7 @@ public abstract class Pow<T> : GrafanaFunctionBase<T> where T : struct, IDataSou
     };
 
     /// <inheritdoc />
-    public override IEnumerable<T> Compute(Parameters parameters)
+    public override IAsyncEnumerable<T> ComputeAsync(Parameters parameters, CancellationToken cancellationToken)
     {
         double valueN = parameters.Value<double>(0);
         return ExecuteFunction(value => Math.Pow(value, valueN), parameters);

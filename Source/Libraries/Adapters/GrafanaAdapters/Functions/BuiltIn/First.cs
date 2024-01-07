@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using GrafanaAdapters.DataSources;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
@@ -39,22 +41,22 @@ public abstract class First<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     };
 
     /// <inheritdoc />
-    public override IEnumerable<T> Compute(Parameters parameters)
+    public override async IAsyncEnumerable<T> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        IEnumerable<T> source = GetDataSourceValues(parameters);
+        IAsyncEnumerable<T> source = GetDataSourceValues(parameters);
 
         if (parameters.ParsedCount == 0)
         {
             // Short cut for only getting first value
-            using IEnumerator<T> enumerator = source.GetEnumerator();
+            await using IAsyncEnumerator<T> enumerator = source.GetAsyncEnumerator(cancellationToken);
 
-            if (enumerator.MoveNext())
+            if (await enumerator.MoveNextAsync())
                 yield return enumerator.Current;
         }
         else
         {
             // Immediately load values in-memory only enumerating data source once
-            T[] values = source.ToArray();
+            T[] values = await source.ToArrayAsync(cancellationToken);
             int length = values.Length;
 
             if (length == 0)

@@ -1,5 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using GrafanaAdapters.DataSources;
 using GSF.Units;
 
@@ -45,11 +48,12 @@ public abstract class Derivative<T> : GrafanaFunctionBase<T> where T : struct, I
     };
 
     /// <inheritdoc />
-    public override IEnumerable<T> Compute(Parameters parameters)
+    public override async IAsyncEnumerable<T> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         TargetTimeUnit units = parameters.Value<TargetTimeUnit>(0);
-        T lastResult = new();
+        T lastResult = default;
 
+        // TODO: JRC - make sure this works in this async context
         // Transpose computed value
         T transposeCompute(T dataValue) => dataValue with
         {
@@ -57,7 +61,7 @@ public abstract class Derivative<T> : GrafanaFunctionBase<T> where T : struct, I
         };
 
         // Return deferred enumeration of computed values
-        foreach (T dataValue in GetDataSourceValues(parameters).Select(transposeCompute))
+        await foreach (T dataValue in GetDataSourceValues(parameters).Select(transposeCompute).WithCancellation(cancellationToken))
         {
             if (lastResult.Time > 0.0D)
                 yield return dataValue;

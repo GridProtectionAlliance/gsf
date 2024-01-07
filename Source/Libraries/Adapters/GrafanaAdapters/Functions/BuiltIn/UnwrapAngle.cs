@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using GrafanaAdapters.DataSources;
 using GSF.Units;
 
@@ -42,11 +44,11 @@ public abstract class UnwrapAngle<T> : GrafanaFunctionBase<T> where T : struct, 
     };
 
     /// <inheritdoc />
-    public override IEnumerable<T> Compute(Parameters parameters)
+    public override async IAsyncEnumerable<T> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         AngleUnit units = parameters.Value<AngleUnit>(0);
 
-        T[] values = GetDataSourceValues(parameters).ToArray();
+        T[] values = await GetDataSourceValues(parameters).ToArrayAsync(cancellationToken);
 
         Angle anglesFromValues(T dataValue) =>
             Angle.ConvertFrom(dataValue.Value, units);
@@ -56,7 +58,8 @@ public abstract class UnwrapAngle<T> : GrafanaFunctionBase<T> where T : struct, 
             Value = angle.ConvertTo(units)
         };
 
-        return Angle.Unwrap(values.Select(anglesFromValues)).Select(valuesFromAngles);
+        foreach (T dataValue in Angle.Unwrap(values.Select(anglesFromValues)).Select(valuesFromAngles))
+            yield return dataValue;
     }
 
     /// <inheritdoc />
@@ -68,7 +71,7 @@ public abstract class UnwrapAngle<T> : GrafanaFunctionBase<T> where T : struct, 
     public class ComputePhasorValue : UnwrapAngle<PhasorValue>
     {
         /// <inheritdoc />
-        protected override IEnumerable<PhasorValue> GetDataSourceValues(Parameters parameters)
+        protected override IAsyncEnumerable<PhasorValue> GetDataSourceValues(Parameters parameters)
         {
             // Update data source values to operate on angle components of phasor values
             return base.GetDataSourceValues(parameters).Select(PhasorValue.AngleAsTarget);
