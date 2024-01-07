@@ -149,6 +149,17 @@ public interface IGrafanaFunction
     /// standard parameter parsing will be used.
     /// </remarks>
     (List<string> parsedParameters, string queryExpression) ParseParameters(QueryParameters queryParameters, string queryExpression);
+
+    /// <summary>
+    /// Gets a formatted target name for the Grafana function.
+    /// </summary>
+    /// <param name="groupOperation">Group operation from the format target name.</param>
+    /// <param name="targetName">Target name to format.</param>
+    /// <param name="parsedParameters">Parsed parameters.</param>
+    /// <returns>
+    /// Target name format for the Grafana function, typically in the form of: Name(Parameters,TargetName).
+    /// </returns>
+    string FormatTargetName(GroupOperations groupOperation, string targetName, string[] parsedParameters);
 }
 
 /// <summary>

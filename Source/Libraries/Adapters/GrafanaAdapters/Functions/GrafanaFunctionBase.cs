@@ -85,6 +85,13 @@ public abstract class GrafanaFunctionBase<T> : IGrafanaFunction<T> where T : str
     }
 
     /// <inheritdoc />
+    public virtual string FormatTargetName(GroupOperations groupOperation, string targetName, string[] parsedParameters)
+    {
+        string groupName = groupOperation == GroupOperations.Standard ? "" : $"{groupOperation}";
+        return $"{groupName}{Name}({this.FormatParameters(parsedParameters)}{targetName})";
+    }
+
+    /// <inheritdoc />
     public abstract IAsyncEnumerable<T> ComputeAsync(Parameters parameters, CancellationToken cancellationToken);
 
     /// <inheritdoc />

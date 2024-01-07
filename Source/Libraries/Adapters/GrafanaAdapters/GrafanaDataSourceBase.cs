@@ -288,7 +288,6 @@ public abstract partial class GrafanaDataSourceBase
         IGrafanaFunction<T> function = parsedFunction.Function;
         GroupOperations groupOperation = parsedFunction.GroupOperation;
         string queryExpression = parsedFunction.Expression;
-        string functionName = function.Name;
 
         // Parse out function parameters and remaining query expression (typically a filter expression)
         (string[] parsedParameters, queryExpression) = function.ParseParameters(queryParameters, queryExpression, groupOperation);
@@ -319,7 +318,7 @@ public abstract partial class GrafanaDataSourceBase
 
                     yield return new DataSourceValueGroup<T>
                     {
-                        Target = $"{functionName}({string.Join(", ", parsedParameters)}{(parsedParameters.Length > 0 ? ", " : "")}{valueGroup.Target})",
+                        Target = function.FormatTargetName(groupOperation, valueGroup.Target, parsedParameters),
                         RootTarget = rootTarget,
                         SourceTarget = queryParameters.SourceTarget,
                         Source = function.ComputeAsync(parameters, cancellationToken),
@@ -334,18 +333,17 @@ public abstract partial class GrafanaDataSourceBase
             case GroupOperations.Slice:
             {
                 if (!double.TryParse(parsedParameters[0], out double tolerance))
-                    throw new InvalidOperationException($"Invalid slice interval specified for {functionName} function.");
+                    throw new InvalidOperationException($"Invalid slice interval specified for {function.Name} function.");
 
                 TimeSliceScannerAsync<T> scanner = await TimeSliceScannerAsync<T>.Create(dataset, tolerance / SI.Milli, cancellationToken);
-                parsedParameters = parsedParameters.Skip(1).ToArray();
 
-                await foreach (DataSourceValueGroup<T> valueGroup in function.ComputeSliceAsync(scanner, queryParameters, queryExpression, Metadata, parsedParameters, cancellationToken))
+                await foreach (DataSourceValueGroup<T> valueGroup in function.ComputeSliceAsync(scanner, queryParameters, queryExpression, Metadata, parsedParameters.Skip(1).ToArray(), cancellationToken))
                 {
                     string rootTarget = valueGroup.RootTarget ?? valueGroup.Target;
 
                     yield return new DataSourceValueGroup<T>
                     {
-                        Target = $"Slice{functionName}({string.Join(", ", parsedParameters)}{(parsedParameters.Length > 0 ? ", " : "")}{rootTarget})",
+                        Target = function.FormatTargetName(groupOperation, rootTarget, parsedParameters),
                         RootTarget = rootTarget,
                         SourceTarget = queryParameters.SourceTarget,
                         Source = valueGroup.Source,
@@ -360,15 +358,14 @@ public abstract partial class GrafanaDataSourceBase
             case GroupOperations.Set:
             {
                 // Flatten all series into a single enumerable
-                string rootTarget = queryExpression;
                 IAsyncEnumerable<T> dataSourceValues = dataset.SelectMany(source => source.Source);
-                Dictionary<string, string> metadataMap = Metadata.GetMetadataMap<T>(rootTarget, queryParameters);
-                Parameters parameters = await function.GenerateParametersAsync(parsedParameters, dataSourceValues, rootTarget, Metadata, metadataMap, cancellationToken);
+                Dictionary<string, string> metadataMap = Metadata.GetMetadataMap<T>(queryExpression, queryParameters);
+                Parameters parameters = await function.GenerateParametersAsync(parsedParameters, dataSourceValues, queryExpression, Metadata, metadataMap, cancellationToken);
 
                 DataSourceValueGroup<T> valueGroup = new()
                 {
-                    Target = $"Set{functionName}({string.Join(", ", parsedParameters)}{(parsedParameters.Length > 0 ? ", " : "")}{queryExpression})",
-                    RootTarget = rootTarget,
+                    Target = function.FormatTargetName(groupOperation, queryExpression, parsedParameters),
+                    RootTarget = queryExpression,
                     SourceTarget = queryParameters.SourceTarget,
                     Source = function.ComputeSetAsync(parameters, cancellationToken),
                     DropEmptySeries = queryParameters.DropEmptySeries,
@@ -380,7 +377,7 @@ public abstract partial class GrafanaDataSourceBase
                 if (function.ResultIsSetTargetSeries)
                 {
                     T dataValue = await valueGroup.Source.FirstAsync(cancellationToken);
-                    valueGroup.Target = $"Set{functionName} = {dataValue.Target}";
+                    valueGroup.Target = $"Set{function.Name} = {dataValue.Target}";
                     valueGroup.RootTarget = dataValue.Target;
                 }
 

@@ -251,6 +251,15 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
         return (parsedParameters, queryExpression);
     }
 
+    public override string FormatTargetName(GroupOperations groupOperation, string targetName, string[] parsedParameters)
+    {
+        string[] parameters = new string[3];
+        Array.Copy(parsedParameters, parameters, 3);
+        parameters[1] = $"{{ {parameters[1]} }}";
+
+        return base.FormatTargetName(GroupOperations.Standard, targetName, parameters);
+    }
+
     /// <inheritdoc />
     public class ComputeDataSourceValue : Evaluate<DataSourceValue>
     {

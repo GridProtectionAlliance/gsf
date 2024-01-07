@@ -32,11 +32,26 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using GSF;
+using GrafanaAdapters.Functions.BuiltIn;
 
 namespace GrafanaAdapters.Functions;
 
 internal static class ParameterParsing
 {
+    // Gets the number of user visible parameters that have been parsed.
+    public static int VisibleCount<T>(this IGrafanaFunction<T> function, int parsedCount) where T : struct, IDataSourceValue<T>
+    {
+        return parsedCount - function.ParameterDefinitions.Count(parameter => parameter.Internal);
+    }
+
+    // Gets formatted parameters to display for a target function.
+    public static string FormatParameters<T>(this IGrafanaFunction<T> function, string[] parsedParameters) where T : struct, IDataSourceValue<T>
+    {
+        int visibleCount = function.VisibleCount(parsedParameters.Length);
+        IEnumerable<string> parameters = parsedParameters.Take(visibleCount);
+        return $"{string.Join(", ", parameters)}{(visibleCount > 0 ? ", " : "")}";
+    }
+    
     /// <summary>
     /// Parses function parameters from a given expression as an array of strings.
     /// </summary>
@@ -54,10 +69,10 @@ internal static class ParameterParsing
         return TargetCache<(string[], string)>.GetOrAdd(queryExpression, () =>
         {
             // Check if function defines any custom parameter parsing
-            (List<string> parsedParameters, queryExpression) = function.ParseParameters(queryParameters, queryExpression);
+            (List<string> parsedParameters, string updatedQueryExpression) = function.ParseParameters(queryParameters, queryExpression);
 
             if (parsedParameters is not null)
-                return (parsedParameters.ToArray(), queryExpression);
+                return (parsedParameters.ToArray(), updatedQueryExpression);
 
             parsedParameters = new List<string>();
 
@@ -152,7 +167,7 @@ internal static class ParameterParsing
 
         Debug.Assert(parameters.Count == function.RequiredParameterCount + function.OptionalParameterCount + 1, $"Expected {function.RequiredParameterCount + function.OptionalParameterCount + 1} parameters, received {parameters.Count} in: {function.Name}({string.Join(",", parsedParameters)})");
         Debug.Assert(parsedParameters.Length <= parameters.Count - 1, $"Expected {parameters.Count - 1} parameters, received {parsedParameters.Length} in: {function.Name}({string.Join(",", parsedParameters)})");
-        Debug.Assert(parsedParameters.Length == 0 || parsedParameters.All(parameter => !string.IsNullOrWhiteSpace(parameter)), $"Expected all parameters to be non-empty in: {function.Name}({string.Join(",", parsedParameters)})");
+        Debug.Assert(parsedParameters.Length == 0 || parsedParameters.All(parameter => !string.IsNullOrWhiteSpace(parameter)) || function.Name.Equals(nameof(Evaluate<TDataSourceValue>)), $"Expected all parameters to be non-empty in: {function.Name}({string.Join(",", parsedParameters)})");
 
         parameters.ParsedCount = parsedParameters.Length;
 
@@ -163,7 +178,7 @@ internal static class ParameterParsing
             // Data -- last parameter is always a data source value
             if (i == parameters.Count - 1)
             {
-                Debug.Assert(parameter is IParameter<IEnumerable<IDataSourceValue>>, $"Last parameter is not a data source value of type '{typeof(IEnumerable<IDataSourceValue>).Name}'.");
+                Debug.Assert(parameter is IParameter<IAsyncEnumerable<IDataSourceValue>>, $"Last parameter is not a data source value of type '{typeof(IAsyncEnumerable<IDataSourceValue>).Name}'.");
 
                 // Replace last parameter with data source type specific parameter with associated values
                 parameters[i] = new Parameter<IAsyncEnumerable<TDataSourceValue>>(default(TDataSourceValue).DataSourceValuesParameterDefinition)
