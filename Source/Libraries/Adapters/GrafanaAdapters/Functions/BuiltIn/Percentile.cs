@@ -70,11 +70,7 @@ public abstract class Percentile<T> : GrafanaFunctionBase<T> where T : struct, I
                 double d = n - k;
                 double k0 = values[k - 1].Value;
                 double k1 = kData.Value;
-
-                yield return kData with
-                {
-                    Value = k0 + d * (k1 - k0)
-                };
+                yield return kData with { Value = k0 + d * (k1 - k0) };
                 break;
         }
     }

@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using GrafanaAdapters.DataSources;
 using GSF.Units;
 
+// ReSharper disable AccessToModifiedClosure
+
 namespace GrafanaAdapters.Functions.BuiltIn;
 
 /// <summary>
@@ -52,13 +54,19 @@ public abstract class TimeIntegration<T> : GrafanaFunctionBase<T> where T : stru
     public override async IAsyncEnumerable<T> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         TargetTimeUnit units = parameters.Value<TargetTimeUnit>(0);
-        T lastResult = new();
+        T lastResult = default;
 
         // Transpose computed value
-        T transposeCompute(T dataValue) => dataValue with
+        T transposeCompute(T dataValue)
         {
-            Value = lastResult.Value + dataValue.Value * TargetTimeUnit.ToTimeUnits((dataValue.Time - lastResult.Time) * SI.Milli, units)
-        };
+            if (lastResult.Time == 0.0D)
+                return dataValue;
+
+            return dataValue with
+            {
+                Value = lastResult.Value + dataValue.Value * TargetTimeUnit.ToTimeUnits((dataValue.Time - lastResult.Time) * SI.Milli, units)
+            };
+        }
 
         // Immediately enumerate to compute values - only enumerate once
         await foreach (T dataValue in GetDataSourceValues(parameters).Select(transposeCompute).WithCancellation(cancellationToken))

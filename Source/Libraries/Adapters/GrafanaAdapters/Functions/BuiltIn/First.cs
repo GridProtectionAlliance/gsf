@@ -18,7 +18,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Returns: Series of values.<br/>
 /// Example: <c>First(5%, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
 /// Variants: First<br/>
-/// Execution: Immediate in-memory array load for values of N greater than 1; otherwise, immediate enumeration of one.
+/// Execution: Immediate in-memory array load, when N is defined; otherwise, immediate enumeration of one, i.e., first value.
 /// </remarks>
 public abstract class First<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {

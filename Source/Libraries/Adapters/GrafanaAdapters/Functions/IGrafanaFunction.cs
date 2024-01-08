@@ -148,7 +148,7 @@ public interface IGrafanaFunction
     /// parsing requirements. By default, this method will return a tuple of <c>(null, null)</c> meaning that
     /// standard parameter parsing will be used.
     /// </remarks>
-    (List<string> parsedParameters, string queryExpression) ParseParameters(QueryParameters queryParameters, string queryExpression);
+    (List<string> parsedParameters, string updatedQueryExpression) ParseParameters(QueryParameters queryParameters, string queryExpression);
 
     /// <summary>
     /// Gets a formatted target name for the Grafana function.

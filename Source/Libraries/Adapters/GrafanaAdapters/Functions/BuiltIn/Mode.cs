@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -10,9 +11,11 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 
 /// <summary>
 /// Returns a single value that represents the mode of the values in the source series.
+/// The numberOfBins parameter is used to define how many bins to use when computing the mode for float-point values.
+/// A value of zero means use a majority-value algorithm which is normally only useful for integer-based values.
 /// </summary>
 /// <remarks>
-/// Signature: <c>Mode(expression)</c><br/>
+/// Signature: <c>Mode([numberOfBins = 0], expression)</c><br/>
 /// Returns: Single value.<br/>
 /// Example: <c>Mode(FILTER TOP 5 ActiveMeasurements WHERE SignalType='DIGI')</c><br/>
 /// Variants: Mode<br/>
@@ -29,27 +32,46 @@ public abstract class Mode<T> : GrafanaFunctionBase<T> where T : struct, IDataSo
     /// <inheritdoc />
     public override bool ResultIsSetTargetSeries => true;
 
-    // TODO: JRC - consider adding a "number of bins" parameter to better estimate mode for a set double values
+    /// <inheritdoc />
+    public override ParameterDefinitions ParameterDefinitions => new List<IParameter>
+    {
+        new ParameterDefinition<int>
+        {
+            Name = "numberOfBins",
+            Default = 0,
+            Description = "An integer value representing the number of bins to use when finding the mode of the values in the source series. Use zero if series values are integer-based.",
+            Required = false
+        }
+    };
 
-    /*
-        Since a set of double values here are unlikely to repeat, finding mode by its classic definition, the most
-        frequently occurring value, might not be useful in this scenario. Finding a value (or values) around which
-        data is most densely clustered may be a better approach. One method is to use binning: you divide the the
-        range of data into intervals (bins) and then find the bin with the most values:
+    /// <inheritdoc />
+    public override async IAsyncEnumerable<T> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        // Immediately load values in-memory only enumerating data source once
+        T[] values = await GetDataSourceValues(parameters).ToArrayAsync(cancellationToken);
 
-            double[] data = { /* your array of doubles * / };
-            int numberOfBins = 10; // Choose a number that suits your data, perhaps parameterize this
+        if (values.Length == 0)
+            yield break;
 
-            double min = data.Min();
-            double max = data.Max();
+        int numberOfBins = parameters.Value<int>(0);
+
+        if (numberOfBins == 0)
+        {
+            // Majority-value algorithm is only useful for integer-based values
+            yield return values.MajorityBy(values.Last(), dataValue => dataValue.Value, false);
+        }
+        else
+        {
+            double min = values.Min(dataValue => dataValue.Value);
+            double max = values.Max(dataValue => dataValue.Value);
             double range = max - min;
             double binSize = range / numberOfBins;
 
             int[] bins = new int[numberOfBins];
 
-            foreach (double value in data)
+            foreach (T dataValue in values)
             {
-                int binIndex = (int)((value - min) / binSize);
+                int binIndex = (int)((dataValue.Value - min) / binSize);
 
                 if (binIndex == numberOfBins)
                     binIndex--; // To handle the max value
@@ -61,61 +83,36 @@ public abstract class Mode<T> : GrafanaFunctionBase<T> where T : struct, IDataSo
             int maxBinIndex = Array.IndexOf(bins, maxBinCount);
             double modalRangeStart = min + maxBinIndex * binSize;
             double modalRangeEnd = modalRangeStart + binSize;
+            double mode = (modalRangeStart + modalRangeEnd) / 2.0D;
 
-            Console.WriteLine($"Modal Range: [{modalRangeStart}, {modalRangeEnd})");
+            // Find data value closest to computed mode
+            T closestDataValue = values[0];
+            double closestDistance = Math.Abs(closestDataValue.Value - mode);
 
-        Since we want a single answer, we could take the midpoint of the modal range as our mode.
+            foreach (T dataValue in values)
+            {
+                double currentDistance = Math.Abs(dataValue.Value - mode);
 
-        Would want this to be optional since source data could represent integer values, in which case
-        the existing algorithm would be fine. Perhaps default "numberOfBins" to 0 which would mean to
-        not use binning, i.e., instead use the existing algorithm.
-    */
+                if (currentDistance >= closestDistance)
+                    continue;
+
+                closestDataValue = dataValue;
+                closestDistance = currentDistance;
+            }
+
+            // Return computed results
+            yield return closestDataValue with { Value = mode };
+        }
+    }
 
     /// <inheritdoc />
     public class ComputeDataSourceValue : Mode<DataSourceValue>
     {
-        /// <inheritdoc />
-        public override async IAsyncEnumerable<DataSourceValue> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
-        {
-            // Immediately load values in-memory only enumerating data source once
-            DataSourceValue[] values = await GetDataSourceValues(parameters).ToArrayAsync(cancellationToken);
-            yield return values.MajorityBy(values.Last(), dataValue => dataValue.Value, false);
-        }
     }
 
     /// <inheritdoc />
     public class ComputePhasorValue : Mode<PhasorValue>
     {
-        /// <inheritdoc />
-        public override async IAsyncEnumerable<PhasorValue> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
-        {
-            List<double> magnitudes = new();
-            List<double> angles = new();
-            PhasorValue lastValue = default;
-
-            // Immediately load values in-memory only enumerating data source once
-            await foreach (PhasorValue dataValue in GetDataSourceValues(parameters).WithCancellation(cancellationToken))
-            {
-                lastValue = dataValue;
-                magnitudes.Add(dataValue.Magnitude);
-                angles.Add(dataValue.Angle);
-            }
-
-            if (magnitudes.Count == 0)
-                yield break;
-
-            double magnitudeMode = magnitudes.Majority(false);
-            double angleMode = angles.Majority(false);
-
-            // Return computed results
-            if (lastValue.Time > 0.0D)
-            {
-                yield return lastValue with
-                {
-                    Magnitude = magnitudeMode,
-                    Angle = angleMode
-                };
-            }
-        }
+        // Operating on magnitude only
     }
 }

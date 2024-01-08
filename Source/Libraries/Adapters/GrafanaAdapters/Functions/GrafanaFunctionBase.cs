@@ -79,7 +79,7 @@ public abstract class GrafanaFunctionBase<T> : IGrafanaFunction<T> where T : str
     public virtual bool ResultIsSetTargetSeries => false;
 
     /// <inheritdoc />
-    public virtual (List<string> parsedParameters, string queryExpression) ParseParameters(QueryParameters queryParameters, string queryExpression)
+    public virtual (List<string> parsedParameters, string updatedQueryExpression) ParseParameters(QueryParameters queryParameters, string queryExpression)
     {
         return (null, null);
     }

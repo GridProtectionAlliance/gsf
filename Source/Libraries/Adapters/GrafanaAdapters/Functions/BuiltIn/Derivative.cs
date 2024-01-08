@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using GrafanaAdapters.DataSources;
 using GSF.Units;
 
+// ReSharper disable AccessToModifiedClosure
+
 namespace GrafanaAdapters.Functions.BuiltIn;
 
 /// <summary>
@@ -53,12 +55,17 @@ public abstract class Derivative<T> : GrafanaFunctionBase<T> where T : struct, I
         TargetTimeUnit units = parameters.Value<TargetTimeUnit>(0);
         T lastResult = default;
 
-        // TODO: JRC - make sure this works in this async context
         // Transpose computed value
-        T transposeCompute(T dataValue) => dataValue with
+        T transposeCompute(T dataValue)
         {
-            Value = (dataValue.Value - lastResult.Value) / TargetTimeUnit.ToTimeUnits((dataValue.Time - lastResult.Time) * SI.Milli, units)
-        };
+            if (lastResult.Time == 0.0D)
+                return dataValue;
+            
+            return dataValue with
+            {
+                Value = (dataValue.Value - lastResult.Value) / TargetTimeUnit.ToTimeUnits((dataValue.Time - lastResult.Time) * SI.Milli, units)
+            };
+        }
 
         // Return deferred enumeration of computed values
         await foreach (T dataValue in GetDataSourceValues(parameters).Select(transposeCompute).WithCancellation(cancellationToken))

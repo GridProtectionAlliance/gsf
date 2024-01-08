@@ -251,6 +251,7 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
         return (parsedParameters, queryExpression);
     }
 
+    /// <inheritdoc />
     public override string FormatTargetName(GroupOperations groupOperation, string targetName, string[] parsedParameters)
     {
         string[] parameters = new string[3];
