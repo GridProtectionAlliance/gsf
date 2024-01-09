@@ -47,35 +47,11 @@ internal static class FunctionParsing
     // Calls to this expensive match operation should be temporally cached by expression
     public static ParsedGrafanaFunction<T>[] MatchFunctions<T>(string expression) where T : struct, IDataSourceValue<T>
     {
-        // This regex matches all functions and their parameters, critically, at top-level only - sub functions are part of parameter data expression
-        const string GrafanaFunctionsExpression = @"(?<GroupOp>Slice|Set)?(?<Function>{0})\s*\((?<Expression>([^\(\)]|(?<counter>\()|(?<-counter>\)))*(?(counter)(?!)))\)";
-
-        // Build and cache a data type specific lookup map for all functions by name and aliases
-        Dictionary<string, IGrafanaFunction<T>> functionMap = TargetCache<Dictionary<string, IGrafanaFunction<T>>>.GetOrAdd(typeof(T).FullName, () =>
-        {
-            IGrafanaFunction<T>[] grafanaFunctions = GetGrafanaFunctions<T>();
-            Dictionary<string, IGrafanaFunction<T>> functionMap = new(StringComparer.OrdinalIgnoreCase);
-
-            foreach (IGrafanaFunction<T> function in grafanaFunctions)
-            {
-                functionMap[function.Name] = function;
-
-                if (function.Aliases is null)
-                    continue;
-
-                foreach (string alias in function.Aliases)
-                    functionMap[alias] = function;
-            }
-
-            return functionMap;
-        });
-
-        // Construct and cache a data type specific regex for all functions
-        Regex grafanaFunctionsRegex = TargetCache<Regex>.GetOrAdd(typeof(T).FullName, () => 
-            new Regex(string.Format(GrafanaFunctionsExpression, string.Join("|", functionMap.Keys)), RegexOptions.Compiled | RegexOptions.IgnoreCase));
+        Regex functionsRegex = DataSourceCache<T>.FunctionsRegex;
+        Dictionary<string, IGrafanaFunction<T>> functionMap = DataSourceCache<T>.FunctionMap;
 
         // Match all top-level functions in expression
-        MatchCollection matches = grafanaFunctionsRegex.Matches(expression);
+        MatchCollection matches = functionsRegex.Matches(expression);
 
         List<ParsedGrafanaFunction<T>> parsedGrafanaFunctions = new();
 
@@ -170,31 +146,12 @@ internal static class FunctionParsing
         }
     }
 
-    // Gets all the available Grafana functions for a specific data source value type.
-    public static IGrafanaFunction<T>[] GetGrafanaFunctions<T>() where T : struct, IDataSourceValue<T>
-    {
-        return TargetCache<IGrafanaFunction<T>[]>.GetOrAdd(typeof(T).FullName, () => 
-            GetGrafanaFunctions().OfType<IGrafanaFunction<T>>().ToArray());
-    }
-
-    // Gets all the available Grafana functions for a specific data source value type.
-    public static IGrafanaFunction[] GetGrafanaFunctions(string dataType)
-    {
-        if (dataType is null)
-            throw new ArgumentNullException(nameof(dataType));
-
-        return TargetCache<IGrafanaFunction[]>.GetOrAdd(dataType, () =>
-        {
-            Type type = Common.GetLocalType(dataType);
-            return GetGrafanaFunctions().Where(function => function.GetType() == type).ToArray();
-        });
-    }
-
     // Reloads the Grafana functions.
     public static void ReloadGrafanaFunctions()
     {
         Interlocked.Exchange(ref s_grafanaFunctions, null);
         TargetCaches.ResetAll();
+        DataSourceCache.ResetAll();
     }
 
     // Gets the <see cref="FunctionDescription"/> for all available functions.
@@ -371,6 +328,7 @@ internal static class FunctionParsing
                 return derivedLabel;
             });
 
+            // TODO: JRC - check if these would be better handled with an index suffix
             // Verify that series label is unique
             while (uniqueLabelSet.Contains(seriesLabel))
                 seriesLabel = $"{seriesLabel}\u00A0"; // non-breaking space
