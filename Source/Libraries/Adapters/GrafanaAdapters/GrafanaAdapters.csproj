@@ -90,7 +90,6 @@
     <Compile Include="Functions\Parameters.cs" />
     <Compile Include="Model\Common\AdHocFilter.cs" />
     <Compile Include="DataSources\DataSourceValue_AncillaryOperations.cs" />
-    <Compile Include="GlobalUsings.cs" />
     <Compile Include="Functions\ParameterDefinition.cs" />
     <Compile Include="Functions\GrafanaFunctionBase.cs" />
     <Compile Include="Functions\IParameter.cs" />

@@ -38,15 +38,15 @@ public enum GroupOperations
     /// <summary>
     /// The function can perform standard, non-grouped, per-trend operations.
     /// </summary>
-    Standard = 0x1,
+    None = 0x0,
     /// <summary>
     /// The function can perform slice-based group operations.
     /// </summary>
-    Slice = 0x2,
+    Slice = 0x1,
     /// <summary>
     /// The function can perform set-based group operations.
     /// </summary>
-    Set = 0x4
+    Set = 0x2
 }
 
 /// <summary>
@@ -95,9 +95,6 @@ public interface IGrafanaFunction
     /// <param name="requestedOperation">Requested operation.</param>
     /// <returns>Supported operation.</returns>
     /// <exception cref="InvalidOperationException">Function does not support the requested operation.</exception>
-    /// <remarks>
-    /// If the requested operation is <c>0</c>, function will default to <see cref="GroupOperations.Standard"/>.
-    /// </remarks>
     GroupOperations CheckAllowedGroupOperation(GroupOperations requestedOperation);
 
     /// <summary>

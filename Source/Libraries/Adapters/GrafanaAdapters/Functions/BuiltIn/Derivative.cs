@@ -11,8 +11,8 @@ using GSF.Units;
 namespace GrafanaAdapters.Functions.BuiltIn;
 
 /// <summary>
-/// Returns a series of values that represent the rate of change, per time units, for the difference between consecutive values in the source
-/// series. The units parameter, optional, specifies the type of time units and must be one of the following: Seconds, Nanoseconds, Microseconds,
+/// Returns a series of values that represent the rate of change, per time units, for the difference between consecutive values in the source series.
+/// The <c>units</c> parameter, optional, specifies the type of time units and must be one of the following: Seconds, Nanoseconds, Microseconds,
 /// Milliseconds, Minutes, Hours, Days, Weeks, Ke (i.e., traditional Chinese unit of decimal time), Ticks (i.e., 100-nanosecond intervals),
 /// PlanckTime or AtomicUnitsOfTime - defaults to Seconds.
 /// </summary>

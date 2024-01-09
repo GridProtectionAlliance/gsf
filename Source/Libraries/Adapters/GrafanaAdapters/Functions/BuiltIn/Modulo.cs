@@ -5,9 +5,9 @@ using GrafanaAdapters.DataSources;
 namespace GrafanaAdapters.Functions.BuiltIn;
 
 /// <summary>
-/// Returns a series of values that represent each of the values in the source series modulo by N.
-/// N is a floating point value representing a divisive factor to be applied to each value the source series.
-/// N can either be constant value or a named target available from the expression.
+/// Returns a series of values that represent each of the values in the source series modulo by <c>N</c>.
+/// <c>N</c> is a floating point value representing a divisive factor to be applied to each value the source series.
+/// <c>N</c> can either be constant value or a named target available from the expression.
 /// </summary>
 /// <remarks>
 /// Signature: <c>Modulo(N, expression)</c><br/>
@@ -29,7 +29,7 @@ public abstract class Modulo<T> : GrafanaFunctionBase<T> where T : struct, IData
 
     /// <inheritdoc />
     // Hiding slice operation since result matrix would be the same when tolerance matches data rate
-    public override GroupOperations PublishedGroupOperations => GroupOperations.Standard | GroupOperations.Set;
+    public override GroupOperations PublishedGroupOperations => GroupOperations.Set;
 
     /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>

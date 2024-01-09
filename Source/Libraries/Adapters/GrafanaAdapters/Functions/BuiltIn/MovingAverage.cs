@@ -8,11 +8,10 @@ using GrafanaAdapters.DataSources;
 namespace GrafanaAdapters.Functions.BuiltIn;
 
 /// <summary>
-/// Returns a series of values that represent the moving average of the values in the source series.
-/// The windowSize parameter, optional, is a positive integer value representing a total number of windows
-/// to use for the moving average. If no windowSize is provided, the default value is the square root of
-/// the total input values in the series. The windowSize can either be constant value or a named target
-/// available from the expression. Function operates using a simple moving average (SMA) algorithm.
+/// Returns a series of values that represent the moving average of the values in the source series. The <c>windowSize</c> parameter,
+/// optional, is a positive integer value representing a total number of windows to use for the moving average. If no <c>windowSize</c>
+/// is provided, the default value is the square root of the total input values in the series. The <c>windowSize</c> can either be a
+/// constant value or a named target available from the expression. Function operates using a simple moving average (SMA) algorithm.
 /// </summary>
 /// <remarks>
 /// Signature: <c>MovingAverage([windowSize = sqrt(len)], expression)</c><br/>

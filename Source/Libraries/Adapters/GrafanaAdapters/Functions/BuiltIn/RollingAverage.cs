@@ -8,11 +8,10 @@ using GrafanaAdapters.DataSources;
 namespace GrafanaAdapters.Functions.BuiltIn;
 
 /// <summary>
-/// Returns a series of values that represent the rolling average of the values in the source series.
-/// The windowSize parameter, optional, is a positive integer value representing a total number of windows
-/// to use for the rolling average. If no windowSize is provided, the default value is the square root of
-/// the total input values in the series. The windowSize can either be constant value or a named target
-/// available from the expression. Function operates by producing a mean over each data window.
+/// Returns a series of values that represent the rolling average of the values in the source series. The <c>windowSize</c> parameter, optional,
+/// is a positive integer value representing a total number of data points to use for each of the values in the rolling average results. If no
+/// <c>windowSize</c> is provided, the default value is the square root of the total input values in the series. The <c>windowSize</c> can either
+/// be constant value or a named target available from the expression. Function operates by producing a mean over each data window.
 /// </summary>
 /// <remarks>
 /// Signature: <c>RollingAverage([windowSize = sqrt(len)], expression)</c><br/>
@@ -39,7 +38,7 @@ public abstract class RollingAverage<T> : GrafanaFunctionBase<T> where T : struc
         {
             Name = "windowSize",
             Default = -1,
-            Description = "An integer value representing the total number of windows to use for the rolling average.",
+            Description = "An integer value representing the window size, in number of points, to use for each rolling average value.",
             Required = false
         }
     };

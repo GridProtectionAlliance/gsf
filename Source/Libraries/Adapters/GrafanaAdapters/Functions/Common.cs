@@ -29,7 +29,7 @@ namespace GrafanaAdapters.Functions;
 
 internal static class Common
 {
-    public const GroupOperations DefaultGroupOperations = GroupOperations.Standard | GroupOperations.Slice | GroupOperations.Set;
+    public const GroupOperations DefaultGroupOperations = GroupOperations.Slice | GroupOperations.Set;
 
     // This generates a standard data source values parameter definition - this is always the last parameter
     public static ParameterDefinition<IAsyncEnumerable<T>> DataSourceValuesParameterDefinition<T>()

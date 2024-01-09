@@ -62,7 +62,7 @@ public class ParameterDefinitions : IReadOnlyList<IParameter>
             Add(parameter);
 
         // Data source parameter is always the last parameter
-        Add(DataSourceValuesParameterDefinition<IDataSourceValue>());
+        Add(Common.DataSourceValuesParameterDefinition<IDataSourceValue>());
     }
 
     private void Add(IParameter parameter)

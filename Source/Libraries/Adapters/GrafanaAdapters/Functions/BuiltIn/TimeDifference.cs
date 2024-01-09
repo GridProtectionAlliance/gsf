@@ -11,10 +11,10 @@ using GSF.Units;
 namespace GrafanaAdapters.Functions.BuiltIn;
 
 /// <summary>
-/// Returns a series of values that represent the time difference, in time units, between consecutive values in the source series. The units
-/// parameter, optional, specifies the type of time units and must be one of the following: Seconds, Nanoseconds, Microseconds, Milliseconds,
-/// Minutes, Hours, Days, Weeks, Ke (i.e., traditional Chinese unit of decimal time), Ticks (i.e., 100-nanosecond intervals), PlanckTime or
-/// AtomicUnitsOfTime - defaults to Seconds.
+/// Returns a series of values that represent the time difference, in time units, between consecutive values in the source series.
+/// The <c>units</c> parameter, optional, specifies the type of time units and must be one of the following: Seconds, Nanoseconds,
+/// Microseconds, Milliseconds, Minutes, Hours, Days, Weeks, Ke (i.e., traditional Chinese unit of decimal time), Ticks (i.e.,
+/// 100-nanosecond intervals), PlanckTime or AtomicUnitsOfTime - defaults to Seconds.
 /// </summary>
 /// <remarks>
 /// Signature: <c>TimeDifference([units = Seconds], expression)</c><br/>
@@ -34,10 +34,10 @@ public abstract class TimeDifference<T> : GrafanaFunctionBase<T> where T : struc
     /// <inheritdoc />
     // Slice operation has no meaning for this time-focused function and Set operation will have an aberration between series,
     // so we override the exposed behaviors, i.e., use of Slice will produce an error and use of Set will be hidden:
-    public override GroupOperations AllowedGroupOperations => GroupOperations.Standard | GroupOperations.Set;
+    public override GroupOperations AllowedGroupOperations => GroupOperations.Set;
 
     /// <inheritdoc />
-    public override GroupOperations PublishedGroupOperations => GroupOperations.Standard;
+    public override GroupOperations PublishedGroupOperations => GroupOperations.None;
 
     /// <inheritdoc />
     public override string[] Aliases => new[] { "TimeDiff", "Elapsed" };

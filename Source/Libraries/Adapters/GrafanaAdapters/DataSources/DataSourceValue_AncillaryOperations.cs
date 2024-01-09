@@ -27,6 +27,7 @@ using System.Data;
 using GrafanaAdapters.Functions;
 using GrafanaAdapters.Model.Annotations;
 using GSF.TimeSeries;
+using static GrafanaAdapters.Functions.Common;
 
 namespace GrafanaAdapters.DataSources;
 

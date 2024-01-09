@@ -7,7 +7,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 
 /// <summary>
 /// Returns a series of values that represent a filtered set of the values in the source series where each value is a real number, i.e., value is not NaN.
-/// First parameter, optional, is a boolean flag that determines if infinite values should also be excluded - defaults to true.
+/// Parameter <c>alsoFilterInfinity</c>, optional, is a boolean flag that determines if infinite values should also be excluded - defaults to true.
 /// </summary>
 /// <remarks>
 /// Signature: <c>FilterNaN([alsoFilterInfinity = true], expression)</c><br/>

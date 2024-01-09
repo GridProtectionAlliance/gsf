@@ -59,7 +59,7 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
     public override GroupOperations AllowedGroupOperations => GroupOperations.Slice;
 
     /// <inheritdoc />
-    public override GroupOperations PublishedGroupOperations => GroupOperations.Standard;
+    public override GroupOperations PublishedGroupOperations => GroupOperations.None;
 
     /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>
@@ -89,8 +89,8 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
     /// <inheritdoc />
     public override GroupOperations CheckAllowedGroupOperation(GroupOperations requestedOperation)
     {
-        // Force standard group operation to be Slice - eval only supports slice operations
-        if (requestedOperation is 0 or GroupOperations.Standard)
+        // Force group operation to be Slice - eval only supports slice operations
+        if (requestedOperation == GroupOperations.None)
             requestedOperation = GroupOperations.Slice;
 
         return base.CheckAllowedGroupOperation(requestedOperation);
@@ -254,11 +254,13 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
     /// <inheritdoc />
     public override string FormatTargetName(GroupOperations groupOperation, string targetName, string[] parsedParameters)
     {
+        // Format eval expression parameter to be in braces, i.e., { expression }
         string[] parameters = new string[3];
         Array.Copy(parsedParameters, parameters, 3);
         parameters[1] = $"{{ {parameters[1]} }}";
 
-        return base.FormatTargetName(GroupOperations.Standard, targetName, parameters);
+        // Hide slice prefix on UI since it is always slice
+        return base.FormatTargetName(GroupOperations.None, targetName, parameters);
     }
 
     /// <inheritdoc />

@@ -3,14 +3,15 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using GrafanaAdapters.DataSources;
+using static GrafanaAdapters.Functions.Common;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
 
 /// <summary>
-/// Returns a series of N, or N% of total, values from the end of the source series.
-/// N, optional, is either a positive integer value, representing a total, that is greater than zero - or - a floating point value,
+/// Returns a series of <c>N</c>, or <c>N%</c> of total, values from the end of the source series.
+/// <c>N</c>, optional, is either a positive integer value, representing a total, that is greater than zero - or - a floating point value,
 /// suffixed with '%' representing a percentage, that must range from greater than 0 to less than or equal to 100 - defaults to 1.
-/// N can either be constant value or a named target available from the expression. Any target values that fall between 0
+/// <c>N</c> can either be constant value or a named target available from the expression. Any target values that fall between 0
 /// and 1 will be treated as a percentage.
 /// </summary>
 /// <remarks>

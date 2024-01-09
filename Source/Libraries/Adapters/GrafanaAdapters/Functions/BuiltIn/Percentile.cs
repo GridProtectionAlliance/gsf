@@ -4,12 +4,13 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using GrafanaAdapters.DataSources;
+using static GrafanaAdapters.Functions.Common;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
 
 /// <summary>
-/// Returns a single value that represents the Nth order percentile for the sorted values in the source series.
-/// N is a floating point value, representing a percentage, that must range from 0 to 100.
+/// Returns a single value that represents the <c>N</c>th order percentile for the sorted values in the source series.
+/// <c>N</c> is a floating point value, representing a percentage, that must range from 0 to 100.
 /// </summary>
 /// <remarks>
 /// Signature: <c>Percentile(N[%], expression)</c><br/>

@@ -185,7 +185,7 @@ internal static class FunctionParsing
 
         return TargetCache<IGrafanaFunction[]>.GetOrAdd(dataType, () =>
         {
-            Type type = GetLocalType(dataType);
+            Type type = Common.GetLocalType(dataType);
             return GetGrafanaFunctions().Where(function => function.GetType() == type).ToArray();
         });
     }
@@ -208,7 +208,7 @@ internal static class FunctionParsing
         {
             List<FunctionDescription> descriptions = new();
 
-            if (function.PublishedGroupOperations.HasFlag(GroupOperations.Standard))
+            if (function.PublishedGroupOperations.HasFlag(GroupOperations.None))
             {
                 descriptions.Add(new FunctionDescription
                 {

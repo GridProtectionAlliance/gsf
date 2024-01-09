@@ -3,14 +3,15 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using GrafanaAdapters.DataSources;
+using static GrafanaAdapters.Functions.Common;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
 
 /// <summary>
-/// Returns a series of N, or N% of total, values from the start of the source series.
-/// N is either a positive integer value, representing a total, that is greater than zero - or - a floating point value,
+/// Returns a series of <c>N</c>, or <c>N%</c> of total, values from the start of the source series.
+/// <c>N</c> is either a positive integer value, representing a total, that is greater than zero - or - a floating point value,
 /// suffixed with '%' representing a percentage, that must range from greater than 0 to less than or equal to 100 - defaults to 1.
-/// N can either be constant value or a named target available from the expression. Any target values that fall between 0
+/// <c>N</c> can either be constant value or a named target available from the expression. Any target values that fall between 0
 /// and 1 will be treated as a percentage.
 /// </summary>
 /// <remarks>
@@ -18,7 +19,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Returns: Series of values.<br/>
 /// Example: <c>First(5%, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
 /// Variants: First<br/>
-/// Execution: Immediate in-memory array load, when N is defined; otherwise, immediate enumeration of one, i.e., first value.
+/// Execution: Immediate in-memory array load, when <c>N</c> is defined; otherwise, immediate enumeration of one, i.e., first value.
 /// </remarks>
 public abstract class First<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {

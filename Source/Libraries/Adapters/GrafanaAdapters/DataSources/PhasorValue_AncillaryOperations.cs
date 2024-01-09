@@ -280,5 +280,5 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
     /// <inheritdoc />
     public readonly ParameterDefinition<IAsyncEnumerable<PhasorValue>> DataSourceValuesParameterDefinition => s_dataSourceValuesParameterDefinition;
 
-    private static readonly ParameterDefinition<IAsyncEnumerable<PhasorValue>> s_dataSourceValuesParameterDefinition = DataSourceValuesParameterDefinition<PhasorValue>();
+    private static readonly ParameterDefinition<IAsyncEnumerable<PhasorValue>> s_dataSourceValuesParameterDefinition = Common.DataSourceValuesParameterDefinition<PhasorValue>();
 }

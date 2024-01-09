@@ -10,9 +10,9 @@ using GSF.Collections;
 namespace GrafanaAdapters.Functions.BuiltIn;
 
 /// <summary>
-/// Returns a single value that represents the mode of the values in the source series.
-/// The numberOfBins parameter is used to define how many bins to use when computing the mode for float-point values.
-/// A value of zero means use a majority-value algorithm which is normally only useful for integer-based values.
+/// Returns a single value that represents the mode of the values in the source series. The <c>numberOfBins</c> parameter
+/// is used to define how many bins to use when computing the mode for float-point values. A value of zero means use a
+/// majority-value algorithm which is normally only useful for integer-based values.
 /// </summary>
 /// <remarks>
 /// Signature: <c>Mode([numberOfBins = 0], expression)</c><br/>

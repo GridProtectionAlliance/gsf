@@ -8,13 +8,13 @@ using GSF.Units;
 namespace GrafanaAdapters.Functions.BuiltIn;
 
 /// <summary>
-/// Returns a series of values that represent a decimated set of the values in the source series based on the specified interval N, in time units.
-/// N is a floating-point value that must be greater than or equal to zero that represents the desired time interval, in time units, for the returned
-/// data. The units parameter, optional, specifies the type of time units and must be one of the following: Seconds, Nanoseconds, Microseconds,
-/// Milliseconds, Minutes, Hours, Days, Weeks, Ke (i.e., traditional Chinese unit of decimal time), Ticks (i.e., 100-nanosecond intervals),
-/// PlanckTime or AtomicUnitsOfTime - defaults to Seconds. Setting N value to zero will request non-decimated, full resolution data from the data
-/// source. A zero N value will always produce the most accurate aggregation calculation results but will increase query burden for large time ranges.
-/// N can either be constant value or a named target available from the expression.
+/// Returns a series of values that represent a decimated set of the values in the source series based on the specified interval <c>N</c>, in time units.
+/// <c>N</c> is a floating-point value that must be greater than or equal to zero that represents the desired time interval, in time units, for the returned
+/// data. The <c>units</c>parameter, optional, specifies the type of time units and must be one of the following: Seconds, Nanoseconds, Microseconds,
+/// Milliseconds, Minutes, Hours, Days, Weeks, Ke (i.e., traditional Chinese unit of decimal time), Ticks (i.e., 100-nanosecond intervals), PlanckTime or
+/// AtomicUnitsOfTime - defaults to Seconds. Setting <c>N</c> value to zero will request non-decimated, full resolution data from the data source. A zero
+/// <c>N</c> value will always produce the most accurate aggregation calculation results but will increase query burden for large time ranges. <c>N</c> can
+/// either be constant value or a named target available from the expression.
 /// </summary>
 /// <remarks>
 /// Signature: <c>Interval(N, [units = Seconds], expression)</c><br/>
@@ -34,10 +34,10 @@ public abstract class Interval<T> : GrafanaFunctionBase<T> where T : struct, IDa
     /// <inheritdoc />
     // Slice operation has no meaning for this time-focused function and Set operation will have an aberration between series,
     // so we override the exposed behaviors, i.e., use of Slice will produce an error and use of Set will be hidden:
-    public override GroupOperations AllowedGroupOperations => GroupOperations.Standard | GroupOperations.Set;
+    public override GroupOperations AllowedGroupOperations => GroupOperations.Set;
 
     /// <inheritdoc />
-    public override GroupOperations PublishedGroupOperations => GroupOperations.Standard;
+    public override GroupOperations PublishedGroupOperations => GroupOperations.None;
 
     /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>

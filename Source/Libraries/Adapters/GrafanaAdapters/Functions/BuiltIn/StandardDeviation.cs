@@ -9,9 +9,9 @@ using GSF.NumericalAnalysis;
 namespace GrafanaAdapters.Functions.BuiltIn;
 
 /// <summary>
-/// Returns a single value that represents the standard deviation of the values in the source series. First parameter,
-/// optional, is a boolean flag representing if the sample based calculation should be used - defaults to false, which
-/// means the population based calculation should be used.
+/// Returns a single value that represents the standard deviation of the values in the source series. Parameter <c>useSampleCalc</c>,
+/// optional, is a boolean flag representing if the sample based calculation should be used - defaults to false, which means the
+/// population based calculation should be used.
 /// </summary>
 /// <remarks>
 /// Signature: <c>StandardDeviation([useSampleCalc = false], expression)</c><br/>

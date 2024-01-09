@@ -6,8 +6,8 @@ using GrafanaAdapters.DataSources;
 namespace GrafanaAdapters.Functions.BuiltIn;
 
 /// <summary>
-/// Returns a series of values that represent the rounded value, with N fractional digits, of each of the values in the source series.
-/// N, optional, is a positive integer value representing the number of decimal places in the return value - defaults to 0.
+/// Returns a series of values that represent the rounded value, with specified fractional digits, of each of the values in the source series.
+/// Parameter <c>digits</c>, optional, is a positive integer value representing the number of decimal places in the return value - defaults to 0.
 /// </summary>
 /// <remarks>
 /// Signature: <c>Round([digits = 0], expression)</c><br/>
@@ -26,7 +26,7 @@ public abstract class Round<T> : GrafanaFunctionBase<T> where T : struct, IDataS
 
     /// <inheritdoc />
     // Hiding slice operation since result matrix would be the same when tolerance matches data rate
-    public override GroupOperations PublishedGroupOperations => GroupOperations.Standard | GroupOperations.Set;
+    public override GroupOperations PublishedGroupOperations => GroupOperations.Set;
 
     /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>

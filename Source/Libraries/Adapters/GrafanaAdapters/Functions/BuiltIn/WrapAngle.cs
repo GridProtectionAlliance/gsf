@@ -11,7 +11,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 
 /// <summary>
 /// Returns a series of values that represent an adjusted set of angles that are wrapped, per specified angle units, so that angle values are consistently
-/// between -180 and +180 degrees. The units parameter, optional, specifies the type of angle units and must be one of the following: Degrees, Radians,
+/// between -180 and +180 degrees. The <c>units</c>parameter, optional, specifies the type of angle units and must be one of the following: Degrees, Radians,
 /// Grads, ArcMinutes, ArcSeconds or AngularMil - defaults to Degrees.
 /// </summary>
 /// <remarks>

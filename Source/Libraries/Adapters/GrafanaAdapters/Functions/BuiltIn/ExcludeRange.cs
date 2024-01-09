@@ -7,14 +7,14 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 
 /// <summary>
 /// Returns a series of values that represent a filtered set of the values in the source series where each value falls outside the specified low and high.
-/// The low and high parameter values are floating-point numbers that represent the range of values excluded in the return series. Third parameter, optional,
-/// is a boolean flag that determines if range values are inclusive, i.e., excluded values are &lt;= low or &gt;= high - defaults to false, which means values
-/// are exclusive, i.e., excluded values are &lt; low or &gt; high. Function allows a fourth optional parameter that is a boolean flag - when four parameters
-/// are provided, third parameter determines if low value is inclusive and forth parameter determines if high value is inclusive. The low and high parameter
-/// values can either be constant values or named targets available from the expression.
+/// The <c>low</c> and <c>high</c> parameter values are floating-point numbers that represent the range of values excluded in the return series. Third parameter,
+/// optional, is a boolean flag that determines if range values are inclusive, i.e., excluded values are &lt;= low or &gt;= high - defaults to false, which means
+/// values are exclusive, i.e., excluded values are &lt; low or &gt; high. Function allows a fourth optional parameter that is a boolean flag - when four parameters
+/// are provided, third parameter determines if low value is inclusive and forth parameter determines if high value is inclusive. The <c>low</c> and <c>high</c>
+/// parameter values can either be constant values or named targets available from the expression.
 /// </summary>
 /// <remarks>
-/// Signature: <c>ExcludeRange(low, high, [inclusive = false], expression) -or- ExcludeRange(low, high, [lowInclusive = false], [highInclusive = false], expression)</c><br/>
+/// Signature: <c>ExcludeRange(low, high, [inclusive = false], expression)</c> -or- <c>ExcludeRange(low, high, [lowInclusive = false], [highInclusive = false], expression)</c><br/>
 /// Returns: Series of values.<br/>
 /// Example: <c>ExcludeRange(-180.0, 180.0, true, false, FILTER ActiveMeasurements WHERE SignalType LIKE '%PHA')</c><br/>
 /// Variants: ExcludeRange, Exclude<br/>

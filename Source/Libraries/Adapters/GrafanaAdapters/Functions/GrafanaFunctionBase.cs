@@ -47,18 +47,14 @@ public abstract class GrafanaFunctionBase<T> : IGrafanaFunction<T> where T : str
     public virtual string[] Aliases => null;
 
     /// <inheritdoc />
-    public virtual GroupOperations AllowedGroupOperations => DefaultGroupOperations;
+    public virtual GroupOperations AllowedGroupOperations => Common.DefaultGroupOperations;
 
     /// <inheritdoc />
-    public virtual GroupOperations PublishedGroupOperations => DefaultGroupOperations;
+    public virtual GroupOperations PublishedGroupOperations => Common.DefaultGroupOperations;
 
     /// <inheritdoc />
     public virtual GroupOperations CheckAllowedGroupOperation(GroupOperations requestedOperation)
     {
-        // Default to standard
-        if (requestedOperation == 0)
-            requestedOperation = GroupOperations.Standard;
-
         // Verify that the function supports the requested operation
         if (!AllowedGroupOperations.HasFlag(requestedOperation))
             throw new InvalidOperationException($"Function '{Name}' does not support '{requestedOperation}' function operations.");
@@ -87,7 +83,7 @@ public abstract class GrafanaFunctionBase<T> : IGrafanaFunction<T> where T : str
     /// <inheritdoc />
     public virtual string FormatTargetName(GroupOperations groupOperation, string targetName, string[] parsedParameters)
     {
-        string groupName = groupOperation == GroupOperations.Standard ? "" : $"{groupOperation}";
+        string groupName = groupOperation == GroupOperations.None ? "" : $"{groupOperation}";
         return $"{groupName}{Name}({this.FormatParameters(parsedParameters)}{targetName})";
     }
 

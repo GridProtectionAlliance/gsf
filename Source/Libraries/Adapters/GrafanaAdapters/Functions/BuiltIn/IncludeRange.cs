@@ -7,14 +7,14 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 
 /// <summary>
 /// Returns a series of values that represent a filtered set of the values in the source series where each value falls between the specified low and high.
-/// The low and high parameter values are floating-point numbers that represent the range of values allowed in the return series. Third parameter, optional,
-/// is a boolean flag that determines if range values are inclusive, i.e., allowed values are &gt;= low and &lt;= high - defaults to false, which means values
-/// are exclusive, i.e., allowed values are &gt; low and &lt; high. Function allows a fourth optional parameter that is a boolean flag - when four parameters
-/// are provided, third parameter determines if low value is inclusive and forth parameter determines if high value is inclusive. The low and high parameter
-/// values can either be constant values or named targets available from the expression.
+/// The <c>low</c> and <c>high</c> parameter values are floating-point numbers that represent the range of values allowed in the return series. Third parameter,
+/// optional, is a boolean flag that determines if range values are inclusive, i.e., allowed values are &gt;= low and &lt;= high - defaults to false, which means
+/// values are exclusive, i.e., allowed values are &gt; low and &lt; high. Function allows a fourth optional parameter that is a boolean flag - when four parameters
+/// are provided, third parameter determines if low value is inclusive and forth parameter determines if high value is inclusive. The <c>low</c> and <c>high</c>
+/// parameter values can either be constant values or named targets available from the expression.
 /// </summary>
 /// <remarks>
-/// Signature: <c>IncludeRange(low, high, [inclusive = false], expression) -or- IncludeRange(low, high, [lowInclusive = false], [highInclusive = false], expression)</c><br/>
+/// Signature: <c>IncludeRange(low, high, [inclusive = false], expression)</c> -or- <c>IncludeRange(low, high, [lowInclusive = false], [highInclusive = false], expression)</c><br/>
 /// Returns: Series of values.<br/>
 /// Example: <c>IncludeRange(59.90, 60.10, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
 /// Variants: IncludeRange, Include<br/>

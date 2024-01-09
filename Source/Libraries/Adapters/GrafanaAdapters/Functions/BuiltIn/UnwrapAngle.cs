@@ -10,8 +10,8 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// <summary>
 /// Returns a series of values that represent an adjusted set of angles that are unwrapped, per specified angle units, so that a comparable mathematical
 /// operation can be executed. For example, for angles that wrap between -180 and +180 degrees, this algorithm unwraps the values to make the values
-/// mathematically comparable. The units parameter, optional, specifies the type of angle units and must be one of the following: Degrees, Radians, Grads,
-/// ArcMinutes, ArcSeconds or AngularMil - defaults to Degrees.
+/// mathematically comparable. The <c>units</c>parameter, optional, specifies the type of angle units and must be one of the following: Degrees, Radians,
+/// Grads, ArcMinutes, ArcSeconds or AngularMil - defaults to Degrees.
 /// </summary>
 /// <remarks>
 /// Signature: <c>UnwrapAngle([units = Degrees], expression)</c><br/>
