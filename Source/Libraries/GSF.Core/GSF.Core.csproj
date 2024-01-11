@@ -140,6 +140,7 @@
     <Compile Include="Data\Model\DefaultSortOrderAttribute.cs" />
     <Compile Include="Data\Model\DeleteRolesAttribute.cs" />
     <Compile Include="Data\Model\ReturnLimitAttribute.cs" />
+    <Compile Include="Data\Model\SearchFilter.cs" />
     <Compile Include="Data\Model\SQLSearchFieldAttribute.cs" />
     <Compile Include="Data\Model\ViewOnlyAttribute.cs" />
     <Compile Include="Data\Model\AllowSearchAttribute.cs" />
