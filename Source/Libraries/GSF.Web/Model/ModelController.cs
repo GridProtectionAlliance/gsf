@@ -139,7 +139,7 @@ namespace GSF.Web.Model
             SearchSettings = typeof(T).GetCustomAttribute<AdditionalFieldSearchAttribute>();
             Take = typeof(T).GetCustomAttribute<ReturnLimitAttribute>()?.Limit ?? null;
 
-            SQLSubstitutions = typeof(T).GetCustomAttributes<SQLSearchFieldAttribute>().ToDictionary((s) =>  s.Field, (s) => s);
+            //SQLSubstitutions = typeof(T).GetCustomAttributes<SQLSearchModifierAttribute>().ToDictionary((s) =>  s.Field, (s) => s);
 
             // Custom View Models are ViewOnly.
             ViewOnly = (typeof(U).GetCustomAttribute<ViewOnlyAttribute>()?.ViewOnly ?? false) ||
@@ -170,7 +170,7 @@ namespace GSF.Web.Model
         private string SecurityType = "";
         protected Dictionary<string, List<Claim>> Claims { get; } = new Dictionary<string, List<Claim>>();
         protected AdditionalFieldSearchAttribute SearchSettings { get; } = null;
-        protected Dictionary<string, SQLSearchFieldAttribute> SQLSubstitutions { get; } = new Dictionary<string, SQLSearchFieldAttribute>();
+        protected Dictionary<string, SQLSearchModifierAttribute> SQLSubstitutions { get; } = new Dictionary<string, SQLSearchModifierAttribute>();
         #endregion
 
         #region [ Http Methods ]
@@ -561,9 +561,9 @@ namespace GSF.Web.Model
                 if (search.Operator != "LIKE")
                     escape = "";
 
-                if (SQLSubstitutions.TryGetValue(search.FieldName, out SQLSearchFieldAttribute substitution))
+                if (SQLSubstitutions.TryGetValue(search.FieldName, out SQLSearchModifierAttribute substitution))
                 {
-                    query = $"{substitution.SQLFieldName} {substitution.Condition(search.Operator)} ";
+                    //query = $"{substitution.SQLFieldName} {substitution.Condition(search.Operator)} ";
 
                     /* We can remove the following once we move to new SQL injection logic,
                      * but it is needed in here for now since I had to leave the logic out 
@@ -577,13 +577,13 @@ namespace GSF.Web.Model
                         searchText = $"({string.Join(",", things.Select((s, i) => $"{{{i + nParameter}}}"))})";
                     }
 
-                    if (search.Operator == "IN")
-                        query += $"{substitution.Query(search.Operator, searchText)}";
+                    //if (search.Operator == "IN")
+                        //query += $"{substitution.Query(search.Operator, searchText)}";
                     
                     else
                     {
                         parameters.Add(searchText);
-                        query += $"{substitution.Query(search.Operator, $"{{{nParameter - 1}}}")}";
+                        //query += $"{substitution.Query(search.Operator, $"{{{nParameter - 1}}}")}";
                     }
                 }
                 else //if (search.Operator != "IN") - uncomment to fix SQL Injection issue needed for legacy support
