@@ -58,21 +58,9 @@ namespace GSF.Web.Model
     {
         #region [ Members ]
 
-        /// <summary>
-        /// Class Providing Search Parameters for the Search Endpoints
-        /// </summary>
-        public class Search
-        {
-            public string FieldName { get; set; }
-            public string SearchText { get; set; }
-            public string Operator { get; set; }
-            public string Type { get; set; }
-            public bool isPivotColumn { get; set; } = false;
-        }
-
         public class PostData
         {
-            public IEnumerable<Search> Searches { get; set; }
+            public IEnumerable<SQLSearchFilter> Searches { get; set; }
             public string OrderBy { get; set; }
             public bool Ascending { get; set; }
         }
@@ -430,7 +418,7 @@ namespace GSF.Web.Model
                 return Unauthorized();
 
             if (!AllowSearch)
-                postData.Searches = new List<Search>();
+                postData.Searches = new List<SQLSearchFilter>();
 
             using DataTable table = GetSearchResults(postData, page);
             int recordCount = CountSearchResults(postData);
@@ -460,12 +448,12 @@ namespace GSF.Web.Model
 
             if (ParentKey != string.Empty && parentID != null)
             {
-                List<Search> searches = postData.Searches.ToList();
+                List<SQLSearchFilter> searches = postData.Searches.ToList();
                 PropertyInfo parentKey = typeof(T).GetProperty(ParentKey);
                 if (parentKey.PropertyType == typeof(int))
-                    searches.Add(new Search() { FieldName = ParentKey, isPivotColumn = false, Operator = "=", Type = "number", SearchText = parentID });
+                    searches.Add(new SQLSearchFilter() { FieldName = ParentKey, isPivotColumn = false, Operator = "=", Type = "number", SearchText = parentID });
                 else 
-                    searches.Add(new Search() { FieldName = ParentKey, isPivotColumn = false, Operator = "=", Type = "string", SearchText = parentID });
+                    searches.Add(new SQLSearchFilter() { FieldName = ParentKey, isPivotColumn = false, Operator = "=", Type = "string", SearchText = parentID });
 
                 postData.Searches = searches;
             }
@@ -489,16 +477,16 @@ namespace GSF.Web.Model
                 return Unauthorized();
 
             if (!AllowSearch)
-                postData.Searches = new List<Search>();
+                postData.Searches = new List<SQLSearchFilter>();
 
             if (ParentKey != string.Empty && parentID != null)
             {
-                List<Search> searches = postData.Searches.ToList();
+                List<SQLSearchFilter> searches = postData.Searches.ToList();
                 PropertyInfo parentKey = typeof(T).GetProperty(ParentKey);
                 if (parentKey.PropertyType == typeof(int))
-                    searches.Add(new Search() { FieldName = ParentKey, isPivotColumn = false, Operator = "=", Type = "number", SearchText = parentID });
+                    searches.Add(new SQLSearchFilter() { FieldName = ParentKey, isPivotColumn = false, Operator = "=", Type = "number", SearchText = parentID });
                 else
-                    searches.Add(new Search() { FieldName = ParentKey, isPivotColumn = false, Operator = "=", Type = "string", SearchText = parentID });
+                    searches.Add(new SQLSearchFilter() { FieldName = ParentKey, isPivotColumn = false, Operator = "=", Type = "string", SearchText = parentID });
 
                 postData.Searches = searches;
             }
@@ -520,12 +508,12 @@ namespace GSF.Web.Model
 
         #region [Helper Methods]
 
-        protected string BuildWhereClause(IEnumerable<Search> searches, ref List<object> parameters)
+        protected string BuildWhereClause(IEnumerable<SQLSearchFilter> searches, ref List<object> parameters)
         {
             int nParameter = parameters.Count();
 
             List<string> clauses = new List<string>();
-            foreach (Search search in searches)
+            foreach (SQLSearchFilter search in searches)
             {
                 nParameter = parameters.Count();
                 bool isQuery = false;
