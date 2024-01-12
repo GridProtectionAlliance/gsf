@@ -435,53 +435,65 @@ namespace GSF.Security
 
                     if (config is not null && config.Enabled)
                     {
-                        // Create a Graph client - exceptions here should be exposed to the caller
-                        GraphServiceClient graphClient = config.GetGraphClient();
+                        int retryCount = 0;
 
-                        try
+                        while (retryCount < 2)
                         {
-                            // Load user data - note that external users need to be looked up by userPrincipalName
-                            User user = graphClient.Users.Request().Filter($"mail eq '{userData.Username}'").GetAsync().Result.FirstOrDefault();
+                            // Create a Graph client - exceptions here should be exposed to the caller
+                            GraphServiceClient graphClient = config.GetGraphClient(forceRefresh: retryCount > 0);
 
-                            if (user is null)
-                                throw new SecurityException($"Failed to load user \"{userData.Username}\" from Azure AD application \"{config.ClientID}\".");
-                            
-                            userData.IsAzureAD = true;
-                            userData.LoginID = user.UserPrincipalName;
-                            userData.FirstName = user.GivenName;
-                            userData.LastName = user.Surname;
-                            userData.PhoneNumber = user.MobilePhone;
-                            userData.EmailAddress = user.Mail;
-                            userData.PasswordChangeDateTime = DateTime.MinValue;
-
-                            // Load user groups (direct or indirect membership)
-                            IUserTransitiveMemberOfCollectionWithReferencesPage userMemberCollection = 
-                                graphClient.Users[user.Id].TransitiveMemberOf.Request().GetAsync().Result;
-
-                            while (userMemberCollection.Count > 0)
+                            try
                             {
-                                foreach (DirectoryObject directoryObject in userMemberCollection)
+                                // Load user data - note that external users need to be looked up by userPrincipalName
+                                User user = graphClient.Users.Request().Filter($"mail eq '{userData.Username}'").GetAsync().Result.FirstOrDefault();
+
+                                if (user is null)
+                                    throw new SecurityException($"Failed to load user \"{userData.Username}\" from Azure AD application \"{config.ClientID}\".");
+
+                                userData.IsAzureAD = true;
+                                userData.LoginID = user.UserPrincipalName;
+                                userData.FirstName = user.GivenName;
+                                userData.LastName = user.Surname;
+                                userData.PhoneNumber = user.MobilePhone;
+                                userData.EmailAddress = user.Mail;
+                                userData.PasswordChangeDateTime = DateTime.MinValue;
+
+                                // Load user groups (direct or indirect membership)
+                                IUserTransitiveMemberOfCollectionWithReferencesPage userMemberCollection = 
+                                    graphClient.Users[user.Id].TransitiveMemberOf.Request().GetAsync().Result;
+
+                                while (userMemberCollection.Count > 0)
                                 {
-                                    if (directoryObject is Group group)
-                                        userData.Groups.Add(group.DisplayName);
+                                    foreach (DirectoryObject directoryObject in userMemberCollection)
+                                    {
+                                        if (directoryObject is Group group)
+                                            userData.Groups.Add(group.DisplayName);
+                                    }
+
+                                    if (userMemberCollection.NextPageRequest is not null)
+                                        userMemberCollection = userMemberCollection.NextPageRequest.GetAsync().Result;
+                                    else
+                                        break;
                                 }
-
-                                if (userMemberCollection.NextPageRequest is not null)
-                                    userMemberCollection = userMemberCollection.NextPageRequest.GetAsync().Result;
-                                else
-                                    break;
+                                
+                                retryCount = 2;
                             }
-                        }
-                        catch (ServiceException ex)
-                        {
-                            throw new SecurityException($"User information load for \"{userData.Username}\" in AzureAD application \"{config.ClientID}\" failed: {ex.Message}", ex);
-                        }
-                        catch
-                        {
-                            if (config.LastException is null)
-                                throw;
+                            catch (ServiceException ex)
+                            {
+                                throw new SecurityException($"User information load for \"{userData.Username}\" in AzureAD application \"{config.ClientID}\" failed: {ex.Message}", ex);
+                            }
+                            catch (Exception ex) when (retryCount == 0)
+                            {
+                                Log.Publish(MessageLevel.Warning, "RefreshData", $"Failed to load user \"{userData.Username}\" from Azure AD application \"{config.ClientID}\", retrying after refreshing token: {ex.Message}");
+                                retryCount++;
+                            }
+                            catch
+                            {
+                                if (config.LastException is null)
+                                    throw;
 
-                            throw config.LastException;
+                                throw config.LastException;
+                            }
                         }
                     }
                 }
@@ -715,9 +727,9 @@ namespace GSF.Security
             AuthenticationFailureReason = null;
             m_successfulPassThroughAuthentication = false;
 
-            bool isAzureADPassthroughPrincipal() => 
-                PassthroughPrincipal is AzureADPassthroughPrincipal principal && 
-                principal.Identity.Name.Equals(UserData.LoginID, StringComparison.OrdinalIgnoreCase);
+            bool isAzureADPassthroughPrincipal() =>
+                PassthroughPrincipal is AzureADPassthroughPrincipal principal &&
+                principal.Identity.Name.Equals(UserData.Username, StringComparison.OrdinalIgnoreCase);
 
             string getUserAuthFailureReason(string settingName, string defaultValue)
             {
@@ -783,27 +795,38 @@ namespace GSF.Security
                                 // If AzureAD has been disabled via external configuration, user will no longer be authenticated
                                 if (config is not null && config.Enabled)
                                 {
-                                    // Create a Graph client - exceptions here are be exposed to outer try/catch
-                                    GraphServiceClient graphClient = config.GetGraphClient();
-                                    string username = UserData.LoginID;
+                                    int retryCount = 0;
 
-                                    try
+                                    while (retryCount < 2)
                                     {
-                                        // Load user data in application context - note that external users need to be looked up by userPrincipalName
-                                        User user = graphClient.Users.Request().Filter($"mail eq '{username}'").GetAsync().Result.FirstOrDefault();
+                                        // Create a Graph client - exceptions here are be exposed to outer try/catch
+                                        GraphServiceClient graphClient = config.GetGraphClient(forceRefresh: retryCount > 0);
+                                        string username = UserData.Username;
 
-                                        isAuthenticated = user is not null;
-                                    }
-                                    catch (ServiceException ex)
-                                    {
-                                        throw new SecurityException($"Authorization validation for \"{username}\" in AzureAD application \"{config.ClientID}\" failed: {ex.Message}", ex);
-                                    }
-                                    catch
-                                    {
-                                        if (config.LastException is null)
-                                            throw;
+                                        try
+                                        {
+                                            // Load user data in application context - note that external users need to be looked up by userPrincipalName
+                                            User user = graphClient.Users.Request().Filter($"mail eq '{username}'").GetAsync().Result.FirstOrDefault();
 
-                                        throw config.LastException;
+                                            isAuthenticated = user is not null;
+                                            retryCount = 2;
+                                        }
+                                        catch (ServiceException ex)
+                                        {
+                                            throw new SecurityException($"Authorization validation for \"{username}\" in AzureAD application \"{config.ClientID}\" failed: {ex.Message}", ex);
+                                        }
+                                        catch (Exception ex) when (retryCount == 0)
+                                        {
+                                            Log.Publish(MessageLevel.Warning, "Authenticate", $"Failed to validate authorization for \"{username}\" in AzureAD application \"{config.ClientID}\", retrying after refreshing token: {ex.Message}");
+                                            retryCount++;
+                                        }
+                                        catch
+                                        {
+                                            if (config.LastException is null)
+                                                throw;
+
+                                            throw config.LastException;
+                                        }
                                     }
                                 }
                             }
