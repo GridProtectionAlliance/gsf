@@ -34,7 +34,7 @@ public abstract class Range<T> : GrafanaFunctionBase<T> where T : struct, IDataS
         T rangeMax = new() { Value = double.MinValue };
 
         // Immediately enumerate values to find range
-        await foreach (T dataValue in GetDataSourceValues(parameters).WithCancellation(cancellationToken))
+        await foreach (T dataValue in GetDataSourceValues(parameters).WithCancellation(cancellationToken).ConfigureAwait(false))
         {
             if (dataValue.Value <= rangeMin.Value)
                 rangeMin = dataValue;

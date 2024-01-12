@@ -39,7 +39,7 @@ public abstract class Median<T> : GrafanaFunctionBase<T> where T : struct, IData
         public override async IAsyncEnumerable<DataSourceValue> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             // Median uses immediate in-memory array load
-            DataSourceValue[] values = (await GetDataSourceValues(parameters).OrderBy(dataValue => dataValue.Value).ToArrayAsync(cancellationToken)).Median();
+            DataSourceValue[] values = (await GetDataSourceValues(parameters).OrderBy(dataValue => dataValue.Value).ToArrayAsync(cancellationToken).ConfigureAwait(false)).Median();
             int length = values.Length;
 
             if (length == 0)
@@ -66,7 +66,7 @@ public abstract class Median<T> : GrafanaFunctionBase<T> where T : struct, IData
             List<double> angles = new();
 
             // Immediately load values in-memory only enumerating data source once
-            await foreach (PhasorValue dataValue in GetDataSourceValues(parameters).WithCancellation(cancellationToken))
+            await foreach (PhasorValue dataValue in GetDataSourceValues(parameters).WithCancellation(cancellationToken).ConfigureAwait(false))
             {
                 lastValue = dataValue;
                 magnitudes.Add(dataValue.Magnitude);

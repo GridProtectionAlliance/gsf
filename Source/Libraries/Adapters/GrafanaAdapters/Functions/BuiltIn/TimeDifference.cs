@@ -71,7 +71,7 @@ public abstract class TimeDifference<T> : GrafanaFunctionBase<T> where T : struc
         };
 
         // Return deferred enumeration of computed values
-        await foreach (T dataValue in GetDataSourceValues(parameters).Select(transposeCompute).WithCancellation(cancellationToken))
+        await foreach (T dataValue in GetDataSourceValues(parameters).Select(transposeCompute).WithCancellation(cancellationToken).ConfigureAwait(false))
         {
             if (lastTime > 0.0D)
                 yield return dataValue;

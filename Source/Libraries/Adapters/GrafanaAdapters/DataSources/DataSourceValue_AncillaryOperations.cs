@@ -25,7 +25,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using GrafanaAdapters.Functions;
-using GrafanaAdapters.Model.Annotations;
 using GSF.TimeSeries;
 using static GrafanaAdapters.Functions.Common;
 
@@ -65,7 +64,7 @@ public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
     {
         int result = Value.CompareTo(other.Value);
 
-        return result != 0 ? result : Time.CompareTo(other.Time);
+        return result == 0 ? Time.CompareTo(other.Time) : result;
     }
 
     /// <inheritdoc />
@@ -78,6 +77,12 @@ public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
     public DataSourceValue TransposeCompute(Func<double, double> function)
     {
         return this with { Value = function(Value) };
+    }
+
+    /// <inheritdoc />
+    public DataSet UpdateMetadata(DataSet metadata)
+    {
+        return metadata;
     }
 
     /// <inheritdoc />
@@ -95,12 +100,12 @@ public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
         foreach (string target in targetSet)
         {
             // Check for point tag based targetValues definition
-            MeasurementKey key = TargetCache<MeasurementKey>.GetOrAdd(target, () => target.KeyFromTag(metadata));
+            MeasurementKey key = TargetCache<MeasurementKey>.GetOrAdd(target, () => target.ToMeasurement(metadata, "ActiveMeasurements", "PointTag", "SignalID"));
 
             if (key == MeasurementKey.Undefined)
             {
                 // Check for Guid based signal ID targetValues definition
-                (MeasurementKey, string) result = TargetCache<(MeasurementKey, string)>.GetOrAdd($"signalID@{target}", () => target.KeyAndTagFromSignalID(metadata));
+                (MeasurementKey, string) result = TargetCache<(MeasurementKey, string)>.GetOrAdd($"signalID@{target}", () => target.KeyAndTagFromSignalID(metadata, "ActiveMeasurements", "SignalID"));
 
                 key = result.Item1;
                 string pointTag = result.Item2;

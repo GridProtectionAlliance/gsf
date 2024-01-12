@@ -1,6 +1,5 @@
 ﻿using Ciloci.Flee;
 using GrafanaAdapters.DataSources;
-using GrafanaAdapters.Model.Annotations;
 using GSF;
 using System;
 using System.Collections.Generic;
@@ -139,7 +138,7 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
         static string getCleanIdentifier(string target) =>
             Regex.Replace(target, @"[^A-Z0-9_]", "", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-        T[] dataValues = await GetDataSourceValues(parameters).ToArrayAsync(cancellationToken);
+        T[] dataValues = await GetDataSourceValues(parameters).ToArrayAsync(cancellationToken).ConfigureAwait(false);
 
         lock (context)
         {

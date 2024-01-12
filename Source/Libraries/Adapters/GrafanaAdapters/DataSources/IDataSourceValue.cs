@@ -66,6 +66,13 @@ public interface IDataSourceValue
     double[] TimeSeriesValue { get; }
 
     /// <summary>
+    /// Updates metadata for the specified data source.
+    /// </summary>
+    /// <param name="metadata">Source metadata.</param>
+    /// <returns>Updated metadata for the specified data source.</returns>
+    DataSet UpdateMetadata(DataSet metadata);
+
+    /// <summary>
     /// Looks up metadata for the specified targetValues.
     /// </summary>
     /// <param name="metadata">Metadata data set.</param>

@@ -192,7 +192,7 @@ partial class GrafanaDataSourceBase
     {
         AnnotationType type = request.ParseQueryType(out bool useFilterExpression);
         Dictionary<string, DataRow> definitions = request.ParseSourceDefinitions(type, Metadata, useFilterExpression);
-        IEnumerable<TimeSeriesValues> annotationData = await Query(request.ExtractQueryRequest(definitions.Keys, MaximumAnnotationsPerRequest), cancellationToken);
+        IEnumerable<TimeSeriesValues> annotationData = await Query(request.ExtractQueryRequest(definitions.Keys, MaximumAnnotationsPerRequest), cancellationToken).ConfigureAwait(false);
         List<AnnotationResponse> responses = new();
 
         foreach (TimeSeriesValues values in annotationData)

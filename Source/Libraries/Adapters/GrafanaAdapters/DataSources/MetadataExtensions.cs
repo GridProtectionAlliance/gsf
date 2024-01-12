@@ -21,14 +21,187 @@
 //
 //******************************************************************************************************
 
+using System;
 using GrafanaAdapters.Functions;
 using System.Collections.Generic;
 using System.Data;
+using System.Text.RegularExpressions;
+using GSF;
+using GSF.Diagnostics;
+using GSF.TimeSeries;
 
 namespace GrafanaAdapters.DataSources;
 
 internal static class MetadataExtensions
 {
+    private static readonly LogPublisher s_log = Logger.CreatePublisher(typeof(MetadataExtensions), MessageClass.Component);
+    private static readonly Regex s_aliasedTagExpression = new(@"^\s*(?<Identifier>[A-Z_][A-Z0-9_]*)\s*\=\s*(?<Expression>.+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+    /// <summary>
+    /// Looks up point tag from measurement <paramref name="key"/> value.
+    /// </summary>
+    /// <param name="key"><see cref="MeasurementKey"/> to lookup.</param>
+    /// <param name="source">Source metadata.</param>
+    /// <returns>Point tag name from source metadata.</returns>
+    /// <remarks>
+    /// This function uses the <see cref="DataTable.Select(string)"/> function which uses a linear
+    /// search algorithm that can be slow for large data sets, it is recommended that any results
+    /// for calls to this function be cached to improve performance.
+    /// </remarks>
+    internal static string TagFromKey(this MeasurementKey key, DataSet source)
+    {
+        DataRow record = GetMetadata(source, "ActiveMeasurements", $"ID = '{key}'");
+        return record is null ? key.ToString() : record["PointTag"].ToNonNullString(key.ToString());
+    }
+
+    /// <summary>
+    /// Looks up measurement key from point tag.
+    /// </summary>
+    /// <param name="pointTag">Point tag to lookup.</param>
+    /// <param name="source">Source metadata.</param>
+    /// <param name="table">Table to search.</param>
+    /// <returns>Measurement key from source metadata.</returns>
+    /// <remarks>
+    /// This function uses the <see cref="DataTable.Select(string)"/> function which uses a linear
+    /// search algorithm that can be slow for large data sets, it is recommended that any results
+    /// for calls to this function be cached to improve performance.
+    /// </remarks>
+    internal static MeasurementKey ToMeasurement(this string pointTag, DataSet source, string table, string pointTagField, string signalIDField)
+    {
+        DataRow record = pointTag.MetadataRecordFromPointTag(source, table, pointTagField);
+
+        if (record is null)
+            return MeasurementKey.Undefined;
+
+        try
+        {
+            return MeasurementKey.LookUpOrCreate(record[signalIDField].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), record["ID"].ToString());
+        }
+        catch (Exception ex)
+        {
+            Logger.SwallowException(ex);
+            return MeasurementKey.Undefined;
+        }
+    }
+
+    /// <summary>
+    /// Looks up measurement key from signal ID.
+    /// </summary>
+    /// <param name="signalID">Signal ID to lookup.</param>
+    /// <param name="metadata">Source metadata.</param>
+    /// <param name="table">Table to search.</param>
+    /// <param name="signalIDField">Signal ID field name.</param>
+    /// <returns>Measurement key from source metadata.</returns>
+    /// <remarks>
+    /// This function uses the <see cref="DataTable.Select(string)"/> function which uses a linear
+    /// search algorithm that can be slow for large data sets, it is recommended that any results
+    /// for calls to this function be cached to improve performance.
+    /// </remarks>
+    internal static (MeasurementKey, string) KeyAndTagFromSignalID(this string signalID, DataSet metadata, string table, string signalIDField)
+    {
+        DataRow record = signalID.MetadataRecordFromSignalID(metadata, table, signalIDField);
+        string pointTag = "Undefined";
+
+        if (record is null)
+            return (MeasurementKey.Undefined, pointTag);
+
+        try
+        {
+            MeasurementKey key = MeasurementKey.LookUpOrCreate(record["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), record["ID"].ToString());
+            pointTag = record["PointTag"].ToNonNullString(key.ToString());
+            return (key, pointTag);
+        }
+        catch (Exception ex)
+        {
+            Logger.SwallowException(ex);
+            return (MeasurementKey.Undefined, pointTag);
+        }
+    }
+
+    /// <summary>
+    /// Splits any defined alias from a point tag expression.
+    /// </summary>
+    /// <param name="tagExpression">Source point tag expression that can contain an alias.</param>
+    /// <param name="alias">Alias, if defined.</param>
+    /// <returns>Point tag name without any alias.</returns>
+    internal static string SplitAlias(this string tagExpression, out string alias)
+    {
+        Match match = s_aliasedTagExpression.Match(tagExpression);
+
+        if (match.Success)
+        {
+            alias = match.Result("${Identifier}");
+            return match.Result("${Expression}").Trim();
+        }
+
+        alias = null;
+        return tagExpression;
+    }
+
+    /// <summary>
+    /// Looks up metadata record from point tag.
+    /// </summary>
+    /// <param name="pointTag">Point tag to lookup.</param>
+    /// <param name="metadata">Source metadata.</param>
+    /// <param name="table">Table to search.</param>
+    /// <param name="pointTagField">Point tag field name.</param>
+    /// <returns>Metadata record from source metadata for provided point tag.</returns>
+    /// <remarks>
+    /// <para>
+    /// Use "table.pointTag" format to specify which table to pull point tag from.
+    /// </para>
+    /// <para>
+    /// This function uses the <see cref="DataTable.Select(string)"/> function which uses a linear
+    /// search algorithm that can be slow for large data sets, it is recommended that any results
+    /// for calls to this function be cached to improve performance.
+    /// </para>
+    /// </remarks>
+    internal static DataRow MetadataRecordFromPointTag(this string pointTag, DataSet metadata, string table, string pointTagField)
+    {
+        return GetMetadata(metadata, table, $"{pointTagField} = '{SplitAlias(pointTag, out string _)}'");
+    }
+
+    /// <summary>
+    /// Looks up metadata record from signal ID.
+    /// </summary>
+    /// <param name="signalID">Signal ID to lookup.</param>
+    /// <param name="metadata">Source metadata.</param>
+    /// <param name="table">Table to search.</param>
+    /// <param name="signalIDField">Signal ID field name.</param>
+    /// <returns>Metadata record from source metadata for provided point tag.</returns>
+    /// <remarks>
+    /// This function uses the <see cref="DataTable.Select(string)"/> function which uses a linear
+    /// search algorithm that can be slow for large data sets, it is recommended that any results
+    /// for calls to this function be cached to improve performance.
+    /// </remarks>
+    internal static DataRow MetadataRecordFromSignalID(this string signalID, DataSet metadata, string table, string signalIDField)
+    {
+        return GetMetadata(metadata, table, $"{signalIDField} = '{signalID}'");
+    }
+
+    internal static DataRow GetMetadata(DataSet metadata, string table, string expression)
+    {
+        try
+        {
+            DataRow[] filteredRows = metadata.Tables[table].Select(expression);
+
+            if (filteredRows.Length > 1)
+                s_log.Publish(MessageLevel.Warning, "Duplicate Tag Names", $"Grafana query for \"{expression}\" produced {filteredRows.Length:N0} records. Key values for meta-data are expected to be unique, invalid meta-data results may be returned.");
+
+            return filteredRows.Length > 0 ? filteredRows[0] : null;
+        }
+        catch (Exception ex)
+        {
+            Logger.SwallowException(ex);
+            return null;
+        }
+    }
+
+    internal static MeasurementKey GetMeasurementKeyFromSignalID(string signalID)
+    {
+        return MeasurementKey.LookUpBySignalID(Guid.Parse(signalID));
+    }
+
     /// <summary>
     /// Gets metadata map for the specified target and selections.
     /// </summary>

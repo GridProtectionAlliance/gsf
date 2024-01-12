@@ -36,7 +36,7 @@ public abstract class Maximum<T> : GrafanaFunctionBase<T> where T : struct, IDat
         T maxValue = new() { Value = double.MinValue };
 
         // Immediately enumerate values to find maximum
-        await foreach (T dataValue in GetDataSourceValues(parameters).WithCancellation(cancellationToken))
+        await foreach (T dataValue in GetDataSourceValues(parameters).WithCancellation(cancellationToken).ConfigureAwait(false))
         {
             if (dataValue.Value >= maxValue.Value)
                 maxValue = dataValue;

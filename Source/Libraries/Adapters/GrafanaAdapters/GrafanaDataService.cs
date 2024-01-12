@@ -58,7 +58,7 @@ public partial class GrafanaDataService
 
         protected override async IAsyncEnumerable<DataSourceValue> QueryDataSourceValues(QueryParameters queryParameters, Dictionary<ulong, string> targetMap, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            await foreach (IDataPoint dataPoint in m_parent.Archive.ReadData(targetMap.Keys.Select(pointID => (int)pointID), queryParameters.StartTime, queryParameters.StopTime, false).ToAsyncEnumerable().WithCancellation(cancellationToken))
+            await foreach (IDataPoint dataPoint in m_parent.Archive.ReadData(targetMap.Keys.Select(pointID => (int)pointID), queryParameters.StartTime, queryParameters.StopTime, false).ToAsyncEnumerable().WithCancellation(cancellationToken).ConfigureAwait(false))
             {
                 yield return new DataSourceValue
                 {

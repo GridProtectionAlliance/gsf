@@ -69,7 +69,7 @@ public abstract class Interval<T> : GrafanaFunctionBase<T> where T : struct, IDa
         double valueN = TargetTimeUnit.FromTimeUnits(parameters.Value<double>(0), units) / SI.Milli;
         double lastTime = 0.0D;
 
-        await foreach (T dataValue in GetDataSourceValues(parameters).WithCancellation(cancellationToken))
+        await foreach (T dataValue in GetDataSourceValues(parameters).WithCancellation(cancellationToken).ConfigureAwait(false))
         {
             if (lastTime > 0.0D)
             {

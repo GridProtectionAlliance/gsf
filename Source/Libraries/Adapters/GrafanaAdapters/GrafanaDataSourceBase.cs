@@ -37,7 +37,6 @@ using System.Threading.Tasks;
 using GrafanaAdapters.DataSources;
 using GrafanaAdapters.Functions;
 using GrafanaAdapters.Functions.BuiltIn;
-using GrafanaAdapters.Model.Annotations;
 using GrafanaAdapters.Model.Common;
 using GSF.Collections;
 
@@ -49,6 +48,8 @@ namespace GrafanaAdapters;
 [Serializable]
 public abstract partial class GrafanaDataSourceBase
 {
+    private DataSet m_dataset;
+
     /// <summary>
     /// Gets or sets instance name for this <see cref="GrafanaDataSourceBase"/> implementation.
     /// </summary>
@@ -57,7 +58,14 @@ public abstract partial class GrafanaDataSourceBase
     /// <summary>
     /// Gets or sets <see cref="DataSet"/> based meta-data source available to this <see cref="GrafanaDataSourceBase"/> implementation.
     /// </summary>
-    public virtual DataSet Metadata { get; set; }
+    public virtual DataSet Metadata
+    {
+        get => m_dataset;
+        set
+        {
+            m_dataset = value;
+        }
+    }
 
     /// <summary>
     /// Gets or sets maximum number of search targets to return during a search query.
@@ -120,7 +128,7 @@ public abstract partial class GrafanaDataSourceBase
                 StartTime = startTime,
                 StopTime = stopTime,
                 Interval = fullResolutionQuery ? "0s" : request.interval,
-                IncludePeaks = includePeaks,
+                IncludePeaks = includePeaks && !fullResolutionQuery,
                 DropEmptySeries = dropEmptySeries,
                 Imports = imports,
                 MetadataSelection = target.metadataSelection
@@ -132,14 +140,14 @@ public abstract partial class GrafanaDataSourceBase
         // Query each target -- each returned value group has a 'Source' value enumerable that may contain deferred
         // enumerations that need evaluation before the final result can be serialized and returned to Grafana
         foreach (QueryParameters queryParameters in targetQueryParameters)
-            await foreach (DataSourceValueGroup<T> valueGroup in QueryTargetAsync<T>(queryParameters, queryParameters.SourceTarget.target, cancellationToken))
+            await foreach (DataSourceValueGroup<T> valueGroup in QueryTargetAsync<T>(queryParameters, queryParameters.SourceTarget.target, cancellationToken).ConfigureAwait(false))
                 valueGroups.Add(valueGroup);
 
         // Establish one result series for each value group so that consistent order can be maintained between calls
         TimeSeriesValues[] seriesResults = new TimeSeriesValues[valueGroups.Count];
 
         // Process value group data in parallel
-        Parallel.ForEach(valueGroups, new ParallelOptions { CancellationToken = cancellationToken }, (valueGroup, _, index) =>
+        IEnumerable<Task> processValueGroups = valueGroups.Select(async (valueGroup, index) =>
         {
             // Create a time series values query result instance that will be serialized as JSON and returned
             // to Grafana. A time series values result is created for each value group that will hold evaluated
@@ -163,9 +171,11 @@ public abstract partial class GrafanaDataSourceBase
             if (valueGroup.SourceTarget?.excludedFlags > uint.MinValue)
                 values = values.Where(value => ((uint)value.Flags & valueGroup.SourceTarget.excludedFlags) == 0);
 
-            // For deferred enumerations, function operations are executed here by ToList() at the last moment
-            series.datapoints = values.Select(dataValue => dataValue.TimeSeriesValue).ToEnumerable().ToList();
+            // For deferred enumerations, function operations are executed here by ToListAsync() at the last moment
+            series.datapoints = await values.Select(dataValue => dataValue.TimeSeriesValue).ToListAsync(cancellationToken).ConfigureAwait(false);
         });
+
+        await Task.WhenAll(processValueGroups).ConfigureAwait(false);
 
         // Drop any empty series, if requested
         IEnumerable<TimeSeriesValues> filteredResults = seriesResults.Where(values => !values.dropEmptySeries || values.datapoints.Count > 0);
@@ -224,7 +234,7 @@ public abstract partial class GrafanaDataSourceBase
             foreach (ParsedGrafanaFunction<T> parsedFunction in grafanaFunctions)
             {
                 // ExecuteGrafanaFunctionAsync calls QueryTargetAsync (this function) in order to process sub-functions or query needed data at final depth
-                await foreach (DataSourceValueGroup<T> valueGroup in ExecuteGrafanaFunctionAsync(parsedFunction, queryParameters, cancellationToken))
+                await foreach (DataSourceValueGroup<T> valueGroup in ExecuteGrafanaFunctionAsync(parsedFunction, queryParameters, cancellationToken).ConfigureAwait(false))
                     yield return valueGroup;
             }
 
@@ -244,8 +254,8 @@ public abstract partial class GrafanaDataSourceBase
         {
             targetSet.UnionWith(TargetCache<string[]>.GetOrAdd(target, () =>
             {
-                // TODO: JRC - if it is determined that a data source needs its own custom filter expression parser, the implementation should
-                // added to the IDataSourceValue interface and called here - the following code would then be moved to DataSourceValue
+                // TODO: JRC - it is likely that target data sources will simply have their own metadata tables that will work with the following parsing code
+                // Each IDataSourceValue interface just needs to define its primary metadata table and pass it into the ParseInputMeasurementKeys function
 
                 // Parse target expression into individual point tags - this will convert filter expressions into point tags
                 MeasurementKey[] results = AdapterBase.ParseInputMeasurementKeys(Metadata, false, target.SplitAlias(out string alias));
@@ -263,8 +273,8 @@ public abstract partial class GrafanaDataSourceBase
         (Dictionary<ulong, string> targetMap, object state) = default(T).GetIDTargetMap(Metadata, targetSet);
         Dictionary<string, List<T>> targetValues = new(); 
 
-        // Query underlying data source, assigning each value to its own data source target list, filtering results per target
-        await foreach (DataSourceValue dataValue in QueryDataSourceValues(queryParameters, targetMap, cancellationToken))
+        // Query underlying data source, assigning each value to its own data source target list, sorting results per target
+        await foreach (DataSourceValue dataValue in QueryDataSourceValues(queryParameters, targetMap, cancellationToken).ConfigureAwait(false))
             default(T).AssignValueToTargetList(dataValue, targetValues.GetOrAdd(dataValue.Target, _ => new List<T>()), state);
 
         // Transpose each target into a data source value group along with its associated queried values
@@ -299,7 +309,7 @@ public abstract partial class GrafanaDataSourceBase
         // Handle series renaming operations as a special case
         if (function is Label<T>)
         {
-            await foreach (DataSourceValueGroup<T> valueGroup in dataset.RenameSeries(queryParameters, Metadata, parsedParameters[0], cancellationToken))
+            await foreach (DataSourceValueGroup<T> valueGroup in dataset.RenameSeries(queryParameters, Metadata, parsedParameters[0], cancellationToken).ConfigureAwait(false))
                 yield return valueGroup;
 
             yield break;
@@ -310,11 +320,11 @@ public abstract partial class GrafanaDataSourceBase
         {
             case GroupOperations.None:
             {
-                await foreach (DataSourceValueGroup<T> valueGroup in dataset)
+                await foreach (DataSourceValueGroup<T> valueGroup in dataset.ConfigureAwait(false))
                 {
                     string rootTarget = valueGroup.RootTarget ?? valueGroup.Target;
                     Dictionary<string, string> metadataMap = Metadata.GetMetadataMap<T>(rootTarget, queryParameters);
-                    Parameters parameters = await function.GenerateParametersAsync(parsedParameters, valueGroup.Source, rootTarget, Metadata, metadataMap, cancellationToken);
+                    Parameters parameters = await function.GenerateParametersAsync(parsedParameters, valueGroup.Source, rootTarget, Metadata, metadataMap, cancellationToken).ConfigureAwait(false);
 
                     yield return new DataSourceValueGroup<T>
                     {
@@ -335,9 +345,9 @@ public abstract partial class GrafanaDataSourceBase
                 if (!double.TryParse(parsedParameters[0], out double tolerance))
                     throw new InvalidOperationException($"Invalid slice interval specified for {function.Name} function.");
 
-                TimeSliceScannerAsync<T> scanner = await TimeSliceScannerAsync<T>.Create(dataset, tolerance / SI.Milli, cancellationToken);
+                TimeSliceScannerAsync<T> scanner = await TimeSliceScannerAsync<T>.Create(dataset, tolerance / SI.Milli, cancellationToken).ConfigureAwait(false);
 
-                await foreach (DataSourceValueGroup<T> valueGroup in function.ComputeSliceAsync(scanner, queryParameters, queryExpression, Metadata, parsedParameters.Skip(1).ToArray(), cancellationToken))
+                await foreach (DataSourceValueGroup<T> valueGroup in function.ComputeSliceAsync(scanner, queryParameters, queryExpression, Metadata, parsedParameters.Skip(1).ToArray(), cancellationToken).ConfigureAwait(false))
                 {
                     string rootTarget = valueGroup.RootTarget ?? valueGroup.Target;
 
@@ -360,7 +370,7 @@ public abstract partial class GrafanaDataSourceBase
                 // Flatten all series into a single enumerable
                 IAsyncEnumerable<T> dataSourceValues = dataset.SelectMany(source => source.Source);
                 Dictionary<string, string> metadataMap = Metadata.GetMetadataMap<T>(queryExpression, queryParameters);
-                Parameters parameters = await function.GenerateParametersAsync(parsedParameters, dataSourceValues, queryExpression, Metadata, metadataMap, cancellationToken);
+                Parameters parameters = await function.GenerateParametersAsync(parsedParameters, dataSourceValues, queryExpression, Metadata, metadataMap, cancellationToken).ConfigureAwait(false);
 
                 DataSourceValueGroup<T> valueGroup = new()
                 {
@@ -376,7 +386,7 @@ public abstract partial class GrafanaDataSourceBase
                 // Handle set operations for functions where there is data in the target series as well, e.g., Min or Max
                 if (function.ResultIsSetTargetSeries)
                 {
-                    T dataValue = await valueGroup.Source.FirstAsync(cancellationToken);
+                    T dataValue = await valueGroup.Source.FirstAsync(cancellationToken).ConfigureAwait(false);
                     valueGroup.Target = $"Set{function.Name} = {dataValue.Target}";
                     valueGroup.RootTarget = dataValue.Target;
                 }

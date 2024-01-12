@@ -46,7 +46,7 @@ public abstract class Percentile<T> : GrafanaFunctionBase<T> where T : struct, I
     public override async IAsyncEnumerable<T> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         // Immediately load values in-memory only enumerating data source once
-        T[] values = await GetDataSourceValues(parameters).ToArrayAsync(cancellationToken);
+        T[] values = await GetDataSourceValues(parameters).ToArrayAsync(cancellationToken).ConfigureAwait(false);
         int length = values.Length;
 
         if (length == 0)

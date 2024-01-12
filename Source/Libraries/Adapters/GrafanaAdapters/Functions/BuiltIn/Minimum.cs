@@ -36,7 +36,7 @@ public abstract class Minimum<T> : GrafanaFunctionBase<T> where T : struct, IDat
         T minValue = new() { Value = double.MaxValue };
 
         // Immediately enumerate values to find minimum
-        await foreach (T dataValue in GetDataSourceValues(parameters).WithCancellation(cancellationToken))
+        await foreach (T dataValue in GetDataSourceValues(parameters).WithCancellation(cancellationToken).ConfigureAwait(false))
         {
             if (dataValue.Value <= minValue.Value)
                 minValue = dataValue;

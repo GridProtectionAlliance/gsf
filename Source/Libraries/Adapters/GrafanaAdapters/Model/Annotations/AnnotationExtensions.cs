@@ -27,12 +27,11 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using GrafanaAdapters.Model.Common;
 using GSF;
-using GSF.Diagnostics;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
+using static GrafanaAdapters.DataSources.MetadataExtensions;
 
 namespace GrafanaAdapters.Model.Annotations;
 
@@ -41,9 +40,6 @@ namespace GrafanaAdapters.Model.Annotations;
 /// </summary>
 public static class AnnotationRequestExtensions
 {
-    private static readonly LogPublisher s_log = Logger.CreatePublisher(typeof(AnnotationRequestExtensions), MessageClass.Component);
-    private static readonly Regex s_aliasedTagExpression = new(@"^\s*(?<Identifier>[A-Z_][A-Z0-9_]*)\s*\=\s*(?<Expression>.+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
     /// <summary>
     /// Gets table name for specified annotation <paramref name="type"/>.
     /// </summary>
@@ -245,8 +241,6 @@ public static class AnnotationRequestExtensions
         return result.Item1;
     }
 
-       
-
     /// <summary>
     /// Parses source definitions for an annotation query.
     /// </summary>
@@ -289,7 +283,7 @@ public static class AnnotationRequestExtensions
 
             foreach (DataRow row in rows)
             {
-                MeasurementKey key = GetTargetFromGuid(row[type.TargetFieldName()].ToString());
+                MeasurementKey key = GetMeasurementKeyFromSignalID(row[type.TargetFieldName()].ToString());
 
                 if (key != MeasurementKey.Undefined)
                     definitions[key.TagFromKey(source)] = row;
@@ -297,175 +291,6 @@ public static class AnnotationRequestExtensions
 
             return definitions;
         });
-    }
-
-        
-    /// <summary>
-    /// Looks up point tag from measurement <paramref name="key"/> value.
-    /// </summary>
-    /// <param name="key"><see cref="MeasurementKey"/> to lookup.</param>
-    /// <param name="source">Source metadata.</param>
-    /// <returns>Point tag name from source metadata.</returns>
-    /// <remarks>
-    /// This function uses the <see cref="DataTable.Select(string)"/> function which uses a linear
-    /// search algorithm that can be slow for large data sets, it is recommended that any results
-    /// for calls to this function be cached to improve performance.
-    /// </remarks>
-    internal static string TagFromKey(this MeasurementKey key, DataSet source)
-    {
-        DataRow record = GetMetaData(source, "ActiveMeasurements", $"ID = '{key}'");
-        return record is null ? key.ToString() : record["PointTag"].ToNonNullString(key.ToString());
-    }
-
-    /// <summary>
-    /// Looks up measurement key from point tag.
-    /// </summary>
-    /// <param name="pointTag">Point tag to lookup.</param>
-    /// <param name="source">Source metadata.</param>
-    /// <param name="table">Table to search.</param>
-    /// <returns>Measurement key from source metadata.</returns>
-    /// <remarks>
-    /// This function uses the <see cref="DataTable.Select(string)"/> function which uses a linear
-    /// search algorithm that can be slow for large data sets, it is recommended that any results
-    /// for calls to this function be cached to improve performance.
-    /// </remarks>
-    internal static MeasurementKey KeyFromTag(this string pointTag, DataSet source, string table = "ActiveMeasurements")
-    {
-        DataRow record = pointTag.MetadataRecordFromTag(source, table);
-
-        if (record is null)
-            return MeasurementKey.Undefined;
-
-        try
-        {
-            return MeasurementKey.LookUpOrCreate(record["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), record["ID"].ToString());
-        }
-        catch (Exception ex)
-        {
-            Logger.SwallowException(ex);
-            return MeasurementKey.Undefined;
-        }
-    }
-
-    /// <summary>
-    /// Looks up measurement key from signal ID.
-    /// </summary>
-    /// <param name="signalID">Signal ID to lookup.</param>
-    /// <param name="source">Source metadata.</param>
-    /// <param name="table">Table to search.</param>
-    /// <returns>Measurement key from source metadata.</returns>
-    /// <remarks>
-    /// This function uses the <see cref="DataTable.Select(string)"/> function which uses a linear
-    /// search algorithm that can be slow for large data sets, it is recommended that any results
-    /// for calls to this function be cached to improve performance.
-    /// </remarks>
-    internal static (MeasurementKey, string) KeyAndTagFromSignalID(this string signalID, DataSet source, string table = "ActiveMeasurements")
-    {
-        DataRow record = signalID.MetadataRecordFromSignalID(source, table);
-        string pointTag = "Undefined";
-
-        if (record is null)
-            return (MeasurementKey.Undefined, pointTag);
-
-        try
-        {
-            MeasurementKey key = MeasurementKey.LookUpOrCreate(record["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), record["ID"].ToString());
-            pointTag = record["PointTag"].ToNonNullString(key.ToString());
-            return (key, pointTag);
-        }
-        catch (Exception ex)
-        {
-            Logger.SwallowException(ex);
-            return (MeasurementKey.Undefined, pointTag);
-        }
-    }
-
-    /// <summary>
-    /// Splits any defined alias from a point tag expression.
-    /// </summary>
-    /// <param name="tagExpression">Source point tag expression that can contain an alias.</param>
-    /// <param name="alias">Alias, if defined.</param>
-    /// <returns>Point tag name without any alias.</returns>
-    internal static string SplitAlias(this string tagExpression, out string alias)
-    {
-        Match match = s_aliasedTagExpression.Match(tagExpression);
-
-        if (match.Success)
-        {
-            alias = match.Result("${Identifier}");
-            return match.Result("${Expression}").Trim();
-        }
-
-        alias = null;
-        return tagExpression;
-    }
-
-    /// <summary>
-    /// Looks up metadata record from point tag.
-    /// </summary>
-    /// <param name="pointTag">Point tag to lookup.</param>
-    /// <param name="source">Source metadata.</param>
-    /// <param name="table">Table to search.</param>
-    /// <returns>Metadata record from source metadata for provided point tag.</returns>
-    /// <remarks>
-    /// <para>
-    /// Use "table.pointTag" format to specify which table to pull point tag from.
-    /// </para>
-    /// <para>
-    /// This function uses the <see cref="DataTable.Select(string)"/> function which uses a linear
-    /// search algorithm that can be slow for large data sets, it is recommended that any results
-    /// for calls to this function be cached to improve performance.
-    /// </para>
-    /// </remarks>
-    internal static DataRow MetadataRecordFromTag(this string pointTag, DataSet source, string table)
-    {
-        return GetMetaData(source, table, $"PointTag = '{SplitAlias(pointTag, out string _)}'");
-    }
-
-    /// <summary>
-    /// Looks up metadata record from signal ID.
-    /// </summary>
-    /// <param name="signalID">Signal ID to lookup.</param>
-    /// <param name="source">Source metadata.</param>
-    /// <param name="table">Table to search.</param>
-    /// <returns>Metadata record from source metadata for provided point tag.</returns>
-    /// <remarks>
-    /// This function uses the <see cref="DataTable.Select(string)"/> function which uses a linear
-    /// search algorithm that can be slow for large data sets, it is recommended that any results
-    /// for calls to this function be cached to improve performance.
-    /// </remarks>
-    internal static DataRow MetadataRecordFromSignalID(this string signalID, DataSet source, string table)
-    {
-        return GetMetaData(source, table, $"SignalID = '{signalID}'");
-    }
-
-    private static DataRow GetMetaData(DataSet source, string table, string expression)
-    {
-        try
-        {
-            DataRow[] filteredRows = source.Tables[table].Select(expression);
-
-            if (filteredRows.Length > 1)
-                s_log.Publish(MessageLevel.Warning, "Duplicate Tag Names", $"Grafana query for \"{expression}\" produced {filteredRows.Length:N0} records. Key values for meta-data are expected to be unique, invalid meta-data results may be returned.");
-
-            return filteredRows.Length > 0 ? filteredRows[0] : null;
-        }
-        catch (Exception ex)
-        {
-            Logger.SwallowException(ex);
-            return null;
-        }
-    }
-
-    private static MeasurementKey GetTargetFromGuid(string guidID)
-    {
-        return MeasurementKey.LookUpBySignalID(Guid.Parse(guidID));
-    }
-
-    private static DataRow GetTargetMetaData(DataSet source, object value)
-    {
-        string target = value.ToNonNullNorWhiteSpace(Guid.Empty.ToString());
-        return TargetCache<DataRow>.GetOrAdd(target, () => GetMetaData(source, "ActiveMeasurements", $"ID = '{GetTargetFromGuid(target)}'"));
     }
 
     private static string GetAlarmCondition(DataRow definition)
@@ -518,4 +343,11 @@ public static class AnnotationRequestExtensions
 
         return description.ToString();
     }
+
+    internal static DataRow GetTargetMetaData(DataSet source, object signalIDFieldValue)
+    {
+        string signalID = signalIDFieldValue.ToNonNullNorWhiteSpace(Guid.Empty.ToString());
+        return TargetCache<DataRow>.GetOrAdd(signalID, () => GetMetadata(source, "ActiveMeasurements", $"ID = '{GetMeasurementKeyFromSignalID(signalID)}'"));
+    }
+
 }

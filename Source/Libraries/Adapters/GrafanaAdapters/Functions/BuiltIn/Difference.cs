@@ -42,7 +42,7 @@ public abstract class Difference<T> : GrafanaFunctionBase<T> where T : struct, I
         T lastValue = new();
 
         // Return deferred enumeration of computed values
-        await foreach (T dataValue in GetDataSourceValues(parameters).Select(dataValue => TransposeCompute(dataValue, lastValue)).WithCancellation(cancellationToken))
+        await foreach (T dataValue in GetDataSourceValues(parameters).Select(dataValue => TransposeCompute(dataValue, lastValue)).WithCancellation(cancellationToken).ConfigureAwait(false))
         {
             if (lastValue.Time > 0.0D)
                 yield return dataValue;

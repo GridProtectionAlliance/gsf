@@ -59,7 +59,7 @@ public abstract class StandardDeviation<T> : GrafanaFunctionBase<T> where T : st
             });
 
             // Immediately enumerate to array to compute values
-            double stdDev = (await trackedValues.ToArrayAsync(cancellationToken)).StandardDeviation(useSampleCalc);
+            double stdDev = (await trackedValues.ToArrayAsync(cancellationToken).ConfigureAwait(false)).StandardDeviation(useSampleCalc);
 
             // Return computed results
             if (lastValue.Time > 0.0D)
@@ -80,7 +80,7 @@ public abstract class StandardDeviation<T> : GrafanaFunctionBase<T> where T : st
             PhasorValue lastValue = default;
 
             // Immediately load values in-memory only enumerating data source once
-            await foreach (PhasorValue dataValue in GetDataSourceValues(parameters).WithCancellation(cancellationToken))
+            await foreach (PhasorValue dataValue in GetDataSourceValues(parameters).WithCancellation(cancellationToken).ConfigureAwait(false))
             {
                 lastValue = dataValue;
                 magnitudes.Add(dataValue.Magnitude);

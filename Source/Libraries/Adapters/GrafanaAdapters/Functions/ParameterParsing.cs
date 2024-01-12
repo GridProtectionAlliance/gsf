@@ -191,7 +191,7 @@ internal static class ParameterParsing
 
             // Parameter
             if (index < parsedParameters.Length)
-                await parameter.ConvertParsedValueAsync(parsedParameters[index++], rootTarget, dataSourceValues, metadata, metadataMap, cancellationToken);
+                await parameter.ConvertParsedValueAsync(parsedParameters[index++], rootTarget, dataSourceValues, metadata, metadataMap, cancellationToken).ConfigureAwait(false);
         
         #if DEBUG
             // Required parameters were already validated in ParseParameters - this is a sanity check
@@ -323,7 +323,7 @@ internal static class ParameterParsing
             foreach (string targetName in targets)
             {
                 // Attempt to find named target in data source values
-                TDataSourceValue sourceResult = await dataSourceValues.FirstOrDefaultAsync(dataSourceValue => dataSourceValue.Target.Equals(targetName, StringComparison.OrdinalIgnoreCase), cancellationToken);
+                TDataSourceValue sourceResult = await dataSourceValues.FirstOrDefaultAsync(dataSourceValue => dataSourceValue.Target.Equals(targetName, StringComparison.OrdinalIgnoreCase), cancellationToken).ConfigureAwait(false);
 
                 // Data source values are structs and cannot be null so an empty target means lookup failed
                 if (string.IsNullOrEmpty(sourceResult.Target))

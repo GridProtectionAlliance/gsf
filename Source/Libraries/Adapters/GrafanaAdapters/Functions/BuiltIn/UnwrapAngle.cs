@@ -48,7 +48,7 @@ public abstract class UnwrapAngle<T> : GrafanaFunctionBase<T> where T : struct, 
     {
         AngleUnit units = parameters.Value<AngleUnit>(0);
 
-        T[] values = await GetDataSourceValues(parameters).ToArrayAsync(cancellationToken);
+        T[] values = await GetDataSourceValues(parameters).ToArrayAsync(cancellationToken).ConfigureAwait(false);
 
         Angle anglesFromValues(T dataValue) =>
             Angle.ConvertFrom(dataValue.Value, units);

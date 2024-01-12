@@ -43,7 +43,7 @@ public abstract class Total<T> : GrafanaFunctionBase<T> where T : struct, IDataS
             });
 
             // Immediately enumerate to compute values
-            double sum = await trackedValues.SumAsync(cancellationToken);
+            double sum = await trackedValues.SumAsync(cancellationToken).ConfigureAwait(false);
 
             // Return computed results
             if (lastValue.Time > 0.0D)
@@ -62,7 +62,7 @@ public abstract class Total<T> : GrafanaFunctionBase<T> where T : struct, IDataS
             double angleTotal = 0.0D;
 
             // Immediately enumerate to compute values - only enumerate once
-            await foreach (PhasorValue dataValue in GetDataSourceValues(parameters).WithCancellation(cancellationToken))
+            await foreach (PhasorValue dataValue in GetDataSourceValues(parameters).WithCancellation(cancellationToken).ConfigureAwait(false))
             {
                 lastValue = dataValue;
                 magnitudeTotal += dataValue.Magnitude;

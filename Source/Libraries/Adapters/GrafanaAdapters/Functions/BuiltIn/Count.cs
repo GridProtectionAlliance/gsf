@@ -39,7 +39,7 @@ public abstract class Count<T> : GrafanaFunctionBase<T> where T : struct, IDataS
         });
 
         // Immediately enumerate to compute values
-        double count = await trackedValues.CountAsync(cancellationToken);
+        double count = await trackedValues.CountAsync(cancellationToken).ConfigureAwait(false);
 
         // Return computed results
         if (lastValue.Time > 0.0D)

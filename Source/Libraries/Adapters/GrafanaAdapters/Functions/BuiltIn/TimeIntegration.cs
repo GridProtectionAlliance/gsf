@@ -69,7 +69,7 @@ public abstract class TimeIntegration<T> : GrafanaFunctionBase<T> where T : stru
         }
 
         // Immediately enumerate to compute values - only enumerate once
-        await foreach (T dataValue in GetDataSourceValues(parameters).Select(transposeCompute).WithCancellation(cancellationToken))
+        await foreach (T dataValue in GetDataSourceValues(parameters).Select(transposeCompute).WithCancellation(cancellationToken).ConfigureAwait(false))
             lastResult = dataValue;
 
         // Return computed value

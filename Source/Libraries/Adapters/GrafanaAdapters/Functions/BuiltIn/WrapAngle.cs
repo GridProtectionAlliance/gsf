@@ -56,7 +56,7 @@ public abstract class WrapAngle<T> : GrafanaFunctionBase<T> where T : struct, ID
         };
 
         // Return deferred enumeration of computed values
-        await foreach (T dataValue in GetDataSourceValues(parameters).Select(transposeCompute).WithCancellation(cancellationToken))
+        await foreach (T dataValue in GetDataSourceValues(parameters).Select(transposeCompute).WithCancellation(cancellationToken).ConfigureAwait(false))
             yield return dataValue;
     }
 

@@ -66,13 +66,13 @@ public class TimeSliceScannerAsync<T> where T : struct, IDataSourceValue<T>
         if (lastValue)
         {
             Dictionary<string, T> nextSlice = new(StringComparer.OrdinalIgnoreCase);
-            await ReadNextTimeSliceAsync(value => nextSlice[value.Target] = value);
+            await ReadNextTimeSliceAsync(value => nextSlice[value.Target] = value).ConfigureAwait(false);
             return nextSlice.Values.ToAsyncEnumerable();
         }
         else
         {
             List<T> nextSlice = new();
-            await ReadNextTimeSliceAsync(value => nextSlice.Add(value));
+            await ReadNextTimeSliceAsync(value => nextSlice.Add(value)).ConfigureAwait(false);
             return nextSlice.ToAsyncEnumerable();
         }
     }
@@ -105,7 +105,7 @@ public class TimeSliceScannerAsync<T> where T : struct, IDataSourceValue<T>
             if (dataPoint.Time <= publishTime)
             {
                 // Attempt to advance to next data point, tracking completed enumerators
-                if (!await enumerator.MoveNextAsync())
+                if (!await enumerator.MoveNextAsync().ConfigureAwait(false))
                 {
                     enumerationComplete = true;
                     completed.Add(index);
@@ -120,7 +120,7 @@ public class TimeSliceScannerAsync<T> where T : struct, IDataSourceValue<T>
                     {
                         addValue(enumerator.Current);
 
-                        if (!await enumerator.MoveNextAsync())
+                        if (!await enumerator.MoveNextAsync().ConfigureAwait(false))
                         {
                             completed.Add(index);
                             break;
@@ -142,7 +142,7 @@ public class TimeSliceScannerAsync<T> where T : struct, IDataSourceValue<T>
         for (int i = completed.Count - 1; i >= 0; i--)
         {
             int indexToRemove = completed[i];
-            await m_enumerators[indexToRemove].DisposeAsync();
+            await m_enumerators[indexToRemove].DisposeAsync().ConfigureAwait(false);
             m_enumerators.RemoveAt(indexToRemove);
         }
 
@@ -159,15 +159,15 @@ public class TimeSliceScannerAsync<T> where T : struct, IDataSourceValue<T>
     {
         List<IAsyncEnumerator<T>> enumerators = new();
 
-        await foreach (DataSourceValueGroup<T> group in dataSources.WithCancellation(cancellationToken))
+        await foreach (DataSourceValueGroup<T> group in dataSources.WithCancellation(cancellationToken).ConfigureAwait(false))
         {
             IAsyncEnumerator<T> enumerator = group.Source.GetAsyncEnumerator(cancellationToken);
 
             // Add enumerator to the list if it has at least one value
-            if (await enumerator.MoveNextAsync())
+            if (await enumerator.MoveNextAsync().ConfigureAwait(false))
                 enumerators.Add(enumerator);
             else
-                await enumerator.DisposeAsync();
+                await enumerator.DisposeAsync().ConfigureAwait(false);
         }
 
         return new TimeSliceScannerAsync<T>(enumerators, tolerance);

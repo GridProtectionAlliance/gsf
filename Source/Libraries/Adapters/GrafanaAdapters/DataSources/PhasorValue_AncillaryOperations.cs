@@ -26,7 +26,9 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using GrafanaAdapters.Functions;
-using GrafanaAdapters.Model.Annotations;
+using GSF.Collections;
+using GSF.Data;
+using GSF.FuzzyStrings;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 
@@ -85,12 +87,13 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
     {
         int result = Magnitude.CompareTo(other.Magnitude);
 
-        if (result != 0)
-            return result;
+        if (result == 0)
+        {
+            result = Angle.CompareTo(other.Angle);
+            return result == 0 ? Time.CompareTo(other.Time) : result;
+        }
 
-        result = Angle.CompareTo(other.Angle);
-        
-        return result != 0 ? result : Time.CompareTo(other.Time);
+        return result;
     }
 
     /// <inheritdoc />
@@ -120,16 +123,102 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
     };
 
     /// <inheritdoc />
-    // TODO: JRC - ERROR - this lookup is problematic, phasor labels are not unique, need to lookup with an associated device ID
-    // or device acronym. Actually, even device phasor labels are not unique, can have same label for different phases. So you
-    // need a device acronym (or ID) and the phasor ID, e.g., <DeviceAcronym>!<PhasorID>. How does this even work from UI?
-    // Do you select a device and then a phasor? I would think a simpler solution would be to filter ActiveMeasurements by phasor
-    // types, perhaps just magnitudes, then use then just use that measurement's unique point tag for metadata lookups. You could
-    // then use the PhasorID to lookup associated angle measurement as well as phasor metadata, e.g., label, phase, etc. as needed.
+    public DataSet UpdateMetadata(DataSet metadata)
+    {
+        // Extract phasor rows from active measurements table in current metadata
+        DataTable activeMeasurements = metadata.Tables["ActiveMeasurements"];
+        DataRow[] phasorRows = activeMeasurements.Select("PhasorID IS NOT NULL", "PhasorID ASC");
+
+        // Group phase angle and magnitudes together by phasor ID
+        Dictionary<int, (DataRow magnitude, DataRow angle)> phasorTargets = new();
+
+        foreach (DataRow row in phasorRows)
+        {
+            int phasorID = Convert.ToInt32(row["PhasorID"]);
+            (DataRow magnitude, DataRow angle) = phasorTargets.GetOrAdd(phasorID, _ => (null, null));
+
+            string signalType = row["SignalType"].ToString();
+
+            if (signalType.EndsWith("PHA"))
+                angle = row;
+            else if (signalType.EndsWith("PHM"))
+                magnitude = row;
+
+            phasorTargets[phasorID] = (magnitude, angle);
+        }
+
+        // Create a new data set for phasor metadata
+        DataSet phasorMetadata = new("PhasorMetadata");
+
+        // Create new metadata table for phasor values
+        DataTable phasorValues = phasorMetadata.Tables.Add("PhasorValues");
+
+        // Add columns to phasor metadata table
+        phasorValues.Columns.Add("Device", typeof(string));
+        phasorValues.Columns.Add("PointTag", typeof(string));
+        phasorValues.Columns.Add("MagnitudePointTag", typeof(string));
+        phasorValues.Columns.Add("AnglePointTag", typeof(string));
+        phasorValues.Columns.Add("MagnitudeID", typeof(string));
+        phasorValues.Columns.Add("AngleID", typeof(string));
+        phasorValues.Columns.Add("MagnitudeSignalID", typeof(Guid));
+        phasorValues.Columns.Add("AngleSignalID", typeof(Guid));
+        phasorValues.Columns.Add("MagnitudeSignalReference", typeof(string));
+        phasorValues.Columns.Add("AngleSignalReference", typeof(string));
+        phasorValues.Columns.Add("Label", typeof(string));
+        phasorValues.Columns.Add("Type", typeof(char));
+        phasorValues.Columns.Add("Phase", typeof(string));
+        phasorValues.Columns.Add("BaseKV", typeof(int));
+        phasorValues.Columns.Add("Longitude", typeof(decimal));
+        phasorValues.Columns.Add("Latitude", typeof(decimal));
+        phasorValues.Columns.Add("Company", typeof(string));
+        phasorValues.Columns.Add("UpdatedOn", typeof(DateTime));
+
+        // Copy phasor metadata from magnitude and angle rows in active measurements table
+        foreach ((DataRow magnitude, DataRow angle) in phasorTargets.Values)
+        {
+            if (magnitude is null || angle is null)
+                continue;
+
+            // Create a new row that will reference phasor magnitude and angle metadata
+            DataRow phasorRow = phasorValues.NewRow();
+
+            string magnitudePointTag = magnitude["PointTag"].ToString();
+            string anglePointTag = angle["PointTag"].ToString();
+
+            // Find overlapping point tag name that will become primary phasor point tag
+            string pointTag = magnitudePointTag.LongestCommonSubstring(anglePointTag);
+
+            // Copy in specific magnitude and angle phasor metadata, default to magnitude metadata for common values
+            phasorRow["Device"] = magnitude["Device"];
+            phasorRow["PointTag"] = pointTag;
+            phasorRow["MagnitudePointTag"] = magnitudePointTag;
+            phasorRow["AnglePointTag"] = anglePointTag;
+            phasorRow["MagnitudeID"] = magnitude["ID"];
+            phasorRow["AngleID"] = angle["ID"];
+            phasorRow["MagnitudeSignalID"] = magnitude.ConvertGuidField("SignalID");
+            phasorRow["AngleSignalID"] = angle.ConvertGuidField("SignalID");
+            phasorRow["MagnitudeSignalReference"] = magnitude["SignalReference"];
+            phasorRow["AngleSignalReference"] = angle["SignalReference"];
+            phasorRow["Label"] = magnitude["PhasorLabel"];
+            phasorRow["Type"] = magnitude["PhasorType"].ToString()[0];
+            phasorRow["Phase"] = magnitude["Phase"];
+            phasorRow["BaseKV"] = magnitude["BaseKV"];
+            phasorRow["Longitude"] = Convert.ToDecimal(magnitude["Longitude"]);
+            phasorRow["Latitude"] = Convert.ToDecimal(magnitude["Latitude"]);
+            phasorRow["Company"] = magnitude["Company"];
+            phasorRow["UpdatedOn"] = magnitude["UpdatedOn"];
+
+            phasorValues.Rows.Add(phasorRow);
+        }
+
+        return phasorMetadata;
+    }
+
+    /// <inheritdoc />
     public readonly DataRow[] LookupMetadata(DataSet metadata, string target)
     {
         // TODO: Cache this metadata lookup per target
-        return metadata?.Tables["Phasor"].Select($"Label = '{target}'") ?? Array.Empty<DataRow>();
+        return metadata?.Tables["PhasorValues"].Select($"PointTag = '{target}'") ?? Array.Empty<DataRow>();
     }
 
     readonly (Dictionary<ulong, string>, object) IDataSourceValue.GetIDTargetMap(DataSet metadata, HashSet<string> targetSet)

@@ -51,13 +51,13 @@ public abstract class First<T> : GrafanaFunctionBase<T> where T : struct, IDataS
             // Short cut for only getting first value
             await using IAsyncEnumerator<T> enumerator = source.GetAsyncEnumerator(cancellationToken);
 
-            if (await enumerator.MoveNextAsync())
+            if (await enumerator.MoveNextAsync().ConfigureAwait(false))
                 yield return enumerator.Current;
         }
         else
         {
             // Immediately load values in-memory only enumerating data source once
-            T[] values = await source.ToArrayAsync(cancellationToken);
+            T[] values = await source.ToArrayAsync(cancellationToken).ConfigureAwait(false);
             int length = values.Length;
 
             if (length == 0)

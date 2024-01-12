@@ -50,7 +50,7 @@ public abstract class RollingAverage<T> : GrafanaFunctionBase<T> where T : struc
     #if NET
         ReadOnlySpan<T> values = await GetDataSourceValues(parameters).ToArrayAsync(cancellationToken);
     #else
-        T[] values = await GetDataSourceValues(parameters).ToArrayAsync(cancellationToken);
+        T[] values = await GetDataSourceValues(parameters).ToArrayAsync(cancellationToken).ConfigureAwait(false);
     #endif
         int length = values.Length;
 

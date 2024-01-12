@@ -41,7 +41,7 @@ namespace GrafanaAdapters.Functions;
 /// all possible parameters for a function, both required and optional, effectively determining its signature. Parameters
 /// in this collection represent the values extracted from the user-provided function expression and, when presented to a
 /// function, have already been validated and parsed by type. Additionally, the class provides access to the data source
-/// values expression; function implementations can call <see cref="GrafanaFunctionBase{T}.GetDataSourceValues(GrafanaAdapters.Functions.Parameters)"/> to get
+/// values expression; function implementations can call <see cref="GrafanaFunctionBase{T}.GetDataSourceValues"/> to get
 /// current data source values. The parameters in this collection are mutable, implying ownership by the function, and
 /// can be safely modified as needed. To identify which optional parameters have been parsed and are available, refer to
 /// the <see cref="ParsedCount"/> property.
@@ -125,7 +125,7 @@ public class Parameters : IList<IMutableParameter>
     /// <typeparam name="T">The type of the parameter.</typeparam>
     /// <param name="index">Index of parameter to get.</param>
     /// <returns>
-    /// The typed value of parameter at specified index if the in index is valid and the
+    /// The typed value of parameter at specified index if the index is valid and the
     /// value can be cast to type; otherwise, default value.
     /// </returns>
     /// <remarks>

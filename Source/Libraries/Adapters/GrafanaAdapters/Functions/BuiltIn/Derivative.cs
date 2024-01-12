@@ -68,7 +68,7 @@ public abstract class Derivative<T> : GrafanaFunctionBase<T> where T : struct, I
         }
 
         // Return deferred enumeration of computed values
-        await foreach (T dataValue in GetDataSourceValues(parameters).Select(transposeCompute).WithCancellation(cancellationToken))
+        await foreach (T dataValue in GetDataSourceValues(parameters).Select(transposeCompute).WithCancellation(cancellationToken).ConfigureAwait(false))
         {
             if (lastResult.Time > 0.0D)
                 yield return dataValue;

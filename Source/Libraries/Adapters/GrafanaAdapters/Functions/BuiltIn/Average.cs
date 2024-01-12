@@ -43,7 +43,7 @@ public abstract class Average<T> : GrafanaFunctionBase<T> where T : struct, IDat
             });
 
             // Immediately enumerate to compute values
-            double average = await trackedValues.AverageAsync(cancellationToken);
+            double average = await trackedValues.AverageAsync(cancellationToken).ConfigureAwait(false);
 
             // Return computed results
             if (lastValue.Time > 0.0D)
@@ -63,7 +63,7 @@ public abstract class Average<T> : GrafanaFunctionBase<T> where T : struct, IDat
             int count = 0;
 
             // Immediately enumerate to compute values enumerating data source once
-            await foreach(PhasorValue dataValue in GetDataSourceValues(parameters).WithCancellation(cancellationToken))
+            await foreach(PhasorValue dataValue in GetDataSourceValues(parameters).WithCancellation(cancellationToken).ConfigureAwait(false))
             {
                 lastValue = dataValue;
                 magnitudeTotal += dataValue.Magnitude;

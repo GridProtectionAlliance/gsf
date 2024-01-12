@@ -32,7 +32,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using GrafanaAdapters.DataSources;
-using GrafanaAdapters.Model.Annotations;
 using GrafanaAdapters.Model.Functions;
 using GSF;
 using GSF.IO;
@@ -227,16 +226,16 @@ internal static class FunctionParsing
         {
             while (!scanner.DataReadComplete)
             {
-                IAsyncEnumerable<T> dataSourceValues = await scanner.ReadNextTimeSliceAsync();
+                IAsyncEnumerable<T> dataSourceValues = await scanner.ReadNextTimeSliceAsync().ConfigureAwait(false);
                 Dictionary<string, string> metadataMap = metadata.GetMetadataMap<T>(rootTarget, queryParameters);
-                Parameters parameters = await function.GenerateParametersAsync(parsedParameters, dataSourceValues, rootTarget, metadata, metadataMap, cancellationToken);
+                Parameters parameters = await function.GenerateParametersAsync(parsedParameters, dataSourceValues, rootTarget, metadata, metadataMap, cancellationToken).ConfigureAwait(false);
 
-                await foreach (T dataValue in function.ComputeSliceAsync(parameters, cancellationToken))
+                await foreach (T dataValue in function.ComputeSliceAsync(parameters, cancellationToken).ConfigureAwait(false))
                     yield return dataValue;
             }
         }
 
-        await foreach (IAsyncGrouping<string, T> valueGroup in readSliceValues().GroupBy(dataValue => dataValue.Target).WithCancellation(cancellationToken))
+        await foreach (IAsyncGrouping<string, T> valueGroup in readSliceValues().GroupBy(dataValue => dataValue.Target).WithCancellation(cancellationToken).ConfigureAwait(false))
         {
             yield return new DataSourceValueGroup<T>
             {
@@ -256,7 +255,7 @@ internal static class FunctionParsing
         HashSet<string> uniqueLabelSet = new(StringComparer.OrdinalIgnoreCase);
         int index = 1;
 
-        await foreach (DataSourceValueGroup<T> valueGroup in dataset.WithCancellation(cancellationToken))
+        await foreach (DataSourceValueGroup<T> valueGroup in dataset.WithCancellation(cancellationToken).ConfigureAwait(false))
         {
             string rootTarget = valueGroup.RootTarget;
 
@@ -347,9 +346,10 @@ internal static class FunctionParsing
         }
     }
 
+    // TODO: JRC - determine if "PointTag" field should be added as parameter to this method
     private static void LoadFieldSubstitutions(DataSet metadata, Dictionary<string, string> substitutions, string target, string tableName, bool usePrefix)
     {
-        DataRow record = target.MetadataRecordFromTag(metadata, tableName);
+        DataRow record = target.MetadataRecordFromPointTag(metadata, tableName, "PointTag");
         string prefix = usePrefix ? $"{tableName}." : "";
 
         if (record is null)
