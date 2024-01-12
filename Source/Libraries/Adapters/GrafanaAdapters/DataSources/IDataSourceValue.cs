@@ -106,8 +106,14 @@ public interface IDataSourceValue<T> : IDataSourceValue, IComparable<T>, IEquata
     /// Assign queried data source value to time-value map.
     /// </summary>
     /// <param name="dataValue">Queried data source value.</param>
-    /// <param name="timeValueMap">Time-value map.</param>
+    /// <param name="timeValueMap">Time-value map for specified <paramref name="dataValue"/>.</param>
     /// <param name="state">Optional intermediate state.</param>
+    /// <remarks>
+    /// Provided time-value map is specific to the queried data source value, by target, and is keyed by Unix
+    /// epoch milliseconds timestamp. This function is used to assign the queried data source value to the
+    /// time-value map. If the data source value type has multiple fields, this function will be called once
+    /// per each field in the data source value for a given timestamp.
+    /// </remarks>
     void AssignToTimeValueMap(DataSourceValue dataValue, SortedList<double, T> timeValueMap, object state);
 
     /// <summary>

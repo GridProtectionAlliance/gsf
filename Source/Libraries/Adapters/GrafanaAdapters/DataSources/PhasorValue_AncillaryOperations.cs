@@ -293,7 +293,7 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
 
         string target = dataValue.Target;
 
-        // Lookup queried data source value target in phasor values metadata - this will only either be a magnitude or angle point tag
+        // Lookup queried data source value target in 'PhasorValues' metadata - this will only either be a magnitude or angle point tag
         (string phasorTarget, string magnitudeTarget, string angleTarget, bool isMagnitudeValue) = TargetCache<(string, string, string, bool)>.GetOrAdd(target, () =>
         {
             // Lookup queried data source target as a point tag for either magnitude or angle
@@ -305,8 +305,12 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
             string phasorTarget = record["PointTag"].ToString();
             string magnitudeTarget = record["MagnitudePointTag"].ToString();
             string angleTarget = record["AnglePointTag"].ToString();
+            bool isMagnitudeValue = target.Equals(magnitudeTarget, StringComparison.OrdinalIgnoreCase);
 
-            return (phasorTarget, magnitudeTarget, angleTarget, target.Equals(magnitudeTarget, StringComparison.OrdinalIgnoreCase));
+            // Since the record lookup results will be the same for both magnitude and angle, we pre-cache the results for the other target
+            TargetCache<(string, string, string, bool)>.GetOrAdd(isMagnitudeValue ? angleTarget : magnitudeTarget, () => (phasorTarget, magnitudeTarget, angleTarget, !isMagnitudeValue));
+
+            return (phasorTarget, magnitudeTarget, angleTarget, isMagnitudeValue);
         });
 
         Debug.Assert(phasorTarget is not null, $"Unexpected null phasor target for '{target}'");
@@ -321,7 +325,9 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
             {
                 Magnitude = isMagnitudeValue ? dataValue.Value : phasorValue.Magnitude,
                 Angle = !isMagnitudeValue ? dataValue.Value : phasorValue.Angle,
-                Flags = isMagnitudeValue ? dataValue.Flags : phasorValue.Flags
+                // Assign actual measurement values only when both values have been received
+                Flags = isMagnitudeValue && double.IsNaN(phasorValue.Angle) || !isMagnitudeValue && double.IsNaN(phasorValue.Magnitude) ? 
+                    phasorValue.Flags : dataValue.Flags
             };
         }
         else
@@ -335,7 +341,8 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
                 Magnitude = isMagnitudeValue ? dataValue.Value : double.NaN,
                 Angle = !isMagnitudeValue ? dataValue.Value : double.NaN,
                 Time = dataValue.Time,
-                Flags = isMagnitudeValue ? dataValue.Flags : MeasurementStateFlags.Normal
+                // Until both values are received, set flags to suspect data
+                Flags = MeasurementStateFlags.SuspectData
             });
         }
     }
