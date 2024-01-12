@@ -66,9 +66,9 @@ internal static class MetadataExtensions
     /// search algorithm that can be slow for large data sets, it is recommended that any results
     /// for calls to this function be cached to improve performance.
     /// </remarks>
-    internal static MeasurementKey ToMeasurement(this string pointTag, DataSet source, string table, string pointTagField, string signalIDField)
+    internal static MeasurementKey KeyFromTag(this string pointTag, DataSet source, string table, string pointTagField, string signalIDField)
     {
-        DataRow record = pointTag.MetadataRecordFromPointTag(source, table, pointTagField);
+        DataRow record = pointTag.RecordFromTag(source, table, pointTagField);
 
         if (record is null)
             return MeasurementKey.Undefined;
@@ -99,7 +99,7 @@ internal static class MetadataExtensions
     /// </remarks>
     internal static (MeasurementKey, string) KeyAndTagFromSignalID(this string signalID, DataSet metadata, string table, string signalIDField)
     {
-        DataRow record = signalID.MetadataRecordFromSignalID(metadata, table, signalIDField);
+        DataRow record = signalID.RecordFromSignalID(metadata, table, signalIDField);
         string pointTag = "Undefined";
 
         if (record is null)
@@ -156,7 +156,7 @@ internal static class MetadataExtensions
     /// for calls to this function be cached to improve performance.
     /// </para>
     /// </remarks>
-    internal static DataRow MetadataRecordFromPointTag(this string pointTag, DataSet metadata, string table, string pointTagField)
+    internal static DataRow RecordFromTag(this string pointTag, DataSet metadata, string table, string pointTagField)
     {
         return GetMetadata(metadata, table, $"{pointTagField} = '{SplitAlias(pointTag, out string _)}'");
     }
@@ -174,7 +174,7 @@ internal static class MetadataExtensions
     /// search algorithm that can be slow for large data sets, it is recommended that any results
     /// for calls to this function be cached to improve performance.
     /// </remarks>
-    internal static DataRow MetadataRecordFromSignalID(this string signalID, DataSet metadata, string table, string signalIDField)
+    internal static DataRow RecordFromSignalID(this string signalID, DataSet metadata, string table, string signalIDField)
     {
         return GetMetadata(metadata, table, $"{signalIDField} = '{signalID}'");
     }
@@ -197,7 +197,7 @@ internal static class MetadataExtensions
         }
     }
 
-    internal static MeasurementKey GetMeasurementKeyFromSignalID(string signalID)
+    internal static MeasurementKey KeyFromSignalID(string signalID)
     {
         return MeasurementKey.LookUpBySignalID(Guid.Parse(signalID));
     }

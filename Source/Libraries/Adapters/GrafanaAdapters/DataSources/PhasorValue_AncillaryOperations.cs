@@ -46,22 +46,16 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
 
     string IDataSourceValue.Target
     {
-        readonly get => PrimaryTarget == PhasorValueTarget.Magnitude ? MagnitudeTarget : AngleTarget;
-        init
-        {
-            if (PrimaryTarget == PhasorValueTarget.Magnitude)
-                MagnitudeTarget = value;
-            else
-                AngleTarget = value;
-        }
+        readonly get => Target;
+        init => Target = value;
     }
 
     double IDataSourceValue.Value
     {
-        readonly get => PrimaryTarget == PhasorValueTarget.Magnitude ? Magnitude : Angle;
+        readonly get => PrimaryValueTarget == PhasorValueTarget.Magnitude ? Magnitude : Angle;
         init
         {
-            if (PrimaryTarget == PhasorValueTarget.Magnitude)
+            if (PrimaryValueTarget == PhasorValueTarget.Magnitude)
                 Magnitude = value;
             else
                 Angle = value;
@@ -113,13 +107,13 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
     }
 
     /// <summary>
-    /// Update phasor value primary target to operate on angle components.
+    /// Update phasor value primary target to operate on angle values.
     /// </summary>
     /// <param name="dataValue">Source phasor value.</param>
-    /// <returns>Phasor value updated to operate on angle components.</returns>
+    /// <returns>Phasor value updated to operate on angle values.</returns>
     public static PhasorValue AngleAsTarget(PhasorValue dataValue) => dataValue with
     {
-        PrimaryTarget = PhasorValueTarget.Angle
+        PrimaryValueTarget = PhasorValueTarget.Angle
     };
 
     /// <inheritdoc />
@@ -150,7 +144,8 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
         // Create a new data set for phasor metadata
         DataSet phasorMetadata = new("PhasorMetadata");
 
-        // Create new metadata table for phasor values
+        // Create new metadata table for phasor values - this becomes a filterable data source table that can be queried, for example:
+        // FILTER TOP 20 PhasorValues WHERE Type = 'V' AND Phase = 'A' AND Label LIKE '%BUS%' AND BaseKV >= 230
         DataTable phasorValues = phasorMetadata.Tables.Add("PhasorValues");
 
         // Add columns to phasor metadata table
@@ -166,7 +161,7 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
         phasorValues.Columns.Add("AngleSignalReference", typeof(string));
         phasorValues.Columns.Add("Label", typeof(string));
         phasorValues.Columns.Add("Type", typeof(char));
-        phasorValues.Columns.Add("Phase", typeof(string));
+        phasorValues.Columns.Add("Phase", typeof(char));
         phasorValues.Columns.Add("BaseKV", typeof(int));
         phasorValues.Columns.Add("Longitude", typeof(decimal));
         phasorValues.Columns.Add("Latitude", typeof(decimal));
@@ -201,7 +196,7 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
             phasorRow["AngleSignalReference"] = angle["SignalReference"];
             phasorRow["Label"] = magnitude["PhasorLabel"];
             phasorRow["Type"] = magnitude["PhasorType"].ToString()[0];
-            phasorRow["Phase"] = magnitude["Phase"];
+            phasorRow["Phase"] = magnitude["Phase"].ToString()[0];
             phasorRow["BaseKV"] = magnitude["BaseKV"];
             phasorRow["Longitude"] = Convert.ToDecimal(magnitude["Longitude"]);
             phasorRow["Latitude"] = Convert.ToDecimal(magnitude["Latitude"]);

@@ -65,11 +65,8 @@ internal static class DataSourceCache
 
 internal static class DataSourceCache<T> where T : struct, IDataSourceValue<T>
 {
-    // This regex matches all functions and their parameters, critically, at top-level only - sub functions are part of parameter data expression
-    const string GrafanaFunctionsExpression = @"(?<GroupOp>Slice|Set)?(?<Function>{0})\s*\((?<Expression>([^\(\)]|(?<counter>\()|(?<-counter>\)))*(?(counter)(?!)))\)";
-
     private static readonly ShortSynchronizedOperation s_updateMetadataOperation;
-    private static DataSet s_operatingMetadata;
+    private static DataSet s_updatedMetadata;
 
     public static IGrafanaFunction<T>[] Functions { get; private set; }
 
@@ -89,17 +86,23 @@ internal static class DataSourceCache<T> where T : struct, IDataSourceValue<T>
     private static void UpdateMetadata()
     {
         // Call data source specific metadata update method
-        Metadata = default(T).UpdateMetadata(s_operatingMetadata);
+        Metadata = default(T).UpdateMetadata(s_updatedMetadata);
     }
 
     internal static void UpdateMetadata(DataSet metadata)
     {
-        s_operatingMetadata = metadata;
-        s_updateMetadataOperation.RunOnce();
+        lock (s_updateMetadataOperation)
+        {
+            s_updatedMetadata = metadata;
+            s_updateMetadataOperation.RunOnce();
+        }
     }
 
     internal static void Initialize()
     {
+        // This regex matches all functions and their parameters, critically, at top-level only - sub functions are part of parameter data expression
+        const string GrafanaFunctionsExpression = @"(?<GroupOp>Slice|Set)?(?<Function>{0})\s*\((?<Expression>([^\(\)]|(?<counter>\()|(?<-counter>\)))*(?(counter)(?!)))\)";
+
         Functions = FunctionParsing.GetGrafanaFunctions().OfType<IGrafanaFunction<T>>().ToArray();
         FunctionMap = CreateFunctionMap();
         FunctionsRegex = new Regex(string.Format(GrafanaFunctionsExpression, string.Join("|", FunctionMap.Keys)), RegexOptions.Compiled | RegexOptions.IgnoreCase);

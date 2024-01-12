@@ -47,12 +47,20 @@ public enum PhasorValueTarget
 public partial struct PhasorValue
 {
     /// <summary>
-    /// Query magnitude target, e.g., a point-tag.
+    /// Query target, i.e., a point-tag representing the phasor.
+    /// </summary>
+    /// <remarks>
+    /// This commonly represents the overlapping point-tag name from the magnitude and angle measurements.
+    /// </remarks>
+    public string Target;
+
+    /// <summary>
+    /// Query magnitude target, i.e., point-tag for the magnitude measurement.
     /// </summary>
     public string MagnitudeTarget;
 
     /// <summary>
-    /// Query angle target, e.g., a point-tag.
+    /// Query angle target, e.g., point-tag for the angle measurement.
     /// </summary>
     public string AngleTarget;
 
@@ -80,13 +88,13 @@ public partial struct PhasorValue
     /// Gets or sets the primary target for the phasor value.
     /// </summary>
     /// <remarks>
-    /// This property is used to determine which components of the phasor value to use when using the data
+    /// This property is used to determine which value field of the phasor value to use when using the data
     /// source as an <see cref="IDataSourceValue{T}"/>. This is useful in default function computations that
-    /// do not need to operate on both the magnitude and angle components of the phasor value. For example,
+    /// do not need to operate on both the magnitude and angle values of the phasor value struct. For example,
     /// see <see cref="Minimum{T}"/> and <see cref="Maximum{T}"/> functions that only operate on magnitudes.
     /// Primary target value defaults to <see cref="PhasorValueTarget.Magnitude"/> but can be overridden to
-    /// <see cref="PhasorValueTarget.Angle"/> if the function only needs to operate on the angle components.
-    /// See <see cref="WrapAngle{T}"/> for example of using only angle components.
+    /// <see cref="PhasorValueTarget.Angle"/> if the function only needs to operate on the angle values.
+    /// See <see cref="WrapAngle{T}"/> for example of using only angle values.
     /// </remarks>
-    public PhasorValueTarget PrimaryTarget;
+    public PhasorValueTarget PrimaryValueTarget;
 }

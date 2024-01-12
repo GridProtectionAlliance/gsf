@@ -100,7 +100,7 @@ public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
         foreach (string target in targetSet)
         {
             // Check for point tag based targetValues definition
-            MeasurementKey key = TargetCache<MeasurementKey>.GetOrAdd(target, () => target.ToMeasurement(metadata, "ActiveMeasurements", "PointTag", "SignalID"));
+            MeasurementKey key = TargetCache<MeasurementKey>.GetOrAdd(target, () => target.KeyFromTag(metadata, "ActiveMeasurements", "PointTag", "SignalID"));
 
             if (key == MeasurementKey.Undefined)
             {
