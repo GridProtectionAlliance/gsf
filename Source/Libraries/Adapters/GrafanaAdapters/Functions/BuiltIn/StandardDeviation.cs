@@ -49,7 +49,7 @@ public abstract class StandardDeviation<T> : GrafanaFunctionBase<T> where T : st
         /// <inheritdoc />
         public override async IAsyncEnumerable<DataSourceValue> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            bool useSampleCalc = parameters.ParsedCount > 0 && parameters.Value<bool>(0);
+            bool useSampleCalc = parameters.Value<bool>(0);
             DataSourceValue lastValue = default;
 
             IAsyncEnumerable<double> trackedValues = GetDataSourceValues(parameters).Select(dataValue =>
@@ -73,7 +73,7 @@ public abstract class StandardDeviation<T> : GrafanaFunctionBase<T> where T : st
         /// <inheritdoc />
         public override async IAsyncEnumerable<PhasorValue> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            bool useSampleCalc = parameters.ParsedCount > 0 && parameters.Value<bool>(0);
+            bool useSampleCalc = parameters.Value<bool>(0);
 
             List<double> magnitudes = new();
             List<double> angles = new();

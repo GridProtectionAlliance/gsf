@@ -9,14 +9,20 @@ using GSF.Collections;
 namespace GrafanaAdapters.Functions.BuiltIn;
 
 /// <summary>
-/// Returns a single value that represents the mode of the values in the source series. The <c>numberOfBins</c> parameter
-/// is used to define how many bins to use when computing the mode for float-point values. A value of zero means use a
-/// majority-value algorithm which is normally only useful for integer-based values.
+/// Returns a single value that represents the mode of the values in the source series. The <c>numberOfBins</c>
+/// parameter is used to define how many bins to use when computing the mode for float-point values. A value of
+/// zero means use a majority-value algorithm which treats all inputs as integer-based values. When using a value
+/// of zero for the number of bins, user should consider using an integer function like <see cref="Round{T}"/>
+/// with zero digits, <see cref="Ceiling{T}"/>, <see cref="Floor{T}"/> or <see cref="Truncate{T}"/> as an input
+/// to this function to ensure the conversion of values to integer-based values is handled as expected.
 /// </summary>
 /// <remarks>
 /// Signature: <c>Mode([numberOfBins = 0], expression)</c><br/>
 /// Returns: Single value.<br/>
-/// Example: <c>Mode(FILTER TOP 5 ActiveMeasurements WHERE SignalType='DIGI')</c><br/>
+/// Example 1: <c>Mode(FILTER TOP 50 ActiveMeasurements WHERE SignalType='DIGI')</c><br/>
+/// Example 2: <c>Mode(20, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
+/// Example 3: <c>Mode(Round(FILTER ActiveMeasurements WHERE SignalType='FREQ'))</c><br/>
+/// Example 4: <c>Divide(100, Mode(0, Floor(Multiply(100, FILTER TOP 20 ActiveMeasurements WHERE SignalType='FREQ'))))</c><br/>
 /// Variants: Mode<br/>
 /// Execution: Immediate in-memory array load.
 /// </remarks>
@@ -56,8 +62,8 @@ public abstract class Mode<T> : GrafanaFunctionBase<T> where T : struct, IDataSo
 
         if (numberOfBins == 0)
         {
-            // Majority-value algorithm is only useful for integer-based values
-            yield return values.MajorityBy(values.Last(), dataValue => dataValue.Value, false);
+            // Use majority-value algorithm executing over integer values
+            yield return values.MajorityBy(values.Last(), dataValue => (int)dataValue.Value, false);
         }
         else
         {

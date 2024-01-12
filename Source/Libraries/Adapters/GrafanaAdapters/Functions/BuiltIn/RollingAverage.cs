@@ -48,7 +48,7 @@ public abstract class RollingAverage<T> : GrafanaFunctionBase<T> where T : struc
     {
         // Immediately load values in-memory only enumerating data source once
     #if NET
-        ReadOnlySpan<T> values = await GetDataSourceValues(parameters).ToArrayAsync(cancellationToken);
+        ReadOnlySpan<T> values = await GetDataSourceValues(parameters).ToArrayAsync(cancellationToken).ConfigureAwait(false);
     #else
         T[] values = await GetDataSourceValues(parameters).ToArrayAsync(cancellationToken).ConfigureAwait(false);
     #endif
@@ -65,7 +65,7 @@ public abstract class RollingAverage<T> : GrafanaFunctionBase<T> where T : struc
         if (windowSize > length)
             windowSize = length;
 
-        // Calculate the moving average for each window
+        // Calculate the rolling average for each window
         for (int i = 0; i < length; i += windowSize) 
         {
             yield return values[i] with

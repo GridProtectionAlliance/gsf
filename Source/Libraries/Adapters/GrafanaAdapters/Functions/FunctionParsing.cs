@@ -349,7 +349,7 @@ internal static class FunctionParsing
     // TODO: JRC - determine if "PointTag" field should be added as parameter to this method
     private static void LoadFieldSubstitutions(DataSet metadata, Dictionary<string, string> substitutions, string target, string tableName, bool usePrefix)
     {
-        DataRow record = target.MetadataRecordFromPointTag(metadata, tableName, "PointTag");
+        DataRow record = target.RecordFromTag(metadata, tableName, "PointTag");
         string prefix = usePrefix ? $"{tableName}." : "";
 
         if (record is null)

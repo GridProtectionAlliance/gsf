@@ -3,6 +3,7 @@ using GrafanaAdapters.DataSources;
 using GSF;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -88,15 +89,13 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
     /// <inheritdoc />
     public override GroupOperations CheckAllowedGroupOperation(GroupOperations requestedOperation)
     {
-        // Force group operation to be Slice - eval only supports slice operations
-        if (requestedOperation == GroupOperations.None)
-            requestedOperation = GroupOperations.Slice;
-
-        return base.CheckAllowedGroupOperation(requestedOperation);
+        // Force group operation to be Slice as eval only supports slice operations. This ignores
+        // any requested group operation instead of throwing an exception:
+        return GroupOperations.Slice;
     }
 
     /// <inheritdoc />
-    public override async IAsyncEnumerable<T> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public override async IAsyncEnumerable<T> ComputeSliceAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         string expression = parameters.Value<string>(0);
 
@@ -138,6 +137,7 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
         static string getCleanIdentifier(string target) =>
             Regex.Replace(target, @"[^A-Z0-9_]", "", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
+        // Data values in this array will be for current slice, one value for each target series
         T[] dataValues = await GetDataSourceValues(parameters).ToArrayAsync(cancellationToken).ConfigureAwait(false);
 
         lock (context)
@@ -186,7 +186,16 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
     }
 
     /// <inheritdoc />
-    // 'Evaluate' function has special parameter parsing requirements, so we override the default implementation
+    public override IAsyncEnumerable<T> ComputeAsync(Parameters parameters, CancellationToken cancellationToken)
+    {
+        // 'ComputeAsync' is abstract, so we must override, however, it should never be called for 'Evaluate' function since
+        // 'CheckAllowedGroupOperation' forces group operation to be 'Slice', 'ComputeSliceAsync' should be called instead:
+        Debug.Fail("Unexpected Operation: ComputeAsync should never be called for Evaluate function, ComputeSliceAsync should be called instead.");
+        return null;
+    }
+
+    /// <inheritdoc />
+    // 'Evaluate' function has special parameter parsing requirements, so we override the default implementation:
     public override (List<string>, string) ParseParameters(QueryParameters queryParameters, string queryExpression)
     {
         List<string> parsedParameters = new();
@@ -253,12 +262,13 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
     /// <inheritdoc />
     public override string FormatTargetName(GroupOperations groupOperation, string targetName, string[] parsedParameters)
     {
-        // Format eval expression parameter to be in braces, i.e., { expression }
+        // Format eval expression parameter to be in braces, i.e., { expression },
+        // this way UI representation of formatted parameters will match user input
         string[] parameters = new string[3];
         Array.Copy(parsedParameters, parameters, 3);
         parameters[1] = $"{{ {parameters[1]} }}";
 
-        // Hide slice prefix on UI since it is always slice
+        // Hide slice prefix on UI since eval function is always slice
         return base.FormatTargetName(GroupOperations.None, targetName, parameters);
     }
 

@@ -5,6 +5,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using GrafanaAdapters.DataSources;
 
+// ReSharper disable AccessToModifiedClosure
+
 namespace GrafanaAdapters.Functions.BuiltIn;
 
 /// <summary>

@@ -60,7 +60,7 @@ public abstract class Label<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     /// <inheritdoc />
     public override GroupOperations CheckAllowedGroupOperation(GroupOperations requestedOperation)
     {
-        // Label function ignores any requested group operation instead of throwing an exception
+        // Label function ignores any requested group operation instead of throwing an exception:
         return GroupOperations.None;
     }
 
@@ -68,7 +68,7 @@ public abstract class Label<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     public override IAsyncEnumerable<T> ComputeAsync(Parameters parameters, CancellationToken cancellationToken)
     {
         // Label function performs no computation, it only renames series,
-        // operation is handled as a special case by the base class
+        // operation is handled as a special case by the base class:
         return GetDataSourceValues(parameters);
     }
 

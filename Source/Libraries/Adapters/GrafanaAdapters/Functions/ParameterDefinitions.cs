@@ -153,7 +153,7 @@ public class ParameterDefinitions : IReadOnlyList<IParameter>
     /// <summary>
     /// Creates a set of mutable parameters from the parameter definitions.
     /// </summary>
-    /// <returns></returns>
+    /// <returns>New set of mutable parameters based on the parameter definitions.</returns>
     public Parameters CreateParameters()
     {
         return new Parameters(this.Select(parameterDefinition => parameterDefinition.CreateParameter()));

@@ -64,6 +64,9 @@ public abstract partial class GrafanaDataSourceBase
         set
         {
             m_dataset = value;
+
+            // Update metadata cache for each data source type
+            DataSourceCache.UpdateMetadata(m_dataset);
         }
     }
 
@@ -198,6 +201,7 @@ public abstract partial class GrafanaDataSourceBase
         // Parse out and cache any top-level grafana functions found in target expression
         (ParsedGrafanaFunction<T>[] grafanaFunctions, HashSet<string> reducedTargetSet) = TargetCache<(ParsedGrafanaFunction<T>[], HashSet<string>)>.GetOrAdd($"{queryExpression}-{typeof(T).FullName}", () =>
         {
+            // Match any top-level grafana functions in target query expression
             ParsedGrafanaFunction<T>[] matchedFunctions = FunctionParsing.MatchFunctions<T>(queryExpression);
             HashSet<string> reducedTargetSet = new(StringComparer.OrdinalIgnoreCase);
 
@@ -220,10 +224,6 @@ public abstract partial class GrafanaDataSourceBase
                 if (!string.IsNullOrWhiteSpace(reducedTarget))
                     reducedTargetSet.Add(reducedTarget);
             }
-            else
-            {
-                reducedTargetSet.Add(queryExpression);
-            }
 
             return (matchedFunctions, reducedTargetSet);
         });
@@ -242,7 +242,7 @@ public abstract partial class GrafanaDataSourceBase
             targetSet = reducedTargetSet;
         }
 
-        // Query any remaining targets
+        // Continue when there are any remaining targets to query
         if (targetSet.Count == 0)
             yield break;
 

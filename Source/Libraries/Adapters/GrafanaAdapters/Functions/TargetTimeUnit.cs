@@ -54,7 +54,7 @@ public class TargetTimeUnit
     /// </returns>
     /// <remarks>
     /// If this method succeeds, return value contains the <see cref="TargetTimeUnit"/> equivalent
-    /// of the time unit contained in <paramref name="value"/>; otherwise, <c>null</c>if the
+    /// of the time unit contained in <paramref name="value"/>; otherwise, <c>null</c> if the
     /// conversion failed. The conversion fails if the <paramref name="value"/> is null or is not
     /// in the correct format.
     /// </remarks>

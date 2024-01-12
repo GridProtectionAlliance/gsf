@@ -283,7 +283,7 @@ public static class AnnotationRequestExtensions
 
             foreach (DataRow row in rows)
             {
-                MeasurementKey key = GetMeasurementKeyFromSignalID(row[type.TargetFieldName()].ToString());
+                MeasurementKey key = KeyFromSignalID(row[type.TargetFieldName()].ToString());
 
                 if (key != MeasurementKey.Undefined)
                     definitions[key.TagFromKey(source)] = row;
@@ -347,7 +347,7 @@ public static class AnnotationRequestExtensions
     internal static DataRow GetTargetMetaData(DataSet source, object signalIDFieldValue)
     {
         string signalID = signalIDFieldValue.ToNonNullNorWhiteSpace(Guid.Empty.ToString());
-        return TargetCache<DataRow>.GetOrAdd(signalID, () => GetMetadata(source, "ActiveMeasurements", $"ID = '{GetMeasurementKeyFromSignalID(signalID)}'"));
+        return TargetCache<DataRow>.GetOrAdd(signalID, () => GetMetadata(source, "ActiveMeasurements", $"ID = '{KeyFromSignalID(signalID)}'"));
     }
 
 }
