@@ -70,16 +70,16 @@ public interface IDataSourceValue
     /// </summary>
     /// <param name="metadata">Source metadata.</param>
     /// <returns>Updated metadata for the specified data source.</returns>
-    DataSet UpdateMetadata(DataSet metadata);
+    void UpdateMetadata(DataSet metadata);
 
     /// <summary>
-    /// Looks up metadata for the specified targetValues.
+    /// Looks up metadata record for the specified target.
     /// </summary>
     /// <param name="metadata">Metadata data set.</param>
     /// <param name="target">Target to lookup.</param>
-    /// <returns>Filtered metadata rows for the specified targetValues.</returns>
+    /// <returns>Filtered metadata row for the specified target.</returns>
     // TODO: JRC - results of this function should be cached for performance (caching internal to function is OK)
-    DataRow[] LookupMetadata(DataSet metadata, string target);
+    DataRow LookupMetadata(DataSet metadata, string target);
 
     /// <summary>
     /// Gets the ID to targetValues map for the specified metadata and targets along with any intermediate state.
@@ -90,7 +90,7 @@ public interface IDataSourceValue
     /// <remarks>
     /// For a given data source type, this function will be called once per query to build a map of IDs to
     /// targets. Since this step involves the metadata lookups for targets, any intermediate state can be
-    /// used with the <see cref="IDataSourceValue{T}.AssignValueToTargetList"/> function to avoid any
+    /// used with the <see cref="IDataSourceValue{T}.AssignToTimeValueMap"/> function to avoid any
     /// redundant metadata lookups after the data query operation.
     /// </remarks>
     (Dictionary<ulong, string> targetMap, object state) GetIDTargetMap(DataSet metadata, HashSet<string> targetSet);
@@ -103,12 +103,12 @@ public interface IDataSourceValue
 public interface IDataSourceValue<T> : IDataSourceValue, IComparable<T>, IEquatable<T> where T : struct, IDataSourceValue
 {
     /// <summary>
-    /// Assign queried data source value to target values list.
+    /// Assign queried data source value to time-value map.
     /// </summary>
-    /// <param name="dataValue"></param>
-    /// <param name="targetValues"></param>
-    /// <param name="state"></param>
-    void AssignValueToTargetList(DataSourceValue dataValue, List<T> targetValues, object state);
+    /// <param name="dataValue">Queried data source value.</param>
+    /// <param name="timeValueMap">Time-value map.</param>
+    /// <param name="state">Optional intermediate state.</param>
+    void AssignToTimeValueMap(DataSourceValue dataValue, SortedList<double, T> timeValueMap, object state);
 
     /// <summary>
     /// Gets the parameter definition for data source values.

@@ -352,11 +352,11 @@ internal static class ParameterParsing
             return (metadataValue, true);
 
         // If not found in dictionary, lookup target in metadata
-        DataRow[] rows = default(TDataSourceValue).LookupMetadata(metadata, target);
+        DataRow row = default(TDataSourceValue).LookupMetadata(metadata, target);
 
-        if (rows.Length == 0 || !rows[0].Table.Columns.Contains(value))
+        if (row is null || !row.Table.Columns.Contains(value))
             return (default, false);
 
-        return (rows[0][value].ToString(), true);
+        return (row[value].ToString(), true);
     }
 }

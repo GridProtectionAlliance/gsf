@@ -66,7 +66,6 @@ internal static class DataSourceCache
 internal static class DataSourceCache<T> where T : struct, IDataSourceValue<T>
 {
     private static readonly ShortSynchronizedOperation s_updateMetadataOperation;
-    private static DataSet s_updatedMetadata;
 
     public static IGrafanaFunction<T>[] Functions { get; private set; }
 
@@ -80,22 +79,13 @@ internal static class DataSourceCache<T> where T : struct, IDataSourceValue<T>
     {
         DataSourceCache.AddType(typeof(T));
         Initialize();
-        s_updateMetadataOperation = new ShortSynchronizedOperation(UpdateMetadata);
-    }
-
-    private static void UpdateMetadata()
-    {
-        // Call data source specific metadata update method
-        Metadata = default(T).UpdateMetadata(s_updatedMetadata);
+        s_updateMetadataOperation = new ShortSynchronizedOperation(() => default(T).UpdateMetadata(Metadata));
     }
 
     internal static void UpdateMetadata(DataSet metadata)
     {
-        lock (s_updateMetadataOperation)
-        {
-            s_updatedMetadata = metadata;
-            s_updateMetadataOperation.RunOnce();
-        }
+        Metadata = metadata;
+        s_updateMetadataOperation.RunOnce();
     }
 
     internal static void Initialize()

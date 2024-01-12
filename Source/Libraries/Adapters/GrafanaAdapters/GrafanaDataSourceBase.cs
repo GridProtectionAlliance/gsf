@@ -65,7 +65,7 @@ public abstract partial class GrafanaDataSourceBase
         {
             m_dataset = value;
 
-            // Update metadata cache for each data source type
+            // Allow each data source type to augment the meta-data
             DataSourceCache.UpdateMetadata(m_dataset);
         }
     }
@@ -271,21 +271,21 @@ public abstract partial class GrafanaDataSourceBase
         // parsed individual point tags. For the final point list we are only interested in the point tags. Convert all remaining
         // targets to point tags, removing any duplicates, and create a map of the queryable data source point IDs to point tags:
         (Dictionary<ulong, string> targetMap, object state) = default(T).GetIDTargetMap(Metadata, targetSet);
-        Dictionary<string, List<T>> targetValues = new(); 
+        Dictionary<string, SortedList<double, T>> targetValues = new(StringComparer.OrdinalIgnoreCase);
 
-        // Query underlying data source, assigning each value to its own data source target list, sorting results per target
+        // Query underlying data source, assigning each value to its own data source target time-value map, thus sorting values per target and time
         await foreach (DataSourceValue dataValue in QueryDataSourceValues(queryParameters, targetMap, cancellationToken).ConfigureAwait(false))
-            default(T).AssignValueToTargetList(dataValue, targetValues.GetOrAdd(dataValue.Target, _ => new List<T>()), state);
+            default(T).AssignToTimeValueMap(dataValue, targetValues.GetOrAdd(dataValue.Target, _ => new SortedList<double, T>()), state);
 
         // Transpose each target into a data source value group along with its associated queried values
-        foreach (KeyValuePair<string, List<T>> item in targetValues)
+        foreach (KeyValuePair<string, SortedList<double, T>> item in targetValues)
         {
             yield return new DataSourceValueGroup<T>
             {
                 Target = item.Key,
                 RootTarget = item.Key,
                 SourceTarget = queryParameters.SourceTarget,
-                Source = item.Value.ToAsyncEnumerable(),
+                Source = item.Value.Values.ToAsyncEnumerable(),
                 DropEmptySeries = queryParameters.DropEmptySeries,
                 RefID = queryParameters.SourceTarget.refId,
                 MetadataMap = Metadata.GetMetadataMap<T>(item.Key, queryParameters)

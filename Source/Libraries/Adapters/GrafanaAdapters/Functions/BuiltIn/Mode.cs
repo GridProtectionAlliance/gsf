@@ -12,7 +12,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Returns a single value that represents the mode of the values in the source series. The <c>numberOfBins</c>
 /// parameter is used to define how many bins to use when computing the mode for float-point values. A value of
 /// zero means use a majority-value algorithm which treats all inputs as integer-based values. When using a value
-/// of zero for the number of bins, user should consider using an integer function like <see cref="Round{T}"/>
+/// of zero for the number of bins, user should consider using an integer function like <see cref="Round{T}"/>,
 /// with zero digits, <see cref="Ceiling{T}"/>, <see cref="Floor{T}"/> or <see cref="Truncate{T}"/> as an input
 /// to this function to ensure the conversion of values to integer-based values is handled as expected.
 /// </summary>

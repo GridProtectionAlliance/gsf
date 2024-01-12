@@ -80,47 +80,41 @@ public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
     }
 
     /// <inheritdoc />
-    public DataSet UpdateMetadata(DataSet metadata)
+    public void UpdateMetadata(DataSet metadata)
     {
-        return metadata;
+        // No augmentation needed
     }
 
     /// <inheritdoc />
-    public readonly DataRow[] LookupMetadata(DataSet metadata, string target)
+    public readonly DataRow LookupMetadata(DataSet metadata, string target)
     {
         // TODO: Cache this metadata lookup per targetValues
-        return metadata?.Tables["ActiveMeasurements"].Select($"PointTag = '{target}'") ?? Array.Empty<DataRow>();
+        return target.RecordFromTag(metadata);
     }
 
     readonly (Dictionary<ulong, string>, object) IDataSourceValue.GetIDTargetMap(DataSet metadata, HashSet<string> targetSet)
     {
         Dictionary<ulong, string> targetMap = new();
 
-        // Reduce all targets down to a dictionary of point ID's mapped to point tags
+        // Reduce all targets down to a dictionary of data source point ID's mapped to point tags
         foreach (string target in targetSet)
         {
-            // Check for point tag based targetValues definition
-            MeasurementKey key = TargetCache<MeasurementKey>.GetOrAdd(target, () => target.KeyFromTag(metadata, "ActiveMeasurements", "PointTag", "SignalID"));
+            // Check if target is already in the form of a point tag
+            MeasurementKey key = TargetCache<MeasurementKey>.GetOrAdd(target, () => target.KeyFromTag(metadata));
 
             if (key == MeasurementKey.Undefined)
             {
-                // Check for Guid based signal ID targetValues definition
-                (MeasurementKey, string) result = TargetCache<(MeasurementKey, string)>.GetOrAdd($"signalID@{target}", () => target.KeyAndTagFromSignalID(metadata, "ActiveMeasurements", "SignalID"));
-
-                key = result.Item1;
-                string pointTag = result.Item2;
+                // Check if target is in the form of a Guid-based signal ID, e.g., {00000000-0000-0000-0000-000000000000}
+                (key, string pointTag) = TargetCache<(MeasurementKey, string)>.GetOrAdd($"signalID@{target}", () => target.KeyAndTagFromSignalID(metadata));
 
                 if (key == MeasurementKey.Undefined)
                 {
-                    // Check for measurement key based targetValues definition
-                    result = TargetCache<(MeasurementKey, string)>.GetOrAdd($"key@{target}", () =>
+                    // Check if target is in the form of a measurement key, e.g., PPA:101
+                    (key, pointTag) = TargetCache<(MeasurementKey, string)>.GetOrAdd($"key@{target}", () =>
                     {
                         MeasurementKey.TryParse(target, out MeasurementKey parsedKey);
                         return (parsedKey, parsedKey.TagFromKey(metadata));
                     });
-
-                    key = result.Item1;
-                    pointTag = result.Item2;
 
                     if (key != MeasurementKey.Undefined)
                         targetMap[key.ID] = pointTag;
@@ -136,12 +130,13 @@ public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
             }
         }
 
+        // Return target map and null state
         return (targetMap, null);
     }
 
-    void IDataSourceValue<DataSourceValue>.AssignValueToTargetList(DataSourceValue dataValue, List<DataSourceValue> targetValues, object state)
+    void IDataSourceValue<DataSourceValue>.AssignToTimeValueMap(DataSourceValue dataValue, SortedList<double, DataSourceValue> timeValueMap, object state)
     {
-        targetValues.Add(dataValue);
+        timeValueMap[dataValue.Time] = dataValue;
     }
 
     /// <inheritdoc />
