@@ -21,9 +21,7 @@
 //
 //******************************************************************************************************
 
-
 using System;
-using System.Collections.Generic;
 
 namespace GSF.Data.Model
 {
@@ -33,10 +31,5 @@ namespace GSF.Data.Model
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public sealed class SQLSearchModifierAttribute : Attribute 
     {
-        /// <summary>
-        /// Creates a new <see cref="SQLSearchModifierAttribute"/>.
-        /// </summary>
-        public SQLSearchModifierAttribute() {}
-
     }
 }

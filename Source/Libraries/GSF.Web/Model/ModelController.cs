@@ -26,7 +26,6 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Security.Claims;
@@ -35,7 +34,6 @@ using GSF.Data;
 using GSF.Data.Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using NUglify.JavaScript.Syntax;
 
 #pragma warning disable CS1591 // TODO: Fix missing XML comments for publicly visible types and members
 
@@ -139,7 +137,7 @@ namespace GSF.Web.Model
             SearchSettings = typeof(T).GetCustomAttribute<AdditionalFieldSearchAttribute>();
             Take = typeof(T).GetCustomAttribute<ReturnLimitAttribute>()?.Limit ?? null;
 
-            SQLSearchModifier = typeof(T).GetMethods().FirstOrDefault(p => p.GetCustomAttributes<SQLSearchModifierAttribute>().Any())?.Name ?? ""; 
+            SQLSearchModifier = typeof(T).GetMethods(BindingFlags.Static).FirstOrDefault(p => p.GetCustomAttributes<SQLSearchModifierAttribute>().Any());
 
             // Custom View Models are ViewOnly.
             ViewOnly = (typeof(U).GetCustomAttribute<ViewOnlyAttribute>()?.ViewOnly ?? false) ||
@@ -170,7 +168,8 @@ namespace GSF.Web.Model
         private string SecurityType = "";
         protected Dictionary<string, List<Claim>> Claims { get; } = new Dictionary<string, List<Claim>>();
         protected AdditionalFieldSearchAttribute SearchSettings { get; } = null;
-        protected string SQLSearchModifier { get; } = "";
+        protected MethodInfo SQLSearchModifier { get; } = null;
+
         #endregion
 
         #region [ Http Methods ]
@@ -451,9 +450,9 @@ namespace GSF.Web.Model
                 List<SQLSearchFilter> searches = postData.Searches.ToList();
                 PropertyInfo parentKey = typeof(T).GetProperty(ParentKey);
                 if (parentKey.PropertyType == typeof(int))
-                    searches.Add(new SQLSearchFilter() { FieldName = ParentKey, isPivotColumn = false, Operator = "=", Type = "number", SearchText = parentID });
+                    searches.Add(new SQLSearchFilter() { FieldName = ParentKey, IsPivotColumn = false, Operator = "=", Type = "number", SearchText = parentID });
                 else 
-                    searches.Add(new SQLSearchFilter() { FieldName = ParentKey, isPivotColumn = false, Operator = "=", Type = "string", SearchText = parentID });
+                    searches.Add(new SQLSearchFilter() { FieldName = ParentKey, IsPivotColumn = false, Operator = "=", Type = "string", SearchText = parentID });
 
                 postData.Searches = searches;
             }
@@ -484,9 +483,9 @@ namespace GSF.Web.Model
                 List<SQLSearchFilter> searches = postData.Searches.ToList();
                 PropertyInfo parentKey = typeof(T).GetProperty(ParentKey);
                 if (parentKey.PropertyType == typeof(int))
-                    searches.Add(new SQLSearchFilter() { FieldName = ParentKey, isPivotColumn = false, Operator = "=", Type = "number", SearchText = parentID });
+                    searches.Add(new SQLSearchFilter() { FieldName = ParentKey, IsPivotColumn = false, Operator = "=", Type = "number", SearchText = parentID });
                 else
-                    searches.Add(new SQLSearchFilter() { FieldName = ParentKey, isPivotColumn = false, Operator = "=", Type = "string", SearchText = parentID });
+                    searches.Add(new SQLSearchFilter() { FieldName = ParentKey, IsPivotColumn = false, Operator = "=", Type = "string", SearchText = parentID });
 
                 postData.Searches = searches;
             }
@@ -508,27 +507,23 @@ namespace GSF.Web.Model
 
         #region [Helper Methods]
 
-        protected string BuildWhereClause (IEnumerable<SQLSearchFilter> searches, ref List<object> parameters)
+        protected string BuildWhereClause(IEnumerable<SQLSearchFilter> searches, List<object> parameters)
         {
+            List<string> clauses = new();
 
-            List<string> clauses = new List<string>();
             foreach (SQLSearchFilter search in searches)
             {
                 if (search.SearchText == string.Empty)
                     search.SearchText = "%";
+
                 SQLSearchFilter updated = search;
-                if (!string.IsNullOrEmpty(SQLSearchModifier))
-                {
-                    MethodInfo methodInfo = GetType().GetMethod(SQLSearchModifier);
-                    T instance = (T)Activator.CreateInstance(typeof(T));
-                    updated = (SQLSearchFilter)methodInfo.Invoke(instance,new [] { search });
-                }
-                       
-                clauses.Add(updated.GenerateQuery(out object[] p, parameters.Count()));
-                parameters.AddRange(p);
+                if (SQLSearchModifier is not null)
+                    updated = (SQLSearchFilter)SQLSearchModifier.Invoke(null, new[] { search });
+
+                clauses.Add(updated.GenerateConditional(parameters));
             }
 
-            return string.Join(" AND ",clauses);
+            return string.Join(" AND ", clauses);
         }
 
         protected virtual IEnumerable<T> QueryRecordsWhere(string filterExpression, params object[] parameters) => QueryRecordsWhere(null, false, filterExpression, parameters);
@@ -737,20 +732,19 @@ namespace GSF.Web.Model
         protected virtual DataTable GetSearchResults(PostData postData, int? page = null)
         {
             string whereClause = "";
+            List<object> param = new();
 
-
-            List<object> param = new List<object>();
             if (RootQueryRestriction != null)
             {
-                whereClause = $" WHERE {RootQueryRestriction.FilterExpression}";
+                whereClause = $"WHERE {RootQueryRestriction.FilterExpression}";
                 param = RootQueryRestriction.Parameters.ToList();
             }
 
-            string clause = BuildWhereClause(postData.Searches, ref param);
-            if (string.IsNullOrEmpty(whereClause) && string.IsNullOrEmpty(clause))
-                whereClause = $" WHERE {clause})";
-             else if (string.IsNullOrEmpty(clause))
-                whereClause += " AND " + clause;
+            string conditions = BuildWhereClause(postData.Searches, param);
+            if (string.IsNullOrEmpty(whereClause) && !string.IsNullOrEmpty(conditions))
+                whereClause = $"WHERE {conditions}";
+            else if (!string.IsNullOrEmpty(conditions))
+                whereClause += $" AND {conditions}";
 
             using (AdoDataConnection connection = new AdoDataConnection(Connection))
             {
@@ -774,7 +768,7 @@ namespace GSF.Web.Model
                         ORDER BY {postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")}";
                 else
                 {
-                    string pivotCollums = "(" + String.Join(",", postData.Searches.Where(item => item.isPivotColumn).Select(search => "'" + search.FieldName + "'")) + ")";
+                    string pivotCollums = "(" + String.Join(",", postData.Searches.Where(item => item.IsPivotColumn).Select(search => "'" + search.FieldName + "'")) + ")";
 
                     if (pivotCollums == "()")
                         pivotCollums = "('')";
@@ -836,9 +830,8 @@ namespace GSF.Web.Model
         /// <returns>The number of records that match the search filters.</returns>
         protected virtual int CountSearchResults(PostData postData)
         {
-            List<object> param = new List<object>();
-
             string whereClause = "";
+            List<object> param = new();
 
             if (RootQueryRestriction is not null)
             {
@@ -846,11 +839,11 @@ namespace GSF.Web.Model
                 param = RootQueryRestriction.Parameters.ToList();
             }
 
-            string clause = BuildWhereClause(postData.Searches, ref param);
-            if (string.IsNullOrEmpty(whereClause) && string.IsNullOrEmpty(clause))
-                whereClause = $" WHERE {clause}";
-            else if (string.IsNullOrEmpty(clause))
-                whereClause += " AND " + clause;
+            string conditions = BuildWhereClause(postData.Searches, param);
+            if (string.IsNullOrEmpty(whereClause) && !string.IsNullOrEmpty(conditions))
+                whereClause = $"WHERE {conditions}";
+            else if (!string.IsNullOrEmpty(conditions))
+                whereClause += $" AND {conditions}";
 
             using AdoDataConnection connection = new(Connection);
             string tableName = TableOperations<T>.GetTableName();
@@ -863,7 +856,7 @@ namespace GSF.Web.Model
                 sql = $@"SELECT COUNT(*) FROM ({CustomView}) FullTbl {whereClause}";
             else
             {
-                string pivotColumns = "(" + string.Join(",", postData.Searches.Where(item => item.isPivotColumn).Select(search => "'" + search.FieldName + "'")) + ")";
+                string pivotColumns = "(" + string.Join(",", postData.Searches.Where(item => item.IsPivotColumn).Select(search => "'" + search.FieldName + "'")) + ")";
 
                 if (pivotColumns == "()")
                     pivotColumns = "('')";
