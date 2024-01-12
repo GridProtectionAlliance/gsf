@@ -145,8 +145,10 @@ public class AzureADSettings
     /// <summary>
     /// Gets a new Graph service client.
     /// </summary>
+    /// <param name="settingsCategory">Settings category to use for determine configuration location.</param>
+    /// <param name="forceRefresh">Set to <c>true</c> to force refresh of Azure AD token.</param>
     /// <returns>New Graph service client when Azure AD is enabled; otherwise, <c>null</c>.</returns>
-    public GraphServiceClient GetGraphClient(string settingsCategory = null)
+    public GraphServiceClient GetGraphClient(string settingsCategory = null, bool forceRefresh = false)
     {
         const string AzureADSecretKey = "AzureADSecret";
 
@@ -182,7 +184,7 @@ public class AzureADSettings
             try
             {
                 // Retrieve an access token for Microsoft Graph (gets a fresh token if needed).
-                AuthenticationResult result = clientApplication.AcquireTokenForClient(new[] { "https://graph.microsoft.com/.default" }).ExecuteAsync().Result;
+                AuthenticationResult result = clientApplication.AcquireTokenForClient(new[] { "https://graph.microsoft.com/.default" }).WithForceRefresh(forceRefresh).ExecuteAsync().Result;
 
                 // Add the access token in the Authorization header of the API request.
                 requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);
