@@ -139,7 +139,7 @@ namespace GSF.Web.Model
             SearchSettings = typeof(T).GetCustomAttribute<AdditionalFieldSearchAttribute>();
             Take = typeof(T).GetCustomAttribute<ReturnLimitAttribute>()?.Limit ?? null;
 
-            //SQLSubstitutions = typeof(T).GetCustomAttributes<SQLSearchModifierAttribute>().ToDictionary((s) =>  s.Field, (s) => s);
+            SQLSearchModifier = typeof(T).GetMethods().FirstOrDefault(p => p.GetCustomAttributes<SQLSearchModifierAttribute>().Any())?.Name ?? ""; 
 
             // Custom View Models are ViewOnly.
             ViewOnly = (typeof(U).GetCustomAttribute<ViewOnlyAttribute>()?.ViewOnly ?? false) ||
@@ -170,7 +170,7 @@ namespace GSF.Web.Model
         private string SecurityType = "";
         protected Dictionary<string, List<Claim>> Claims { get; } = new Dictionary<string, List<Claim>>();
         protected AdditionalFieldSearchAttribute SearchSettings { get; } = null;
-        protected Dictionary<string, SQLSearchModifierAttribute> SQLSubstitutions { get; } = new Dictionary<string, SQLSearchModifierAttribute>();
+        protected string SQLSearchModifier { get; } = "";
         #endregion
 
         #region [ Http Methods ]
@@ -508,96 +508,24 @@ namespace GSF.Web.Model
 
         #region [Helper Methods]
 
-        protected string BuildWhereClause(IEnumerable<SQLSearchFilter> searches, ref List<object> parameters)
+        protected string BuildWhereClause (IEnumerable<SQLSearchFilter> searches, ref List<object> parameters)
         {
-            int nParameter = parameters.Count();
 
             List<string> clauses = new List<string>();
             foreach (SQLSearchFilter search in searches)
             {
-                nParameter = parameters.Count();
-                bool isQuery = false;
-                string query = "";
-                string searchText = search.SearchText;
-                if (searchText == string.Empty) searchText = "%";
-                else searchText = searchText.Replace("*", "%");
-
-                if (Array.IndexOf(new[] { "=", "<>", "<", ">", "IN" }, search.Operator) < 0)
+                if (search.SearchText == string.Empty)
+                    search.SearchText = "%";
+                SQLSearchFilter updated = search;
+                if (!string.IsNullOrEmpty(SQLSearchModifier))
                 {
-                    continue;
+                    MethodInfo methodInfo = GetType().GetMethod(SQLSearchModifier);
+                    T instance = (T)Activator.CreateInstance(typeof(T));
+                    updated = (SQLSearchFilter)methodInfo.Invoke(instance,new [] { search });
                 }
-
-                // leaving for legacy support once everything uses the new search format, this can be removed
-                if (search.Type == "string" || search.Type == "datetime")
-                    searchText = $"'{searchText}'";
-                else if (Array.IndexOf(new[] { "integer", "number", "boolean", "query" }, search.Type) < 0)
-                {
-                    string text = searchText.Replace("(", "").Replace(")", "");
-                    List<string> things = text.Split(',').ToList();
-                    things = things.Select(t => $"'{t}'").ToList();
-                    searchText = $"({string.Join(",", things)})";
-                }
-                else if (search.Type == "query")
-                    isQuery = true;
-
-
-                // For Legacy Support. In Future remove IsQuery option.
-                if (!isQuery)
-                    query = $"[{(search.isPivotColumn ? "AFV_" : "") + search.FieldName}] {search.Operator} ";
-                else
-                    query = $"{(search.isPivotColumn ? "AFV_" : "") + search.FieldName} {search.Operator} ";
-
-                /* This requires switch to the new search format 
-                    if (search.Operator == "IN")
-                    {
-                        string text = searchText.Replace("(", "").Replace(")", "");
-                        List<string> things = text.Split(',').ToList();
-                        parameters.AddRange(things);
-                        searchText =  $"({string.Join(",",things.Select((s,i) => $"{{{i+nParameter}}}"))})";
-                    }
-                 */
-
-                string escape = "ESCAPE '$'";
-                if (search.Operator != "LIKE")
-                    escape = "";
-
-                if (SQLSubstitutions.TryGetValue(search.FieldName, out SQLSearchModifierAttribute substitution))
-                {
-                    //query = $"{substitution.SQLFieldName} {substitution.Condition(search.Operator)} ";
-
-                    /* We can remove the following once we move to new SQL injection logic,
-                     * but it is needed in here for now since I had to leave the logic out 
-                     * of the above to avoid legacy issues
-                     */
-                    if (search.Operator == "IN")
-                    {
-                        string text = searchText.Replace("(", "").Replace(")", "");
-                        List<string> things = text.Split(',').ToList();
-                        parameters.AddRange(things);
-                        searchText = $"({string.Join(",", things.Select((s, i) => $"{{{i + nParameter}}}"))})";
-                    }
-
-                    //if (search.Operator == "IN")
-                        //query += $"{substitution.Query(search.Operator, searchText)}";
-                    
-                    else
-                    {
-                        parameters.Add(searchText);
-                        //query += $"{substitution.Query(search.Operator, $"{{{nParameter - 1}}}")}";
-                    }
-                }
-                else //if (search.Operator != "IN") - uncomment to fix SQL Injection issue needed for legacy support
-                {
-                    /* for Now use: for legacy reasons */
-                    query += $"{searchText} {escape}";
-
-                    /* To prevent SQL Injections we will swith to: once everything is replaced properly 
-                   
-                    query += $"{{{nParameter - 1}}} {escape}";
-                    parameters.Add(searchText);
-                    */
-                }
-                clauses.Add(query);
+                       
+                clauses.Add(updated.GenerateQuery(out object[] p, parameters.Count()));
+                parameters.AddRange(p);
             }
 
             return string.Join(" AND ",clauses);
