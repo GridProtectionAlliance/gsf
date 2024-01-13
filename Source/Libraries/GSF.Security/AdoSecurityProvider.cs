@@ -444,7 +444,7 @@ namespace GSF.Security
 
                             try
                             {
-                                // Load user data - note that external users need to be looked up by userPrincipalName
+                                // Load user data, looking up by e-mail address
                                 User user = graphClient.Users.Request().Filter($"mail eq '{userData.Username}'").GetAsync().Result.FirstOrDefault();
 
                                 if (user is null)
@@ -805,7 +805,7 @@ namespace GSF.Security
 
                                         try
                                         {
-                                            // Load user data in application context - note that external users need to be looked up by userPrincipalName
+                                            // Load user data in application context, looking by e-mail address
                                             User user = graphClient.Users.Request().Filter($"mail eq '{username}'").GetAsync().Result.FirstOrDefault();
 
                                             isAuthenticated = user is not null;
