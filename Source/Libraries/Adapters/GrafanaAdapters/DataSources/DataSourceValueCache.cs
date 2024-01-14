@@ -43,7 +43,7 @@ namespace GrafanaAdapters.DataSources;
 public static class DataSourceValueCache
 {
     private static IDataSourceValue[] s_defaultInstances;
-    private static Type[] s_typeCache;
+    private static Type[] s_loadedTypes;
     private static Dictionary<string, int> s_typeIndexMap;
     private static readonly object s_defaultInstancesLock = new();
 
@@ -80,7 +80,7 @@ public static class DataSourceValueCache
                 .ThenBy(dsv => dsv.GetType().Name)
                 .ToArray();
 
-            Interlocked.Exchange(ref s_typeCache, instances.Select(dsv => dsv.GetType()).ToArray());
+            Interlocked.Exchange(ref s_loadedTypes, instances.Select(dsv => dsv.GetType()).ToArray());
             Interlocked.Exchange(ref s_defaultInstances, instances.ToArray());
         }
 
@@ -90,21 +90,21 @@ public static class DataSourceValueCache
     /// <summary>
     /// Gets a list of all the cached data source value types.
     /// </summary>
-    public static IReadOnlyCollection<Type> TypeCache
+    public static IReadOnlyCollection<Type> LoadedTypes
     {
         get
         {
-            Type[] types = Interlocked.CompareExchange(ref s_typeCache, null, null);
+            Type[] loadedTypes = Interlocked.CompareExchange(ref s_loadedTypes, null, null);
 
-            if (types is not null)
-                return types;
+            if (loadedTypes is not null)
+                return loadedTypes;
 
             // Initialize data source value type cache
             lock (s_defaultInstancesLock)
             {
-                // Generate list of data source value instances which creates type cache in the process
+                // Generate list of data source value instances which creates loaded type cache in the process
                 GetDefaultInstances();
-                return s_typeCache;
+                return s_loadedTypes;
             }
         }
     }
@@ -124,7 +124,7 @@ public static class DataSourceValueCache
     private static Dictionary<string, int> CreateTypeIndexMap()
     {
         Dictionary<string, int> typeIndexMap = new(StringComparer.OrdinalIgnoreCase);
-        IReadOnlyCollection<Type> types = TypeCache.ToArray();
+        IReadOnlyCollection<Type> types = LoadedTypes.ToArray();
 
         for (int index = 0; index < types.Count; index++)
         {
@@ -150,7 +150,7 @@ public static class DataSourceValueCache
         lock (s_defaultInstancesLock)
         {
             Interlocked.Exchange(ref s_defaultInstances, null);
-            Interlocked.Exchange(ref s_typeCache, null);
+            Interlocked.Exchange(ref s_loadedTypes, null);
             Interlocked.Exchange(ref s_typeIndexMap, null);
         }
     }
@@ -161,7 +161,7 @@ public static class DataSourceValueCache
         const string InitializeMethodName = nameof(DataSourceValueCache<DataSourceValue>.Initialize);
 
         // Just using reflection here since this method will only be called rarely
-        foreach (Type type in TypeCache)
+        foreach (Type type in LoadedTypes)
             typeof(DataSourceValueCache<>).MakeGenericType(type).GetMethod(InitializeMethodName, BindingFlags.NonPublic | BindingFlags.Static)?.Invoke(null, null);
     }
 }

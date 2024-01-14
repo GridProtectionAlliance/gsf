@@ -31,7 +31,6 @@ using GrafanaAdapters.Model.Common;
 using GSF.Collections;
 using GSF.Diagnostics;
 using GSF.TimeSeries;
-using GSF.TimeSeries.Adapters;
 using GSF.Units;
 using GSF.Web;
 using System;
@@ -92,8 +91,8 @@ public abstract partial class GrafanaDataSourceBase
         if (request.dataTypeIndex == -1)
             request.dataTypeIndex = request.isPhasor ? PhasorValue.TypeIndex : DataSourceValue.TypeIndex;
 
-        if (request.dataTypeIndex < 0 || request.dataTypeIndex >= DataSourceValueCache.TypeCache.Count)
-            throw new InvalidOperationException("Query request must specify a value data type index.");
+        if (request.dataTypeIndex < 0 || request.dataTypeIndex >= DataSourceValueCache.LoadedTypes.Count)
+            throw new IndexOutOfRangeException("Query request must specify a valid data type index.");
 
         // Execute specific process query request handler function for the requested data type
         return ProcessQueryRequestFunctions[request.dataTypeIndex](this, request, cancellationToken);
@@ -245,20 +244,10 @@ public abstract partial class GrafanaDataSourceBase
         // Split remaining targets on semi-colon, this way even multiple filter expressions can be used as inputs to functions
         string[] allTargets = targetSet.Select(target => target.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)).SelectMany(currentTargets => currentTargets).ToArray();
 
-        // Expand target set to include point tags for all parsed inputs
+        // Expand target set to include point tags for all parsed inputs, parsing target expression into individual point tags,
+        // this step will convert any defined filter expressions into point tags:
         foreach (string target in allTargets)
-        {
-            targetSet.UnionWith(TargetCache<string[]>.GetOrAdd(target, () =>
-            {
-                // Parse target expression into individual point tags - this will convert filter expressions into point tags
-                MeasurementKey[] results = AdapterBase.ParseInputMeasurementKeys(metadata, false, target.SplitAlias(out string alias), default(T).MetadataTableName);
-
-                if (!string.IsNullOrWhiteSpace(alias) && results.Length == 1)
-                    return new[] { $"{alias}={results[0].TagFromKey(metadata, default(T).MetadataTableName)}" };
-
-                return results.Select(key => key.TagFromKey(metadata, default(T).MetadataTableName)).ToArray();
-            }));
-        }
+            targetSet.UnionWith(TargetCache<string[]>.GetOrAdd(target, () => target.ParseExpressionAsTags<T>(metadata)));
 
         // Target set may now contain both original expressions, e.g., Guid (signal ID) or measurement key (source:ID), and newly
         // parsed individual point tags. For the final point list we are only interested in the point tags. Convert all remaining

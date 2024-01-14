@@ -316,6 +316,8 @@ internal static class ParameterParsing
 
             foreach (string targetName in targets)
             {
+                // TODO: JRC - adjust for multiple data source values, in sequence of processing, return a function?
+
                 // Attempt to find named target in data source values
                 TDataSourceValue sourceResult = await dataSourceValues.FirstOrDefaultAsync(dataSourceValue => dataSourceValue.Target.Equals(targetName, StringComparison.OrdinalIgnoreCase), cancellationToken).ConfigureAwait(false);
 
@@ -345,12 +347,14 @@ internal static class ParameterParsing
         if (metadataMap.TryGetValue(value, out string metadataValue))
             return (metadataValue, true);
 
-        // If not found in dictionary, lookup target in metadata
-        DataRow row = default(TDataSourceValue).LookupMetadata(metadata, target);
+        (string tableName, string fieldName) = value.ParseAsTableAndField<TDataSourceValue>();
 
-        if (row is null || !row.Table.Columns.Contains(value))
+        // Attempt to lookup target in metadata
+        DataRow row = default(TDataSourceValue).LookupMetadata(metadata, tableName, target);
+
+        if (row is null || !row.Table.Columns.Contains(fieldName))
             return (default, false);
 
-        return (row[value].ToString(), true);
+        return (row[fieldName].ToString(), true);
     }
 }

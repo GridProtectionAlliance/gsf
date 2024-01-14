@@ -49,7 +49,7 @@ partial class GrafanaDataSourceBase
     private static Regex s_selectExpression;
 
     // Gets array of functions used to process query requests per data source value type, each value in the array
-    // is at the same index as the data source value type in the DataSourceCache.DataSourceValueTypes array
+    // is at the same index as the data source value type in the 'DataSourceCache.LoadedTypes' array
     private static ProcessQueryRequestDelegate[] ProcessQueryRequestFunctions =>
         s_processQueryRequestFunctions ??= CreateProcessQueryRequestFunctions();
 
@@ -91,14 +91,12 @@ partial class GrafanaDataSourceBase
         FunctionParsing.ReloadGrafanaFunctions();
     }
 
-    private static int GetDataSourceValueTypeIndex(string dataType) =>
-        DataSourceValueCache.TypeIndexMap.TryGetValue(dataType, out int index) ? index : -1;
-
     private static ProcessQueryRequestDelegate[] CreateProcessQueryRequestFunctions()
     {
-        ProcessQueryRequestDelegate[] functions = new ProcessQueryRequestDelegate[DataSourceValueCache.TypeCache.Count];
+        // One process query request function will be defined per data source value type
+        ProcessQueryRequestDelegate[] processQueryRequestFunctions = new ProcessQueryRequestDelegate[DataSourceValueCache.LoadedTypes.Count];
 
-        foreach (Type type in DataSourceValueCache.TypeCache)
+        foreach (Type type in DataSourceValueCache.LoadedTypes)
         {
             string typeName = type.Name;
 
@@ -134,9 +132,9 @@ partial class GrafanaDataSourceBase
 
             Debug.Assert(index > -1, $"Failed to find data source value type index for \"{typeName}\"");
 
-            functions[index] = function;
+            processQueryRequestFunctions[index] = function;
         }
 
-        return functions;
+        return processQueryRequestFunctions;
     }
 }

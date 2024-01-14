@@ -26,11 +26,12 @@ using GrafanaAdapters.Functions;
 using GSF;
 using GSF.Diagnostics;
 using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Text.RegularExpressions;
-using GrafanaAdapters.Model.Common;
 
 namespace GrafanaAdapters.DataSources;
 
@@ -248,6 +249,23 @@ internal static class MetadataExtensions
     }
 
     /// <summary>
+    /// Parses target as table and field name.
+    /// </summary>
+    /// <param name="target">Target to parse.</param>
+    /// <returns>Target parsed as table and field name.</returns>
+    public static (string tableName, string fieldName) ParseAsTableAndField<T>(this string target) where T : struct, IDataSourceValue
+    {
+        string[] parts = target.Split('.');
+
+        return parts.Length switch
+        {
+            1 => (default(T).MetadataTableName, parts[0]),
+            2 => (parts[0], parts[1]),
+            _ => throw new InvalidOperationException($"Invalid target \"{target}\" encountered, expected format as \"fieldName\" or \"tableName.fieldName\".")
+        };
+    }
+
+    /// <summary>
     /// Gets metadata map for the specified target and selections.
     /// </summary>
     /// <param name="metadata">Source metadata.</param>
@@ -294,5 +312,45 @@ internal static class MetadataExtensions
         }
 
         return metadataMap;
+    }
+
+    /// <summary>
+    /// Parses a user provided expression as tags.
+    /// </summary>
+    /// <param name="target">Target expression to parse.</param>
+    /// <param name="metadata">Source metadata.</param>
+    /// <returns>Point tags parsed from expression.</returns>
+    public static string[] ParseExpressionAsTags<T>(this string target, DataSet metadata) where T : struct, IDataSourceValue
+    {
+        static Guid convertToGuid(object value) =>
+            value.ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
+
+        string aliasTarget = target.SplitAlias(out string alias);
+
+        MeasurementKey[] keys;
+        
+        // Attempt to parse expression as a filter expression first as this will provide target table name for tag to key lookups
+        if (AdapterBase.ParseFilterExpression(aliasTarget, out string tableName, out string expression, out string sortField, out int takeCount))
+        {
+            keys = metadata.Tables[tableName]
+                .Select(expression, sortField)
+                .Take(takeCount)
+                .Select(row => MeasurementKey.LookUpOrCreate(convertToGuid(row["SignalID"]), row["ID"].ToString()))
+                .Where(key => key != MeasurementKey.Undefined)
+                .ToArray();
+        }
+        else
+        {
+            // Fall back on standard tag expression parsing which will attempt to parse target as measurement keys or signal IDs
+            keys = AdapterBase.ParseInputMeasurementKeys(metadata, false, aliasTarget, default(T).MetadataTableName);
+        }
+
+        if (string.IsNullOrWhiteSpace(tableName))
+            tableName = default(T).MetadataTableName;
+
+        if (!string.IsNullOrWhiteSpace(alias) && keys.Length == 1)
+            return new[] { $"{alias}={keys[0].TagFromKey(metadata, tableName)}" };
+
+        return keys.Select(key => key.TagFromKey(metadata, tableName)).ToArray();
     }
 }
