@@ -68,7 +68,7 @@ public class QueryParameters
     public string Imports { get; set; }
 
     /// <summary>
-    /// Gets or sets metadata selection dictionary for the query.
+    /// Gets or sets metadata selections for the query.
     /// </summary>
-    public Dictionary<string, List<string>> MetadataSelection { get; set; }
+    public (string tableName, string[] fieldNames)[] MetadataSelections { get; set; }
 }

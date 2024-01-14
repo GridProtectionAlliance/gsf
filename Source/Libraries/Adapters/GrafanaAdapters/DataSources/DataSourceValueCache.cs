@@ -37,14 +37,20 @@ using System.Threading;
 
 namespace GrafanaAdapters.DataSources;
 
-internal static class DataSourceValueCache
+/// <summary>
+/// Represents a cache of all defined data source value types and their default instances.
+/// </summary>
+public static class DataSourceValueCache
 {
     private static IDataSourceValue[] s_defaultInstances;
     private static Type[] s_typeCache;
     private static Dictionary<string, int> s_typeIndexMap;
     private static readonly object s_defaultInstancesLock = new();
 
-    // Gets a default instance list of all the defined data source value type implementations
+    /// <summary>
+    /// Gets a default instance list of all the defined data source value type implementations.
+    /// </summary>
+    /// <returns>Default instance list of all the defined data source value type implementations.</returns>
     public static IDataSourceValue[] GetDefaultInstances()
     {
         // Caching default data source value types and instances so expensive assembly load with
@@ -81,7 +87,9 @@ internal static class DataSourceValueCache
         return s_defaultInstances;
     }
 
-    // Gets a list of all the cached data source value types.
+    /// <summary>
+    /// Gets a list of all the cached data source value types.
+    /// </summary>
     public static IReadOnlyCollection<Type> TypeCache
     {
         get
@@ -101,9 +109,16 @@ internal static class DataSourceValueCache
         }
     }
 
+    /// <summary>
+    /// Gets type index for the specified data source value type; or, -1 if not found
+    /// </summary>
+    /// <param name="dataTypeName">Type name of target <see cref="IDataSourceValue"/> to lookup.</param>
+    /// <returns>Index of specified data source value type; or, -1 if not found.</returns>
+    public static int GetTypeIndex(string dataTypeName) => TypeIndexMap.TryGetValue(dataTypeName, out int index) ? index : -1;
+
     // Gets an index for the specified data source value type for the DataSourceValueTypes array
     // Lookup is case-insensitive and will match on type name or full type name
-    public static Dictionary<string, int> TypeIndexMap => s_typeIndexMap ??= CreateTypeIndexMap();
+    internal static Dictionary<string, int> TypeIndexMap => s_typeIndexMap ??= CreateTypeIndexMap();
 
     // Gets an index map of all the defined data source value types by name and full name
     private static Dictionary<string, int> CreateTypeIndexMap()
@@ -130,7 +145,7 @@ internal static class DataSourceValueCache
     }
 
     // Reloads all data source value types and default instances
-    public static void ReloadDataSourceValueTypes()
+    internal static void ReloadDataSourceValueTypes()
     {
         lock (s_defaultInstancesLock)
         {
@@ -141,7 +156,7 @@ internal static class DataSourceValueCache
     }
 
     // Reinitializes all data source caches
-    public static void ReinitializeAll()
+    internal static void ReinitializeAll()
     {
         const string InitializeMethodName = nameof(DataSourceValueCache<DataSourceValue>.Initialize);
 

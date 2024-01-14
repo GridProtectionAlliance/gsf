@@ -81,14 +81,14 @@ public partial class GrafanaDataService : DataService, IGrafanaDataService
         return m_dataSource.GetDeviceGroups(request, m_cancellationSource.Token);
     }
 
-    /// <inheritdoc/>
-    public Task<string> GetMetadata(Target request)
-    {
-        // TODO: JRC - fix this if 'isPhasor' gets updated to 'dataType'
-        return request.isPhasor ?
-            m_dataSource.GetMetadata<PhasorValue>(request) :
-            m_dataSource.GetMetadata<DataSourceValue>(request);
-    }
+    ///// <inheritdoc/>
+    //public Task<string> GetMetadata(Target request)
+    //{
+    //    // TODO: JRC - fix this if 'isPhasor' gets updated to 'dataType'
+    //    return request.isPhasor ?
+    //        m_dataSource.GetMetadata<PhasorValue>(request) :
+    //        m_dataSource.GetMetadata<DataSourceValue>(request);
+    //}
 
     /// <inheritdoc/>
     public Task<string[]> Search(Target request)
@@ -106,23 +106,23 @@ public partial class GrafanaDataService : DataService, IGrafanaDataService
         return m_dataSource.Annotations(request, m_cancellationSource.Token);
     }
 
-    /// <inheritdoc/>
-    public Task<string[]> GetTableOptions(bool isPhasor)
-    {
-        return m_dataSource.GetTableOptions(isPhasor, m_cancellationSource.Token);
-    }
+    ///// <inheritdoc/>
+    //public Task<string[]> GetTableOptions(bool isPhasor)
+    //{
+    //    return m_dataSource.GetTableOptions(isPhasor, m_cancellationSource.Token);
+    //}
 
-    /// <inheritdoc/>
-    public Task<IEnumerable<FunctionDescription>> GetFunctions(int dataTypeIndex)
-    {
-        return m_dataSource.GetFunctionDescription(dataTypeIndex, m_cancellationSource.Token);
-    }
+    ///// <inheritdoc/>
+    //public Task<IEnumerable<FunctionDescription>> GetFunctions(int dataTypeIndex)
+    //{
+    //    return m_dataSource.GetFunctionDescription(dataTypeIndex, m_cancellationSource.Token);
+    //}
 
-    /// <inheritdoc/>
-    public Task<Dictionary<string, string[]>> GetMetadataOptions(MetadataOptionsRequest request)
-    {
-        return m_dataSource.GetMetadataOptions(request, m_cancellationSource.Token);
-    }
+    ///// <inheritdoc/>
+    //public Task<Dictionary<string, string[]>> GetMetadataOptions(MetadataOptionsRequest request)
+    //{
+    //    return m_dataSource.GetMetadataOptions(request, m_cancellationSource.Token);
+    //}
 }
 
 #endif

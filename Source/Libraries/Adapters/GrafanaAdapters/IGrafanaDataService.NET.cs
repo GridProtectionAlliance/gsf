@@ -69,12 +69,12 @@ public partial interface IGrafanaDataService
     [OperationContract, WebInvoke(UriTemplate = "/getdevicegroups", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
     Task<IEnumerable<DeviceGroup>> GetDeviceGroups(QueryRequest request);
 
-    /// <summary>
-    /// Queries openHistorian as a Grafana Metadata source.
-    /// </summary>
-    /// <param name="request">Query request.</param>
-    [OperationContract, WebInvoke(UriTemplate = "/getmetadata", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-    Task<string> GetMetadata(Target request);
+    ///// <summary>
+    ///// Queries openHistorian as a Grafana Metadata source.
+    ///// </summary>
+    ///// <param name="request">Query request.</param>
+    //[OperationContract, WebInvoke(UriTemplate = "/getmetadata", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+    //Task<string> GetMetadata(Target request);
 
     /// <summary>
     /// Search openHistorian for a target.
@@ -91,26 +91,26 @@ public partial interface IGrafanaDataService
     [OperationContract, WebInvoke(UriTemplate = "/annotations", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
     Task<List<AnnotationResponse>> Annotations(AnnotationRequest request);
 
-    /// <summary>
-    /// Queries available MetaData Options.
-    /// </summary>
-    /// <param name="isPhasor">A boolean indicating whether the data is a phasor.</param>
-    [OperationContract, WebInvoke(UriTemplate = "/gettableoptions", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-    Task<string[]> GetTableOptions(bool isPhasor);
+    ///// <summary>
+    ///// Queries available MetaData Options.
+    ///// </summary>
+    ///// <param name="isPhasor">A boolean indicating whether the data is a phasor.</param>
+    //[OperationContract, WebInvoke(UriTemplate = "/gettableoptions", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+    //Task<string[]> GetTableOptions(bool isPhasor);
 
-    /// <summary>
-    /// Queries description of available functions.
-    /// </summary>
-    /// <param name="dataTypeIndex">Target data type index.</param>
-    [OperationContract, WebInvoke(UriTemplate = "/getfunctions", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-    Task<IEnumerable<FunctionDescription>> GetFunctions(int dataTypeIndex);
+    ///// <summary>
+    ///// Queries description of available functions.
+    ///// </summary>
+    ///// <param name="dataTypeIndex">Target data type index.</param>
+    //[OperationContract, WebInvoke(UriTemplate = "/getfunctions", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+    //Task<IEnumerable<FunctionDescription>> GetFunctions(int dataTypeIndex);
 
-    /// <summary>
-    /// Queries available metaDataFields for a given set of tables.
-    /// </summary>
-    /// <param name="request"> the set of Tables to be queried. </param>
-    [OperationContract, WebInvoke(UriTemplate = "/getmetadataoptions", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-    Task<Dictionary<string, string[]>> GetMetadataOptions(MetadataOptionsRequest request);
+    ///// <summary>
+    ///// Queries available metaDataFields for a given set of tables.
+    ///// </summary>
+    ///// <param name="request"> the set of Tables to be queried. </param>
+    //[OperationContract, WebInvoke(UriTemplate = "/getmetadataoptions", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+    //Task<Dictionary<string, string[]>> GetMetadataOptions(MetadataOptionsRequest request);
 }
 
 #endif

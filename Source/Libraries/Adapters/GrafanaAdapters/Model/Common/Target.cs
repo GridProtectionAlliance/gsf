@@ -16,12 +16,10 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  09/12/2016 - Ritchie Carroll
+//  09/12/2016 - J. Ritchie Carroll
 //       Generated original version of source code.
 //
 //******************************************************************************************************
-
-using System.Collections.Generic;
 
 namespace GrafanaAdapters.Model.Common;
 
@@ -41,24 +39,7 @@ public class Target
     public string target { get; set; }
 
     /// <summary>
-    /// Gets or sets target method, can either be phasor or not.
-    /// </summary>
-    // TODO: JRC - recommend renaming to 'dataType'
-    public bool isPhasor { get; set; }
-
-    /// <summary>
     /// Gets or sets metadata selections.
     /// </summary>
-    public Dictionary<string, List<string>> metadataSelection { get; set; }
-
-    /// <summary>
-    /// Gets or sets excluded data flags.
-    /// </summary>
-    public uint excludedFlags { get; set; }
-
-    /// <summary>
-    /// Gets or sets flag that determines if normal flags should be excluded.
-    /// </summary>
-    public bool excludeNormalFlags { get; set; }
-
+    public MetadataSelections[] metadataSelections { get; set; }
 }

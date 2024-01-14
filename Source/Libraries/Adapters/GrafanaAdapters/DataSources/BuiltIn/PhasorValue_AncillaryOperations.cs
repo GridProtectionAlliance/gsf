@@ -103,13 +103,25 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
 
     readonly string IDataSourceValue.MetadataTableName => MetadataTableName;
 
+    readonly string[] IDataSourceValue.RequiredMetadataFieldNames => new[]
+    {
+        // These are fields as required by GetIDTargetMap() and AssignToTimeValueMap() methods
+        "MagnitudeID",       // Measurement key representing magnitude, e.g., PPA:101
+        "AngleID",           // Measurement key representing angle, e.g., PPA:102
+        "MagnitudeSignalID", // Guid-based signal ID representing magnitude
+        "AngleSignalID",     // Guid-based signal ID representing angle
+        "MagnitudePointTag", // Point tag representing magnitude, e.g, GPA_SHELBY:BUS1.MAG
+        "AnglePointTag",     // Point tag representing angle, e.g, GPA_SHELBY:BUS1.ANG
+        "PointTag"           // Point tag representing phasor, e.g, GPA_SHELBY:BUS1
+    };
+
     readonly Action<DataSet> IDataSourceValue.AugmentMetadata => AugmentMetadata;
 
     /// <inheritdoc />
-    public readonly DataRow LookupMetadata(DataSet metadata, string target)
+    public readonly DataRow LookupMetadata(DataSet metadata, string tableName, string target)
     {
         (DataRow, int) getRecordAndHashCode() => 
-            (target.RecordFromTag(metadata, MetadataTableName), metadata.GetHashCode());
+            (target.RecordFromTag(metadata, tableName), metadata.GetHashCode());
 
         string cacheKey = $"{nameof(PhasorValue)}-{target}";
 
@@ -275,6 +287,11 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
     private static readonly ParameterDefinition<IAsyncEnumerable<PhasorValue>> s_dataSourceValuesParameterDefinition = Common.DataSourceValuesParameterDefinition<PhasorValue>();
 
     /// <summary>
+    /// Gets the type index for <see cref="PhasorValue"/>.
+    /// </summary>
+    public static readonly int TypeIndex = DataSourceValueCache.GetTypeIndex(nameof(PhasorValue));
+
+    /// <summary>
     /// Update phasor value primary target to operate on angle values.
     /// </summary>
     /// <param name="dataValue">Source phasor value.</param>
@@ -330,6 +347,7 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
                 phasorValues.Columns.Add("PointTag", typeof(string));
                 phasorValues.Columns.Add("MagnitudePointTag", typeof(string));
                 phasorValues.Columns.Add("AnglePointTag", typeof(string));
+                phasorValues.Columns.Add("ID", typeof(string));
                 phasorValues.Columns.Add("MagnitudeID", typeof(string));
                 phasorValues.Columns.Add("AngleID", typeof(string));
                 phasorValues.Columns.Add("MagnitudeSignalID", typeof(Guid));
@@ -365,7 +383,7 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
                     phasorRow["PointTag"] = pointTag;
                     phasorRow["MagnitudePointTag"] = magnitudePointTag;
                     phasorRow["AnglePointTag"] = anglePointTag;
-                    phasorRow["ID"] = magnitude["ID"];
+                    phasorRow["ID"] = magnitude["ID"]; // Fall back on magnitude for possible ID only lookups
                     phasorRow["MagnitudeID"] = magnitude["ID"];
                     phasorRow["AngleID"] = angle["ID"];
                     phasorRow["MagnitudeSignalID"] = magnitude.ConvertGuidField("SignalID");

@@ -79,7 +79,7 @@ public class TimeSeriesValues
     ///       [365,1450754220000]
     /// ]
     /// </remarks>
-    public List<double[]> datapoints;
+    public double[][] datapoints;
 
 
 }

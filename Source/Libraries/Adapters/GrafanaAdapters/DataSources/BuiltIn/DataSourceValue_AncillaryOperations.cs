@@ -84,13 +84,21 @@ public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
 
     readonly string IDataSourceValue.MetadataTableName => MetadataTableName;
 
+    readonly string[] IDataSourceValue.RequiredMetadataFieldNames => new[]
+    {
+        // These are fields as required by GetIDTargetMap() method
+        "ID",       // Measurement key, e.g., PPA:101
+        "SignalID", // Guid-based signal ID
+        "PointTag"  // Point tag, e.g., GPA_SHELBY:FREQ
+    };
+
     readonly Action<DataSet> IDataSourceValue.AugmentMetadata => null; // No augmentation needed
 
     /// <inheritdoc />
-    public readonly DataRow LookupMetadata(DataSet metadata, string target)
+    public readonly DataRow LookupMetadata(DataSet metadata, string tableName, string target)
     {
         (DataRow, int) getRecordAndHashCode() =>
-            (target.RecordFromTag(metadata), metadata.GetHashCode());
+            (target.RecordFromTag(metadata, tableName), metadata.GetHashCode());
 
         string cacheKey = $"{nameof(DataSourceValue)}-{target}";
 
@@ -158,4 +166,9 @@ public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
     public readonly ParameterDefinition<IAsyncEnumerable<DataSourceValue>> DataSourceValuesParameterDefinition => s_dataSourceValuesParameterDefinition;
 
     private static readonly ParameterDefinition<IAsyncEnumerable<DataSourceValue>> s_dataSourceValuesParameterDefinition = Common.DataSourceValuesParameterDefinition<DataSourceValue>();
+
+    /// <summary>
+    /// Gets the type index for <see cref="DataSourceValue"/>.
+    /// </summary>
+    public static readonly int TypeIndex = DataSourceValueCache.GetTypeIndex(nameof(DataSourceValue));
 }

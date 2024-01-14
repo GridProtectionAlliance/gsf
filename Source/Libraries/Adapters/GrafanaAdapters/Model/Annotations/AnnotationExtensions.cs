@@ -148,7 +148,7 @@ public static class AnnotationRequestExtensions
                 break;
             case AnnotationType.Alarms:
                 metadata = GetTargetMetaData(source, definition["SignalID"]);
-                response.title = $"Alarm";
+                response.title = "Alarm";
                 response.text = $"{definition["Description"]}<br/>Condition:&nbsp;{GetAlarmCondition(definition)}<br/>Severity:&nbsp;{definition["Severity"]}<br/>[{metadata["ID"]}]:&nbsp;{metadata["SignalReference"]}";
                 response.tags = $"{metadata["PointTag"]},{target}";
                 break;
@@ -173,11 +173,10 @@ public static class AnnotationRequestExtensions
         // function so that any encountered alarms not will not be down-sampled
         return new QueryRequest
         {
+            dataTypeIndex = DataSourceValue.TypeIndex,
             range = request.range,
-            rangeRaw = request.rangeRaw,
             interval = "*",
-            targets = targets.Select((target, index) => new Target { refId = $"ID{index}", target = $"Interval(0, {target})" }).ToList(),
-            format = "json",
+            targets = targets.Select((target, index) => new Target { refId = $"ID{index}", target = $"Interval(0, {target})" }).ToArray(),
             maxDataPoints = maxDataPoints
         };
     }

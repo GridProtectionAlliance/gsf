@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  Column.cs - Gbtc
+//  MetadataSelections.cs - Gbtc
 //
-//  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2024, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,35 +16,26 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  09/12/2016 - Ritchie Carroll
+//  01/14/2024 - J. Ritchie Carroll
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-namespace GrafanaAdapters.Model.Common;
-
-/// <summary>
-/// Defines a Grafana table column.
-/// </summary>
-public class Column
+namespace GrafanaAdapters.Model.Common
 {
     /// <summary>
-    /// Gets or sets column title.
+    /// Defines a set of Grafana metadata selections.
     /// </summary>
-    public string text { get; set; }
+    public class MetadataSelections
+    {
+        /// <summary>
+        /// Gets ot sets source metadata table name.
+        /// </summary>
+        public string tableName { get; set; }
 
-    /// <summary>
-    /// Gets or sets column type, e.g., "time", "mean", "sum", etc.
-    /// </summary>
-    public string type { get; set; }
-
-    /// <summary>
-    /// Gets or sets flag that indicates if column is sortable.
-    /// </summary>
-    public bool sort { get; set; }
-
-    /// <summary>
-    /// Gets or sets flag that indicates if column is sorted descending.
-    /// </summary>
-    public bool desc { get; set; }
+        /// <summary>
+        /// Gets or sets source metadata field names.
+        /// </summary>
+        public string[] fieldNames { get; set; }
+    }
 }

@@ -27,7 +27,7 @@ using System.Collections.Generic;
 
 namespace GrafanaAdapters.Model.Common;
 
-// TODO: JRC - is this class used any more?  If not, remove it.
+// TODO: JRC - is this class used any more?  See LocationData class in GrafanaAdapters.Model.Data
 
 /// <summary>
 /// Defines a Grafana query location request.

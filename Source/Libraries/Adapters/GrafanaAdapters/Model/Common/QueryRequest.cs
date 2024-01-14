@@ -36,39 +36,14 @@ public class QueryRequest
     public int dataTypeIndex { get; set; } = -1;
 
     /// <summary>
-    /// Gets or sets panel ID of request.
-    /// </summary>
-    public int panelId { get; set; }
-
-    /// <summary>
-    /// Gets or sets panel ID of request.
-    /// </summary>
-    public int dashboardId { get; set; }
-
-    /// <summary>
     /// Gets or sets request range.
     /// </summary>
     public Range range { get; set; }
 
     /// <summary>
-    /// Gets or sets relative request range.
-    /// </summary>
-    public RangeRaw rangeRaw { get; set; }
-
-    /// <summary>
     /// Gets or sets request interval.
     /// </summary>
     public string interval { get; set; }
-
-    /// <summary>
-    /// Gets or sets request interval, in milliseconds.
-    /// </summary>
-    public string intervalMs { get; set; }
-
-    /// <summary>
-    /// Gets or sets request format (typically json).
-    /// </summary>
-    public string format { get; set; }
 
     /// <summary>
     /// Gets or sets maximum data points to return.
@@ -78,16 +53,26 @@ public class QueryRequest
     /// <summary>
     /// Gets or sets request targets.
     /// </summary>
-    public List<Target> targets { get; set; }
+    public Target[] targets { get; set; }
 
     /// <summary>
     /// Gets or sets ad-hoc filters to apply.
     /// </summary>
-    public List<AdHocFilter> adhocFilters { get; set; }
+    public AdHocFilter[] adhocFilters { get; set; }
+
+    /// <summary>
+    /// Gets or sets excluded data flags.
+    /// </summary>
+    public uint excludedFlags { get; set; }
+
+    /// <summary>
+    /// Gets or sets flag that determines if normal flags should be excluded.
+    /// </summary>
+    public bool excludeNormalFlags { get; set; }
 
     /// <summary>
     /// Gets or sets if request is in phasor mode.
     /// </summary>
-    // TODO: JRC - suggest renaming this to 'dataType' and making it a string value, e.g., "PhasorValue" or "DataSourceValue", to allow for future expansion
+    // TODO: JRC - drop this as soon as UI has been updated to use 'dataTypeIndex'
     public bool isPhasor { get; set; }
 }

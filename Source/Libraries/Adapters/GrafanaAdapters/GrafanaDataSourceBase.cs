@@ -81,10 +81,6 @@ public abstract partial class GrafanaDataSourceBase
     /// <returns>Queried data source data in terms of value and time.</returns>
     protected abstract IAsyncEnumerable<DataSourceValue> QueryDataSourceValues(QueryParameters queryParameters, Dictionary<ulong, string> targetMap, CancellationToken cancellationToken);
 
-    // TODO: JRC - drop these temporary indexes once UI supports 'request.dataTypeIndex':
-    private static readonly int s_dataSourceValueTypeIndex = GetDataSourceValueTypeIndex(nameof(DataSourceValue));
-    private static readonly int s_phasorValueTypeIndex = GetDataSourceValueTypeIndex(nameof(PhasorValue));
-
     /// <summary>
     /// Queries data source returning data as Grafana time-series data set.
     /// </summary>
@@ -92,15 +88,12 @@ public abstract partial class GrafanaDataSourceBase
     /// <param name="cancellationToken">Cancellation token.</param>
     public Task<IEnumerable<TimeSeriesValues>> Query(QueryRequest request, CancellationToken cancellationToken)
     {
-        if (!string.IsNullOrWhiteSpace(request.format) && !request.format.Equals("json", StringComparison.OrdinalIgnoreCase))
-            throw new InvalidOperationException("Only JSON formatted query requests are currently supported.");
-
         // TODO: JRC - drop this temporary code once UI supports 'request.dataTypeIndex':
         if (request.dataTypeIndex == -1)
-            request.dataTypeIndex = request.isPhasor ? s_phasorValueTypeIndex : s_dataSourceValueTypeIndex;
+            request.dataTypeIndex = request.isPhasor ? PhasorValue.TypeIndex : DataSourceValue.TypeIndex;
 
-        if (request.dataTypeIndex < 0)
-            throw new InvalidOperationException("Query request must specify a data type.");
+        if (request.dataTypeIndex < 0 || request.dataTypeIndex >= DataSourceValueCache.TypeCache.Count)
+            throw new InvalidOperationException("Query request must specify a value data type index.");
 
         // Execute specific process query request handler function for the requested data type
         return ProcessQueryRequestFunctions[request.dataTypeIndex](this, request, cancellationToken);
@@ -132,7 +125,7 @@ public abstract partial class GrafanaDataSourceBase
                 IncludePeaks = includePeaks && !fullResolutionQuery,
                 DropEmptySeries = dropEmptySeries,
                 Imports = imports,
-                MetadataSelection = target.metadataSelection
+                MetadataSelections = target.metadataSelections.Select(selection => (selection.tableName, selection.fieldNames)).ToArray()
             });
         }
 
@@ -169,23 +162,23 @@ public abstract partial class GrafanaDataSourceBase
             IAsyncEnumerable<T> values = valueGroup.Source;
 
             // Apply any requested flag filters applied for the data source
-            if (valueGroup.SourceTarget?.excludeNormalFlags ?? false)
+            if (request.excludeNormalFlags)
                 values = values.Where(value => value.Flags != MeasurementStateFlags.Normal);
 
-            if (valueGroup.SourceTarget?.excludedFlags > uint.MinValue)
-                values = values.Where(value => ((uint)value.Flags & valueGroup.SourceTarget.excludedFlags) == 0);
+            if (request.excludedFlags > 0)
+                values = values.Where(value => ((uint)value.Flags & request.excludedFlags) == 0);
 
-            // For deferred enumerations, function operations are executed here by ToListAsync() at the last moment
-            series.datapoints = await values.Select(dataValue => dataValue.TimeSeriesValue).ToListAsync(cancellationToken).ConfigureAwait(false);
+            // For deferred enumerations, function operations are executed here by ToArrayAsync() at the last moment
+            series.datapoints = await values.Select(dataValue => dataValue.TimeSeriesValue).ToArrayAsync(cancellationToken).ConfigureAwait(false);
         });
 
         await Task.WhenAll(processValueGroups).ConfigureAwait(false);
 
         // Drop any empty series, if requested
-        IEnumerable<TimeSeriesValues> filteredResults = seriesResults.Where(values => !values.dropEmptySeries || values.datapoints.Count > 0);
+        IEnumerable<TimeSeriesValues> filteredResults = seriesResults.Where(values => !values.dropEmptySeries || values.datapoints.Length > 0);
 
         // Apply any encountered ad-hoc filters
-        if (request.adhocFilters?.Count > 0)
+        if (request.adhocFilters?.Length > 0)
             foreach (AdHocFilter filter in request.adhocFilters)
                 filteredResults = filteredResults.Where(values => IsFilterMatch<T>(values.rootTarget, filter, instance.Metadata));
 
@@ -413,7 +406,7 @@ public abstract partial class GrafanaDataSourceBase
         {
             try
             {
-                DataRow record = default(T).LookupMetadata(metadata, target);
+                DataRow record = default(T).LookupMetadata(metadata, default(T).MetadataTableName, target);
 
                 if (record is null)
                     return true;

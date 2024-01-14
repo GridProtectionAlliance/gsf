@@ -30,6 +30,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Text.RegularExpressions;
+using GrafanaAdapters.Model.Common;
 
 namespace GrafanaAdapters.DataSources;
 
@@ -255,7 +256,7 @@ internal static class MetadataExtensions
     /// <returns>Mapped metadata for the specified target and selections.</returns>
     public static Dictionary<string, string> GetMetadataMap<T>(this DataSet metadata, string rootTarget, QueryParameters queryParameters) where T : struct, IDataSourceValue
     {
-        return metadata.GetMetadataMap<T>(rootTarget, queryParameters.MetadataSelection);
+        return metadata.GetMetadataMap<T>(rootTarget, queryParameters.MetadataSelections);
     }
 
     /// <summary>
@@ -263,29 +264,33 @@ internal static class MetadataExtensions
     /// </summary>
     /// <param name="metadata">Source metadata.</param>
     /// <param name="rootTarget">Root target to use for metadata lookup.</param>
-    /// <param name="metadataSelection">Metadata selections.</param>
+    /// <param name="metadataSelections">Metadata selections.</param>
     /// <returns>Mapped metadata for the specified target and selections.</returns>
-    public static Dictionary<string, string> GetMetadataMap<T>(this DataSet metadata, string rootTarget, Dictionary<string, List<string>> metadataSelection) where T : struct, IDataSourceValue
+    public static Dictionary<string, string> GetMetadataMap<T>(this DataSet metadata, string rootTarget, IList<(string tableName, string[] fieldNames)> metadataSelections) where T : struct, IDataSourceValue
     {
         // Create a new dictionary to hold the metadata values
         Dictionary<string, string> metadataMap = new();
 
         // Return an empty dictionary if metadataSelection is null or empty
-        if (metadataSelection?.Count == 0)
+        if (metadataSelections?.Count == 0)
             return metadataMap;
 
         // Iterate through selections
-        foreach (KeyValuePair<string, List<string>> entry in metadataSelection!)
+        foreach ((string tableName, string[] fieldNames) in metadataSelections!)
         {
-            List<string> values = entry.Value;
-            DataRow row = default(T).LookupMetadata(metadata, rootTarget);
+            DataRow row = default(T).LookupMetadata(metadata, tableName, rootTarget);
 
             if (row is null)
                 continue;
 
             // Populate the entry dictionary with the metadata values
-            foreach (string value in values)
-                metadataMap[value] = row[value].ToString();
+            foreach (string fieldName in fieldNames)
+            {
+                if (metadataMap.ContainsKey(fieldName))
+                    metadataMap[$"{tableName}.{fieldName}"] = row[fieldName].ToString();
+                else
+                    metadataMap[fieldName] = row[fieldName].ToString();
+            }
         }
 
         return metadataMap;

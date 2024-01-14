@@ -39,9 +39,4 @@ public class AnnotationRequest
     /// Gets or sets request range.
     /// </summary>
     public Range range { get; set; }
-
-    /// <summary>
-    /// Gets or sets relative request range.
-    /// </summary>
-    public RangeRaw rangeRaw { get; set; }
 }

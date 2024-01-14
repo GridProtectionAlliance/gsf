@@ -85,7 +85,8 @@ public interface IDataSourceValue
     /// This value is used to determine the order in which data source value types are
     /// presented to the user in the Grafana data source configuration UI. If multiple
     /// data source value types have the same load order, they will use a secondary
-    /// sort order, i.e., alphabetically by type name.
+    /// sort order, i.e., alphabetically by type name. Ideally, these values should be
+    /// as unique as possible to avoid any secondary sorting.
     /// </remarks>
     int LoadOrder { get; }
 
@@ -93,6 +94,19 @@ public interface IDataSourceValue
     /// Gets the name of the primary metadata table for the data source.
     /// </summary>
     string MetadataTableName { get; }
+
+    /// <summary>
+    /// Gets the names of the required metadata fields for the data source.
+    /// </summary>
+    /// <remarks>
+    /// This defines a list of the required metadata fields for a table in the data source. If any of
+    /// these are missing, the data source table will not be available for use. This list should at
+    /// least include key field names for the <see cref="MetadataTableName"/> that may be needed by
+    /// the <see cref="GetIDTargetMap"/> or <see cref="IDataSourceValue{T}.AssignToTimeValueMap"/>
+    /// functions. For example, in order to use a table named 'ActiveMeasurements', the required
+    /// metadata field names might be: 'ID', 'SignalID', and 'PointTag'.
+    /// </remarks>
+    string[] RequiredMetadataFieldNames { get; }
 
     /// <summary>
     /// Gets function that augments metadata for the data source, or <c>null</c>
@@ -111,12 +125,13 @@ public interface IDataSourceValue
     /// Looks up metadata record for the specified target.
     /// </summary>
     /// <param name="metadata">Metadata data set.</param>
+    /// <param name="tableName">Table name to search.</param>
     /// <param name="target">Target to lookup.</param>
     /// <returns>Filtered metadata row for the specified target.</returns>
     /// <remarks>
     /// Implementations should cache metadata lookups for performance.
     /// </remarks>
-    DataRow LookupMetadata(DataSet metadata, string target);
+    DataRow LookupMetadata(DataSet metadata, string tableName, string target);
 
     /// <summary>
     /// Gets the ID to target map for the specified metadata and targets along with any intermediate state.
