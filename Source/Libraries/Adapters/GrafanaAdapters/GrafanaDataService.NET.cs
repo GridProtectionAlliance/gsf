@@ -23,12 +23,9 @@
 
 #if !MONO
 
-using GrafanaAdapters.DataSources.BuiltIn;
 using GrafanaAdapters.Model.Annotations;
 using GrafanaAdapters.Model.Common;
 using GrafanaAdapters.Model.Database;
-using GrafanaAdapters.Model.Functions;
-using GrafanaAdapters.Model.MetaData;
 using GSF.Historian.DataServices;
 using System.Collections.Generic;
 using System.Threading.Tasks;

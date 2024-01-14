@@ -26,8 +26,6 @@
 using GrafanaAdapters.Model.Annotations;
 using GrafanaAdapters.Model.Common;
 using GrafanaAdapters.Model.Database;
-using GrafanaAdapters.Model.Functions;
-using GrafanaAdapters.Model.MetaData;
 using System.Collections.Generic;
 using System.ServiceModel;
 using System.ServiceModel.Web;

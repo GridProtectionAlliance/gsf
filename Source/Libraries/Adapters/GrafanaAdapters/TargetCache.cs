@@ -20,6 +20,7 @@
 //       Generated original version of source code.
 //
 //******************************************************************************************************
+// ReSharper disable StaticMemberInGenericType
 
 using GSF.Threading;
 using System;
@@ -71,7 +72,6 @@ public static class TargetCaches
 internal static class TargetCache<T>
 {
     // Desired use case is one static MemoryCache per type T:
-    // ReSharper disable StaticMemberInGenericType
     private static readonly string s_cacheName;
     private static MemoryCache s_targetCache;
 

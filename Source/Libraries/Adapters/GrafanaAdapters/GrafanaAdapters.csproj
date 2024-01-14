@@ -108,6 +108,7 @@
     <Compile Include="DataSources\DataSourceValueGroup.cs" />
     <Compile Include="DeviceAlarmStateAdapter.cs" />
     <Compile Include="Model\Common\MetadataSelections.cs" />
+    <Compile Include="Model\Common\SearchRequest.cs" />
     <Compile Include="Model\Database\AlarmDevice.cs" />
     <Compile Include="Model\Database\AlarmState.cs" />
     <Compile Include="Model\Database\DeviceGroup.cs" />

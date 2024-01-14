@@ -20,6 +20,7 @@
 //       Generated original version of source code.
 //
 //******************************************************************************************************
+// ReSharper disable StaticMemberInGenericType
 
 using GrafanaAdapters.DataSources.BuiltIn;
 using GrafanaAdapters.Functions;
@@ -32,8 +33,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
-
-// ReSharper disable StaticMemberInGenericType
 
 namespace GrafanaAdapters.DataSources;
 
@@ -107,6 +106,20 @@ public static class DataSourceValueCache
                 return s_loadedTypes;
             }
         }
+    }
+
+    /// <summary>
+    /// Gets a default instance of the specified data source value type (by index).
+    /// </summary>
+    /// <param name="dataTypeIndex">Index of target <see cref="IDataSourceValue"/> to lookup.</param>
+    /// <returns>Default instance of the specified data source value type, found by index.</returns>
+    /// <exception cref="IndexOutOfRangeException">Invalid data type index provided.</exception>
+    public static IDataSourceValue GetDefaultInstance(int dataTypeIndex)
+    {
+        if (dataTypeIndex < 0 || dataTypeIndex >= LoadedTypes.Count)
+            throw new IndexOutOfRangeException("Invalid data type index provided.");
+
+        return GetDefaultInstances()[dataTypeIndex];
     }
 
     /// <summary>

@@ -23,7 +23,6 @@
 
 using GrafanaAdapters.Model.Common;
 using System;
-using System.Collections.Generic;
 
 namespace GrafanaAdapters.Functions;
 

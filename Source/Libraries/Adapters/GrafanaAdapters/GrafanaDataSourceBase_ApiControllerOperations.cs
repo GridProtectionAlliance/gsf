@@ -27,13 +27,13 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using GrafanaAdapters.DataSources;
 using GrafanaAdapters.DataSources.BuiltIn;
 using GrafanaAdapters.Functions;
 using GrafanaAdapters.Model.Annotations;
 using GrafanaAdapters.Model.Common;
 using GrafanaAdapters.Model.Database;
 using GrafanaAdapters.Model.Functions;
-using GrafanaAdapters.Model.MetaData;
 using GSF;
 using GSF.Data;
 using GSF.Data.Model;
@@ -48,99 +48,94 @@ partial class GrafanaDataSourceBase
     /// <summary>
     /// Search data source meta-data for a target.
     /// </summary>
-    /// <param name="request">Search target.</param>
+    /// <param name="request">Search request.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    public virtual Task<string[]> Search(Target request, CancellationToken cancellationToken)
+    public virtual Task<string[]> Search(SearchRequest request, CancellationToken cancellationToken)
     {
-        string target = request.target == "select metric" ? "" : request.target;
+        string requestExpression = request.expression == "select metric" ? "" : request.expression;
+        IDataSourceValue dataSourceValue = DataSourceValueCache.GetDefaultInstance(request.dataTypeIndex);
 
         return Task.Factory.StartNew(() =>
         {
-            return TargetCache<string[]>.GetOrAdd($"search!{target}", () =>
+            return TargetCache<string[]>.GetOrAdd($"search!{requestExpression}", () =>
             {
-                if (request.target is not null)
+                // Attempt to parse search target as a "SELECT" statement
+                if (!parseSelectExpression(request.expression.Trim(), out string tableName, out string[] fieldNames, out string expression, out string sortField, out int takeCount))
                 {
-                    // Attempt to parse search target as a SQL SELECT statement that will operate as a filter for in memory metadata (not a database query)
-                    if (parseSelectExpression(request.target.Trim(), out string tableName, out string[] fieldNames, out string expression, out string sortField, out int takeCount))
+                    // Expression was not a 'SELECT' statement, execute a 'LIKE' statement against primary meta-data table for data source value type
+                    // returning matching point tags - this can be a slow operation for large meta-data sets, so results are cached by expression
+                    return Metadata.Tables[dataSourceValue.MetadataTableName]
+                        .Select($"ID LIKE '{InstanceName}:%' AND PointTag LIKE '%{requestExpression}%'")
+                        .Take(MaximumSearchTargetsPerRequest)
+                        .Select(row => $"{row["PointTag"]}")
+                        .ToArray();
+                }
+
+                // Search target is a 'SELECT' statement, this operates as a filter for in memory metadata (not a database query)
+                List<string> results = new();
+
+                // If meta-data table does not contain the field names required by the data source value type,
+                // return empty results - this is not a table supported by the data source value type
+                if (!dataSourceValue.MetadataTableIsValid(Metadata, tableName))
+                    return results.ToArray();
+
+                DataTable table = Metadata.Tables[tableName];
+                List<string> validFieldNames = new();
+
+                for (int i = 0; i < fieldNames?.Length; i++)
+                {
+                    string fieldName = fieldNames[i].Trim();
+
+                    if (table.Columns.Contains(fieldName))
+                        validFieldNames.Add(fieldName);
+                }
+
+                fieldNames = validFieldNames.ToArray();
+
+                if (fieldNames.Length == 0)
+                    fieldNames = table.Columns.Cast<DataColumn>().Select(column => column.ColumnName).ToArray();
+
+                // If no filter expression or take count was specified, limit search target results - user can
+                // still request larger results sets by specifying desired TOP count.
+                if (takeCount == int.MaxValue && string.IsNullOrWhiteSpace(expression))
+                    takeCount = MaximumSearchTargetsPerRequest;
+
+                void executeSelect(IEnumerable<DataRow> queryOperation)
+                {
+                    results.AddRange(queryOperation.Take(takeCount).Select(row =>
+                        string.Join(",", fieldNames.Select(fieldName => row[fieldName].ToString()))));
+                }
+
+                if (string.IsNullOrWhiteSpace(expression))
+                {
+                    if (string.IsNullOrWhiteSpace(sortField))
                     {
-                        DataTableCollection tables = Metadata.Tables;
-                        List<string> results = new();
-
-                        if (!tables.Contains(tableName))
-                            return results.ToArray();
-
-                        DataTable table = tables[tableName];
-                        List<string> validFieldNames = new();
-
-                        for (int i = 0; i < fieldNames?.Length; i++)
+                        executeSelect(table.Select());
+                    }
+                    else
+                    {
+                        if (Common.IsNumericType(table.Columns[sortField].DataType))
                         {
-                            string fieldName = fieldNames[i].Trim();
-
-                            if (table.Columns.Contains(fieldName))
-                                validFieldNames.Add(fieldName);
-                        }
-
-                        fieldNames = validFieldNames.ToArray();
-
-                        if (fieldNames.Length == 0)
-                            fieldNames = table.Columns.Cast<DataColumn>().Select(column => column.ColumnName).ToArray();
-
-                        // If no filter expression or take count was specified, limit search target results - user can
-                        // still request larger results sets by specifying desired TOP count.
-                        if (takeCount == int.MaxValue && string.IsNullOrWhiteSpace(expression))
-                            takeCount = MaximumSearchTargetsPerRequest;
-
-                        void executeSelect(IEnumerable<DataRow> queryOperation)
-                        {
-                            results.AddRange(queryOperation.Take(takeCount).Select(row =>
-                                string.Join(",", fieldNames.Select(fieldName => row[fieldName].ToString()))));
-                        }
-
-                        if (string.IsNullOrWhiteSpace(expression))
-                        {
-                            if (string.IsNullOrWhiteSpace(sortField))
+                            decimal parseAsNumeric(DataRow row)
                             {
-                                executeSelect(table.Select());
+                                decimal.TryParse(row[sortField].ToString(), out decimal result);
+                                return result;
                             }
-                            else
-                            {
-                                if (Common.IsNumericType(table.Columns[sortField].DataType))
-                                {
-                                    decimal parseAsNumeric(DataRow row)
-                                    {
-                                        decimal.TryParse(row[sortField].ToString(), out decimal result);
-                                        return result;
-                                    }
 
-                                    executeSelect(table.Select().OrderBy(parseAsNumeric));
-                                }
-                                else
-                                {
-                                    executeSelect(table.Select().OrderBy(row => row[sortField].ToString()));
-                                }
-                            }
+                            executeSelect(table.Select().OrderBy(parseAsNumeric));
                         }
                         else
                         {
-                            executeSelect(table.Select(expression, sortField));
+                            executeSelect(table.Select().OrderBy(row => row[sortField].ToString()));
                         }
-
-                        return results.ToArray();
                     }
                 }
+                else
+                {
+                    executeSelect(table.Select(expression, sortField));
+                }
 
-                // TODO: JRC - suggest renaming 'isPhasor' parameter to 'dataType' and making it a string,
-                // then check value, e.g., "PhasorValue" or "DataSourceValue", and query the following
-                // from an updated IDataSourceValue interface function - can create a new instance of
-                // type based on the value of 'dataType' and then call the interface function:
-
-                // Non "SELECT" style expressions default to searches on ActiveMeasurements meta-data table
-                //if (request.isPhasor)
-                //    return Metadata.Tables["Phasor"].AsEnumerable()
-                //        .Select(row => row["Label"].ToString())
-                //        .ToArray();
-
-                return Metadata.Tables[DataSourceValue.MetadataTableName].Select($"ID LIKE '{InstanceName}:%' AND PointTag LIKE '%{target}%'").Take(MaximumSearchTargetsPerRequest).Select(row => $"{row["PointTag"]}").ToArray();
+                return results.ToArray();
             });
         },
         cancellationToken);

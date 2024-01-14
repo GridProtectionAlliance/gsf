@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  QueryRequest.cs - Gbtc
+//  SearchRequest.cs - Gbtc
 //
-//  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2024, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,7 +16,7 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  09/12/2016 - Ritchie Carroll
+//  01/14/2024 - J Ritchie Carroll
 //       Generated original version of source code.
 //
 //******************************************************************************************************
@@ -24,53 +24,21 @@
 namespace GrafanaAdapters.Model.Common;
 
 /// <summary>
-/// Defines a Grafana query request.
+/// Defines a Grafana search request.
 /// </summary>
-public class QueryRequest
+public class SearchRequest
 {
     /// <summary>
     /// Gets or sets target data source value type index.
     /// </summary>
-    public int dataTypeIndex { get; set; } = -1;
+    /// <remarks>
+    /// This narrows meta-data search to that which is specific
+    /// to data source value type.
+    /// </remarks>
+    public int dataTypeIndex { get; set; }
 
     /// <summary>
-    /// Gets or sets request range.
+    /// Gets or sets target search expression.
     /// </summary>
-    public Range range { get; set; }
-
-    /// <summary>
-    /// Gets or sets request interval.
-    /// </summary>
-    public string interval { get; set; }
-
-    /// <summary>
-    /// Gets or sets maximum data points to return.
-    /// </summary>
-    public int maxDataPoints { get; set; }
-
-    /// <summary>
-    /// Gets or sets request targets.
-    /// </summary>
-    public Target[] targets { get; set; }
-
-    /// <summary>
-    /// Gets or sets ad-hoc filters to apply.
-    /// </summary>
-    public AdHocFilter[] adhocFilters { get; set; }
-
-    /// <summary>
-    /// Gets or sets excluded data flags.
-    /// </summary>
-    public uint excludedFlags { get; set; }
-
-    /// <summary>
-    /// Gets or sets flag that determines if normal flags should be excluded.
-    /// </summary>
-    public bool excludeNormalFlags { get; set; }
-
-    /// <summary>
-    /// Gets or sets if request is in phasor mode.
-    /// </summary>
-    // TODO: JRC - drop this as soon as UI has been updated to use 'dataTypeIndex'
-    public bool isPhasor { get; set; }
+    public string expression { get; set; }
 }

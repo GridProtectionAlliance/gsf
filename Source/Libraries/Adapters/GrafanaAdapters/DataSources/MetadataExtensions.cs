@@ -266,6 +266,30 @@ internal static class MetadataExtensions
     }
 
     /// <summary>
+    /// Determines if metadata table is valid for the target data source value type.
+    /// </summary>
+    /// <param name="metadata">Source metadata.</param>
+    /// <param name="tableName">Target table name.</param>
+    /// <returns><c>true</c> if metadata table is valid for the specified data source value type instance; otherwise, <c>false</c>.</returns>
+    public static bool MetadataTableIsValid<T>(this DataSet metadata, string tableName) where T : struct, IDataSourceValue
+    {
+        return default(T).MetadataTableIsValid(metadata, tableName);
+    }
+
+    /// <summary>
+    /// Determines if metadata table is valid for the specified data source value type instance.
+    /// </summary>
+    /// <param name="instance">Data source value type instance.</param>
+    /// <param name="metadata">Source metadata.</param>
+    /// <param name="tableName">Target table name.</param>
+    /// <returns><c>true</c> if metadata table is valid for the specified data source value type instance; otherwise, <c>false</c>.</returns>
+    public static bool MetadataTableIsValid(this IDataSourceValue instance, DataSet metadata, string tableName)
+    {
+        string[] requiredFields = instance.RequiredMetadataFieldNames;
+        return metadata.Tables.Contains(tableName) && requiredFields.All(field => metadata.Tables[tableName].Columns.Contains(field));
+    }
+
+    /// <summary>
     /// Gets metadata map for the specified target and selections.
     /// </summary>
     /// <param name="metadata">Source metadata.</param>

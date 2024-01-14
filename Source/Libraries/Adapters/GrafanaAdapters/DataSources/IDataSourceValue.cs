@@ -99,12 +99,18 @@ public interface IDataSourceValue
     /// Gets the names of the required metadata fields for the data source.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// This defines a list of the required metadata fields for a table in the data source. If any of
     /// these are missing, the data source table will not be available for use. This list should at
     /// least include key field names for the <see cref="MetadataTableName"/> that may be needed by
     /// the <see cref="GetIDTargetMap"/> or <see cref="IDataSourceValue{T}.AssignToTimeValueMap"/>
     /// functions. For example, in order to use a table named 'ActiveMeasurements', the required
     /// metadata field names might be: 'ID', 'SignalID', and 'PointTag'.
+    /// </para>
+    /// <para>
+    /// Note that system generally assumes that a 'PointTag' field exists in the metadata table and
+    /// to use some of the metadata functions, an 'ID' and/or 'SignalID' field may be needed.
+    /// </para>
     /// </remarks>
     string[] RequiredMetadataFieldNames { get; }
 
