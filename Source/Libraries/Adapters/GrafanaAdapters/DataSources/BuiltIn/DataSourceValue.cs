@@ -23,7 +23,7 @@
 
 using GSF.TimeSeries;
 
-namespace GrafanaAdapters.DataSources;
+namespace GrafanaAdapters.DataSources.BuiltIn;
 
 /// <summary>
 /// Represents an individual time-series value from a data source.
@@ -34,6 +34,11 @@ namespace GrafanaAdapters.DataSources;
 /// </remarks>
 public partial struct DataSourceValue
 {
+    /// <summary>
+    /// Defines the primary metadata table name for a <see cref="DataSourceValue"/>.
+    /// </summary>
+    public const string MetadataTableName = "ActiveMeasurements";
+
     /// <summary>
     /// Query target, e.g., a point-tag.
     /// </summary>

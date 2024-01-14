@@ -82,7 +82,7 @@ public class Parameters : IList<IMutableParameter>
     /// <inheritdoc />
     public IMutableParameter this[int index]
     {
-        get => m_parameters[index]; 
+        get => m_parameters[index];
         set => m_parameters[index] = value;
     }
 
@@ -114,7 +114,7 @@ public class Parameters : IList<IMutableParameter>
     /// </remarks>
     public object Value(int index)
     {
-        return index > -1 && index < m_parameters.Count ? 
+        return index > -1 && index < m_parameters.Count ?
             m_parameters[index].Value : null;
     }
 
@@ -133,7 +133,7 @@ public class Parameters : IList<IMutableParameter>
     /// </remarks>
     public T Value<T>(int index)
     {
-        return index > -1 && index < m_parameters.Count && m_parameters[index] is IMutableParameter<T> typedParameter ? 
+        return index > -1 && index < m_parameters.Count && m_parameters[index] is IMutableParameter<T> typedParameter ?
             typedParameter.Value : default;
     }
 

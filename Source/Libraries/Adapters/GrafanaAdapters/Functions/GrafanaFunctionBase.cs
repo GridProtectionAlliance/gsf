@@ -21,11 +21,11 @@
 //
 //******************************************************************************************************
 
+using GrafanaAdapters.DataSources;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using GrafanaAdapters.DataSources;
 
 namespace GrafanaAdapters.Functions;
 
@@ -36,6 +36,7 @@ public abstract class GrafanaFunctionBase<T> : IGrafanaFunction<T> where T : str
 {
     private int? m_requiredParameterCount;
     private int? m_optionalParameterCount;
+    private int? m_internalParameterCount;
 
     /// <inheritdoc />
     public abstract string Name { get; }
@@ -72,6 +73,9 @@ public abstract class GrafanaFunctionBase<T> : IGrafanaFunction<T> where T : str
     public virtual int OptionalParameterCount => m_optionalParameterCount ??= ParameterDefinitions.Count(parameter => !parameter.Required);
 
     /// <inheritdoc />
+    public virtual int InternalParameterCount => m_internalParameterCount ??= ParameterDefinitions.Count(parameter => parameter.Internal);
+
+    /// <inheritdoc />
     public virtual bool ResultIsSetTargetSeries => false;
 
     /// <inheritdoc />
@@ -86,6 +90,9 @@ public abstract class GrafanaFunctionBase<T> : IGrafanaFunction<T> where T : str
         string groupName = groupOperation == GroupOperations.None ? "" : $"{groupOperation}";
         return $"{groupName}{Name}({this.FormatParameters(parsedParameters)}{targetName})";
     }
+
+    /// <inheritdoc />
+    public int DataTypeIndex => DataSourceValueCache<T>.DataTypeIndex;
 
     /// <inheritdoc />
     public abstract IAsyncEnumerable<T> ComputeAsync(Parameters parameters, CancellationToken cancellationToken);

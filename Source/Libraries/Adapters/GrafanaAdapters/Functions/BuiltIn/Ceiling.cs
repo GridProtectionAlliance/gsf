@@ -1,7 +1,8 @@
-﻿using System;
+﻿using GrafanaAdapters.DataSources;
+using GrafanaAdapters.DataSources.BuiltIn;
+using System;
 using System.Collections.Generic;
 using System.Threading;
-using GrafanaAdapters.DataSources;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
 

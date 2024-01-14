@@ -21,8 +21,8 @@
 //
 //******************************************************************************************************
 
-using System.Collections.Generic;
 using GrafanaAdapters.Model.Common;
+using System.Collections.Generic;
 
 namespace GrafanaAdapters.DataSources;
 

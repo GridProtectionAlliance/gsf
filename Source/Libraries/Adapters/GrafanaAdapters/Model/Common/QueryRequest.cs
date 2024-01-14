@@ -31,6 +31,11 @@ namespace GrafanaAdapters.Model.Common;
 public class QueryRequest
 {
     /// <summary>
+    /// Gets or sets target data source value type index.
+    /// </summary>
+    public int dataTypeIndex { get; set; } = -1;
+
+    /// <summary>
     /// Gets or sets panel ID of request.
     /// </summary>
     public int panelId { get; set; }

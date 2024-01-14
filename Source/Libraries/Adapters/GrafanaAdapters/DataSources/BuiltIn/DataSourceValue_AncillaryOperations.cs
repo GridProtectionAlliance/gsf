@@ -21,14 +21,13 @@
 //
 //******************************************************************************************************
 
+using GrafanaAdapters.Functions;
+using GSF.TimeSeries;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using GrafanaAdapters.Functions;
-using GSF.TimeSeries;
-using static GrafanaAdapters.Functions.Common;
 
-namespace GrafanaAdapters.DataSources;
+namespace GrafanaAdapters.DataSources.BuiltIn;
 
 // IDataSourceValue implementation for DataSourceValue
 public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
@@ -59,8 +58,10 @@ public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
 
     readonly double[] IDataSourceValue.TimeSeriesValue => new[] { Value, Time };
 
+    readonly string[] IDataSourceValue.TimeSeriesValueDefinition => new[] { nameof(Value), nameof(Time) };
+
     /// <inheritdoc />
-    public int CompareTo(DataSourceValue other)
+    public readonly int CompareTo(DataSourceValue other)
     {
         int result = Value.CompareTo(other.Value);
 
@@ -68,28 +69,42 @@ public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
     }
 
     /// <inheritdoc />
-    public bool Equals(DataSourceValue other)
+    public readonly bool Equals(DataSourceValue other)
     {
         return CompareTo(other) == 0;
     }
 
     /// <inheritdoc />
-    public DataSourceValue TransposeCompute(Func<double, double> function)
+    public readonly DataSourceValue TransposeCompute(Func<double, double> function)
     {
         return this with { Value = function(Value) };
     }
 
-    /// <inheritdoc />
-    public void UpdateMetadata(DataSet metadata)
-    {
-        // No augmentation needed
-    }
+    readonly int IDataSourceValue.LoadOrder => 0;
+
+    readonly string IDataSourceValue.MetadataTableName => MetadataTableName;
+
+    readonly Action<DataSet> IDataSourceValue.AugmentMetadata => null; // No augmentation needed
 
     /// <inheritdoc />
     public readonly DataRow LookupMetadata(DataSet metadata, string target)
     {
-        // TODO: Cache this metadata lookup per targetValues
-        return target.RecordFromTag(metadata);
+        (DataRow, int) getRecordAndHashCode() =>
+            (target.RecordFromTag(metadata), metadata.GetHashCode());
+
+        string cacheKey = $"{nameof(DataSourceValue)}-{target}";
+
+        (DataRow record, int hashCode) = TargetCache<(DataRow, int)>.GetOrAdd(cacheKey, getRecordAndHashCode);
+
+        // If metadata hasn't changed, return cached record
+        if (metadata.GetHashCode() == hashCode)
+            return record;
+
+        // Metadata has changed, remove cached record and re-query
+        TargetCache<(DataRow, int)>.Remove(cacheKey);
+        (record, _) = TargetCache<(DataRow, int)>.GetOrAdd(cacheKey, getRecordAndHashCode);
+
+        return record;
     }
 
     readonly (Dictionary<ulong, string>, object) IDataSourceValue.GetIDTargetMap(DataSet metadata, HashSet<string> targetSet)
@@ -134,7 +149,7 @@ public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
         return (targetMap, null);
     }
 
-    void IDataSourceValue<DataSourceValue>.AssignToTimeValueMap(DataSourceValue dataValue, SortedList<double, DataSourceValue> timeValueMap, object state)
+    readonly void IDataSourceValue<DataSourceValue>.AssignToTimeValueMap(DataSourceValue dataValue, SortedList<double, DataSourceValue> timeValueMap, object state)
     {
         timeValueMap[dataValue.Time] = dataValue;
     }
@@ -142,5 +157,5 @@ public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
     /// <inheritdoc />
     public readonly ParameterDefinition<IAsyncEnumerable<DataSourceValue>> DataSourceValuesParameterDefinition => s_dataSourceValuesParameterDefinition;
 
-    private static readonly ParameterDefinition<IAsyncEnumerable<DataSourceValue>> s_dataSourceValuesParameterDefinition = DataSourceValuesParameterDefinition<DataSourceValue>();
+    private static readonly ParameterDefinition<IAsyncEnumerable<DataSourceValue>> s_dataSourceValuesParameterDefinition = Common.DataSourceValuesParameterDefinition<DataSourceValue>();
 }

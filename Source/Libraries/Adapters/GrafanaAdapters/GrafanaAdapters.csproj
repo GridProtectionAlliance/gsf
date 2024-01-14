@@ -81,7 +81,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DataSources\DataSourceCache.cs" />
+    <Compile Include="DataSources\DataSourceValueCache.cs" />
     <Compile Include="DataSources\MetadataExtensions.cs" />
     <Compile Include="Functions\BuiltIn\Sqrt.cs" />
     <Compile Include="Functions\BuiltIn\Pow.cs" />
@@ -89,7 +89,7 @@
     <Compile Include="Functions\ParameterParsing.cs" />
     <Compile Include="Functions\Parameters.cs" />
     <Compile Include="Model\Common\AdHocFilter.cs" />
-    <Compile Include="DataSources\DataSourceValue_AncillaryOperations.cs" />
+    <Compile Include="DataSources\BuiltIn\DataSourceValue_AncillaryOperations.cs" />
     <Compile Include="Functions\ParameterDefinition.cs" />
     <Compile Include="Functions\GrafanaFunctionBase.cs" />
     <Compile Include="Functions\IParameter.cs" />
@@ -161,14 +161,14 @@
     <Compile Include="IGrafanaDataService.cs" />
     <Compile Include="IGrafanaDataService.NET.cs" />
     <Compile Include="IGrafanaDataServiceMono.cs" />
-    <Compile Include="LocationData.cs" />
+    <Compile Include="DataSources\LocationData.cs" />
     <Compile Include="GrafanaAlarm.cs" />
     <Compile Include="Model\Functions\ParameterDescription.cs" />
     <Compile Include="Model\Functions\FunctionDescription.cs" />
     <Compile Include="Model\MetaData\MetaDataTargetRequest.cs" />
     <Compile Include="Model\MetaData\MetaDataOptionsRequest.cs" />
-    <Compile Include="DataSources\PhasorValue.cs" />
-    <Compile Include="DataSources\PhasorValue_AncillaryOperations.cs" />
+    <Compile Include="DataSources\BuiltIn\PhasorValue.cs" />
+    <Compile Include="DataSources\BuiltIn\PhasorValue_AncillaryOperations.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Model\Common\QueryRequest.cs" />
     <Compile Include="Model\Common\Range.cs" />
@@ -177,7 +177,7 @@
     <Compile Include="Model\Common\LocationRequest.cs" />
     <Compile Include="Model\Common\Target.cs" />
     <Compile Include="TargetCache.cs" />
-    <Compile Include="DataSources\DataSourceValue.cs" />
+    <Compile Include="DataSources\BuiltIn\DataSourceValue.cs" />
     <Compile Include="Model\Common\TimeSeriesValues.cs" />
     <Compile Include="TimeSliceScannerAsync.cs" />
   </ItemGroup>
@@ -212,6 +212,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="DataSources\BuiltIn\README.md" />
+    <None Include="Functions\BuiltIn\README.md" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup />

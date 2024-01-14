@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using GrafanaAdapters.DataSources;
+using GrafanaAdapters.DataSources.BuiltIn;
+using GSF;
+using GSF.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using GrafanaAdapters.DataSources;
-using GSF;
-using GSF.Collections;
 using static GrafanaAdapters.Functions.Common;
 
 namespace GrafanaAdapters.Functions.BuiltIn;

@@ -22,15 +22,16 @@
 //******************************************************************************************************
 // ReSharper disable CompareOfFloatsByEqualityOperator
 
+using GrafanaAdapters.DataSources.BuiltIn;
+using GrafanaAdapters.Model.Common;
+using GSF;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
-using GrafanaAdapters.Model.Common;
-using GSF;
-using GSF.TimeSeries;
-using GSF.TimeSeries.Adapters;
 using static GrafanaAdapters.DataSources.MetadataExtensions;
 
 namespace GrafanaAdapters.Model.Annotations;
@@ -49,7 +50,7 @@ public static class AnnotationRequestExtensions
     {
         return type switch
         {
-            AnnotationType.RaisedAlarms  => "RaisedAlarms",
+            AnnotationType.RaisedAlarms => "RaisedAlarms",
             AnnotationType.ClearedAlarms => "ClearedAlarms",
             AnnotationType.Alarms => "Alarms",
             _ => "Undefined"
@@ -80,10 +81,10 @@ public static class AnnotationRequestExtensions
     {
         return type switch
         {
-            AnnotationType.RaisedAlarms  => "AssociatedMeasurementID",
+            AnnotationType.RaisedAlarms => "AssociatedMeasurementID",
             AnnotationType.ClearedAlarms => "AssociatedMeasurementID",
             AnnotationType.Alarms => "AssociatedMeasurementID",
-            _  => throw new InvalidOperationException("Cannot extract target for specified annotation type.")
+            _ => throw new InvalidOperationException("Cannot extract target for specified annotation type.")
         };
     }
 
@@ -102,7 +103,7 @@ public static class AnnotationRequestExtensions
 
         return type switch
         {
-            AnnotationType.RaisedAlarms  => value != 0.0D,
+            AnnotationType.RaisedAlarms => value != 0.0D,
             AnnotationType.ClearedAlarms => value == 0.0D,
             AnnotationType.Alarms => value == 0.0D,
             _ => throw new InvalidOperationException("Cannot determine data point applicability for specified annotation type.")
@@ -205,11 +206,11 @@ public static class AnnotationRequestExtensions
 
                 type = tableName.ToUpperInvariant() switch
                 {
-                    "RAISEDALARMS"  => AnnotationType.RaisedAlarms,
+                    "RAISEDALARMS" => AnnotationType.RaisedAlarms,
                     "CLEAREDALARMS" => AnnotationType.ClearedAlarms,
                     "EVENTS" => AnnotationType.Events,
                     "ALARMS" => AnnotationType.Alarms,
-                    _               => throw new InvalidOperationException("Invalid FILTER table for annotation query expression.")
+                    _ => throw new InvalidOperationException("Invalid FILTER table for annotation query expression.")
                 };
             }
             else if (query.StartsWith("#RaisedAlarms", StringComparison.OrdinalIgnoreCase))
@@ -347,7 +348,6 @@ public static class AnnotationRequestExtensions
     internal static DataRow GetTargetMetaData(DataSet source, object signalIDFieldValue)
     {
         string signalID = signalIDFieldValue.ToNonNullNorWhiteSpace(Guid.Empty.ToString());
-        return TargetCache<DataRow>.GetOrAdd(signalID, () => GetMetadata(source, "ActiveMeasurements", $"ID = '{KeyFromSignalID(signalID)}'"));
+        return TargetCache<DataRow>.GetOrAdd(signalID, () => GetMetadata(source, DataSourceValue.MetadataTableName, $"ID = '{KeyFromSignalID(signalID)}'"));
     }
-
 }

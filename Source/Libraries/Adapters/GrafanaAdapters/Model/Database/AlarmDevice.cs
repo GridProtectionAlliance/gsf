@@ -23,10 +23,10 @@
 //
 //******************************************************************************************************
 
-using System;
-using System.ComponentModel.DataAnnotations;
 using GSF.ComponentModel;
 using GSF.Data.Model;
+using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace GrafanaAdapters.Model.Database;
 

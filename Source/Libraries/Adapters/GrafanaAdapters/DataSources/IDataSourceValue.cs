@@ -21,24 +21,28 @@
 //
 //******************************************************************************************************
 
+using GrafanaAdapters.DataSources.BuiltIn;
+using GrafanaAdapters.Functions;
+using GSF.TimeSeries;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using GrafanaAdapters.Functions;
-using GSF.TimeSeries;
 
 namespace GrafanaAdapters.DataSources;
 
 /// <summary>
 /// Defines an interface for a data source value.
 /// </summary>
+/// <remarks>
+/// Implementations of this interface should be structs.
+/// </remarks>
 public interface IDataSourceValue
 {
     /// <summary>
-    /// Gets the query targetValues, e.g., a point-tag.
+    /// Gets the query target, e.g., a point-tag.
     /// </summary>
     /// <remarks>
-    /// If data source value has multiple targets, this should be the primary targetValues.
+    /// If data source value has multiple targets, this should be the primary target.
     /// </remarks>
     string Target { get; init; }
 
@@ -51,12 +55,12 @@ public interface IDataSourceValue
     double Value { get; init; }
 
     /// <summary>
-    /// Gets or sets timestamp, in Unix epoch milliseconds, of data source value.
+    /// Gets timestamp, in Unix epoch milliseconds, of data source value.
     /// </summary>
     double Time { get; init; }
 
     /// <summary>
-    /// Gets flags of data source value.
+    /// Gets measurement state and quality flags of data source value.
     /// </summary>
     MeasurementStateFlags Flags { get; init; }
 
@@ -66,11 +70,42 @@ public interface IDataSourceValue
     double[] TimeSeriesValue { get; }
 
     /// <summary>
-    /// Updates metadata for the specified data source.
+    /// Gets the format definition of a time-series array value, e.g., ["Value", "Time"].
     /// </summary>
-    /// <param name="metadata">Source metadata.</param>
-    /// <returns>Updated metadata for the specified data source.</returns>
-    void UpdateMetadata(DataSet metadata);
+    /// <remarks>
+    /// These string values are used to define field value names that are used in
+    /// a <see cref="TimeSeriesValue"/> result.
+    /// </remarks>
+    string[] TimeSeriesValueDefinition { get; }
+
+    /// <summary>
+    /// Gets the desired load order for the data source value type.
+    /// </summary>
+    /// <remarks>
+    /// This value is used to determine the order in which data source value types are
+    /// presented to the user in the Grafana data source configuration UI. If multiple
+    /// data source value types have the same load order, they will use a secondary
+    /// sort order, i.e., alphabetically by type name.
+    /// </remarks>
+    int LoadOrder { get; }
+
+    /// <summary>
+    /// Gets the name of the primary metadata table for the data source.
+    /// </summary>
+    string MetadataTableName { get; }
+
+    /// <summary>
+    /// Gets function that augments metadata for the data source, or <c>null</c>
+    /// if metadata augmentation is not needed.
+    /// </summary>
+    /// <remarks>
+    /// Returned function augments metadata for the target data source value type. Metadata is a shared
+    /// resource and may be long-lived, as such method should only add to existing metadata for needs of
+    /// the data source value type and only perform needed augmentation once per provided instance of
+    /// metadata. For example, if a new table is added to the metadata for the data source value type,
+    /// first step should be to check if table already exists.
+    /// </remarks>
+    Action<DataSet> AugmentMetadata { get; }
 
     /// <summary>
     /// Looks up metadata record for the specified target.
@@ -78,11 +113,13 @@ public interface IDataSourceValue
     /// <param name="metadata">Metadata data set.</param>
     /// <param name="target">Target to lookup.</param>
     /// <returns>Filtered metadata row for the specified target.</returns>
-    // TODO: JRC - results of this function should be cached for performance (caching internal to function is OK)
+    /// <remarks>
+    /// Implementations should cache metadata lookups for performance.
+    /// </remarks>
     DataRow LookupMetadata(DataSet metadata, string target);
 
     /// <summary>
-    /// Gets the ID to targetValues map for the specified metadata and targets along with any intermediate state.
+    /// Gets the ID to target map for the specified metadata and targets along with any intermediate state.
     /// </summary>
     /// <param name="metadata">Source metadata.</param>
     /// <param name="targetSet">Target set to query.</param>
@@ -129,7 +166,7 @@ public interface IDataSourceValue<T> : IDataSourceValue, IComparable<T>, IEquata
     /// <returns>Computed result.</returns>
     /// <remarks>
     /// This function is used to compute a new data source value, applying the
-    /// values to all fields in the data source.
+    /// specified function operation to all value fields in the data source.
     /// </remarks>
     T TransposeCompute(Func<double, double> function);
 }

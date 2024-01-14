@@ -21,8 +21,8 @@
 //
 //******************************************************************************************************
 
-using System.Collections.Generic;
 using GSF.Data.Model;
+using System.Collections.Generic;
 
 namespace GrafanaAdapters.Model.Database;
 

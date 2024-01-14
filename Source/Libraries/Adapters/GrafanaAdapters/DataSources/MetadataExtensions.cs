@@ -21,14 +21,15 @@
 //
 //******************************************************************************************************
 
-using System;
+using GrafanaAdapters.DataSources.BuiltIn;
 using GrafanaAdapters.Functions;
-using System.Collections.Generic;
-using System.Data;
-using System.Text.RegularExpressions;
 using GSF;
 using GSF.Diagnostics;
 using GSF.TimeSeries;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Text.RegularExpressions;
 
 namespace GrafanaAdapters.DataSources;
 
@@ -71,7 +72,7 @@ internal static class MetadataExtensions
     /// search algorithm that can be slow for large data sets, it is recommended that any results
     /// for calls to this function be cached to improve performance.
     /// </remarks>
-    public static string TagFromKey(this MeasurementKey key, DataSet source, string table = "ActiveMeasurements", string pointTagField = "PointTag", string idField = "ID")
+    public static string TagFromKey(this MeasurementKey key, DataSet source, string table = DataSourceValue.MetadataTableName, string pointTagField = "PointTag", string idField = "ID")
     {
         DataRow record = key.ToString().RecordFromKey(source, table, idField);
         return record is null ? key.ToString() : record[pointTagField].ToNonNullString(key.ToString());
@@ -92,7 +93,7 @@ internal static class MetadataExtensions
     /// search algorithm that can be slow for large data sets, it is recommended that any results
     /// for calls to this function be cached to improve performance.
     /// </remarks>
-    public static MeasurementKey KeyFromTag(this string pointTag, DataSet source, string table = "ActiveMeasurements", string pointTagField = "PointTag", string signalIDField = "SignalID", string idField = "ID")
+    public static MeasurementKey KeyFromTag(this string pointTag, DataSet source, string table = DataSourceValue.MetadataTableName, string pointTagField = "PointTag", string signalIDField = "SignalID", string idField = "ID")
     {
         DataRow record = pointTag.RecordFromTag(source, table, pointTagField);
 
@@ -125,7 +126,7 @@ internal static class MetadataExtensions
     /// search algorithm that can be slow for large data sets, it is recommended that any results
     /// for calls to this function be cached to improve performance.
     /// </remarks>
-    public static (MeasurementKey, string) KeyAndTagFromSignalID(this string signalID, DataSet metadata, string table = "ActiveMeasurements", string signalIDField = "SignalID", string pointTagField = "PointTag", string idField = "ID")
+    public static (MeasurementKey, string) KeyAndTagFromSignalID(this string signalID, DataSet metadata, string table = DataSourceValue.MetadataTableName, string signalIDField = "SignalID", string pointTagField = "PointTag", string idField = "ID")
     {
         DataRow record = signalID.RecordFromSignalID(metadata, table, signalIDField);
         return record?.KeyAndTagFromRecord(signalIDField, pointTagField, idField) ?? (MeasurementKey.Undefined, nameof(MeasurementKey.Undefined));
@@ -172,7 +173,7 @@ internal static class MetadataExtensions
     /// for calls to this function be cached to improve performance.
     /// </para>
     /// </remarks>
-    public static DataRow RecordFromTag(this string pointTag, DataSet metadata, string table = "ActiveMeasurements", string pointTagField = "PointTag")
+    public static DataRow RecordFromTag(this string pointTag, DataSet metadata, string table = DataSourceValue.MetadataTableName, string pointTagField = "PointTag")
     {
         return GetMetadata(metadata, table, $"{pointTagField} = '{SplitAlias(pointTag, out string _)}'");
     }
@@ -190,7 +191,7 @@ internal static class MetadataExtensions
     /// search algorithm that can be slow for large data sets, it is recommended that any results
     /// for calls to this function be cached to improve performance.
     /// </remarks>
-    public static DataRow RecordFromSignalID(this string signalID, DataSet metadata, string table = "ActiveMeasurements", string signalIDField = "SignalID")
+    public static DataRow RecordFromSignalID(this string signalID, DataSet metadata, string table = DataSourceValue.MetadataTableName, string signalIDField = "SignalID")
     {
         return GetMetadata(metadata, table, $"{signalIDField} = '{signalID}'");
     }
@@ -203,7 +204,7 @@ internal static class MetadataExtensions
     /// <param name="table">Table to search.</param>
     /// <param name="idField">Measurement key-based ID field name.</param>
     /// <returns>Metadata record from source metadata for provided measurement key.</returns>
-    public static DataRow RecordFromKey(this string key, DataSet metadata, string table = "ActiveMeasurements", string idField = "ID")
+    public static DataRow RecordFromKey(this string key, DataSet metadata, string table = DataSourceValue.MetadataTableName, string idField = "ID")
     {
         return GetMetadata(metadata, table, $"{idField} = '{key}'");
     }

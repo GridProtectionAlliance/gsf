@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using GrafanaAdapters.DataSources;
+using GrafanaAdapters.DataSources.BuiltIn;
+using GSF.Units;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using GrafanaAdapters.DataSources;
-using GSF.Units;
 
 // ReSharper disable AccessToModifiedClosure
 

@@ -20,14 +20,10 @@
 //       Generated original version of source code.
 //
 //******************************************************************************************************
+// ReSharper disable StaticMemberInGenericType
 
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using GrafanaAdapters.DataSources;
+using GrafanaAdapters.DataSources.BuiltIn;
 using GrafanaAdapters.Functions;
 using GrafanaAdapters.Model.Annotations;
 using GrafanaAdapters.Model.Common;
@@ -39,14 +35,36 @@ using GSF.Data;
 using GSF.Data.Model;
 using GSF.TimeSeries.Model;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Diagnostics;
+using System.Linq;
+using System.Reflection;
+using System.Reflection.Emit;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using Common = GSF.Common;
+using ProcessQueryRequestDelegate = System.Func<
+    GrafanaAdapters.GrafanaDataSourceBase,
+    GrafanaAdapters.Model.Common.QueryRequest,
+    System.Threading.CancellationToken,
+    System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<GrafanaAdapters.Model.Common.TimeSeriesValues>>>;
+
 
 namespace GrafanaAdapters;
 
 // Non-query specific Grafana functionality is defined here
 partial class GrafanaDataSourceBase
 {
+    private static ProcessQueryRequestDelegate[] s_processQueryRequestFunctions;
     private static Regex s_selectExpression;
+
+    // Gets array of functions used to process query requests per data source value type, each value in the array
+    // is at the same index as the data source value type in the DataSourceCache.DataSourceValueTypes array
+    private static ProcessQueryRequestDelegate[] ProcessQueryRequestFunctions =>
+        s_processQueryRequestFunctions ??= CreateProcessQueryRequestFunctions();
 
     /// <summary>
     /// Search data source meta-data for a target.
@@ -143,7 +161,7 @@ partial class GrafanaDataSourceBase
                         .Select(row => row["Label"].ToString())
                         .ToArray();
 
-                return Metadata.Tables["ActiveMeasurements"].Select($"ID LIKE '{InstanceName}:%' AND PointTag LIKE '%{target}%'").Take(MaximumSearchTargetsPerRequest).Select(row => $"{row["PointTag"]}").ToArray();
+                return Metadata.Tables[DataSourceValue.MetadataTableName].Select($"ID LIKE '{InstanceName}:%' AND PointTag LIKE '%{target}%'").Take(MaximumSearchTargetsPerRequest).Select(row => $"{row["PointTag"]}").ToArray();
             });
         },
         cancellationToken);
@@ -226,7 +244,7 @@ partial class GrafanaDataSourceBase
 
                 AnnotationResponse response;
 
-                if (index == values.datapoints.Count-1 )
+                if (index == values.datapoints.Count - 1)
                 {
                     response = new AnnotationResponse
                     {
@@ -263,7 +281,7 @@ partial class GrafanaDataSourceBase
     {
         return Task.Factory.StartNew(() =>
         {
-            using AdoDataConnection connection = new("systemSettings"); 
+            using AdoDataConnection connection = new("systemSettings");
             return new TableOperations<AlarmDeviceStateView>(connection).QueryRecords("Name");
         },
         cancellationToken);
@@ -335,12 +353,12 @@ partial class GrafanaDataSourceBase
             if (isPhasor)
                 return new[] { "Phasor" };
 
-            List<string> tables = new();    
+            List<string> tables = new();
 
             foreach (DataTable table in Metadata.Tables)
             {
                 if (hasRequiredMetadataSourceColumns(table) && table.Rows.Count > 0)
-                    tables.Add(table.TableName); 
+                    tables.Add(table.TableName);
             }
 
             return tables.ToArray();
@@ -358,11 +376,11 @@ partial class GrafanaDataSourceBase
     /// <summary>
     /// Queries description of available functions.
     /// </summary>
+    /// <param name="dataTypeIndex">Target data type index.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    // TODO: JRC - suggest passing a parameter e.g. 'dataType' string to filter function descriptions by data type, e.g., "PhasorValue" or "DataSourceValue"
-    public virtual Task<FunctionDescription[]> GetFunctionDescription(CancellationToken cancellationToken)
+    public virtual Task<IEnumerable<FunctionDescription>> GetFunctionDescription(int dataTypeIndex, CancellationToken cancellationToken)
     {
-        return Task.Factory.StartNew(() => FunctionParsing.GetFunctionDescriptions().ToArray(), cancellationToken);
+        return Task.Run(() => FunctionParsing.GetFunctionDescriptions(dataTypeIndex), cancellationToken);
     }
 
     /// <summary>
@@ -385,7 +403,7 @@ partial class GrafanaDataSourceBase
                 DataColumnCollection columns = Metadata.Tables[table].Columns;
                 List<string> columnNames = new();
 
-                for (int i = 0; i < columns.Count; i++) 
+                for (int i = 0; i < columns.Count; i++)
                     columnNames.Add(columns[i].ColumnName);
 
                 tableColumnNames[table] = columnNames.ToArray();
@@ -443,11 +461,31 @@ partial class GrafanaDataSourceBase
     }
 
     /// <summary>
+    /// Reloads data source value types cache.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This function is used to support dynamic data source value type loading.
+    /// Function would only need to be called when a new data source value is added
+    /// to Grafana at run-time and user wanted to use new installed data source
+    /// value type without restarting host.
+    /// </para>
+    /// <para>
+    /// Suggest making this option available via web-based endpoint for administrators.
+    /// </para>
+    /// </remarks>
+    public void ReloadDataSourceValueTypes()
+    {
+        DataSourceValueCache.ReloadDataSourceValueTypes();
+        s_processQueryRequestFunctions = null;
+    }
+
+    /// <summary>
     /// Reloads Grafana functions cache.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// This function is used to support dynamic function loading for Grafana functions.
+    /// This function is used to support dynamic loading for Grafana functions.
     /// Function would only need to be called when a new function is added to Grafana at
     /// run-time and user wanted to use new installed function without restarting host.
     /// </para>
@@ -458,5 +496,54 @@ partial class GrafanaDataSourceBase
     public void ReloadGrafanaFunctions()
     {
         FunctionParsing.ReloadGrafanaFunctions();
+    }
+
+    private static int GetDataSourceValueTypeIndex(string dataType) =>
+        DataSourceValueCache.TypeIndexMap.TryGetValue(dataType, out int index) ? index : -1;
+
+    private static ProcessQueryRequestDelegate[] CreateProcessQueryRequestFunctions()
+    {
+        ProcessQueryRequestDelegate[] functions = new ProcessQueryRequestDelegate[DataSourceValueCache.TypeCache.Count];
+
+        foreach (Type type in DataSourceValueCache.TypeCache)
+        {
+            string typeName = type.Name;
+
+            // Get generic definition for ProcessQueryRequestAsync method
+            MethodInfo genericMethod = typeof(GrafanaDataSourceBase).GetMethod(nameof(ProcessQueryRequestAsync), BindingFlags.NonPublic | BindingFlags.Static)!.MakeGenericMethod(type);
+
+            DynamicMethod dynamicMethod = new($"{nameof(ProcessQueryRequestAsync)}_{typeName}",
+                typeof(Task<IEnumerable<TimeSeriesValues>>),
+                new[] { typeof(GrafanaDataSourceBase), typeof(QueryRequest), typeof(CancellationToken) },
+                typeof(GrafanaDataSourceBase));
+
+            ILGenerator generator = dynamicMethod.GetILGenerator();
+
+            // Load the first argument (GrafanaDataSourceBase) onto the stack
+            generator.Emit(OpCodes.Ldarg_0);
+
+            // Load the second argument (QueryRequest) onto the stack
+            generator.Emit(OpCodes.Ldarg_1);
+
+            // Load the third argument (CancellationToken) onto the stack
+            generator.Emit(OpCodes.Ldarg_2);
+
+            // Call the generic method
+            generator.Emit(OpCodes.Call, genericMethod);
+
+            // Return the result of the call
+            generator.Emit(OpCodes.Ret);
+
+            ProcessQueryRequestDelegate function = (ProcessQueryRequestDelegate)dynamicMethod.CreateDelegate(typeof(ProcessQueryRequestDelegate), null);
+
+            // Make sure function index matches data source value type index
+            int index = GetDataSourceValueTypeIndex(typeName);
+
+            Debug.Assert(index > -1, $"Failed to find data source value type index for \"{typeName}\"");
+
+            functions[index] = function;
+        }
+
+        return functions;
     }
 }

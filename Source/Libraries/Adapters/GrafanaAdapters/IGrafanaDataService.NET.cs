@@ -23,15 +23,15 @@
 
 #if !MONO
 
-using System.Collections.Generic;
-using System.ServiceModel;
-using System.ServiceModel.Web;
-using System.Threading.Tasks;
 using GrafanaAdapters.Model.Annotations;
 using GrafanaAdapters.Model.Common;
 using GrafanaAdapters.Model.Database;
 using GrafanaAdapters.Model.Functions;
 using GrafanaAdapters.Model.MetaData;
+using System.Collections.Generic;
+using System.ServiceModel;
+using System.ServiceModel.Web;
+using System.Threading.Tasks;
 
 namespace GrafanaAdapters;
 
@@ -101,8 +101,9 @@ public partial interface IGrafanaDataService
     /// <summary>
     /// Queries description of available functions.
     /// </summary>
+    /// <param name="dataTypeIndex">Target data type index.</param>
     [OperationContract, WebInvoke(UriTemplate = "/getfunctions", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-    Task<FunctionDescription[]> GetFunctions();
+    Task<IEnumerable<FunctionDescription>> GetFunctions(int dataTypeIndex);
 
     /// <summary>
     /// Queries available metaDataFields for a given set of tables.

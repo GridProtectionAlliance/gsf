@@ -23,15 +23,15 @@
 
 #if !MONO
 
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using GrafanaAdapters.DataSources;
+using GrafanaAdapters.DataSources.BuiltIn;
 using GrafanaAdapters.Model.Annotations;
 using GrafanaAdapters.Model.Common;
 using GrafanaAdapters.Model.Database;
 using GrafanaAdapters.Model.Functions;
 using GrafanaAdapters.Model.MetaData;
 using GSF.Historian.DataServices;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace GrafanaAdapters;
 
@@ -41,10 +41,7 @@ namespace GrafanaAdapters;
 // .NET Implementation
 public partial class GrafanaDataService : DataService, IGrafanaDataService
 {
-    /// <summary>
-    /// Queries openHistorian as a Grafana data source.
-    /// </summary>
-    /// <param name="request">Query request.</param>
+    /// <inheritdoc/>
     public Task<IEnumerable<TimeSeriesValues>> Query(QueryRequest request)
     {
         // Abort if services are not enabled
@@ -54,10 +51,7 @@ public partial class GrafanaDataService : DataService, IGrafanaDataService
         return m_dataSource.Query(request, m_cancellationSource.Token);
     }
 
-    /// <summary>
-    /// Queries openPDC alarm states as a Grafana data source.
-    /// </summary>
-    /// <param name="request">Query request.</param>
+    /// <inheritdoc/>
     public Task<IEnumerable<AlarmDeviceStateView>> GetAlarmState(QueryRequest request)
     {
         // Abort if services are not enabled
@@ -67,10 +61,7 @@ public partial class GrafanaDataService : DataService, IGrafanaDataService
         return m_dataSource.GetAlarmState(request, m_cancellationSource.Token);
     }
 
-    /// <summary>
-    /// Queries openHistorian Device alarm states.
-    /// </summary>
-    /// <param name="request">Query request.</param>
+    /// <inheritdoc/>
     public Task<IEnumerable<AlarmState>> GetDeviceAlarms(QueryRequest request)
     {
         // Abort if services are not enabled
@@ -80,10 +71,7 @@ public partial class GrafanaDataService : DataService, IGrafanaDataService
         return m_dataSource.GetDeviceAlarms(request, m_cancellationSource.Token);
     }
 
-    /// <summary>
-    /// Queries openHistorian Device Groups.
-    /// </summary>
-    /// <param name="request">Query request.</param>
+    /// <inheritdoc/>
     public Task<IEnumerable<DeviceGroup>> GetDeviceGroups(QueryRequest request)
     {
         // Abort if services are not enabled
@@ -91,33 +79,24 @@ public partial class GrafanaDataService : DataService, IGrafanaDataService
             return null;
 
         return m_dataSource.GetDeviceGroups(request, m_cancellationSource.Token);
-    }       
+    }
 
-    /// <summary>
-    /// Queries openHistorian as a Grafana Metadata source.
-    /// </summary>
-    /// <param name="request">Query request.</param>
+    /// <inheritdoc/>
     public Task<string> GetMetadata(Target request)
     {
         // TODO: JRC - fix this if 'isPhasor' gets updated to 'dataType'
-        return request.isPhasor ? 
-            m_dataSource.GetMetadata<PhasorValue>(request) : 
+        return request.isPhasor ?
+            m_dataSource.GetMetadata<PhasorValue>(request) :
             m_dataSource.GetMetadata<DataSourceValue>(request);
     }
 
-    /// <summary>
-    /// Search openHistorian for a target.
-    /// </summary>
-    /// <param name="request">Search target.</param>
+    /// <inheritdoc/>
     public Task<string[]> Search(Target request)
     {
         return m_dataSource.Search(request, m_cancellationSource.Token);
     }
 
-    /// <summary>
-    /// Queries openHistorian for annotations in a time-range (e.g., Alarms).
-    /// </summary>
-    /// <param name="request">Annotation request.</param>
+    /// <inheritdoc/>
     public Task<List<AnnotationResponse>> Annotations(AnnotationRequest request)
     {
         // Abort if services are not enabled
@@ -126,28 +105,20 @@ public partial class GrafanaDataService : DataService, IGrafanaDataService
 
         return m_dataSource.Annotations(request, m_cancellationSource.Token);
     }
-       
-    /// <summary>
-    /// Queries available metadata options.
-    /// </summary>
-    /// <param name="isPhasor">A boolean indicating whether the data is a phasor.</param>
+
+    /// <inheritdoc/>
     public Task<string[]> GetTableOptions(bool isPhasor)
     {
         return m_dataSource.GetTableOptions(isPhasor, m_cancellationSource.Token);
     }
 
-    /// <summary>
-    /// Queries description of available functions.
-    /// </summary>
-    // TODO: JRC - suggest passing a new parameter e.g. 'string dataType' to filter function descriptions by data type, e.g., "PhasorValue" or "DataSourceValue"
-    public Task<FunctionDescription[]> GetFunctions()
+    /// <inheritdoc/>
+    public Task<IEnumerable<FunctionDescription>> GetFunctions(int dataTypeIndex)
     {
-        return m_dataSource.GetFunctionDescription(m_cancellationSource.Token);
+        return m_dataSource.GetFunctionDescription(dataTypeIndex, m_cancellationSource.Token);
     }
 
-    /// <summary>
-    /// Queries available metadata fields for a given source.
-    /// </summary>
+    /// <inheritdoc/>
     public Task<Dictionary<string, string[]>> GetMetadataOptions(MetadataOptionsRequest request)
     {
         return m_dataSource.GetMetadataOptions(request, m_cancellationSource.Token);

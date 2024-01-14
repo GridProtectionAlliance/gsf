@@ -41,11 +41,6 @@ public interface IParameter
     string Description { get; }
 
     /// <summary>
-    /// Gets flag that indicates if the parameter is required.
-    /// </summary>
-    bool Required { get; }
-
-    /// <summary>
     /// Gets the type of the parameter.
     /// </summary>
     Type Type { get; }
@@ -60,10 +55,29 @@ public interface IParameter
     bool IsDefinition { get; }
 
     /// <summary>
+    /// Gets flag that indicates if the parameter is required.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Required parameters (i.e., Required = <c>true</c>) must precede
+    /// optional parameters (i.e., Required = <c>false</c>) in the
+    /// parameter list.
+    /// </para>
+    /// <para>
+    /// Note that the data source values parameter, i.e., the 'expression', is technically
+    /// a required parameter but always exists as the last parameter after any defined
+    /// optional or internal parameters. This parameter is automatically added to the
+    /// parameter list by the <see cref="ParameterDefinitions"/> class.
+    /// </para>
+    /// </remarks>
+    bool Required { get; }
+
+    /// <summary>
     /// Gets flag that indicates if parameter is internal.
     /// </summary>
     /// <remarks>
-    /// Internal parameters are not exposed to the user.
+    /// Internal parameters are not exposed to the user and should
+    /// always be defined at the end of the parameter list.
     /// </remarks>
     public bool Internal { get; }
 

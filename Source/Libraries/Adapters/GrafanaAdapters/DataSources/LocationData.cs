@@ -21,6 +21,11 @@
 //
 //******************************************************************************************************
 
+using GrafanaAdapters.DataSources.BuiltIn;
+using GrafanaAdapters.Model.Common;
+using GSF.Drawing;
+using GSF.Geo;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -28,12 +33,10 @@ using System.Data;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using GrafanaAdapters.Model.Common;
-using GSF.Drawing;
-using GSF.Geo;
-using Newtonsoft.Json;
 
-namespace GrafanaAdapters;
+namespace GrafanaAdapters.DataSources;
+
+// TODO: JRC - class is currently not referenced: think about where to locate/use "radial distribution for overlapped coordinates" code
 
 /// <summary>
 /// Defines location meta-data functions for Grafana controllers.
@@ -130,11 +133,11 @@ public sealed class LocationData
                         {
                             DataRow row = rows[i];
                             Point point = coordinateReference.Translate(new GeoCoordinate((double)row.Field<decimal>(latitude), (double)row.Field<decimal>(longitude)), zoom);
-                            
+
                             double theta = interval * i;
                             double x = point.X + radius * Math.Cos(theta);
                             double y = point.Y + radius * Math.Sin(theta);
-                            
+
                             GeoCoordinate coordinate = coordinateReference.Translate(new Point(x, y), zoom);
 
                             row[longitude] = (decimal)coordinate.Longitude;
@@ -161,7 +164,7 @@ public sealed class LocationData
 
     private DataTable GetLocationDataTable(List<Target> request, bool orderByCoordinates)
     {
-        DataTable activeMeasurements = DataSource?.Metadata?.Tables["ActiveMeasurements"];
+        DataTable activeMeasurements = DataSource?.Metadata?.Tables[DataSourceValue.MetadataTableName];
 
         if (activeMeasurements is null)
             return new DataTable();
@@ -190,7 +193,7 @@ public sealed class LocationData
 
         ConcurrentBag<DataRow> matchingRows = new();
 
-        foreach(DataRow row in activeMeasurements.AsEnumerable())
+        foreach (DataRow row in activeMeasurements.AsEnumerable())
         {
             if (!pointTags.Contains(row["PointTag"].ToString()))
                 continue;
@@ -202,7 +205,7 @@ public sealed class LocationData
 
             matchingRows.Add(newRow);
         }
-            
+
         if (orderByCoordinates)
         {
             int longitude = targetMeasurements.Columns["Longitude"].Ordinal;

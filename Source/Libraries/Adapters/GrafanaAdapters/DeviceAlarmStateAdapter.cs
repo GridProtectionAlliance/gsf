@@ -23,6 +23,7 @@
 //
 //******************************************************************************************************
 
+using GrafanaAdapters.Model.Database;
 using GSF;
 using GSF.Collections;
 using GSF.Data;
@@ -42,7 +43,6 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Timers;
-using GrafanaAdapters.Model.Database;
 using AlarmStateRecord = GrafanaAdapters.Model.Database.AlarmState;
 using ConnectionStringParser = GSF.Configuration.ConnectionStringParser<GSF.TimeSeries.Adapters.ConnectionStringParameterAttribute>;
 using Timer = System.Timers.Timer;
@@ -639,9 +639,9 @@ public class DeviceAlarmStateAdapter : FacileActionAdapterBase
                     // Update display text to show time since last alarm state change
                     alarmDevice.DisplayData = newState switch
                     {
-                        AlarmState.Good         => "0",
+                        AlarmState.Good => "0",
                         AlarmState.OutOfService => GetOutOfServiceTime(metadata),
-                        _                       => GetShortElapsedTimeString(currentTime - m_lastDeviceStateChange[alarmDevice.DeviceID])
+                        _ => GetShortElapsedTimeString(currentTime - m_lastDeviceStateChange[alarmDevice.DeviceID])
                     };
 
                     // Update alarm table record

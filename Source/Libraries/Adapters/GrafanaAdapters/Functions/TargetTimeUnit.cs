@@ -21,8 +21,8 @@
 //
 //******************************************************************************************************
 
-using System;
 using GSF.Units;
+using System;
 
 namespace GrafanaAdapters.Functions;
 

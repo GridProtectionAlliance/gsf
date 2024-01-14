@@ -21,9 +21,9 @@
 //
 //******************************************************************************************************
 
+using GrafanaAdapters.Model.Common;
 using System;
 using System.Collections.Generic;
-using GrafanaAdapters.Model.Common;
 
 namespace GrafanaAdapters.Functions;
 

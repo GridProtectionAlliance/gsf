@@ -43,13 +43,13 @@ public readonly struct ParameterDefinition<T> : IParameter<T>
     public string Description { get; init; }
 
     /// <inheritdoc />
-    public bool Required { get; init; }
-
-    /// <inheritdoc />
     public Type Type => typeof(T);
 
     /// <inheritdoc />
     public bool IsDefinition => true;
+
+    /// <inheritdoc />
+    public bool Required { get; init; }
 
     /// <inheritdoc />
     public bool Internal { get; init; }

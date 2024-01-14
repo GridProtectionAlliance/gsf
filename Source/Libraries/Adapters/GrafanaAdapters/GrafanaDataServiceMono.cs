@@ -26,128 +26,104 @@
 #if MONO
 
 using System.Collections.Generic;
+using GrafanaAdapters.DataSources.BuiltIn;
+using GrafanaAdapters.Model.Annotations;
+using GrafanaAdapters.Model.Common;
+using GrafanaAdapters.Model.Database;
+using GrafanaAdapters.Model.Functions;
+using GrafanaAdapters.Model.MetaData;
 using GSF.Historian.DataServices;
 
-namespace GrafanaAdapters
+namespace GrafanaAdapters;
+
+/// <summary>
+/// Represents a REST based API for a simple JSON based Grafana data source for the openHistorian 1.0.
+/// </summary>
+// Mono Implementation
+public partial class GrafanaDataService : DataService, IGrafanaDataService
 {
-    /// <summary>
-    /// Represents a REST based API for a simple JSON based Grafana data source for the openHistorian 1.0.
-    /// </summary>
-    // Mono Implementation
-    public partial class GrafanaDataService : DataService, IGrafanaDataService
+    /// <inheritdoc/>
+    public IEnumerable<TimeSeriesValues> Query(QueryRequest request)
     {
-        /// <summary>
-        /// Queries openHistorian as a Grafana data source.
-        /// </summary>
-        /// <param name="request">Query request.</param>
-        public IEnumerable<TimeSeriesValues> Query(QueryRequest request)
-        {
-            // Abort if services are not enabled
-            if (!Enabled || Archive is null)
-                return null;
+        // Abort if services are not enabled
+        if (!Enabled || Archive is null)
+            return null;
 
-            return m_dataSource.Query(request, m_cancellationSource.Token).Result;
-        }
+        return m_dataSource.Query(request, m_cancellationSource.Token).Result;
+    }
 
-        /// <summary>
-        /// Queries openPDC alarm states as a Grafana data source.
-        /// </summary>
-        /// <param name="request">Query request.</param>
-        public IEnumerable<AlarmDeviceStateView> GetAlarmState(QueryRequest request)
-        {
-            // Abort if services are not enabled
-            if (!Enabled || Archive is null)
-                return null;
+    /// <inheritdoc/>
+    public IEnumerable<AlarmDeviceStateView> GetAlarmState(QueryRequest request)
+    {
+        // Abort if services are not enabled
+        if (!Enabled || Archive is null)
+            return null;
 
-            return m_dataSource.GetAlarmState(request, m_cancellationSource.Token).Result;
-        }
+        return m_dataSource.GetAlarmState(request, m_cancellationSource.Token).Result;
+    }
 
-        /// <summary>
-        /// Queries openHistorian Device alarm states.
-        /// </summary>
-        /// <param name="request">Query request.</param>
-        public IEnumerable<AlarmState> GetDeviceAlarms(QueryRequest request)
-        {
-            // Abort if services are not enabled
-            if (!Enabled || Archive is null)
-                return null;
+    /// <inheritdoc/>
+    public IEnumerable<AlarmState> GetDeviceAlarms(QueryRequest request)
+    {
+        // Abort if services are not enabled
+        if (!Enabled || Archive is null)
+            return null;
 
-            return m_dataSource.GetDeviceAlarms(request, m_cancellationSource.Token).Result;
-        }
+        return m_dataSource.GetDeviceAlarms(request, m_cancellationSource.Token).Result;
+    }
 
-        /// <summary>
-        /// Queries openHistorian Device Groups.
-        /// </summary>
-        /// <param name="request">Query request.</param>
-        public IEnumerable<DeviceGroup> GetDeviceGroups(QueryRequest request)
-        {
-            // Abort if services are not enabled
-            if (!Enabled || Archive is null)
-                return null;
+    /// <inheritdoc/>
+    public IEnumerable<DeviceGroup> GetDeviceGroups(QueryRequest request)
+    {
+        // Abort if services are not enabled
+        if (!Enabled || Archive is null)
+            return null;
 
-            return m_dataSource.GetDeviceGroups(request, m_cancellationSource.Token).Result;
-        }
+        return m_dataSource.GetDeviceGroups(request, m_cancellationSource.Token).Result;
+    }
 
-        /// <summary>
-        /// Queries openHistorian as a Grafana Metadata source.
-        /// </summary>
-        /// <param name="request">Query request.</param>
-        public string GetMetadata(Target request)
-        {
-            // TODO: JRC - fix this if 'isPhasor' gets updated to 'dataType'
-            if (request.isPhasor)
-                return m_dataSource.GetMetadata<PhasorValue>(request).Result;
+    /// <inheritdoc/>
+    public string GetMetadata(Target request)
+    {
+        // TODO: JRC - fix this if 'isPhasor' gets updated to 'dataType'
+        if (request.isPhasor)
+            return m_dataSource.GetMetadata<PhasorValue>(request).Result;
 
-            return await m_dataSource.GetMetadata<DataSourceValue>(request).Result;
-        }
+        return m_dataSource.GetMetadata<DataSourceValue>(request).Result;
+    }
 
-        /// <summary>
-        /// Search openHistorian for a target.
-        /// </summary>
-        /// <param name="request">Search target.</param>
-        public string[] Search(Target request)
-        {
-            return m_dataSource.Search(request, m_cancellationSource.Token).Result;
-        }
+    /// <inheritdoc/>
+    public string[] Search(Target request)
+    {
+        return m_dataSource.Search(request, m_cancellationSource.Token).Result;
+    }
 
-        /// <summary>
-        /// Queries openHistorian for annotations in a time-range (e.g., Alarms).
-        /// </summary>
-        /// <param name="request">Annotation request.</param>
-        public List<AnnotationResponse> Annotations(AnnotationRequest request)
-        {
-            // Abort if services are not enabled
-            if (!Enabled || Archive is null)
-                return null;
+    /// <inheritdoc/>
+    public List<AnnotationResponse> Annotations(AnnotationRequest request)
+    {
+        // Abort if services are not enabled
+        if (!Enabled || Archive is null)
+            return null;
 
-            return m_dataSource.Annotations(request, m_cancellationSource.Token).Result;
-        }
+        return m_dataSource.Annotations(request, m_cancellationSource.Token).Result;
+    }
 
-        /// <summary>
-        /// Queries available metadata options.
-        /// </summary>
-        /// <param name="isPhasor">A boolean indicating whether the data is a phasor.</param>
-        public string[] GetTableOptions(bool isPhasor)
-        {
-            return m_dataSource.GetTableOptions(isPhasor, m_cancellationSource.Token).Result;
-        }
+    /// <inheritdoc/>
+    public string[] GetTableOptions(bool isPhasor)
+    {
+        return m_dataSource.GetTableOptions(isPhasor, m_cancellationSource.Token).Result;
+    }
 
-        /// <summary>
-        /// Queries description of available functions.
-        /// </summary>
-        // TODO: JRC - suggest passing a parameter e.g. 'string dataType' to filter function descriptions by data type, e.g., "PhasorValue" or "DataSourceValue"
-        public FunctionDescription[] GetFunctions()
-        {
-            return m_dataSource.GetFunctionDescriptions(m_cancellationSource.Token).Result;
-        }
+    /// <inheritdoc/>
+    public IEnumerable<FunctionDescription> GetFunctions(int dataTypeIndex)
+    {
+        return m_dataSource.GetFunctionDescription(dataTypeIndex, m_cancellationSource.Token).Result;
+    }
 
-        /// <summary>
-        /// Queries available metadata fields for a given source.
-        /// </summary>
-        public Dictionary<string, string[]> GetMetadataOptions(MetadataOptionsRequest request)
-        {
-            return m_dataSource.GetMetadataOptions(request, m_cancellationSource.Token).Result;
-        }
+    /// <inheritdoc/>
+    public Dictionary<string, string[]> GetMetadataOptions(MetadataOptionsRequest request)
+    {
+        return m_dataSource.GetMetadataOptions(request, m_cancellationSource.Token).Result;
     }
 }
 

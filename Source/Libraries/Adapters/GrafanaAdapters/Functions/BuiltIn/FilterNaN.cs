@@ -1,7 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using GrafanaAdapters.DataSources;
+using GrafanaAdapters.DataSources.BuiltIn;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using GrafanaAdapters.DataSources;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
 
@@ -41,7 +42,7 @@ public abstract class FilterNaN<T> : GrafanaFunctionBase<T> where T : struct, ID
     {
         bool alsoFilterInfinity = parameters.Value<bool>(0);
 
-        bool filterNaN(T dataValue) => 
+        bool filterNaN(T dataValue) =>
             !(double.IsNaN(dataValue.Value) || alsoFilterInfinity && double.IsInfinity(dataValue.Value));
 
         return GetDataSourceValues(parameters).Where(filterNaN);

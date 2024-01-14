@@ -1,9 +1,10 @@
-﻿using System;
+﻿using GrafanaAdapters.DataSources;
+using GrafanaAdapters.DataSources.BuiltIn;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using GrafanaAdapters.DataSources;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
 
@@ -47,11 +48,11 @@ public abstract class RollingAverage<T> : GrafanaFunctionBase<T> where T : struc
     public override async IAsyncEnumerable<T> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         // Immediately load values in-memory only enumerating data source once
-    #if NET
+#if NET
         ReadOnlySpan<T> values = await GetDataSourceValues(parameters).ToArrayAsync(cancellationToken).ConfigureAwait(false);
-    #else
+#else
         T[] values = await GetDataSourceValues(parameters).ToArrayAsync(cancellationToken).ConfigureAwait(false);
-    #endif
+#endif
         int length = values.Length;
 
         if (length == 0)
@@ -66,15 +67,15 @@ public abstract class RollingAverage<T> : GrafanaFunctionBase<T> where T : struc
             windowSize = length;
 
         // Calculate the rolling average for each window
-        for (int i = 0; i < length; i += windowSize) 
+        for (int i = 0; i < length; i += windowSize)
         {
             yield return values[i] with
             {
-            #if NET
+#if NET
                 Value = values[i..windowSize].Average(dataValue => dataValue.Value)
-            #else
+#else
                 Value = values.Skip(i).Take(windowSize).Average(dataValue => dataValue.Value)
-            #endif
+#endif
             };
         }
     }

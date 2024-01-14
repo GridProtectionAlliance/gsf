@@ -21,6 +21,11 @@
 //
 //******************************************************************************************************
 
+using GrafanaAdapters.DataSources.BuiltIn;
+using GrafanaAdapters.Functions;
+using GSF;
+using GSF.Historian;
+using HistorianAdapters;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,11 +33,6 @@ using System.Runtime.CompilerServices;
 using System.ServiceModel;
 using System.Threading;
 using System.Threading.Tasks;
-using GrafanaAdapters.DataSources;
-using GrafanaAdapters.Functions;
-using GSF;
-using GSF.Historian;
-using HistorianAdapters;
 
 namespace GrafanaAdapters;
 
@@ -75,7 +75,7 @@ public partial class GrafanaDataService
     private readonly HistorianDataSource m_dataSource;
     private CancellationTokenSource m_cancellationSource;
     private bool m_disposed;
-    private LocationData m_locationData;
+    //private LocationData<HistorianDataSource> m_locationData;
 
     #endregion
 
@@ -135,14 +135,6 @@ public partial class GrafanaDataService
             if (m_dataSource.Metadata is null && Enabled)
                 Archive_MetadataUpdated(this, EventArgs.Empty);
         }
-    }
-
-    /// <summary>
-    /// Gets the <see cref="LocationData"/> used by the web service to get geographic information for Phasors.
-    /// </summary>
-    private LocationData LocationData
-    {
-        get { return m_locationData ??= new LocationData { DataSource = m_dataSource }; }
     }
 
     #endregion

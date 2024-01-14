@@ -21,11 +21,11 @@
 //
 //******************************************************************************************************
 
+using GSF.Threading;
 using System;
 using System.Collections.Generic;
 using System.Runtime.Caching;
 using System.Threading;
-using GSF.Threading;
 
 namespace GrafanaAdapters;
 
@@ -109,6 +109,11 @@ internal static class TargetCache<T>
             s_targetCache.Remove(target);
             throw;
         }
+    }
+
+    internal static void Remove(string target)
+    {
+        s_targetCache.Remove(target);
     }
 
     internal static void ResetCache()

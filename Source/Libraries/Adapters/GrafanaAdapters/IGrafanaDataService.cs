@@ -35,6 +35,6 @@ public partial interface IGrafanaDataService
     /// <summary>
     /// Validates that openHistorian Grafana data source is responding as expected.
     /// </summary>
-    [OperationContract, WebInvoke(UriTemplate = "/", Method ="GET", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+    [OperationContract, WebInvoke(UriTemplate = "/", Method = "GET", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
     void TestDataSource();
 }

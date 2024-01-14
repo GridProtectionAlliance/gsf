@@ -23,6 +23,8 @@
 // ReSharper disable PossibleMultipleEnumeration
 
 using GrafanaAdapters.DataSources;
+using GrafanaAdapters.Functions.BuiltIn;
+using GSF;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -31,27 +33,19 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using GSF;
-using GrafanaAdapters.Functions.BuiltIn;
 
 namespace GrafanaAdapters.Functions;
 
 internal static class ParameterParsing
 {
-    // Gets the number of user visible parameters that have been parsed.
-    public static int VisibleCount<T>(this IGrafanaFunction<T> function, int parsedCount) where T : struct, IDataSourceValue<T>
-    {
-        return parsedCount - function.ParameterDefinitions.Count(parameter => parameter.Internal);
-    }
-
     // Gets formatted parameters to display for a target function.
     public static string FormatParameters<T>(this IGrafanaFunction<T> function, string[] parsedParameters) where T : struct, IDataSourceValue<T>
     {
-        int visibleCount = function.VisibleCount(parsedParameters.Length);
+        int visibleCount = parsedParameters.Length - function.InternalParameterCount;
         IEnumerable<string> parameters = parsedParameters.Take(visibleCount);
         return $"{string.Join(", ", parameters)}{(visibleCount > 0 ? ", " : "")}";
     }
-    
+
     /// <summary>
     /// Parses function parameters from a given expression as an array of strings.
     /// </summary>
@@ -192,7 +186,7 @@ internal static class ParameterParsing
             // Parameter
             if (index < parsedParameters.Length)
                 await parameter.ConvertParsedValueAsync(parsedParameters[index++], rootTarget, dataSourceValues, metadata, metadataMap, cancellationToken).ConfigureAwait(false);
-        
+
         #if DEBUG
             // Required parameters were already validated in ParseParameters - this is a sanity check
             else if (parameter.Required)

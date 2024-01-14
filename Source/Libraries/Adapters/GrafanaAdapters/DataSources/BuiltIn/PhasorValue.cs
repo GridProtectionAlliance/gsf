@@ -24,7 +24,7 @@
 using GrafanaAdapters.Functions.BuiltIn;
 using GSF.TimeSeries;
 
-namespace GrafanaAdapters.DataSources;
+namespace GrafanaAdapters.DataSources.BuiltIn;
 
 /// <summary>
 /// Defines a default target for a phasor value.
@@ -46,6 +46,11 @@ public enum PhasorValueTarget
 /// </summary>
 public partial struct PhasorValue
 {
+    /// <summary>
+    /// Defines the primary metadata table name for a <see cref="PhasorValue"/>.
+    /// </summary>
+    public const string MetadataTableName = "PhasorValues";
+
     /// <summary>
     /// Query target, i.e., a point-tag representing the phasor.
     /// </summary>

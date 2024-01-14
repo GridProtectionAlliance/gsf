@@ -28,85 +28,90 @@
 using System.Collections.Generic;
 using System.ServiceModel;
 using System.ServiceModel.Web;
+using GrafanaAdapters.Model.Annotations;
+using GrafanaAdapters.Model.Common;
+using GrafanaAdapters.Model.Database;
+using GrafanaAdapters.Model.Functions;
+using GrafanaAdapters.Model.MetaData;
 
-namespace GrafanaAdapters
+namespace GrafanaAdapters;
+
+/// <summary>
+/// Defines needed API calls for a Grafana data source.
+/// </summary>
+// Mono Implementation
+public partial interface IGrafanaDataService
 {
     /// <summary>
-    /// Defines needed API calls for a Grafana data source.
+    /// Queries openHistorian as a Grafana data source.
     /// </summary>
-    // Mono Implementation
-    public partial interface IGrafanaDataService
-    {
-        /// <summary>
-        /// Queries openHistorian as a Grafana data source.
-        /// </summary>
-        /// <param name="request">Query request.</param>
-        [OperationContract, WebInvoke(UriTemplate = "/query", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        IEnumerable<TimeSeriesValues> Query(QueryRequest request);
+    /// <param name="request">Query request.</param>
+    [OperationContract, WebInvoke(UriTemplate = "/query", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+    IEnumerable<TimeSeriesValues> Query(QueryRequest request);
 
-        /// <summary>
-        /// Queries openPDC alarm states as a Grafana data source.
-        /// </summary>
-        /// <param name="request">Query request.</param>
-        [OperationContract, WebInvoke(UriTemplate = "/getalarmstate", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        IEnumerable<AlarmDeviceStateView> GetAlarmState(QueryRequest request);
+    /// <summary>
+    /// Queries openPDC alarm states as a Grafana data source.
+    /// </summary>
+    /// <param name="request">Query request.</param>
+    [OperationContract, WebInvoke(UriTemplate = "/getalarmstate", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+    IEnumerable<AlarmDeviceStateView> GetAlarmState(QueryRequest request);
 
-        /// <summary>
-        /// Queries openHistorian Device alarm states.
-        /// </summary>
-        /// <param name="request">Query request.</param>
-        [OperationContract, WebInvoke(UriTemplate = "/getdevicealarms", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        IEnumerable<AlarmState> GetDeviceAlarms(QueryRequest request);
+    /// <summary>
+    /// Queries openHistorian Device alarm states.
+    /// </summary>
+    /// <param name="request">Query request.</param>
+    [OperationContract, WebInvoke(UriTemplate = "/getdevicealarms", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+    IEnumerable<AlarmState> GetDeviceAlarms(QueryRequest request);
 
-        /// <summary>
-        /// Queries openHistorian Device Groups.
-        /// </summary>
-        /// <param name="request">Query request.</param>
-        [OperationContract, WebInvoke(UriTemplate = "/getdevicegroups", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        IEnumerable<DeviceGroup> GetDeviceGroups(QueryRequest request);
+    /// <summary>
+    /// Queries openHistorian Device Groups.
+    /// </summary>
+    /// <param name="request">Query request.</param>
+    [OperationContract, WebInvoke(UriTemplate = "/getdevicegroups", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+    IEnumerable<DeviceGroup> GetDeviceGroups(QueryRequest request);
 
-        /// <summary>
-        /// Queries openHistorian as a Grafana Metadata source.
-        /// </summary>
-        /// <param name="request">Query request.</param>
-        [OperationContract, WebInvoke(UriTemplate = "/getmetadata", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        string GetMetadata(Target request);
+    /// <summary>
+    /// Queries openHistorian as a Grafana Metadata source.
+    /// </summary>
+    /// <param name="request">Query request.</param>
+    [OperationContract, WebInvoke(UriTemplate = "/getmetadata", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+    string GetMetadata(Target request);
 
-        /// <summary>
-        /// Search openHistorian for a target.
-        /// </summary>
-        /// <param name="request">Search target.</param>
-        [OperationContract, WebInvoke(UriTemplate = "/search", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        string[] Search(Target request);
+    /// <summary>
+    /// Search openHistorian for a target.
+    /// </summary>
+    /// <param name="request">Search target.</param>
+    [OperationContract, WebInvoke(UriTemplate = "/search", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+    string[] Search(Target request);
 
 
-        /// <summary>
-        /// Queries openHistorian for annotations in a time-range (e.g., Alarms).
-        /// </summary>
-        /// <param name="request">Annotation request.</param>
-        [OperationContract, WebInvoke(UriTemplate = "/annotations", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        List<AnnotationResponse> Annotations(AnnotationRequest request);
+    /// <summary>
+    /// Queries openHistorian for annotations in a time-range (e.g., Alarms).
+    /// </summary>
+    /// <param name="request">Annotation request.</param>
+    [OperationContract, WebInvoke(UriTemplate = "/annotations", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+    List<AnnotationResponse> Annotations(AnnotationRequest request);
 
-        /// <summary>
-        /// Queries available MetaData Options.
-        /// </summary>
-        /// <param name="isPhasor">A boolean indicating whether the data is a phasor.</param>
-        [OperationContract, WebInvoke(UriTemplate = "/gettableoptions", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        string[] GetTableOptions(bool isPhasor);
+    /// <summary>
+    /// Queries available MetaData Options.
+    /// </summary>
+    /// <param name="isPhasor">A boolean indicating whether the data is a phasor.</param>
+    [OperationContract, WebInvoke(UriTemplate = "/gettableoptions", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+    string[] GetTableOptions(bool isPhasor);
 
-        /// <summary>
-        /// Queries description of available functions.
-        /// </summary>
-        [OperationContract, WebInvoke(UriTemplate = "/getfunctions", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        FunctionDescription[] GetFunctions();
+    /// <summary>
+    /// Queries description of available functions.
+    /// </summary>
+    /// <param name="dataTypeIndex">Target data type index.</param>
+    [OperationContract, WebInvoke(UriTemplate = "/getfunctions", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+    IEnumerable<FunctionDescription> GetFunctions(int dataTypeIndex);
 
-        /// <summary>
-        /// Queries available metaDataFields for a given set of tables.
-        /// </summary>
-        /// <param name="request"> the set of Tables to be queried. </param>
-        [OperationContract, WebInvoke(UriTemplate = "/getmetadataoptions", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
-        Dictionary<string, string[]> GetMetadataOptions(MetadataOptionsRequest request);
-    }
+    /// <summary>
+    /// Queries available metaDataFields for a given set of tables.
+    /// </summary>
+    /// <param name="request"> the set of Tables to be queried. </param>
+    [OperationContract, WebInvoke(UriTemplate = "/getmetadataoptions", Method = "POST", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+    Dictionary<string, string[]> GetMetadataOptions(MetadataOptionsRequest request);
 }
 
 #endif

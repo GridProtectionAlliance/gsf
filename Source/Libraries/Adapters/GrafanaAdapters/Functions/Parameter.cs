@@ -39,8 +39,8 @@ internal class Parameter<T> : IMutableParameter<T>
     {
         Definition = definition;
         Value = definition.Default;
-        
-        if (Definition.Parse is not null) 
+
+        if (Definition.Parse is not null)
             m_parse = value => Definition.Parse(value);
     }
 
@@ -62,12 +62,12 @@ internal class Parameter<T> : IMutableParameter<T>
     }
 
     public string Description => Definition.Description;
-        
-    public bool Required => Definition.Required;
-        
+
     public Type Type => Definition.Type;
 
     public bool IsDefinition => false;
+
+    public bool Required => Definition.Required;
 
     public bool Internal => Definition.Internal;
 

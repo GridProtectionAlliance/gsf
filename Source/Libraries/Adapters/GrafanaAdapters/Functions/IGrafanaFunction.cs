@@ -21,11 +21,11 @@
 //
 //******************************************************************************************************
 
+using GrafanaAdapters.DataSources;
+using GrafanaAdapters.Functions.BuiltIn;
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using GrafanaAdapters.DataSources;
-using GrafanaAdapters.Functions.BuiltIn;
 
 namespace GrafanaAdapters.Functions;
 
@@ -123,6 +123,11 @@ public interface IGrafanaFunction
     int OptionalParameterCount { get; }
 
     /// <summary>
+    /// Gets the number of internal parameters of the Grafana function.
+    /// </summary>
+    int InternalParameterCount { get; }
+
+    /// <summary>
     /// Gets flag that determines if function result is target series for set-based group operations.
     /// </summary>
     /// <remarks>
@@ -157,6 +162,11 @@ public interface IGrafanaFunction
     /// Target name format for the Grafana function, typically in the form of: Name(Parameters,TargetName).
     /// </returns>
     string FormatTargetName(GroupOperations groupOperation, string targetName, string[] parsedParameters);
+
+    /// <summary>
+    /// Gets the data source value type index associated with the Grafana function.
+    /// </summary>
+    int DataTypeIndex { get; }
 }
 
 /// <summary>

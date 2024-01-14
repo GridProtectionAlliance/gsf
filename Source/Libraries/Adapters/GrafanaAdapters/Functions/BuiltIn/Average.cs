@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using GrafanaAdapters.DataSources;
+using GrafanaAdapters.DataSources.BuiltIn;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using GrafanaAdapters.DataSources;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
 
@@ -63,7 +64,7 @@ public abstract class Average<T> : GrafanaFunctionBase<T> where T : struct, IDat
             int count = 0;
 
             // Immediately enumerate to compute values enumerating data source once
-            await foreach(PhasorValue dataValue in GetDataSourceValues(parameters).WithCancellation(cancellationToken).ConfigureAwait(false))
+            await foreach (PhasorValue dataValue in GetDataSourceValues(parameters).WithCancellation(cancellationToken).ConfigureAwait(false))
             {
                 lastValue = dataValue;
                 magnitudeTotal += dataValue.Magnitude;

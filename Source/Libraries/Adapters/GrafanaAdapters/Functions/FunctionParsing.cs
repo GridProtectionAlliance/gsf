@@ -21,6 +21,11 @@
 //
 //******************************************************************************************************
 
+using GrafanaAdapters.DataSources;
+using GrafanaAdapters.DataSources.BuiltIn;
+using GrafanaAdapters.Model.Functions;
+using GSF;
+using GSF.IO;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -31,10 +36,6 @@ using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using GrafanaAdapters.DataSources;
-using GrafanaAdapters.Model.Functions;
-using GSF;
-using GSF.IO;
 
 namespace GrafanaAdapters.Functions;
 
@@ -46,8 +47,8 @@ internal static class FunctionParsing
     // Calls to this expensive match operation should be temporally cached by expression
     public static ParsedGrafanaFunction<T>[] MatchFunctions<T>(string expression) where T : struct, IDataSourceValue<T>
     {
-        Regex functionsRegex = DataSourceCache<T>.FunctionsRegex;
-        Dictionary<string, IGrafanaFunction<T>> functionMap = DataSourceCache<T>.FunctionMap;
+        Regex functionsRegex = DataSourceValueCache<T>.FunctionsRegex;
+        Dictionary<string, IGrafanaFunction<T>> functionMap = DataSourceValueCache<T>.FunctionMap;
 
         // Match all top-level functions in expression
         MatchCollection matches = functionsRegex.Matches(expression);
@@ -72,7 +73,7 @@ internal static class FunctionParsing
             // Check if the function has a group operation prefix, e.g., slice or set
             Enum.TryParse(groups["GroupOp"].Value, true, out GroupOperations operation);
 
-            // Verify that the function allows the requested operation, defaulting to standard
+            // Verify that the function allows the requested group operation
             operation = function.CheckAllowedGroupOperation(operation);
 
             parsedGrafanaFunctions.Add(new ParsedGrafanaFunction<T>
@@ -94,7 +95,7 @@ internal static class FunctionParsing
         // and reflection-based instance creation of types are only done once. If dynamic
         // reload is needed at runtime, call ReloadGrafanaFunctions() method.
         IGrafanaFunction[] grafanaFunctions = Interlocked.CompareExchange(ref s_grafanaFunctions, null, null);
-        
+
         if (grafanaFunctions is not null)
             return grafanaFunctions;
 
@@ -109,7 +110,7 @@ internal static class FunctionParsing
             string grafanaFunctionsPath = FilePath.GetAbsolutePath("").EnsureEnd(Path.DirectorySeparatorChar);
             List<Type> implementationTypes = typeof(IGrafanaFunction).LoadImplementations(grafanaFunctionsPath, true, false);
 
-            List<IGrafanaFunction> list = new();
+            List<IGrafanaFunction> functions = new();
 
             foreach (Type type in implementationTypes.Where(type => type.GetConstructor(Type.EmptyTypes) is not null))
             {
@@ -118,10 +119,10 @@ internal static class FunctionParsing
                 if (functionType is null)
                     continue;
 
-                list.Add((IGrafanaFunction)Activator.CreateInstance(functionType));
+                functions.Add((IGrafanaFunction)Activator.CreateInstance(functionType));
             }
 
-            Interlocked.Exchange(ref s_grafanaFunctions, list.ToArray());
+            Interlocked.Exchange(ref s_grafanaFunctions, functions.ToArray());
 
             return s_grafanaFunctions;
         }
@@ -131,7 +132,7 @@ internal static class FunctionParsing
         {
             if (!type.ContainsGenericParameters)
                 return type;
-            
+
             if (!type.IsNested || !type.DeclaringType!.IsGenericType)
                 return null;
 
@@ -140,27 +141,36 @@ internal static class FunctionParsing
 
             // Look for any constraint based on IDataSourceValue, if found, assign a specific
             // type (any is fine) to generic parent class so nested type can be constructed
-            return constraints.Any(constraint => constraint.GetInterfaces().Any(interfaceType => interfaceType == typeof(IDataSourceValue))) ? 
+            return constraints.Any(constraint => constraint.GetInterfaces().Any(interfaceType => interfaceType == typeof(IDataSourceValue))) ?
                 type.MakeGenericType(typeof(DataSourceValue)) : null;
         }
+    }
+
+    // Gets the Grafana functions for a specific data source value type (by its index).
+    public static IEnumerable<IGrafanaFunction> GetGrafanaFunctions(int dataTypeIndex)
+    {
+        return GetGrafanaFunctions().Where(function => function.DataTypeIndex == dataTypeIndex);
     }
 
     // Reloads the Grafana functions.
     public static void ReloadGrafanaFunctions()
     {
-        Interlocked.Exchange(ref s_grafanaFunctions, null);
-        TargetCaches.ResetAll();
-        DataSourceCache.ResetAll();
+        lock (s_grafanaFunctionsLock)
+        {
+            Interlocked.Exchange(ref s_grafanaFunctions, null);
+            TargetCaches.ResetAll();
+        }
+
+        // Reinitializing data source caches will reload all grafana functions per data source value type
+        DataSourceValueCache.ReinitializeAll();
     }
 
-    // Gets the <see cref="FunctionDescription"/> for all available functions.
-    public static IEnumerable<FunctionDescription> GetFunctionDescriptions()
+    // Gets a 'FunctionDescription' instance for all available functions.
+    public static IEnumerable<FunctionDescription> GetFunctionDescriptions(int dataTypeIndex)
     {
         static bool published(IParameter parameter) => !parameter.Internal;
 
-        // TODO: JRC - getting unique function names for the moment - this should be changed to filter by data source value type
-        // since technically there could be functions that are unique to a specific data source value types
-        return new HashSet<FunctionDescription>(GetGrafanaFunctions().SelectMany(function =>
+        return new HashSet<FunctionDescription>(GetGrafanaFunctions(dataTypeIndex).SelectMany(function =>
         {
             List<FunctionDescription> descriptions = new();
 
@@ -289,7 +299,7 @@ internal static class FunctionParsing
                     }
 
                     // Check all substitution fields for table name specifications (ActiveMeasurements assumed)
-                    HashSet<string> tableNames = new(new[] { "ActiveMeasurements" }, StringComparer.OrdinalIgnoreCase);
+                    HashSet<string> tableNames = new(new[] { DataSourceValue.MetadataTableName }, StringComparer.OrdinalIgnoreCase);
                     MatchCollection fields = fieldExpression.Matches(labelExpression);
 
                     foreach (Match match in fields)
@@ -307,7 +317,7 @@ internal static class FunctionParsing
                     foreach (string tableName in tableNames)
                     {
                         // ActiveMeasurements view fields are added as non-prefixed field name substitutions
-                        if (tableName.Equals("ActiveMeasurements", StringComparison.OrdinalIgnoreCase))
+                        if (tableName.Equals(DataSourceValue.MetadataTableName, StringComparison.OrdinalIgnoreCase))
                             LoadFieldSubstitutions(metadata, substitutions, target, tableName, false);
 
                         // All other table fields are added with table name as the prefix {table.field}
@@ -346,10 +356,9 @@ internal static class FunctionParsing
         }
     }
 
-    // TODO: JRC - determine if "PointTag" field should be added as parameter to this method
     private static void LoadFieldSubstitutions(DataSet metadata, Dictionary<string, string> substitutions, string target, string tableName, bool usePrefix)
     {
-        DataRow record = target.RecordFromTag(metadata, tableName, "PointTag");
+        DataRow record = target.RecordFromTag(metadata, tableName);
         string prefix = usePrefix ? $"{tableName}." : "";
 
         if (record is null)

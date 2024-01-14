@@ -1,5 +1,6 @@
 ﻿using Ciloci.Flee;
 using GrafanaAdapters.DataSources;
+using GrafanaAdapters.DataSources.BuiltIn;
 using GSF;
 using System;
 using System.Collections.Generic;
@@ -179,7 +180,7 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
             // Return evaluated expression
             yield return lastValue with
             {
-                Value = Convert.ToDouble(dynamicExpression.Evaluate()), 
+                Value = Convert.ToDouble(dynamicExpression.Evaluate()),
                 Target = $"{string.Join("; ", targets.Take(4))}{(targets.Count > 4 ? "; ..." : "")}"
             };
         }
