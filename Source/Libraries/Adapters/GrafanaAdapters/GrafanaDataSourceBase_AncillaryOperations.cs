@@ -20,14 +20,17 @@
 //       Generated original version of source code.
 //
 //******************************************************************************************************
-// ReSharper disable StaticMemberInGenericType
 
 using GrafanaAdapters.DataSources;
 using GrafanaAdapters.Functions;
 using GrafanaAdapters.Model.Common;
+using GSF;
+using GSF.Drawing;
+using GSF.Geo;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Text.RegularExpressions;
@@ -38,7 +41,6 @@ using ProcessQueryRequestDelegate = System.Func<
     GrafanaAdapters.Model.Common.QueryRequest,
     System.Threading.CancellationToken,
     System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<GrafanaAdapters.Model.Common.TimeSeriesValues>>>;
-
 
 namespace GrafanaAdapters;
 
@@ -136,5 +138,136 @@ partial class GrafanaDataSourceBase
         }
 
         return processQueryRequestFunctions;
+    }
+
+    private static Task ProcessRadialDistributionAsync<T>(List<DataSourceValueGroup<T>> queryValueGroups, QueryParameters queryParameters, CancellationToken cancellationToken) where T : struct, IDataSourceValue<T>
+    {
+        Dictionary<string, string> settings = queryParameters.RadialDistribution.ParseKeyValuePairs();
+
+        // Gets radius of overlapping coordinate distribution
+        if (!settings.TryGetValue("radius", out string setting))
+            throw new InvalidOperationException("Radial distribution \"radius\" setting is missing.");
+
+        if (!double.TryParse(setting, out double radius) || radius <= 0.0D)
+            throw new InvalidOperationException("Radial distribution \"radius\" setting is negative, zero or not a valid number.");
+
+        // Get zoom level
+        if (!settings.TryGetValue("zoom", out setting))
+            throw new InvalidOperationException("Radial distribution \"zoom\" setting is missing.");
+
+        if (!double.TryParse(setting, out double zoom) || zoom <= 0.0D)
+            throw new InvalidOperationException("Radial distribution \"zoom\" setting is negative, zero or not a valid number.");
+
+        // For this use case, we consider coordinates to be the "same" if they are within 100 feet.
+        //
+        // As long as coordinates are not near the poles, the following formula works to calculate
+        // the degree of difference to use for a default coordinate tolerance of about 100 feet:
+        //
+        //   1 degree of latitude ≈ 111 kilometers, and
+        //   1 foot ≈ 0.0003048 kilometers, so
+        //   100 feet ≈ 0.03048 kilometers, so
+        //   degree difference = 0.03048 kilometers / 111 kilometers/degree, so
+        //   for 100 feet, degree difference is about 0.000275 degrees
+
+        // Get optional tolerance, or use default (see above)
+        if (!settings.TryGetValue("tolerance", out setting) || !double.TryParse(setting, out double tolerance) || tolerance <= double.Epsilon)
+            tolerance = 0.000275;
+
+        // Get metadata maps that contain longitude and latitude values
+        Dictionary<string, string>[] metadataMaps = queryValueGroups
+            .Select(group => group.MetadataMap)
+            .Where(metadataMap => metadataMap.ContainsKey("Longitude") && metadataMap.ContainsKey("Latitude"))
+            .ToArray();
+
+        // No work to do if no metadata maps contain longitude and latitude values
+        if (metadataMaps.Length == 0)
+            return Task.CompletedTask;
+
+        return Task.Factory.StartNew(() =>
+        {
+            List<Dictionary<string, string>[]> groupedMaps = new();
+            List<Dictionary<string, string>> matchingMaps = new() { metadataMaps[0] };
+            Dictionary<string, string> firstGroupMap = metadataMaps[0];
+            bool firstGroupMapIsValid = coordinatesAreValid(firstGroupMap);
+
+            // Organize metadata maps with overlapped coordinates into groups
+            for (int i = 1; i < metadataMaps.Length; i++)
+            {
+                Dictionary<string, string> currentMap = metadataMaps[i];
+
+                if (firstGroupMapIsValid && coordinatesMatch(firstGroupMap, currentMap))
+                {
+                    matchingMaps.Add(currentMap);
+                }
+                else
+                {
+                    if (matchingMaps.Count > 1)
+                        groupedMaps.Add(matchingMaps.ToArray());
+
+                    matchingMaps = new List<Dictionary<string, string>> { currentMap };
+                    firstGroupMap = currentMap;
+                    firstGroupMapIsValid = coordinatesAreValid(firstGroupMap);
+                }
+            }
+
+            if (matchingMaps.Count > 1)
+                groupedMaps.Add(matchingMaps.ToArray());
+
+            // Create radial distribution for overlapped coordinates, leaving one item at center
+            EPSG3857 coordinateReference = new();
+
+            foreach (Dictionary<string, string>[] maps in groupedMaps)
+            {
+                int count = maps.Length;
+                double interval = 2.0D * Math.PI / (count - 1);
+
+                for (int i = 1; i < count; i++)
+                {
+                    Dictionary<string, string> map = maps[i];
+                    Point point = coordinateReference.Translate(new GeoCoordinate(double.Parse(map["Latitude"]), double.Parse(map["Longitude"])), zoom);
+
+                    double theta = interval * i;
+                    double x = point.X + radius * Math.Cos(theta);
+                    double y = point.Y + radius * Math.Sin(theta);
+
+                    GeoCoordinate coordinate = coordinateReference.Translate(new Point(x, y), zoom);
+
+                    map["Longitude"] = $"{coordinate.Longitude}";
+                    map["Latitude"] = $"{coordinate.Latitude}";
+                }
+            }
+        }, cancellationToken);
+
+        bool tryParseCoordinate(Dictionary<string, string> metadataMap, string coordinate, out double value)
+        {
+            value = default;
+            return metadataMap.TryGetValue(coordinate, out setting) && double.TryParse(setting, out value);
+        }
+
+        bool tryParseLongitude(Dictionary<string, string> metadataMap, out double longitude)
+        {
+            return tryParseCoordinate(metadataMap, "Longitude", out longitude);
+        }
+
+        bool tryParseLatitude(Dictionary<string, string> metadataMap, out double latitude)
+        {
+            return tryParseCoordinate(metadataMap, "Latitude", out latitude);
+        }
+
+        bool coordinatesAreValid(Dictionary<string, string> metadataMap)
+        {
+            return tryParseLongitude(metadataMap, out _) && tryParseLatitude(metadataMap, out _);
+        }
+
+        bool coordinatesMatch(Dictionary<string, string> first, Dictionary<string, string> current)
+        {
+            if (!tryParseLongitude(first, out double longitude1) || !tryParseLatitude(first, out double latitude1))
+                return false;
+
+            if (!tryParseLongitude(current, out double longitude2) || !tryParseLatitude(current, out double latitude2))
+                return false;
+
+            return Math.Abs(longitude1 - longitude2) < tolerance && Math.Abs(latitude1 - latitude2) < tolerance;
+        }
     }
 }

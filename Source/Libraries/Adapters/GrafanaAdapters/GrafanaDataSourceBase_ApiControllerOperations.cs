@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -38,7 +39,6 @@ using GSF;
 using GSF.Data;
 using GSF.Data.Model;
 using GSF.TimeSeries.Model;
-using Common = GSF.Common;
 
 namespace GrafanaAdapters;
 
@@ -60,7 +60,7 @@ partial class GrafanaDataSourceBase
             return TargetCache<string[]>.GetOrAdd($"search!{requestExpression}", () =>
             {
                 // Attempt to parse search target as a "SELECT" statement
-                if (!parseSelectExpression(request.expression.Trim(), out string tableName, out string[] fieldNames, out string expression, out string sortField, out int takeCount))
+                if (!parseSelectExpression(request.expression.Trim(), out string tableName, out bool distinct, out string[] fieldNames, out string expression, out string sortField, out int takeCount))
                 {
                     // Expression was not a 'SELECT' statement, execute a 'LIKE' statement against primary meta-data table for data source value type
                     // returning matching point tags - this can be a slow operation for large meta-data sets, so results are cached by expression
@@ -90,10 +90,10 @@ partial class GrafanaDataSourceBase
                         validFieldNames.Add(fieldName);
                 }
 
-                fieldNames = validFieldNames.ToArray();
-
-                if (fieldNames.Length == 0)
-                    fieldNames = table.Columns.Cast<DataColumn>().Select(column => column.ColumnName).ToArray();
+                // If no specific fields names were selected, assume "*" and select all fields
+                fieldNames = validFieldNames.Count == 0 ? 
+                    table.Columns.Cast<DataColumn>().Select(column => column.ColumnName).ToArray() : 
+                    validFieldNames.ToArray();
 
                 // If no filter expression or take count was specified, limit search target results - user can
                 // still request larger results sets by specifying desired TOP count.
@@ -107,43 +107,22 @@ partial class GrafanaDataSourceBase
                 }
 
                 if (string.IsNullOrWhiteSpace(expression))
-                {
-                    if (string.IsNullOrWhiteSpace(sortField))
-                    {
-                        executeSelect(table.Select());
-                    }
-                    else
-                    {
-                        if (Common.IsNumericType(table.Columns[sortField].DataType))
-                        {
-                            decimal parseAsNumeric(DataRow row)
-                            {
-                                decimal.TryParse(row[sortField].ToString(), out decimal result);
-                                return result;
-                            }
-
-                            executeSelect(table.Select().OrderBy(parseAsNumeric));
-                        }
-                        else
-                        {
-                            executeSelect(table.Select().OrderBy(row => row[sortField].ToString()));
-                        }
-                    }
-                }
+                    executeSelect(string.IsNullOrWhiteSpace(sortField) ? table.Select() : table.Select("true", sortField));
                 else
-                {
                     executeSelect(table.Select(expression, sortField));
-                }
 
-                return results.ToArray();
+                return distinct ? 
+                    results.Distinct(StringComparer.OrdinalIgnoreCase).ToArray() : 
+                    results.ToArray();
             });
         },
         cancellationToken);
 
         // Attempt to parse an expression that has SQL SELECT syntax
-        bool parseSelectExpression(string selectExpression, out string tableName, out string[] fieldNames, out string expression, out string sortField, out int topCount)
+        bool parseSelectExpression(string selectExpression, out string tableName, out bool distinct, out string[] fieldNames, out string expression, out string sortField, out int topCount)
         {
             tableName = null;
+            distinct = false;
             fieldNames = null;
             expression = null;
             sortField = null;
@@ -153,7 +132,9 @@ partial class GrafanaDataSourceBase
                 return false;
 
             // RegEx instance used to parse meta-data for target search queries using a reduced SQL SELECT statement syntax
-            s_selectExpression ??= new Regex(@"(SELECT\s+(TOP\s+(?<MaxRows>\d+)\s+)?(\s*((?<FieldName>\*)|((?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)))?\s*FROM\s+(?<TableName>\w+)\s+WHERE\s+(?<Expression>.+)\s+ORDER\s+BY\s+(?<SortField>\w+))|(SELECT\s+(TOP\s+(?<MaxRows>\d+)\s+)?(\s*((?<FieldName>\*)|((?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)))?\s*FROM\s+(?<TableName>\w+)\s+WHERE\s+(?<Expression>.+))|(SELECT\s+(TOP\s+(?<MaxRows>\d+)\s+)?((\s*((?<FieldName>\*)|((?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)))?)?\s*FROM\s+(?<TableName>\w+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            s_selectExpression ??= new Regex(
+                @"(SELECT\s+((?<Distinct>DISTINCT)\s+)?(TOP\s+(?<MaxRows>\d+)\s+)?(\s*((?<FieldName>\*)|((?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)))?\s*FROM\s+(?<TableName>\w+)\s+WHERE\s+(?<Expression>.+)\s+ORDER\s+BY\s+(?<SortField>\w+))|(SELECT\s+((?<Distinct>DISTINCT)\s+)?(TOP\s+(?<MaxRows>\d+)\s+)?(\s*((?<FieldName>\*)|((?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)))?\s*FROM\s+(?<TableName>\w+)\s+WHERE\s+(?<Expression>.+))|(SELECT\s+((?<Distinct>DISTINCT)\s+)?(TOP\s+(?<MaxRows>\d+)\s+)?((\s*((?<FieldName>\*)|((?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)))?)?\s*FROM\s+(?<TableName>\w+))",
+                RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
             Match match = s_selectExpression.Match(selectExpression.ReplaceControlCharacters());
 
@@ -161,6 +142,7 @@ partial class GrafanaDataSourceBase
                 return false;
 
             tableName = match.Result("${TableName}").Trim();
+            distinct = match.Result("${Distinct}").Trim().Length > 0;
             fieldNames = match.Groups["FieldName"].Captures.Cast<Capture>().Select(capture => capture.Value).ToArray();
             expression = match.Result("${Expression}").Trim();
             sortField = match.Result("${SortField}").Trim();
@@ -222,16 +204,16 @@ partial class GrafanaDataSourceBase
                 {
                     response = new AnnotationResponse
                     {
-                        time = datapoint[TimeSeriesValues.Time],
-                        endTime = datapoint[TimeSeriesValues.Time]
+                        time = datapoint[DataSourceValue.TimeIndex],
+                        endTime = datapoint[DataSourceValue.TimeIndex]
                     };
                 }
                 else
                 {
                     response = new AnnotationResponse
                     {
-                        time = datapoint[TimeSeriesValues.Time],
-                        endTime = values.datapoints[index + 1][TimeSeriesValues.Time]
+                        time = datapoint[DataSourceValue.TimeIndex],
+                        endTime = values.datapoints[index + 1][DataSourceValue.TimeIndex]
                     };
                 }
 
@@ -312,36 +294,6 @@ partial class GrafanaDataSourceBase
         }
     }
 
-    ///// <summary>
-    ///// Queries available MetaData Options.
-    ///// </summary>
-    ///// <param name="isPhasor">A boolean indicating whether the data is a phasor.</param>
-    ///// <param name="cancellationToken">Cancellation token.</param>
-    ///// <returns> Available MetaData Table options.</returns>
-    //public virtual Task<string[]> GetTableOptions(int dataTypeIndex, CancellationToken cancellationToken)
-    //{
-    //    return Task.Factory.StartNew(() =>
-    //    {
-    //        List<string> tables = new();
-
-    //        foreach (DataTable table in Metadata.Tables)
-    //        {
-    //            if (hasRequiredMetadataSourceColumns(table) && table.Rows.Count > 0)
-    //                tables.Add(table.TableName);
-    //        }
-
-    //        return tables.ToArray();
-    //    },
-    //    cancellationToken);
-
-    //    static bool hasRequiredMetadataSourceColumns(DataTable table) =>
-    //        table.Columns.Contains("ID") &&
-    //        table.Columns.Contains("SignalID") &&
-    //        table.Columns.Contains("PointTag") &&
-    //        table.Columns.Contains("Adder") &&
-    //        table.Columns.Contains("Multiplier");
-    //}
-
     /// <summary>
     /// Queries description of available functions.
     /// </summary>
@@ -352,80 +304,5 @@ partial class GrafanaDataSourceBase
         return Task.Run(() => FunctionParsing.GetFunctionDescriptions(dataTypeIndex), cancellationToken);
     }
 
-    ///// <summary>
-    ///// Requests Grafana metadata table column names for multiple targets.
-    ///// </summary>
-    ///// <param name="cancellationToken">Cancellation token.</param>
-    ///// <param name="request"> The targets and the meta data requested</param>
-    ///// <returns>Queried metadata table column names.</returns>
-    //public virtual Task<Dictionary<string, string[]>> GetMetadataOptions(MetadataOptionsRequest request, CancellationToken cancellationToken)
-    //{
-    //    return Task.Factory.StartNew(() =>
-    //    {
-    //        Dictionary<string, string[]> tableColumnNames = new();
 
-    //        foreach (string table in request.Tables)
-    //        {
-    //            if (!Metadata.Tables.Contains(table))
-    //                continue;
-
-    //            DataColumnCollection columns = Metadata.Tables[table].Columns;
-    //            List<string> columnNames = new();
-
-    //            for (int i = 0; i < columns.Count; i++)
-    //                columnNames.Add(columns[i].ColumnName);
-
-    //            tableColumnNames[table] = columnNames.ToArray();
-    //        }
-    //        return tableColumnNames;
-
-    //    },
-    //    cancellationToken);
-    //}
-
-    ///// <summary>
-    ///// Queries openHistorian as a Grafana metadata source.
-    ///// </summary>
-    ///// <param name="request">Query request.</param>
-    //public virtual Task<string> GetMetadata<T>(Target request) where T : struct, IDataSourceValue
-    //{
-    //    return Task.Factory.StartNew(() =>
-    //    {
-    //        HashSet<string> result = new();
-
-    //        if (string.IsNullOrWhiteSpace(request.target))
-    //        {
-    //            string tableName = request.metadataSelection.FirstOrDefault().Key;
-    //            string fieldName = request.metadataSelection.FirstOrDefault().Value.FirstOrDefault();
-
-    //            if (fieldName is not null)
-    //            {
-    //                DataTable table = Metadata.Tables[tableName];
-
-    //                if (table is not null)
-    //                {
-    //                    DataRow[] rows = table.Select();
-
-    //                    foreach (DataRow row in rows)
-    //                        result.Add(row[fieldName].ToString());
-    //                }
-    //            }
-
-    //            return JsonConvert.SerializeObject(result);
-    //        }
-
-    //        // TODO: JRC - verify this is correct - this assumes that the target is a normal data source value
-    //        //ParsedTarget<DataSourceValue>[] targets = ParseTargets<DataSourceValue>(request.target.Trim());
-
-    //        string[] rootTargets = null; // targets.SelectMany(target => target.DataTargets).ToArray();
-
-    //        foreach (string rootTarget in rootTargets)
-    //        {
-    //            KeyValuePair<string, string> data = Metadata.GetMetadataMap<T>(rootTarget, request.metadataSelection).FirstOrDefault();
-    //            result.Add(data.Value);
-    //        }
-
-    //        return JsonConvert.SerializeObject(result);
-    //    });
-    //}
 }

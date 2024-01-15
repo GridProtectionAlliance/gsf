@@ -67,6 +67,11 @@ public class QueryParameters
     public string Imports { get; set; }
 
     /// <summary>
+    /// Gets or sets any defined radial distribution request parameters defined in the query.
+    /// </summary>
+    public string RadialDistribution { get; set; }
+
+    /// <summary>
     /// Gets or sets metadata selections for the query.
     /// </summary>
     public (string tableName, string[] fieldNames)[] MetadataSelections { get; set; }

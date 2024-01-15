@@ -14,3 +14,9 @@ dotnet_diagnostic.IDE0300.severity = silent
 
 # IDE0028: Simplify collection initialization
 dotnet_diagnostic.IDE0028.severity = silent
+
+# Default severity for analyzer diagnostics with category 'Style'
+dotnet_analyzer_diagnostic.category-Style.severity = none
+
+# IDE0028: Simplify collection initialization
+dotnet_style_collection_initializer = false

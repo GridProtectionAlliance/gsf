@@ -35,16 +35,6 @@ namespace GrafanaAdapters.Model.Common;
 public class TimeSeriesValues
 {
     /// <summary>
-    /// Data point index for value.
-    /// </summary>
-    public const int Value = 0;
-
-    /// <summary>
-    /// Data point index for time.
-    /// </summary>
-    public const int Time = 1;
-
-    /// <summary>
     /// Gets or sets a Grafana time-series value point source.
     /// </summary>
     public string target;
@@ -57,12 +47,12 @@ public class TimeSeriesValues
     /// <summary>
     /// Gets or sets a Grafana time-series refId to reference a specific query.
     /// </summary>
-    public string refId;
+    public string refID;
 
     /// <summary>
     /// Gets or sets metadata attached to the <see cref="TimeSeriesValues"/>.
     /// </summary>
-    public Dictionary<string, string> meta;
+    public Dictionary<string, string> metadata;
 
     /// <summary>
     /// Gets or sets a flag that determines if empty series are produced -- non-serialized.

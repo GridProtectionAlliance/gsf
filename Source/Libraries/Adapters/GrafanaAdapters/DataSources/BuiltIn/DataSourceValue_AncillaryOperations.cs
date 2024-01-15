@@ -32,6 +32,16 @@ namespace GrafanaAdapters.DataSources.BuiltIn;
 // IDataSourceValue implementation for DataSourceValue
 public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
 {
+    /// <summary>
+    /// Data point index for value.
+    /// </summary>
+    public const int ValueIndex = 0;
+
+    /// <summary>
+    /// Data point index for time.
+    /// </summary>
+    public const int TimeIndex = 1;
+
     string IDataSourceValue.Target
     {
         readonly get => Target;
@@ -86,10 +96,10 @@ public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
 
     readonly string[] IDataSourceValue.RequiredMetadataFieldNames => new[]
     {
-        // These are fields as required by GetIDTargetMap() method
-        "ID",       // Measurement key, e.g., PPA:101
-        "SignalID", // Guid-based signal ID
-        "PointTag"  // Point tag, e.g., GPA_SHELBY:FREQ
+        // These are fields as required by local GetIDTargetMap() method
+        "ID",       // <string> Measurement key, e.g., PPA:101
+        "SignalID", //  <Guid>  Signal ID
+        "PointTag"  // <string> Point tag, e.g., GPA_SHELBY:FREQ
     };
 
     readonly Action<DataSet> IDataSourceValue.AugmentMetadata => null; // No augmentation needed

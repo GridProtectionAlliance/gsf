@@ -105,14 +105,14 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
 
     readonly string[] IDataSourceValue.RequiredMetadataFieldNames => new[]
     {
-        // These are fields as required by GetIDTargetMap() and AssignToTimeValueMap() methods
-        "MagnitudeID",       // Measurement key representing magnitude, e.g., PPA:101
-        "AngleID",           // Measurement key representing angle, e.g., PPA:102
-        "MagnitudeSignalID", // Guid-based signal ID representing magnitude
-        "AngleSignalID",     // Guid-based signal ID representing angle
-        "MagnitudePointTag", // Point tag representing magnitude, e.g, GPA_SHELBY:BUS1.MAG
-        "AnglePointTag",     // Point tag representing angle, e.g, GPA_SHELBY:BUS1.ANG
-        "PointTag"           // Point tag representing phasor, e.g, GPA_SHELBY:BUS1
+        // These are fields as required by local GetIDTargetMap() and AssignToTimeValueMap() methods
+        "MagnitudeID",       // <string> Measurement key representing magnitude, e.g., PPA:101
+        "AngleID",           // <string> Measurement key representing angle, e.g., PPA:102
+        "MagnitudeSignalID", //  <Guid>  Signal ID representing magnitude
+        "AngleSignalID",     //  <Guid>  Signal ID representing angle
+        "MagnitudePointTag", // <string> Point tag representing magnitude, e.g, GPA_SHELBY:BUS1.MAG
+        "AnglePointTag",     // <string> Point tag representing angle, e.g, GPA_SHELBY:BUS1.ANG
+        "PointTag"           // <string> Point tag representing phasor, e.g, GPA_SHELBY:BUS1
     };
 
     readonly Action<DataSet> IDataSourceValue.AugmentMetadata => AugmentMetadata;

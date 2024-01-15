@@ -261,7 +261,7 @@ internal static class MetadataExtensions
         {
             1 => (default(T).MetadataTableName, parts[0]),
             2 => (parts[0], parts[1]),
-            _ => throw new InvalidOperationException($"Invalid target \"{target}\" encountered, expected format as \"fieldName\" or \"tableName.fieldName\".")
+            _ => throw new InvalidOperationException($"Invalid target \"{target}\" encountered, expected format as \"FieldName\" or \"TableName.FieldName\".")
         };
     }
 
@@ -328,6 +328,8 @@ internal static class MetadataExtensions
             // Populate the entry dictionary with the metadata values
             foreach (string fieldName in fieldNames)
             {
+                // Returned field name will not include table name if it is unique in the return set,
+                // otherwise, field name will be formatted as "{tableName}.{fieldName}":
                 if (metadataMap.ContainsKey(fieldName))
                     metadataMap[$"{tableName}.{fieldName}"] = row[fieldName].ToString();
                 else

@@ -45,7 +45,7 @@ public class DataSourceValueGroup<T> where T : struct, IDataSourceValue
     public string RootTarget { get; set; }
 
     /// <summary>
-    /// Gets or sets a reference to the original target that was the source of these results.
+    /// Gets a reference to the original target that was the source of these results.
     /// </summary>
     public Target SourceTarget { get; init; }
 
@@ -55,17 +55,17 @@ public class DataSourceValueGroup<T> where T : struct, IDataSourceValue
     public IAsyncEnumerable<T> Source { get; set; }
 
     /// <summary>
-    /// Gets or sets flag that determines if empty series are produced.
+    /// Gets flag that determines if empty series are produced.
     /// </summary>
     public bool DropEmptySeries { get; init; }
 
     /// <summary>
-    /// Gets or sets a refID for a specific Grafana Query.
+    /// Gets a query name identifier, assigned by Grafana, used to identify a specific query.
     /// </summary>
     public string RefID { get; init; }
 
     /// <summary>
-    /// TODO: Update this
+    /// Gets user selected metadata associated with the query.
     /// </summary>
     public Dictionary<string, string> MetadataMap { get; init; }
 

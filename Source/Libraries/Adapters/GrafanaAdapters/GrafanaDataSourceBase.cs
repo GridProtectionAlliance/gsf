@@ -102,17 +102,16 @@ public abstract partial class GrafanaDataSourceBase
     {
         DateTime startTime = request.range.from.ParseJsonTimestamp();
         DateTime stopTime = request.range.to.ParseJsonTimestamp();
-
-        foreach (Target target in request.targets)
-            target.target = target.target?.Trim() ?? string.Empty;
-
         List<QueryParameters> targetQueryParameters = new();
 
         // Create query parameters for each target
         foreach (Target target in request.targets)
         {
+            if (string.IsNullOrWhiteSpace(target.target))
+                continue;
+
             // Parse any query commands in target
-            (bool dropEmptySeries, bool includePeaks, bool fullResolutionQuery, string imports, target.target) =
+            (bool dropEmptySeries, bool includePeaks, bool fullResolutionQuery, string imports, string radialDistribution, target.target) =
                 ParseQueryCommands(target.target);
 
             targetQueryParameters.Add(new QueryParameters
@@ -124,6 +123,7 @@ public abstract partial class GrafanaDataSourceBase
                 IncludePeaks = includePeaks && !fullResolutionQuery,
                 DropEmptySeries = dropEmptySeries,
                 Imports = imports,
+                RadialDistribution = radialDistribution,
                 MetadataSelections = target.metadataSelections.Select(selection => (selection.tableName, selection.fieldNames)).ToArray()
             });
         }
@@ -136,8 +136,19 @@ public abstract partial class GrafanaDataSourceBase
         // Query each target -- each returned value group has a 'Source' value enumerable that may contain deferred
         // enumerations that need evaluation before the final result can be serialized and returned to Grafana
         foreach (QueryParameters queryParameters in targetQueryParameters)
+        {
+            // Capture value groups for a given Grafana target data source query, i.e., all results with the same RefID
+            List<DataSourceValueGroup<T>> queryValueGroups = new();
+
             await foreach (DataSourceValueGroup<T> valueGroup in QueryTargetAsync<T>(instance, queryParameters, queryParameters.SourceTarget.target, cancellationToken).ConfigureAwait(false))
-                valueGroups.Add(valueGroup);
+                queryValueGroups.Add(valueGroup);
+
+            // Check if metadata selections are defined and radial distribution is requested for this data source query
+            if (queryParameters.MetadataSelections.Length > 0 && queryParameters.RadialDistribution.Length > 0)
+                await ProcessRadialDistributionAsync(queryValueGroups, queryParameters, cancellationToken).ConfigureAwait(false);
+
+            valueGroups.AddRange(queryValueGroups);
+        }
 
         // Establish one result series for each value group so that consistent order can be maintained between calls
         TimeSeriesValues[] seriesResults = new TimeSeriesValues[valueGroups.Count];
@@ -153,9 +164,9 @@ public abstract partial class GrafanaDataSourceBase
             {
                 target = valueGroup.Target,
                 rootTarget = valueGroup.RootTarget,
-                meta = valueGroup.MetadataMap,
+                metadata = valueGroup.MetadataMap,
                 dropEmptySeries = valueGroup.DropEmptySeries,
-                refId = valueGroup.RefID
+                refID = valueGroup.RefID
             };
 
             IAsyncEnumerable<T> values = valueGroup.Source;
@@ -424,15 +435,16 @@ public abstract partial class GrafanaDataSourceBase
         });
     }
 
-    private static (bool, bool, bool, string, string) ParseQueryCommands(string expression)
+    private static (bool, bool, bool, string, string, string) ParseQueryCommands(string expression)
     {
         // Parse and cache any query commands found in target expression
-        return TargetCache<(bool, bool, bool, string, string)>.GetOrAdd(expression, () =>
+        return TargetCache<(bool, bool, bool, string, string, string)>.GetOrAdd(expression, () =>
         {
             bool dropEmptySeries = false;
             bool includePeaks = false;
             bool fullResolutionQuery = false;
             string imports = string.Empty;
+            string radialDistribution = string.Empty;
 
             Match commandMatch = s_dropEmptySeriesCommand.Match(expression);
 
@@ -467,7 +479,16 @@ public abstract partial class GrafanaDataSourceBase
                 expression = expression.Replace(commandMatch.Value, "");
             }
 
-            return (dropEmptySeries, includePeaks, fullResolutionQuery, imports, expression);
+            commandMatch = s_radialDistributionCommand.Match(expression);
+
+            if (commandMatch.Success)
+            {
+                string result = commandMatch.Result("${Expression}");
+                radialDistribution = result.Trim();
+                expression = expression.Replace(commandMatch.Value, "");
+            }
+
+            return (dropEmptySeries, includePeaks, fullResolutionQuery, imports, radialDistribution, expression);
         });
     }
 
@@ -476,4 +497,5 @@ public abstract partial class GrafanaDataSourceBase
     private static readonly Regex s_includePeaksCommand = new(@";\s*IncludePeaks", RegexOptions.Compiled | RegexOptions.IgnoreCase);
     private static readonly Regex s_fullResolutionQueryCommand = new(@";\s*FullResolutionQuery", RegexOptions.Compiled | RegexOptions.IgnoreCase);
     private static readonly Regex s_importsCommand = new(@";\s*Imports\s*=\s*\{(?<Expression>.+)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private static readonly Regex s_radialDistributionCommand = new(@";\s*RadialDistribution\s*=\s*\{(?<Expression>.+)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 }

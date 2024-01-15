@@ -99,7 +99,7 @@ public static class AnnotationRequestExtensions
         if (datapoint is null)
             throw new ArgumentNullException(nameof(datapoint));
 
-        double value = datapoint[TimeSeriesValues.Value];
+        double value = datapoint[DataSourceValue.ValueIndex];
 
         return type switch
         {
