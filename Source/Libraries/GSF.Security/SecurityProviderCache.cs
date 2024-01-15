@@ -35,6 +35,7 @@ using System.Linq;
 using System.Security.Principal;
 using GSF.Collections;
 using GSF.Configuration;
+using GSF.Diagnostics;
 using GSF.Threading;
 
 // ReSharper disable MethodOverloadWithOptionalParameter
@@ -159,9 +160,14 @@ namespace GSF.Security
 
                     return true;
                 }
-                catch (ObjectDisposedException)
+                catch (Exception ex)
                 {
-                    m_disposed = true;
+                    Logger.SwallowException(ex);
+
+                    // If the provider is disposed, then it needs to be purged from the cache
+                    if (ex is ObjectDisposedException)
+                        m_disposed = true;
+
                     return false;
                 }
             }
