@@ -124,7 +124,10 @@ public abstract partial class GrafanaDataSourceBase
                 DropEmptySeries = dropEmptySeries,
                 Imports = imports,
                 RadialDistribution = radialDistribution,
-                MetadataSelections = target.metadataSelections.Select(selection => (selection.tableName, selection.fieldNames)).ToArray()
+                MetadataSelections = target.metadataSelections?
+                    .Select(selection => (selection.tableName, selection.fieldNames))
+                    .ToArray()
+                    ?? Array.Empty<(string, string[])>()
             });
         }
 

@@ -24,28 +24,32 @@
 namespace GrafanaAdapters.Model.Functions;
 
 /// <summary>
-/// Describes a Grafana function parameter.
+/// Defines a Grafana function parameter.
 /// </summary>
 public class ParameterDescription
 {
     /// <summary>
     /// Gets or sets the name of the parameter.
     /// </summary>
-    public string Name { get; set; }
+    public string name { get; set; }
 
     /// <summary>
     /// Gets or sets the description of the parameter.
     /// </summary>
-    public string Description { get; set; }
+    public string description { get; set; }
+
+    /// <summary>
+    /// Gets or sets the data type of the parameter.
+    /// </summary>
+    public string type { get; set; }
 
     /// <summary>
     /// Gets or sets flag indicating if parameter is required.
     /// </summary>
-    public bool Required { get; set; }
+    public bool required { get; set; }
 
     /// <summary>
-    /// Gets or sets the type name of the parameter.
+    /// Gets or sets the string-based representation of the default value.
     /// </summary>
-    public string ParameterTypeName { get; set; }
-
+    public string @default { get; set; }
 }

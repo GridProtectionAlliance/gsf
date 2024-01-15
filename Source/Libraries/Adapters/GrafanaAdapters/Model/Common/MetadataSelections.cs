@@ -21,21 +21,20 @@
 //
 //******************************************************************************************************
 
-namespace GrafanaAdapters.Model.Common
+namespace GrafanaAdapters.Model.Common;
+
+/// <summary>
+/// Defines a set of Grafana metadata selections.
+/// </summary>
+public class MetadataSelections
 {
     /// <summary>
-    /// Defines a set of Grafana metadata selections.
+    /// Gets ot sets source metadata table name.
     /// </summary>
-    public class MetadataSelections
-    {
-        /// <summary>
-        /// Gets ot sets source metadata table name.
-        /// </summary>
-        public string tableName { get; set; }
+    public string tableName { get; set; }
 
-        /// <summary>
-        /// Gets or sets source metadata field names.
-        /// </summary>
-        public string[] fieldNames { get; set; }
-    }
+    /// <summary>
+    /// Gets or sets source metadata field names.
+    /// </summary>
+    public string[] fieldNames { get; set; }
 }

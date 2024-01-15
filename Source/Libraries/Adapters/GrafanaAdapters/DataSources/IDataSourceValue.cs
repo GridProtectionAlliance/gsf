@@ -16,7 +16,7 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  11/20/2023 - Ritchie Carroll
+//  11/20/2023 - J. Ritchie Carroll
 //       Generated original version of source code.
 //
 //******************************************************************************************************
@@ -34,7 +34,7 @@ namespace GrafanaAdapters.DataSources;
 /// Defines an interface for a data source value.
 /// </summary>
 /// <remarks>
-/// Implementations of this interface should be structs.
+/// Implementations of this interface must be structs.
 /// </remarks>
 public interface IDataSourceValue
 {

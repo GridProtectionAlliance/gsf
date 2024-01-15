@@ -314,7 +314,7 @@ internal static class MetadataExtensions
         Dictionary<string, string> metadataMap = new();
 
         // Return an empty dictionary if metadataSelection is null or empty
-        if (metadataSelections?.Count == 0)
+        if (metadataSelections is null || metadataSelections.Count == 0)
             return metadataMap;
 
         // Iterate through selections

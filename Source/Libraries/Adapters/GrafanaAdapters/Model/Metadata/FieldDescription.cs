@@ -1,12 +1,12 @@
 ﻿//******************************************************************************************************
-//  FunctionDescription.cs - Gbtc
+//  FieldDescription.cs - Gbtc
 //
-//  Copyright © 2023, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2024, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
-//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may
-//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
+//  file except in compliance with the License. You may obtain a copy of the License at:
 //
 //      http://opensource.org/licenses/MIT
 //
@@ -16,40 +16,30 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  10/17/2023 - C. Lackner
+//  01/15/2024 - J. Ritchie Carroll
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-namespace GrafanaAdapters.Model.Functions;
+namespace GrafanaAdapters.Model.Metadata;
 
 /// <summary>
-/// Defines a Grafana function.
+/// Defines a field description for a data source value type metadata table.
 /// </summary>
-public class FunctionDescription
+public class FieldDescription
 {
     /// <summary>
-    /// Gets or sets the name of the function.
+    /// Gets or sets the name of the field.
     /// </summary>
     public string name { get; set; }
 
     /// <summary>
-    /// Gets or sets the description of the function.
+    /// Gets or sets the data type of the field.
     /// </summary>
-    public string description { get; set; }
-
+    public string type { get; set; }
+    
     /// <summary>
-    /// Gets or sets other names for the function.
+    /// Gets or sets flag indicating if field is required.
     /// </summary>
-    public string[] aliases { get; set; }
-
-    /// <summary>
-    /// Gets or sets allowed group operations for the function.
-    /// </summary>
-    public string allowedGroupOperations { get; set; }
-
-    /// <summary>
-    /// Gets or sets the parameter descriptions for the function.
-    /// </summary>
-    public ParameterDescription[] parameters { get; set; }
+    public bool required { get; set; }
 }

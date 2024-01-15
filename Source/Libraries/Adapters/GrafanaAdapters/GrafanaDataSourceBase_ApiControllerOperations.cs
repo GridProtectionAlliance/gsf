@@ -35,16 +35,157 @@ using GrafanaAdapters.Model.Annotations;
 using GrafanaAdapters.Model.Common;
 using GrafanaAdapters.Model.Database;
 using GrafanaAdapters.Model.Functions;
+using GrafanaAdapters.Model.Metadata;
 using GSF;
 using GSF.Data;
 using GSF.Data.Model;
 using GSF.TimeSeries.Model;
+using Common = GrafanaAdapters.Functions.Common;
 
 namespace GrafanaAdapters;
 
 // ApiController specific Grafana functionality is defined here
 partial class GrafanaDataSourceBase
 {
+    /// <summary>
+    /// Gets the data source value types, i.e., any type that has implemented <see cref="IDataSourceValue"/>,
+    /// that have been loaded into the application domain.
+    /// </summary>
+    public virtual IEnumerable<DataSourceValueType> GetValueTypes()
+    {
+        return DataSourceValueCache.GetDefaultInstances().Select((value, index) => new DataSourceValueType
+        {
+            name = value.GetType().Name,
+            index = index,
+            timeSeriesDefinition = string.Join(", ", value.TimeSeriesValueDefinition),
+            metadataTableName = value.MetadataTableName
+        });
+    }
+
+    /// <summary>
+    /// Gets the table names that, at a minimum, contain all the fields that the value type has defined as
+    /// required, see <see cref="IDataSourceValue.RequiredMetadataFieldNames"/>.
+    /// </summary>
+    /// <param name="request">Search request.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    public virtual Task<IEnumerable<string>> GetValueTypeTables(SearchRequest request, CancellationToken cancellationToken)
+    {
+        return Task.Run(() =>
+        {
+            IDataSourceValue dataSourceValue = DataSourceValueCache.GetDefaultInstance(request.dataTypeIndex);
+            return Metadata.Tables.Cast<DataTable>().Where(table => dataSourceValue.MetadataTableIsValid(Metadata, table.TableName)).Select(table => table.TableName);
+        },
+        cancellationToken);
+    }
+
+    /// <summary>
+    /// Gets the field names for a given table.
+    /// </summary>
+    /// <param name="request">Search request.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    public virtual Task<IEnumerable<FieldDescription>> GetValueTypeTableFields(SearchRequest request, CancellationToken cancellationToken)
+    {
+        return Task.Run(() =>
+        {
+            IDataSourceValue dataSourceValue = DataSourceValueCache.GetDefaultInstance(request.dataTypeIndex);
+            string tableName = request.expression.Trim();
+
+            if (!dataSourceValue.MetadataTableIsValid(Metadata, tableName))
+                return Enumerable.Empty<FieldDescription>();
+
+            return Metadata.Tables[tableName].Columns.Cast<DataColumn>().Select(column => new FieldDescription
+            {
+                name = column.ColumnName,
+                type = column.DataType.Name,
+                required = dataSourceValue.RequiredMetadataFieldNames.Contains(column.ColumnName, StringComparer.OrdinalIgnoreCase)
+            });
+        },
+        cancellationToken);
+    }
+
+    /// <summary>
+    /// Gets the functions that are available for a given data source value type.
+    /// </summary>
+    /// <param name="request">Search request.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    public virtual Task<IEnumerable<FunctionDescription>> GetValueTypeFunctions(SearchRequest request, CancellationToken cancellationToken)
+    {
+        return Task.Run(() =>
+        {
+            static bool published(IParameter parameter) => !parameter.Internal;
+
+            GroupOperations filteredGroupOperations = Enum.TryParse(request.expression.Trim(), out GroupOperations groupOperations) ? 
+                groupOperations :
+                Common.DefaultGroupOperations;
+
+            return FunctionParsing.GetGrafanaFunctions(request.dataTypeIndex).SelectMany(function =>
+            {
+                List<FunctionDescription> descriptions = new()
+                {
+                    new FunctionDescription
+                    {
+                        name = function.Name,
+                        description = function.Description,
+                        aliases = function.Aliases,
+                        allowedGroupOperations = function.AllowedGroupOperations.ToString(),
+                        parameters = function.ParameterDefinitions.Where(published).Select(parameter => new ParameterDescription
+                        {
+                            name = parameter.Name,
+                            description = parameter.Description,
+                            type = parameter.Type.Name,
+                            required = parameter.Required,
+                            @default = parameter.Default.ToString()
+                        }).ToArray()
+                    }
+                };
+
+                if (function.PublishedGroupOperations.HasFlag(GroupOperations.Slice) && filteredGroupOperations.HasFlag(GroupOperations.Slice))
+                {
+                    List<IParameter> parameters = new(function.ParameterDefinitions);
+                    parameters.InsertRequiredSliceParameter();
+
+                    descriptions.Add(new FunctionDescription
+                    {
+                        name = $"Slice{function.Name}",
+                        description = function.Description,
+                        aliases = function.Aliases,
+                        allowedGroupOperations = function.AllowedGroupOperations.ToString(),
+                        parameters = parameters.Where(published).Select(parameter => new ParameterDescription
+                        {
+                            name = parameter.Name,
+                            description = parameter.Description,
+                            type = parameter.Type.Name,
+                            required = parameter.Required,
+                            @default = parameter.Default.ToString()
+                        }).ToArray()
+                    });
+                }
+
+                if (function.PublishedGroupOperations.HasFlag(GroupOperations.Set) && filteredGroupOperations.HasFlag(GroupOperations.Set))
+                {
+                    descriptions.Add(new FunctionDescription
+                    {
+                        name = $"Set{function.Name}",
+                        description = function.Description,
+                        aliases = function.Aliases,
+                        allowedGroupOperations = function.AllowedGroupOperations.ToString(),
+                        parameters = function.ParameterDefinitions.Where(published).Select(parameter => new ParameterDescription
+                        {
+                            name = parameter.Name,
+                            description = parameter.Description,
+                            type = parameter.Type.Name,
+                            required = parameter.Required,
+                            @default = parameter.Default.ToString()
+                        }).ToArray()
+                    });
+                }
+
+                return descriptions;
+            });
+        },
+        cancellationToken);
+    }
+
     /// <summary>
     /// Search data source meta-data for a target.
     /// </summary>
@@ -230,10 +371,9 @@ partial class GrafanaDataSourceBase
     /// <summary>
     /// Queries current alarm device state.
     /// </summary>
-    /// <param name="request">Alarm request.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns> Queried device alarm states.</returns>
-    public virtual Task<IEnumerable<AlarmDeviceStateView>> GetAlarmState(QueryRequest request, CancellationToken cancellationToken)
+    public virtual Task<IEnumerable<AlarmDeviceStateView>> GetAlarmState(CancellationToken cancellationToken)
     {
         return Task.Factory.StartNew(() =>
         {
@@ -246,10 +386,9 @@ partial class GrafanaDataSourceBase
     /// <summary>
     /// Queries All Available Device Alarm states.
     /// </summary>
-    /// <param name="request">Alarm request.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns> Queried device alarm states.</returns>
-    public virtual Task<IEnumerable<AlarmState>> GetDeviceAlarms(QueryRequest request, CancellationToken cancellationToken)
+    public virtual Task<IEnumerable<AlarmState>> GetDeviceAlarms(CancellationToken cancellationToken)
     {
         return Task.Factory.StartNew(() =>
         {
@@ -262,10 +401,9 @@ partial class GrafanaDataSourceBase
     /// <summary>
     /// Queries All Available Device Groups.
     /// </summary>
-    /// <param name="request">request.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns> List of Device Groups.</returns>
-    public virtual Task<IEnumerable<DeviceGroup>> GetDeviceGroups(QueryRequest request, CancellationToken cancellationToken)
+    public virtual Task<IEnumerable<DeviceGroup>> GetDeviceGroups(CancellationToken cancellationToken)
     {
         return Task.Factory.StartNew(() =>
         {
@@ -293,16 +431,4 @@ partial class GrafanaDataSourceBase
                 settings["DeviceIDs"].Split(',').Select(int.Parse);
         }
     }
-
-    /// <summary>
-    /// Queries description of available functions.
-    /// </summary>
-    /// <param name="dataTypeIndex">Target data type index.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    public virtual Task<IEnumerable<FunctionDescription>> GetFunctionDescription(int dataTypeIndex, CancellationToken cancellationToken)
-    {
-        return Task.Run(() => FunctionParsing.GetFunctionDescriptions(dataTypeIndex), cancellationToken);
-    }
-
-
 }

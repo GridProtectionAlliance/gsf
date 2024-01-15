@@ -31,10 +31,6 @@ public class SearchRequest
     /// <summary>
     /// Gets or sets target data source value type index.
     /// </summary>
-    /// <remarks>
-    /// This narrows meta-data search to that which is specific
-    /// to data source value type.
-    /// </remarks>
     public int dataTypeIndex { get; set; }
 
     /// <summary>
