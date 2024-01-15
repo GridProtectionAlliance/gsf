@@ -513,8 +513,13 @@ namespace GSF.Web.Model
 
             foreach (SQLSearchFilter search in searches)
             {
-                if (search.SearchText == string.Empty)
-                    search.SearchText = "%";
+                if (search.Operator == "LIKE" || search.Operator == "NOT LIKE")
+                {
+                    if (search.SearchText == string.Empty)
+                        search.SearchText = "%";
+                    else
+                        search.SearchText = search.SearchText.Replace("*", "%");
+                }
 
                 SQLSearchFilter updated = search;
                 if (SQLSearchModifier is not null)
