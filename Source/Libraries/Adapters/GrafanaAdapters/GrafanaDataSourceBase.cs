@@ -208,7 +208,7 @@ public abstract partial class GrafanaDataSourceBase
         HashSet<string> targetSet = new(new[] { queryExpression }, StringComparer.OrdinalIgnoreCase); // Targets include user provided input, so casing is ignored
 
         // Parse out and cache any top-level grafana functions found in target expression
-        (ParsedGrafanaFunction<T>[] grafanaFunctions, HashSet<string> reducedTargetSet) = TargetCache<(ParsedGrafanaFunction<T>[], HashSet<string>)>.GetOrAdd($"{queryExpression}-{typeof(T).FullName}", () =>
+        (ParsedGrafanaFunction<T>[] grafanaFunctions, HashSet<string> reducedTargetSet) = TargetCache<(ParsedGrafanaFunction<T>[], HashSet<string>)>.GetOrAdd($"{default(T).DataTypeIndex}:{queryExpression}", () =>
         {
             // Match any top-level grafana functions in target query expression
             ParsedGrafanaFunction<T>[] matchedFunctions = FunctionParsing.MatchFunctions<T>(queryExpression);

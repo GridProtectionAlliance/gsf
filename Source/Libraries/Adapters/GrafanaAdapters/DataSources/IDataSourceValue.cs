@@ -67,6 +67,10 @@ public interface IDataSourceValue
     /// <summary>
     /// Gets time-series array values of data source value, e.g., [Value, Time].
     /// </summary>
+    /// <remarks>
+    /// To ensure data will work with Grafana data source, all values should
+    /// precede single time value. Time is always the last value in the array.
+    /// </remarks>
     double[] TimeSeriesValue { get; }
 
     /// <summary>
@@ -152,6 +156,11 @@ public interface IDataSourceValue
     /// redundant metadata lookups after the data query operation.
     /// </remarks>
     (Dictionary<ulong, string> targetMap, object state) GetIDTargetMap(DataSet metadata, HashSet<string> targetSet);
+
+    /// <summary>
+    /// Gets the data source value type index.
+    /// </summary>
+    int DataTypeIndex { get; }
 }
 
 /// <summary>

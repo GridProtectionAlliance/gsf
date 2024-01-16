@@ -205,7 +205,7 @@ internal static class FunctionParsing
         {
             string rootTarget = valueGroup.RootTarget;
 
-            string seriesLabel = TargetCache<string>.GetOrAdd($"{labelExpression}@{rootTarget}", () =>
+            string seriesLabel = TargetCache<string>.GetOrAdd($"{default(T).DataTypeIndex}:{labelExpression}@{rootTarget}", () =>
             {
                 // If label expression does not contain any substitutions, just return the expression
                 if (labelExpression.IndexOf('{') < 0)

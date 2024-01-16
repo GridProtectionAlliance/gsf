@@ -112,148 +112,151 @@ partial class GrafanaDataSourceBase
     {
         return Task.Run(() =>
         {
-            static bool published(IParameter parameter) => !parameter.Internal;
-
-            // Parse out any requested group operation filter
-            GroupOperations requestedGroupOperations = Enum.TryParse(request.expression.Trim(), out GroupOperations groupOperations) ? 
-                groupOperations :
-                Common.DefaultGroupOperations;
-
-            // Assume no group operation is desired if requested operation is undefined
-            if (requestedGroupOperations == GroupOperations.Undefined)
-                requestedGroupOperations = GroupOperations.None;
-
-            string formatDefaultValue(IParameter parameter)
+            return TargetCache<IEnumerable<FunctionDescription>>.GetOrAdd( $"{request.dataTypeIndex}:{request.expression}", () =>
             {
-                if (parameter.Name.Equals("expression"))
-                    return string.Empty;
+                static bool published(IParameter parameter) => !parameter.Internal;
 
-                return parameter.Default switch
+                // Parse out any requested group operation filter
+                GroupOperations requestedGroupOperations = Enum.TryParse(request.expression.Trim(), out GroupOperations groupOperations) ?
+                    groupOperations :
+                    Common.DefaultGroupOperations;
+
+                // Assume no group operation is desired if requested operation is undefined
+                if (requestedGroupOperations == GroupOperations.Undefined)
+                    requestedGroupOperations = GroupOperations.None;
+
+                string formatDefaultValue(IParameter parameter)
                 {
-                    string strVal => strVal,
-                    DateTime dateTime => dateTime.ToString("yyyy-MM-dd HH:mm:ss.fff"),
-                    null => "null",
-                    _ => parameter.Default.ToString()
-                };
-            }
+                    if (parameter.Name.Equals("expression"))
+                        return string.Empty;
 
-            return FunctionParsing.GetGrafanaFunctions(request.dataTypeIndex).SelectMany(function =>
-            {
-                List<FunctionDescription> descriptions = new();
-
-                GroupOperations publishedGroupOperations = function.PublishedGroupOperations;
-                GroupOperations allowedGroupOperations = function.AllowedGroupOperations;
-                GroupOperations filteredGroupOperations = requestedGroupOperations;
-                GroupOperations? overrideNamedGroupOperation = null;
-
-                if (publishedGroupOperations == GroupOperations.Undefined)
-                    publishedGroupOperations = GroupOperations.None;
-
-                if (allowedGroupOperations == GroupOperations.Undefined)
-                    allowedGroupOperations = GroupOperations.None;
-
-                // Check for group operation exceptions where published group operation is not a subset of
-                // allowed group operations. For example, this accommodates cases like the "Evaluate" function
-                // which is forced to be a "Slice"" operation, but only publishes "None". Additionally, only 
-                // apply this override if the requested group operation is a subset of either the allowed or
-                // published group operations.
-                if ((publishedGroupOperations & allowedGroupOperations) == 0 && 
-                    ((filteredGroupOperations & publishedGroupOperations) > 0 || (filteredGroupOperations & allowedGroupOperations) > 0))
-                {
-                    // Override naming target group operation with original published group operation
-                    overrideNamedGroupOperation = publishedGroupOperations;
-
-                    // Published group operation is not a subset of allowed group operations, so
-                    // we use the allowed group operations as the published group operations
-                    publishedGroupOperations = allowedGroupOperations;
-
-                    // If the requested group operation is not a subset of the allowed group operations,
-                    // then we use the allowed group operations as the requested group operations
-                    if ((filteredGroupOperations & allowedGroupOperations) == 0)
-                        filteredGroupOperations = allowedGroupOperations;
-                }
-
-                string formatFunctionName(GroupOperations targetGroupOperation)
-                {
-                    if (overrideNamedGroupOperation.HasValue)
-                        targetGroupOperation = overrideNamedGroupOperation.Value;
-
-                    // Function name is based on original published group operation
-                    return targetGroupOperation switch
+                    return parameter.Default switch
                     {
-                        GroupOperations.Slice => $"Slice{function.Name}",
-                        GroupOperations.Set => $"Set{function.Name}",
-                        _ => function.Name
+                        string strVal => strVal,
+                        DateTime dateTime => dateTime.ToString("yyyy-MM-dd HH:mm:ss.fff"),
+                        null => "null",
+                        _ => parameter.Default.ToString()
                     };
                 }
 
-                // Apply any requested group operation filters
-                publishedGroupOperations &= filteredGroupOperations;
-
-                if (publishedGroupOperations.HasFlag(GroupOperations.None))
+                return FunctionParsing.GetGrafanaFunctions(request.dataTypeIndex).SelectMany(function =>
                 {
-                    descriptions.Add(new FunctionDescription
+                    List<FunctionDescription> descriptions = new();
+
+                    GroupOperations publishedGroupOperations = function.PublishedGroupOperations;
+                    GroupOperations allowedGroupOperations = function.AllowedGroupOperations;
+                    GroupOperations filteredGroupOperations = requestedGroupOperations;
+                    GroupOperations? overrideNamedGroupOperation = null;
+
+                    if (publishedGroupOperations == GroupOperations.Undefined)
+                        publishedGroupOperations = GroupOperations.None;
+
+                    if (allowedGroupOperations == GroupOperations.Undefined)
+                        allowedGroupOperations = GroupOperations.None;
+
+                    // Check for group operation exceptions where published group operation is not a subset of
+                    // allowed group operations. For example, this accommodates cases like the "Evaluate" function
+                    // which is forced to be a "Slice"" operation, but only publishes "None". Additionally, only 
+                    // apply this override if the requested group operation is a subset of either the allowed or
+                    // published group operations.
+                    if ((publishedGroupOperations & allowedGroupOperations) == 0 &&
+                        ((filteredGroupOperations & publishedGroupOperations) > 0 || (filteredGroupOperations & allowedGroupOperations) > 0))
                     {
-                        name = formatFunctionName(GroupOperations.None),
-                        description = function.Description,
-                        aliases = function.Aliases,
-                        allowedGroupOperations = function.AllowedGroupOperations.ToString(),
-                        publishedGroupOperations = function.PublishedGroupOperations.ToString(),
-                        parameters = function.ParameterDefinitions.Where(published).Select(parameter => new ParameterDescription
-                        {
-                            name = parameter.Name,
-                            description = parameter.Description,
-                            type = parameter.Type.Name,
-                            required = parameter.Required,
-                            @default = formatDefaultValue(parameter)
-                        }).ToArray()
-                    });
-                };
+                        // Override naming target group operation with original published group operation
+                        overrideNamedGroupOperation = publishedGroupOperations;
 
-                if (publishedGroupOperations.HasFlag(GroupOperations.Slice))
-                {
-                    List<IParameter> parameters = new(function.ParameterDefinitions);
-                    parameters.InsertRequiredSliceParameter();
+                        // Published group operation is not a subset of allowed group operations, so
+                        // we use the allowed group operations as the published group operations
+                        publishedGroupOperations = allowedGroupOperations;
 
-                    descriptions.Add(new FunctionDescription
+                        // If the requested group operation is not a subset of the allowed group operations,
+                        // then we use the allowed group operations as the requested group operations
+                        if ((filteredGroupOperations & allowedGroupOperations) == 0)
+                            filteredGroupOperations = allowedGroupOperations;
+                    }
+
+                    string formatFunctionName(GroupOperations targetGroupOperation)
                     {
-                        name = formatFunctionName(GroupOperations.Slice),
-                        description = function.Description,
-                        aliases = function.Aliases,
-                        allowedGroupOperations = function.AllowedGroupOperations.ToString(),
-                        publishedGroupOperations = function.PublishedGroupOperations.ToString(),
-                        parameters = parameters.Where(published).Select(parameter => new ParameterDescription
-                        {
-                            name = parameter.Name,
-                            description = parameter.Description,
-                            type = parameter.Type.Name,
-                            required = parameter.Required,
-                            @default = formatDefaultValue(parameter)
-                        }).ToArray()
-                    });
-                }
+                        if (overrideNamedGroupOperation.HasValue)
+                            targetGroupOperation = overrideNamedGroupOperation.Value;
 
-                if (publishedGroupOperations.HasFlag(GroupOperations.Set))
-                {
-                    descriptions.Add(new FunctionDescription
+                        // Function name is based on original published group operation
+                        return targetGroupOperation switch
+                        {
+                            GroupOperations.Slice => $"Slice{function.Name}",
+                            GroupOperations.Set => $"Set{function.Name}",
+                            _ => function.Name
+                        };
+                    }
+
+                    // Apply any requested group operation filters
+                    publishedGroupOperations &= filteredGroupOperations;
+
+                    if (publishedGroupOperations.HasFlag(GroupOperations.None))
                     {
-                        name = formatFunctionName(GroupOperations.Set),
-                        description = function.Description,
-                        aliases = function.Aliases,
-                        allowedGroupOperations = function.AllowedGroupOperations.ToString(),
-                        publishedGroupOperations = function.PublishedGroupOperations.ToString(),
-                        parameters = function.ParameterDefinitions.Where(published).Select(parameter => new ParameterDescription
+                        descriptions.Add(new FunctionDescription
                         {
-                            name = parameter.Name,
-                            description = parameter.Description,
-                            type = parameter.Type.Name,
-                            required = parameter.Required,
-                            @default = formatDefaultValue(parameter)
-                        }).ToArray()
-                    });
-                }
+                            name = formatFunctionName(GroupOperations.None),
+                            description = function.Description,
+                            aliases = function.Aliases,
+                            allowedGroupOperations = function.AllowedGroupOperations.ToString(),
+                            publishedGroupOperations = function.PublishedGroupOperations.ToString(),
+                            parameters = function.ParameterDefinitions.Where(published).Select(parameter => new ParameterDescription
+                            {
+                                name = parameter.Name,
+                                description = parameter.Description,
+                                type = parameter.Type.Name,
+                                required = parameter.Required,
+                                @default = formatDefaultValue(parameter)
+                            }).ToArray()
+                        });
+                    };
 
-                return descriptions;
+                    if (publishedGroupOperations.HasFlag(GroupOperations.Slice))
+                    {
+                        List<IParameter> parameters = new(function.ParameterDefinitions);
+                        parameters.InsertRequiredSliceParameter();
+
+                        descriptions.Add(new FunctionDescription
+                        {
+                            name = formatFunctionName(GroupOperations.Slice),
+                            description = function.Description,
+                            aliases = function.Aliases,
+                            allowedGroupOperations = function.AllowedGroupOperations.ToString(),
+                            publishedGroupOperations = function.PublishedGroupOperations.ToString(),
+                            parameters = parameters.Where(published).Select(parameter => new ParameterDescription
+                            {
+                                name = parameter.Name,
+                                description = parameter.Description,
+                                type = parameter.Type.Name,
+                                required = parameter.Required,
+                                @default = formatDefaultValue(parameter)
+                            }).ToArray()
+                        });
+                    }
+
+                    if (publishedGroupOperations.HasFlag(GroupOperations.Set))
+                    {
+                        descriptions.Add(new FunctionDescription
+                        {
+                            name = formatFunctionName(GroupOperations.Set),
+                            description = function.Description,
+                            aliases = function.Aliases,
+                            allowedGroupOperations = function.AllowedGroupOperations.ToString(),
+                            publishedGroupOperations = function.PublishedGroupOperations.ToString(),
+                            parameters = function.ParameterDefinitions.Where(published).Select(parameter => new ParameterDescription
+                            {
+                                name = parameter.Name,
+                                description = parameter.Description,
+                                type = parameter.Type.Name,
+                                required = parameter.Required,
+                                @default = formatDefaultValue(parameter)
+                            }).ToArray()
+                        });
+                    }
+
+                    return descriptions;
+                });
             });
         },
         cancellationToken);
@@ -271,7 +274,7 @@ partial class GrafanaDataSourceBase
 
         return Task.Factory.StartNew(() =>
         {
-            return TargetCache<string[]>.GetOrAdd($"search!{requestExpression}", () =>
+            return TargetCache<string[]>.GetOrAdd($"search!{request.dataTypeIndex}:{requestExpression}", () =>
             {
                 // Attempt to parse search target as a "SELECT" statement
                 if (!parseSelectExpression(request.expression.Trim(), out string tableName, out bool distinct, out string[] fieldNames, out string expression, out string sortField, out int takeCount))

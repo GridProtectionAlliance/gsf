@@ -110,7 +110,7 @@ public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
         (DataRow, int) getRecordAndHashCode() =>
             (target.RecordFromTag(metadata, tableName), metadata.GetHashCode());
 
-        string cacheKey = $"{nameof(DataSourceValue)}-{target}";
+        string cacheKey = $"{TypeIndex}:{target}";
 
         (DataRow record, int hashCode) = TargetCache<(DataRow, int)>.GetOrAdd(cacheKey, getRecordAndHashCode);
 
@@ -133,17 +133,17 @@ public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
         foreach (string target in targetSet)
         {
             // Check if target is already in the form of a point tag
-            MeasurementKey key = TargetCache<MeasurementKey>.GetOrAdd(target, () => target.KeyFromTag(metadata));
+            MeasurementKey key = TargetCache<MeasurementKey>.GetOrAdd($"{TypeIndex}:{target}", () => target.KeyFromTag(metadata));
 
             if (key == MeasurementKey.Undefined)
             {
                 // Check if target is in the form of a Guid-based signal ID, e.g., {00000000-0000-0000-0000-000000000000}
-                (key, string pointTag) = TargetCache<(MeasurementKey, string)>.GetOrAdd($"signalID@{target}", () => target.KeyAndTagFromSignalID(metadata));
+                (key, string pointTag) = TargetCache<(MeasurementKey, string)>.GetOrAdd($"signalID@{TypeIndex}:{target}", () => target.KeyAndTagFromSignalID(metadata));
 
                 if (key == MeasurementKey.Undefined)
                 {
                     // Check if target is in the form of a measurement key, e.g., PPA:101
-                    (key, pointTag) = TargetCache<(MeasurementKey, string)>.GetOrAdd($"key@{target}", () =>
+                    (key, pointTag) = TargetCache<(MeasurementKey, string)>.GetOrAdd($"key@{TypeIndex}:{target}", () =>
                     {
                         MeasurementKey.TryParse(target, out MeasurementKey parsedKey);
                         return (parsedKey, parsedKey.TagFromKey(metadata));
@@ -166,6 +166,8 @@ public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
         // Return target map and null state
         return (targetMap, null);
     }
+
+    int IDataSourceValue.DataTypeIndex => TypeIndex;
 
     readonly void IDataSourceValue<DataSourceValue>.AssignToTimeValueMap(DataSourceValue dataValue, SortedList<double, DataSourceValue> timeValueMap, object state)
     {
