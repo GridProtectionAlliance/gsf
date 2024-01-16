@@ -87,10 +87,6 @@ public abstract partial class GrafanaDataSourceBase
     /// <param name="cancellationToken">Cancellation token.</param>
     public Task<IEnumerable<TimeSeriesValues>> Query(QueryRequest request, CancellationToken cancellationToken)
     {
-        // TODO: JRC - drop this temporary code once UI supports 'request.dataTypeIndex':
-        if (request.dataTypeIndex == -1)
-            request.dataTypeIndex = request.isPhasor ? PhasorValue.TypeIndex : DataSourceValue.TypeIndex;
-
         if (request.dataTypeIndex < 0 || request.dataTypeIndex >= DataSourceValueCache.LoadedTypes.Count)
             throw new IndexOutOfRangeException("Query request must specify a valid data type index.");
 
