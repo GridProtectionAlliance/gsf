@@ -315,7 +315,7 @@ public abstract partial class GrafanaDataSourceBase
         // Handle function based on selected group operation
         switch (groupOperation)
         {
-            case GroupOperations.None:
+            case <= GroupOperations.None:
             {
                 await foreach (DataSourceValueGroup<T> valueGroup in dataset.ConfigureAwait(false))
                 {

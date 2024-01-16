@@ -23,7 +23,6 @@
 
 using GrafanaAdapters.DataSources;
 using GrafanaAdapters.DataSources.BuiltIn;
-using GrafanaAdapters.Model.Functions;
 using GSF;
 using GSF.IO;
 using System;
@@ -73,7 +72,8 @@ internal static class FunctionParsing
             // Check if the function has a group operation prefix, e.g., slice or set
             Enum.TryParse(groups["GroupOp"].Value, true, out GroupOperations operation);
 
-            // Verify that the function allows the requested group operation
+            // Verify that the function allows the requested group operation - this will
+            // throw an exception if the function does not support the requested operation
             operation = function.CheckAllowedGroupOperation(operation);
 
             parsedGrafanaFunctions.Add(new ParsedGrafanaFunction<T>

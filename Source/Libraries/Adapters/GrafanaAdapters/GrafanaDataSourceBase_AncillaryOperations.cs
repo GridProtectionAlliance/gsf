@@ -173,10 +173,12 @@ partial class GrafanaDataSourceBase
         if (!settings.TryGetValue("tolerance", out setting) || !double.TryParse(setting, out double tolerance) || tolerance <= double.Epsilon)
             tolerance = 0.000275;
 
-        // Get metadata maps that contain longitude and latitude values
+        // Get metadata maps that contain valid longitude and latitude coordinates and are sorted by them
         Dictionary<string, string>[] metadataMaps = queryValueGroups
             .Select(group => group.MetadataMap)
-            .Where(metadataMap => metadataMap.ContainsKey("Longitude") && metadataMap.ContainsKey("Latitude"))
+            .Where(coordinatesAreValid)
+            .OrderBy(metadataMap => numericValueOf(metadataMap["Longitude"]))
+            .ThenBy(metadataMap => numericValueOf(metadataMap["Latitude"]))
             .ToArray();
 
         // No work to do if no metadata maps contain longitude and latitude values
@@ -188,14 +190,14 @@ partial class GrafanaDataSourceBase
             List<Dictionary<string, string>[]> groupedMaps = new();
             List<Dictionary<string, string>> matchingMaps = new() { metadataMaps[0] };
             Dictionary<string, string> firstGroupMap = metadataMaps[0];
-            bool firstGroupMapIsValid = coordinatesAreValid(firstGroupMap);
 
-            // Organize metadata maps with overlapped coordinates into groups
+            // Organize metadata maps with overlapped coordinates into groups, this code
+            // assumes that metadata maps are already sorted by longitude and latitude:
             for (int i = 1; i < metadataMaps.Length; i++)
             {
                 Dictionary<string, string> currentMap = metadataMaps[i];
 
-                if (firstGroupMapIsValid && coordinatesMatch(firstGroupMap, currentMap))
+                if (coordinatesMatch(firstGroupMap, currentMap))
                 {
                     matchingMaps.Add(currentMap);
                 }
@@ -206,7 +208,6 @@ partial class GrafanaDataSourceBase
 
                     matchingMaps = new List<Dictionary<string, string>> { currentMap };
                     firstGroupMap = currentMap;
-                    firstGroupMapIsValid = coordinatesAreValid(firstGroupMap);
                 }
             }
 
@@ -221,6 +222,7 @@ partial class GrafanaDataSourceBase
                 int count = maps.Length;
                 double interval = 2.0D * Math.PI / (count - 1);
 
+                // Skip first map since it is the center
                 for (int i = 1; i < count; i++)
                 {
                     Dictionary<string, string> map = maps[i];
@@ -238,23 +240,29 @@ partial class GrafanaDataSourceBase
             }
         }, cancellationToken);
 
-        bool tryParseCoordinate(Dictionary<string, string> metadataMap, string coordinate, out double value)
+        static double numericValueOf(string mapValue)
         {
-            value = default;
-            return metadataMap.TryGetValue(coordinate, out setting) && double.TryParse(setting, out value);
+            double.TryParse(mapValue, out double value);
+            return value;
         }
 
-        bool tryParseLongitude(Dictionary<string, string> metadataMap, out double longitude)
+        static bool tryParseCoordinate(Dictionary<string, string> metadataMap, string coordinate, out double value)
+        {
+            value = default;
+            return metadataMap.TryGetValue(coordinate, out string setting) && double.TryParse(setting, out value);
+        }
+
+        static bool tryParseLongitude(Dictionary<string, string> metadataMap, out double longitude)
         {
             return tryParseCoordinate(metadataMap, "Longitude", out longitude);
         }
 
-        bool tryParseLatitude(Dictionary<string, string> metadataMap, out double latitude)
+        static bool tryParseLatitude(Dictionary<string, string> metadataMap, out double latitude)
         {
             return tryParseCoordinate(metadataMap, "Latitude", out latitude);
         }
 
-        bool coordinatesAreValid(Dictionary<string, string> metadataMap)
+        static bool coordinatesAreValid(Dictionary<string, string> metadataMap)
         {
             return tryParseLongitude(metadataMap, out _) && tryParseLatitude(metadataMap, out _);
         }

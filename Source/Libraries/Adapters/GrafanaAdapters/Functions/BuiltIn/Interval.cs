@@ -35,7 +35,7 @@ public abstract class Interval<T> : GrafanaFunctionBase<T> where T : struct, IDa
     /// <inheritdoc />
     // Slice operation has no meaning for this time-focused function and Set operation will have an aberration between series,
     // so we override the exposed behaviors, i.e., use of Slice will produce an error and use of Set will be hidden:
-    public override GroupOperations AllowedGroupOperations => GroupOperations.Set;
+    public override GroupOperations AllowedGroupOperations => GroupOperations.None | GroupOperations.Set;
 
     /// <inheritdoc />
     public override GroupOperations PublishedGroupOperations => GroupOperations.None;

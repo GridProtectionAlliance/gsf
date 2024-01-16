@@ -29,7 +29,7 @@ namespace GrafanaAdapters.Functions;
 
 internal static class Common
 {
-    public const GroupOperations DefaultGroupOperations = GroupOperations.Slice | GroupOperations.Set;
+    public const GroupOperations DefaultGroupOperations = GroupOperations.None | GroupOperations.Slice | GroupOperations.Set;
 
     // This generates a standard data source values parameter definition - this is always the last parameter
     public static ParameterDefinition<IAsyncEnumerable<T>> DataSourceValuesParameterDefinition<T>()
@@ -38,7 +38,7 @@ internal static class Common
         {
             Name = "expression",
             Default = AsyncEnumerable.Empty<T>(),
-            Description = "Input Data Points",
+            Description = "Target expression that produces a series of values representing input data for the function",
             Required = true
         };
     }
@@ -47,6 +47,7 @@ internal static class Common
     {
         parameters.Insert(0, new ParameterDefinition<double>()
         {
+            Name = "sliceTolerance",
             Default = 0.0333D,
             Description = "A floating-point value that must be greater than or equal to zero that represents the desired time tolerance, in seconds, for the time slice",
             Required = true

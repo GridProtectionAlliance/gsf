@@ -114,68 +114,141 @@ partial class GrafanaDataSourceBase
         {
             static bool published(IParameter parameter) => !parameter.Internal;
 
-            GroupOperations filteredGroupOperations = Enum.TryParse(request.expression.Trim(), out GroupOperations groupOperations) ? 
+            // Parse out any requested group operation filter
+            GroupOperations requestedGroupOperations = Enum.TryParse(request.expression.Trim(), out GroupOperations groupOperations) ? 
                 groupOperations :
                 Common.DefaultGroupOperations;
 
+            // Assume no group operation is desired if requested operation is undefined
+            if (requestedGroupOperations == GroupOperations.Undefined)
+                requestedGroupOperations = GroupOperations.None;
+
+            string formatDefaultValue(IParameter parameter)
+            {
+                if (parameter.Name.Equals("expression"))
+                    return string.Empty;
+
+                return parameter.Default switch
+                {
+                    string strVal => strVal,
+                    DateTime dateTime => dateTime.ToString("yyyy-MM-dd HH:mm:ss.fff"),
+                    null => "null",
+                    _ => parameter.Default.ToString()
+                };
+            }
+
             return FunctionParsing.GetGrafanaFunctions(request.dataTypeIndex).SelectMany(function =>
             {
-                List<FunctionDescription> descriptions = new()
+                List<FunctionDescription> descriptions = new();
+
+                GroupOperations publishedGroupOperations = function.PublishedGroupOperations;
+                GroupOperations allowedGroupOperations = function.AllowedGroupOperations;
+                GroupOperations filteredGroupOperations = requestedGroupOperations;
+                GroupOperations? overrideNamedGroupOperation = null;
+
+                if (publishedGroupOperations == GroupOperations.Undefined)
+                    publishedGroupOperations = GroupOperations.None;
+
+                if (allowedGroupOperations == GroupOperations.Undefined)
+                    allowedGroupOperations = GroupOperations.None;
+
+                // Check for group operation exceptions where published group operation is not a subset of
+                // allowed group operations. For example, this accommodates cases like the "Evaluate" function
+                // which is forced to be a "Slice"" operation, but only publishes "None". Additionally, only 
+                // apply this override if the requested group operation is a subset of either the allowed or
+                // published group operations.
+                if ((publishedGroupOperations & allowedGroupOperations) == 0 && 
+                    ((filteredGroupOperations & publishedGroupOperations) > 0 || (filteredGroupOperations & allowedGroupOperations) > 0))
                 {
-                    new FunctionDescription
+                    // Override naming target group operation with original published group operation
+                    overrideNamedGroupOperation = publishedGroupOperations;
+
+                    // Published group operation is not a subset of allowed group operations, so
+                    // we use the allowed group operations as the published group operations
+                    publishedGroupOperations = allowedGroupOperations;
+
+                    // If the requested group operation is not a subset of the allowed group operations,
+                    // then we use the allowed group operations as the requested group operations
+                    if ((filteredGroupOperations & allowedGroupOperations) == 0)
+                        filteredGroupOperations = allowedGroupOperations;
+                }
+
+                string formatFunctionName(GroupOperations targetGroupOperation)
+                {
+                    if (overrideNamedGroupOperation.HasValue)
+                        targetGroupOperation = overrideNamedGroupOperation.Value;
+
+                    // Function name is based on original published group operation
+                    return targetGroupOperation switch
                     {
-                        name = function.Name,
+                        GroupOperations.Slice => $"Slice{function.Name}",
+                        GroupOperations.Set => $"Set{function.Name}",
+                        _ => function.Name
+                    };
+                }
+
+                // Apply any requested group operation filters
+                publishedGroupOperations &= filteredGroupOperations;
+
+                if (publishedGroupOperations.HasFlag(GroupOperations.None))
+                {
+                    descriptions.Add(new FunctionDescription
+                    {
+                        name = formatFunctionName(GroupOperations.None),
                         description = function.Description,
                         aliases = function.Aliases,
                         allowedGroupOperations = function.AllowedGroupOperations.ToString(),
+                        publishedGroupOperations = function.PublishedGroupOperations.ToString(),
                         parameters = function.ParameterDefinitions.Where(published).Select(parameter => new ParameterDescription
                         {
                             name = parameter.Name,
                             description = parameter.Description,
                             type = parameter.Type.Name,
                             required = parameter.Required,
-                            @default = parameter.Default.ToString()
+                            @default = formatDefaultValue(parameter)
                         }).ToArray()
-                    }
+                    });
                 };
 
-                if (function.PublishedGroupOperations.HasFlag(GroupOperations.Slice) && filteredGroupOperations.HasFlag(GroupOperations.Slice))
+                if (publishedGroupOperations.HasFlag(GroupOperations.Slice))
                 {
                     List<IParameter> parameters = new(function.ParameterDefinitions);
                     parameters.InsertRequiredSliceParameter();
 
                     descriptions.Add(new FunctionDescription
                     {
-                        name = $"Slice{function.Name}",
+                        name = formatFunctionName(GroupOperations.Slice),
                         description = function.Description,
                         aliases = function.Aliases,
                         allowedGroupOperations = function.AllowedGroupOperations.ToString(),
+                        publishedGroupOperations = function.PublishedGroupOperations.ToString(),
                         parameters = parameters.Where(published).Select(parameter => new ParameterDescription
                         {
                             name = parameter.Name,
                             description = parameter.Description,
                             type = parameter.Type.Name,
                             required = parameter.Required,
-                            @default = parameter.Default.ToString()
+                            @default = formatDefaultValue(parameter)
                         }).ToArray()
                     });
                 }
 
-                if (function.PublishedGroupOperations.HasFlag(GroupOperations.Set) && filteredGroupOperations.HasFlag(GroupOperations.Set))
+                if (publishedGroupOperations.HasFlag(GroupOperations.Set))
                 {
                     descriptions.Add(new FunctionDescription
                     {
-                        name = $"Set{function.Name}",
+                        name = formatFunctionName(GroupOperations.Set),
                         description = function.Description,
                         aliases = function.Aliases,
                         allowedGroupOperations = function.AllowedGroupOperations.ToString(),
+                        publishedGroupOperations = function.PublishedGroupOperations.ToString(),
                         parameters = function.ParameterDefinitions.Where(published).Select(parameter => new ParameterDescription
                         {
                             name = parameter.Name,
                             description = parameter.Description,
                             type = parameter.Type.Name,
                             required = parameter.Required,
-                            @default = parameter.Default.ToString()
+                            @default = formatDefaultValue(parameter)
                         }).ToArray()
                     });
                 }

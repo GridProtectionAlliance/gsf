@@ -49,6 +49,11 @@ public class FunctionDescription
     public string allowedGroupOperations { get; set; }
 
     /// <summary>
+    /// Gets or sets published group operations for the function.
+    /// </summary>
+    public string publishedGroupOperations { get; set; }
+
+    /// <summary>
     /// Gets or sets the parameter descriptions for the function.
     /// </summary>
     public ParameterDescription[] parameters { get; set; }

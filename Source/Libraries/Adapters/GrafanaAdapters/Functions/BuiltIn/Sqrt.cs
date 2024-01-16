@@ -26,7 +26,7 @@ public abstract class Sqrt<T> : GrafanaFunctionBase<T> where T : struct, IDataSo
 
     /// <inheritdoc />
     // Hiding slice operation since result matrix would be the same when tolerance matches data rate
-    public override GroupOperations PublishedGroupOperations => GroupOperations.Set;
+    public override GroupOperations PublishedGroupOperations => GroupOperations.None | GroupOperations.Set;
 
     /// <inheritdoc />
     public override IAsyncEnumerable<T> ComputeAsync(Parameters parameters, CancellationToken cancellationToken)

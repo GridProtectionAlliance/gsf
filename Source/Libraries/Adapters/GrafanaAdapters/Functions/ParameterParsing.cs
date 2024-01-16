@@ -43,7 +43,7 @@ internal static class ParameterParsing
     {
         int visibleCount = parsedParameters.Length - function.InternalParameterCount;
         IEnumerable<string> parameters = parsedParameters.Take(visibleCount);
-        return $"{string.Join(", ", parameters)}{(visibleCount > 0 ? ", " : "")}";
+        return $"{string.Join(", ", parameters)}{(visibleCount > 0 ? ", " : string.Empty)}";
     }
 
     /// <summary>

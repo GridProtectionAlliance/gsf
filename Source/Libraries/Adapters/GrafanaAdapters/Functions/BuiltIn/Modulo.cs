@@ -30,7 +30,7 @@ public abstract class Modulo<T> : GrafanaFunctionBase<T> where T : struct, IData
 
     /// <inheritdoc />
     // Hiding slice operation since result matrix would be the same when tolerance matches data rate
-    public override GroupOperations PublishedGroupOperations => GroupOperations.Set;
+    public override GroupOperations PublishedGroupOperations => GroupOperations.None | GroupOperations.Set;
 
     /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>

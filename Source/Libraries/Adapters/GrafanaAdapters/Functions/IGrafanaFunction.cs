@@ -36,17 +36,21 @@ namespace GrafanaAdapters.Functions;
 public enum GroupOperations
 {
     /// <summary>
+    /// The function has not defined any group operations.
+    /// </summary>
+    Undefined = 0x0,
+    /// <summary>
     /// The function can perform standard, non-grouped, per-trend operations.
     /// </summary>
-    None = 0x0,
+    None = 0x1, // Must not be zero to create a discernible value
     /// <summary>
     /// The function can perform slice-based group operations.
     /// </summary>
-    Slice = 0x1,
+    Slice = 0x2,
     /// <summary>
     /// The function can perform set-based group operations.
     /// </summary>
-    Set = 0x2
+    Set = 0x4
 }
 
 /// <summary>
@@ -87,6 +91,9 @@ public interface IGrafanaFunction
     /// <summary>
     /// Gets set of group operations that the Grafana function exposes publicly.
     /// </summary>
+    /// <remarks>
+    /// In normal operations, the published group operations should be a subset of the allowed group operations.
+    /// </remarks>
     GroupOperations PublishedGroupOperations { get; }
 
     /// <summary>
