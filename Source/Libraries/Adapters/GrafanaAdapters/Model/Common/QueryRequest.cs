@@ -20,6 +20,7 @@
 //       Generated original version of source code.
 //
 //******************************************************************************************************
+// ReSharper disable InconsistentNaming
 
 namespace GrafanaAdapters.Model.Common;
 
@@ -67,10 +68,4 @@ public class QueryRequest
     /// Gets or sets flag that determines if normal flags should be excluded.
     /// </summary>
     public bool excludeNormalFlags { get; set; }
-
-    /// <summary>
-    /// Gets or sets if request is in phasor mode.
-    /// </summary>
-    // TODO: JRC - drop this as soon as UI has been updated to use 'dataTypeIndex'
-    public bool isPhasor { get; set; }
 }

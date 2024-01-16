@@ -20,6 +20,7 @@
 //       Generated original version of source code.
 //
 //******************************************************************************************************
+// ReSharper disable InconsistentNaming
 
 using Newtonsoft.Json;
 using System.Collections.Generic;
@@ -57,7 +58,7 @@ public class TimeSeriesValues
     /// <summary>
     /// Gets or sets a flag that determines if empty series are produced -- non-serialized.
     /// </summary>
-    [JsonIgnore]
+    [JsonIgnore] // Used internally for filtering empty series, not serialized
     public bool dropEmptySeries;
 
     /// <summary>
