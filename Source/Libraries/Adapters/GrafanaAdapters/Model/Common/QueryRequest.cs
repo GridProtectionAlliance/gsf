@@ -32,7 +32,7 @@ public class QueryRequest
     /// <summary>
     /// Gets or sets target data source value type index.
     /// </summary>
-    public int dataTypeIndex { get; set; } = -1;
+    public int dataTypeIndex { get; set; }
 
     /// <summary>
     /// Gets or sets request range.

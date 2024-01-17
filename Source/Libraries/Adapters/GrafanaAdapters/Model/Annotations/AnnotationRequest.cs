@@ -20,6 +20,7 @@
 //       Generated original version of source code.
 //
 //******************************************************************************************************
+// ReSharper disable InconsistentNaming
 
 using GrafanaAdapters.Model.Common;
 

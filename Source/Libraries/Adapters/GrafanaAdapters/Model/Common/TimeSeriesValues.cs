@@ -65,10 +65,20 @@ public class TimeSeriesValues
     /// Gets or sets a Grafana time-series value data.
     /// </summary>
     /// <remarks>
+    /// <para>
+    /// To ensure data will work with Grafana data source, all values should
+    /// precede single time value. Time is always the last value in the array.
+    /// Time value should be in Unix epoch milliseconds.
+    /// </para>
+    /// <para>
+    /// JSON example:
+    /// <code>
     /// "datapoints":[
     ///       [622,1450754160000],
     ///       [365,1450754220000]
     /// ]
+    /// </code>
+    /// </para>
     /// </remarks>
     public double[][] datapoints;
 

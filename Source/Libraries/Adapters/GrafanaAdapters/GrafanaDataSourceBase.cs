@@ -58,9 +58,20 @@ public abstract partial class GrafanaDataSourceBase
     public virtual string InstanceName { get; set; }
 
     /// <summary>
-    /// Gets or sets <see cref="DataSet"/> based meta-data source available to this <see cref="GrafanaDataSourceBase"/> implementation.
+    /// Gets or sets <see cref="DataSetAdapter"/> used to hold <see cref="DataSet"/> based metadata
+    /// source available to this <see cref="GrafanaDataSourceBase"/> implementation.
     /// </summary>
-    public virtual DataSet Metadata { get; set; }
+    /// <remarks>
+    /// <para>
+    /// Class is used to augment meta-data for the target data source, on demand, so that the augmentation
+    /// process only occurs when a data source type is first used.
+    /// </para>
+    /// <para>
+    /// Note that the <see cref="DataSetAdapter"/> is implicitly convertible from a <see cref="DataSet"/>
+    /// so that derived classes can assign a <see cref="DataSet"/> source directly as needed.
+    /// </para>
+    /// </remarks>
+    public virtual DataSetAdapter Metadata { get; set; }
 
     /// <summary>
     /// Gets or sets maximum number of search targets to return during a search query.
@@ -129,8 +140,8 @@ public abstract partial class GrafanaDataSourceBase
             });
         }
 
-        // Handle metadata augmentation for data source value type
-        default(T).AugmentMetadata?.Invoke(instance.Metadata);
+        // Get augmented metadata for data source value type
+        DataSet metadata = instance.Metadata.GetAugmentedDataSet<T>();
 
         List<DataSourceValueGroup<T>> valueGroups = new();
 
@@ -141,7 +152,7 @@ public abstract partial class GrafanaDataSourceBase
             // Capture value groups for a given Grafana target data source query, i.e., all results with the same RefID
             List<DataSourceValueGroup<T>> queryValueGroups = new();
 
-            await foreach (DataSourceValueGroup<T> valueGroup in QueryTargetAsync<T>(instance, queryParameters, queryParameters.SourceTarget.target, cancellationToken).ConfigureAwait(false))
+            await foreach (DataSourceValueGroup<T> valueGroup in QueryTargetAsync<T>(instance, queryParameters, metadata, queryParameters.SourceTarget.target, cancellationToken).ConfigureAwait(false))
                 queryValueGroups.Add(valueGroup);
 
             // Check if metadata selections are defined and radial distribution is requested for this data source query
@@ -191,16 +202,14 @@ public abstract partial class GrafanaDataSourceBase
         // Apply any encountered ad-hoc filters
         if (request.adhocFilters?.Length > 0)
             foreach (AdHocFilter filter in request.adhocFilters)
-                filteredResults = filteredResults.Where(values => IsFilterMatch<T>(values.rootTarget, filter, instance.Metadata));
+                filteredResults = filteredResults.Where(values => IsFilterMatch<T>(values.rootTarget, filter, metadata));
 
         return filteredResults;
     }
 
     // This function is re-entrant so that it operates with functions as a depth-first recursive expression parser
-    private static async IAsyncEnumerable<DataSourceValueGroup<T>> QueryTargetAsync<T>(GrafanaDataSourceBase instance, QueryParameters queryParameters, string queryExpression, [EnumeratorCancellation] CancellationToken cancellationToken) where T : struct, IDataSourceValue<T>
+    private static async IAsyncEnumerable<DataSourceValueGroup<T>> QueryTargetAsync<T>(GrafanaDataSourceBase instance, QueryParameters queryParameters, DataSet metadata, string queryExpression, [EnumeratorCancellation] CancellationToken cancellationToken) where T : struct, IDataSourceValue<T>
     {
-        DataSet metadata = instance.Metadata;
-
         // A single target might look like the following - nested functions with multiple targets are supported:
         // PPA:15; STAT:20; SETSUM(COUNT(PPA:8; PPA:9; PPA:10)); FILTER ActiveMeasurements WHERE SignalType IN ('IPHA', 'VPHA'); RANGE(PPA:99; SUM(FILTER ActiveMeasurements WHERE SignalType = 'FREQ'; STAT:12))
         HashSet<string> targetSet = new(new[] { queryExpression }, StringComparer.OrdinalIgnoreCase); // Targets include user provided input, so casing is ignored
@@ -241,7 +250,7 @@ public abstract partial class GrafanaDataSourceBase
             foreach (ParsedGrafanaFunction<T> parsedFunction in grafanaFunctions)
             {
                 // ExecuteGrafanaFunctionAsync calls QueryTargetAsync (this function) in order to process sub-functions or query needed data at final depth
-                await foreach (DataSourceValueGroup<T> valueGroup in ExecuteGrafanaFunctionAsync(instance, parsedFunction, queryParameters, cancellationToken).ConfigureAwait(false))
+                await foreach (DataSourceValueGroup<T> valueGroup in ExecuteGrafanaFunctionAsync(instance, parsedFunction, queryParameters, metadata, cancellationToken).ConfigureAwait(false))
                     yield return valueGroup;
             }
 
@@ -287,19 +296,18 @@ public abstract partial class GrafanaDataSourceBase
         }
     }
 
-    private static async IAsyncEnumerable<DataSourceValueGroup<T>> ExecuteGrafanaFunctionAsync<T>(GrafanaDataSourceBase instance, ParsedGrafanaFunction<T> parsedFunction, QueryParameters queryParameters, [EnumeratorCancellation] CancellationToken cancellationToken) where T : struct, IDataSourceValue<T>
+    private static async IAsyncEnumerable<DataSourceValueGroup<T>> ExecuteGrafanaFunctionAsync<T>(GrafanaDataSourceBase instance, ParsedGrafanaFunction<T> parsedFunction, QueryParameters queryParameters, DataSet metadata, [EnumeratorCancellation] CancellationToken cancellationToken) where T : struct, IDataSourceValue<T>
     {
         IGrafanaFunction<T> function = parsedFunction.Function;
         GroupOperations groupOperation = parsedFunction.GroupOperation;
         string queryExpression = parsedFunction.Expression;
-        DataSet metadata = instance.Metadata;
 
         // Parse out function parameters and remaining query expression (typically a filter expression)
         (string[] parsedParameters, queryExpression) = function.ParseParameters(queryParameters, queryExpression, groupOperation);
 
         // Reenter query function with remaining query expression to get data - at the bottom of the recursion,
         // this will return time-series data queried from the derived class using 'QueryDataSourceValues':
-        IAsyncEnumerable<DataSourceValueGroup<T>> dataset = QueryTargetAsync<T>(instance, queryParameters, queryExpression, cancellationToken);
+        IAsyncEnumerable<DataSourceValueGroup<T>> dataset = QueryTargetAsync<T>(instance, queryParameters, metadata, queryExpression, cancellationToken);
 
         // Handle series renaming operations as a special case
         if (function is Label<T>)

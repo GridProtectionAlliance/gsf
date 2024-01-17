@@ -353,6 +353,7 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
                 phasorValues.Columns.Add("ID", typeof(string));
                 phasorValues.Columns.Add("MagnitudeID", typeof(string));
                 phasorValues.Columns.Add("AngleID", typeof(string));
+                phasorValues.Columns.Add("SignalID", typeof(Guid));
                 phasorValues.Columns.Add("MagnitudeSignalID", typeof(Guid));
                 phasorValues.Columns.Add("AngleSignalID", typeof(Guid));
                 phasorValues.Columns.Add("MagnitudeSignalReference", typeof(string));
@@ -389,6 +390,7 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
                     phasorRow["ID"] = magnitude["ID"]; // Fall back on magnitude for possible ID only lookups
                     phasorRow["MagnitudeID"] = magnitude["ID"];
                     phasorRow["AngleID"] = angle["ID"];
+                    phasorRow["SignalID"] = magnitude.ConvertGuidField("SignalID");
                     phasorRow["MagnitudeSignalID"] = magnitude.ConvertGuidField("SignalID");
                     phasorRow["AngleSignalID"] = angle.ConvertGuidField("SignalID");
                     phasorRow["MagnitudeSignalReference"] = magnitude["SignalReference"];

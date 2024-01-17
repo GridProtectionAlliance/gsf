@@ -76,7 +76,8 @@ partial class GrafanaDataSourceBase
             return TargetCache<IEnumerable<string>>.GetOrAdd($"{request.dataTypeIndex}", () =>
             {
                 IDataSourceValue dataSourceValue = DataSourceValueCache.GetDefaultInstance(request.dataTypeIndex);
-                return Metadata.Tables.Cast<DataTable>().Where(table => dataSourceValue.MetadataTableIsValid(Metadata, table.TableName)).Select(table => table.TableName);
+                DataSet metadata = Metadata.GetAugmentedDataSet(dataSourceValue);
+                return metadata.Tables.Cast<DataTable>().Where(table => dataSourceValue.MetadataTableIsValid(metadata, table.TableName)).Select(table => table.TableName);
             });
         },
         cancellationToken);
@@ -94,12 +95,13 @@ partial class GrafanaDataSourceBase
             return TargetCache<IEnumerable<FieldDescription>>.GetOrAdd($"{request.dataTypeIndex}:{request.expression}", () =>
             {
                 IDataSourceValue dataSourceValue = DataSourceValueCache.GetDefaultInstance(request.dataTypeIndex);
+                DataSet metadata = Metadata.GetAugmentedDataSet(dataSourceValue);
                 string tableName = request.expression.Trim();
 
-                if (!dataSourceValue.MetadataTableIsValid(Metadata, tableName))
+                if (!dataSourceValue.MetadataTableIsValid(metadata, tableName))
                     return Enumerable.Empty<FieldDescription>();
 
-                return Metadata.Tables[tableName].Columns.Cast<DataColumn>().Select(column => new FieldDescription
+                return metadata.Tables[tableName].Columns.Cast<DataColumn>().Select(column => new FieldDescription
                 {
                     name = column.ColumnName,
                     type = column.DataType.GetReflectedTypeName(false),
@@ -214,7 +216,8 @@ partial class GrafanaDataSourceBase
                                 type = parameter.Type.GetReflectedTypeName(false),
                                 required = parameter.Required,
                                 @default = formatDefaultValue(parameter)
-                            }).ToArray()
+                            })
+                            .ToArray()
                         });
                     }
 
@@ -244,20 +247,20 @@ partial class GrafanaDataSourceBase
     /// <param name="cancellationToken">Cancellation token.</param>
     public virtual Task<string[]> Search(SearchRequest request, CancellationToken cancellationToken)
     {
-        string requestExpression = request.expression == "select metric" ? "" : request.expression;
-        IDataSourceValue dataSourceValue = DataSourceValueCache.GetDefaultInstance(request.dataTypeIndex);
-
         return Task.Factory.StartNew(() =>
         {
-            return TargetCache<string[]>.GetOrAdd($"search!{request.dataTypeIndex}:{requestExpression}", () =>
+            return TargetCache<string[]>.GetOrAdd($"search!{request.dataTypeIndex}:{request.expression}", () =>
             {
+                IDataSourceValue dataSourceValue = DataSourceValueCache.GetDefaultInstance(request.dataTypeIndex);
+                DataSet metadata = Metadata.GetAugmentedDataSet(dataSourceValue);
+
                 // Attempt to parse search target as a "SELECT" statement
                 if (!parseSelectExpression(request.expression.Trim(), out string tableName, out bool distinct, out string[] fieldNames, out string expression, out string sortField, out int takeCount))
                 {
                     // Expression was not a 'SELECT' statement, execute a 'LIKE' statement against primary meta-data table for data source value type
                     // returning matching point tags - this can be a slow operation for large meta-data sets, so results are cached by expression
-                    return Metadata.Tables[dataSourceValue.MetadataTableName]
-                        .Select($"ID LIKE '{InstanceName}:%' AND PointTag LIKE '%{requestExpression}%'")
+                    return metadata.Tables[dataSourceValue.MetadataTableName]
+                        .Select($"ID LIKE '{InstanceName}:%' AND PointTag LIKE '%{request.expression}%'")
                         .Take(MaximumSearchTargetsPerRequest)
                         .Select(row => $"{row["PointTag"]}")
                         .ToArray();
@@ -268,10 +271,10 @@ partial class GrafanaDataSourceBase
 
                 // If meta-data table does not contain the field names required by the data source value type,
                 // return empty results - this is not a table supported by the data source value type
-                if (!dataSourceValue.MetadataTableIsValid(Metadata, tableName))
+                if (!dataSourceValue.MetadataTableIsValid(metadata, tableName))
                     return results.ToArray();
 
-                DataTable table = Metadata.Tables[tableName];
+                DataTable table = metadata.Tables[tableName];
                 List<string> validFieldNames = new();
 
                 for (int i = 0; i < fieldNames?.Length; i++)
@@ -357,7 +360,8 @@ partial class GrafanaDataSourceBase
     public virtual async Task<List<AnnotationResponse>> Annotations(AnnotationRequest request, CancellationToken cancellationToken)
     {
         AnnotationType type = request.ParseQueryType(out bool useFilterExpression);
-        Dictionary<string, DataRow> definitions = request.ParseSourceDefinitions(type, Metadata, useFilterExpression);
+        DataSet metadata = Metadata.GetAugmentedDataSet<DataSourceValue>();
+        Dictionary<string, DataRow> definitions = request.ParseSourceDefinitions(type, metadata, useFilterExpression);
         IEnumerable<TimeSeriesValues> annotationData = await Query(request.ExtractQueryRequest(definitions.Keys, MaximumAnnotationsPerRequest), cancellationToken).ConfigureAwait(false);
         List<AnnotationResponse> responses = new();
 
@@ -409,7 +413,7 @@ partial class GrafanaDataSourceBase
                     };
                 }
 
-                type.PopulateResponse(response, target, definition, datapoint, Metadata);
+                type.PopulateResponse(response, target, definition, datapoint, metadata);
                 responses.Add(response);
 
                 index++;

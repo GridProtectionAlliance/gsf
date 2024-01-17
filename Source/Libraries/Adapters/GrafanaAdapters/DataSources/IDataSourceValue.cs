@@ -70,6 +70,7 @@ public interface IDataSourceValue
     /// <remarks>
     /// To ensure data will work with Grafana data source, all values should
     /// precede single time value. Time is always the last value in the array.
+    /// Time value should be in Unix epoch milliseconds.
     /// </remarks>
     double[] TimeSeriesValue { get; }
 
@@ -113,7 +114,10 @@ public interface IDataSourceValue
     /// </para>
     /// <para>
     /// Note that system generally assumes that a 'PointTag' field exists in the metadata table and
-    /// to use some of the metadata functions, an 'ID' and/or 'SignalID' field may be needed.
+    /// to use some of the metadata functions, e.g., parsing a filter expression, then an 'ID' and
+    /// 'SignalID' field will also be required. In these cases, pick a primary key field that will
+    /// mirror to these required fields for needed values. These do not need to be marked as required
+    /// metadata fields, but they will need to be included in the table as available fields.
     /// </para>
     /// </remarks>
     string[] RequiredMetadataFieldNames { get; }

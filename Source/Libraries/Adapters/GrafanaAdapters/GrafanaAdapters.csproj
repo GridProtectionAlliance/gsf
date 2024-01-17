@@ -79,7 +79,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataSources\DataSourceValueCache.cs" />
-    <Compile Include="Metadata\Metadata.cs" />
+    <Compile Include="Metadata\DataSetAdapter.cs" />
     <Compile Include="Metadata\MetadataExtensions.cs" />
     <Compile Include="Functions\BuiltIn\Sqrt.cs" />
     <Compile Include="Functions\BuiltIn\Pow.cs" />
