@@ -27,6 +27,7 @@ using GrafanaAdapters.DataSources;
 using GrafanaAdapters.DataSources.BuiltIn;
 using GrafanaAdapters.Functions;
 using GrafanaAdapters.Functions.BuiltIn;
+using GrafanaAdapters.Metadata;
 using GrafanaAdapters.Model.Common;
 using GSF.Collections;
 using GSF.Diagnostics;
@@ -94,6 +95,7 @@ public abstract partial class GrafanaDataSourceBase
         return ProcessQueryRequestFunctions[request.dataTypeIndex](this, request, cancellationToken);
     }
 
+    // This function is called by ProcessQueryRequestFunctions delegate array
     private static async Task<IEnumerable<TimeSeriesValues>> ProcessQueryRequestAsync<T>(GrafanaDataSourceBase instance, QueryRequest request, CancellationToken cancellationToken) where T : struct, IDataSourceValue<T>
     {
         DateTime startTime = request.range.from.ParseJsonTimestamp();
@@ -316,7 +318,7 @@ public abstract partial class GrafanaDataSourceBase
                 await foreach (DataSourceValueGroup<T> valueGroup in dataset.ConfigureAwait(false))
                 {
                     string rootTarget = valueGroup.RootTarget ?? valueGroup.Target;
-                    Dictionary<string, string> metadataMap = metadata.GetMetadataMap<T>(rootTarget, queryParameters);
+                    MetadataMap metadataMap = metadata.GetMetadataMap<T>(rootTarget, queryParameters);
                     Parameters parameters = await function.GenerateParametersAsync(parsedParameters, valueGroup.Source, rootTarget, metadata, metadataMap, cancellationToken).ConfigureAwait(false);
 
                     yield return new DataSourceValueGroup<T>
@@ -362,7 +364,7 @@ public abstract partial class GrafanaDataSourceBase
             {
                 // Flatten all series into a single enumerable
                 IAsyncEnumerable<T> dataSourceValues = dataset.SelectMany(source => source.Source);
-                Dictionary<string, string> metadataMap = metadata.GetMetadataMap<T>(queryExpression, queryParameters);
+                MetadataMap metadataMap = metadata.GetMetadataMap<T>(queryExpression, queryParameters);
                 Parameters parameters = await function.GenerateParametersAsync(parsedParameters, dataSourceValues, queryExpression, metadata, metadataMap, cancellationToken).ConfigureAwait(false);
 
                 DataSourceValueGroup<T> valueGroup = new()

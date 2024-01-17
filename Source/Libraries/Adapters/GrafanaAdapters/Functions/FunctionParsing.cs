@@ -23,6 +23,7 @@
 
 using GrafanaAdapters.DataSources;
 using GrafanaAdapters.DataSources.BuiltIn;
+using GrafanaAdapters.Metadata;
 using GSF;
 using GSF.IO;
 using System;

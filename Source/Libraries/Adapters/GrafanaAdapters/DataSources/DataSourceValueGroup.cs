@@ -67,7 +67,7 @@ public class DataSourceValueGroup<T> where T : struct, IDataSourceValue
     /// <summary>
     /// Gets user selected metadata associated with the query.
     /// </summary>
-    public Dictionary<string, string> MetadataMap { get; init; }
+    public MetadataMap MetadataMap { get; init; }
 
     /// <summary>
     /// Creates a new <see cref="DataSourceValueGroup{T}"/> from this instance.

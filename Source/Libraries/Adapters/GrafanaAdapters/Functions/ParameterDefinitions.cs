@@ -158,4 +158,8 @@ public class ParameterDefinitions : IReadOnlyList<IParameter>
     {
         return new Parameters(this.Select(parameterDefinition => parameterDefinition.CreateParameter()));
     }
+
+    // Gets parameter definitions with inserted slice parameter
+    internal IReadOnlyList<IParameter> WithRequiredSliceParameter =>
+        new List<IParameter>(this).InsertRequiredSliceParameter();
 }

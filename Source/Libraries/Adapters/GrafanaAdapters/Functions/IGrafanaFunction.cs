@@ -92,7 +92,7 @@ public interface IGrafanaFunction
     /// Gets set of group operations that the Grafana function exposes publicly.
     /// </summary>
     /// <remarks>
-    /// In normal operations, the published group operations should be a subset of the allowed group operations.
+    /// Normally, the published group operations should be a subset of the allowed group operations.
     /// </remarks>
     GroupOperations PublishedGroupOperations { get; }
 

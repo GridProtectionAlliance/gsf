@@ -1,6 +1,7 @@
 ﻿using Ciloci.Flee;
 using GrafanaAdapters.DataSources;
 using GrafanaAdapters.DataSources.BuiltIn;
+using GrafanaAdapters.Metadata;
 using GSF;
 using System;
 using System.Collections.Generic;

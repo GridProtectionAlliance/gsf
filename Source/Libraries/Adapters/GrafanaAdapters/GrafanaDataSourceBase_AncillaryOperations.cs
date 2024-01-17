@@ -48,12 +48,32 @@ namespace GrafanaAdapters;
 partial class GrafanaDataSourceBase
 {
     private static ProcessQueryRequestDelegate[] s_processQueryRequestFunctions;
+    private static object s_processQueryRequestFunctionsLock = new();
     private static Regex s_selectExpression;
 
     // Gets array of functions used to process query requests per data source value type, each value in the array
     // is at the same index as the data source value type in the 'DataSourceCache.LoadedTypes' array
-    private static ProcessQueryRequestDelegate[] ProcessQueryRequestFunctions =>
-        s_processQueryRequestFunctions ??= CreateProcessQueryRequestFunctions();
+    private static ProcessQueryRequestDelegate[] ProcessQueryRequestFunctions
+    {
+        get
+        {
+            ProcessQueryRequestDelegate[] processQueryRequestFunctions = Interlocked.CompareExchange(ref s_processQueryRequestFunctions, null, null);
+
+            if (processQueryRequestFunctions is not null)
+                return processQueryRequestFunctions;
+
+            lock (s_processQueryRequestFunctionsLock)
+            {
+                // Check if another thread already created functions
+                if (s_processQueryRequestFunctions is not null)
+                    return s_processQueryRequestFunctions;
+
+                s_processQueryRequestFunctions = CreateProcessQueryRequestFunctions();
+            }
+
+            return s_processQueryRequestFunctions;
+        }
+    }
 
     /// <summary>
     /// Reloads data source value types cache.
@@ -72,7 +92,9 @@ partial class GrafanaDataSourceBase
     public void ReloadDataSourceValueTypes()
     {
         DataSourceValueCache.ReloadDataSourceValueTypes();
-        s_processQueryRequestFunctions = null;
+
+        lock (s_processQueryRequestFunctionsLock)
+            Interlocked.Exchange(ref s_processQueryRequestFunctions, null);
     }
 
     /// <summary>
@@ -163,18 +185,17 @@ partial class GrafanaDataSourceBase
         // As long as coordinates are not near the poles, the following formula works to calculate
         // the degree of difference to use for a default coordinate tolerance of about 100 feet:
         //
-        //   1 degree of latitude ≈ 111 kilometers, and
-        //   1 foot ≈ 0.0003048 kilometers, so
-        //   100 feet ≈ 0.03048 kilometers, so
-        //   degree difference = 0.03048 kilometers / 111 kilometers/degree, so
-        //   for 100 feet, degree difference is about 0.000275 degrees
+        //   1 degree of latitude (or longitude) at equator ≈ 111 kilometers, and
+        //   1 foot ≈ 0.0003048 kilometers, so 100 feet ≈ 0.03048 kilometers, which means
+        //   the degree of difference = 0.03048 kilometers / 111 kilometers/degree, or
+        //   for 100 feet, the degree of difference is about 0.000275 degrees
 
         // Get optional tolerance, or use default (see above)
         if (!settings.TryGetValue("tolerance", out setting) || !double.TryParse(setting, out double tolerance) || tolerance <= double.Epsilon)
             tolerance = 0.000275;
 
         // Get metadata maps that contain valid longitude and latitude coordinates and are sorted by them
-        Dictionary<string, string>[] metadataMaps = queryValueGroups
+        MetadataMap[] metadataMaps = queryValueGroups
             .Select(group => group.MetadataMap)
             .Where(coordinatesAreValid)
             .OrderBy(metadataMap => numericValueOf(metadataMap["Longitude"]))
@@ -187,15 +208,15 @@ partial class GrafanaDataSourceBase
 
         return Task.Factory.StartNew(() =>
         {
-            List<Dictionary<string, string>[]> groupedMaps = new();
-            List<Dictionary<string, string>> matchingMaps = new() { metadataMaps[0] };
-            Dictionary<string, string> firstGroupMap = metadataMaps[0];
+            List<MetadataMap[]> groupedMaps = new();
+            List<MetadataMap> matchingMaps = new() { metadataMaps[0] };
+            MetadataMap firstGroupMap = metadataMaps[0];
 
             // Organize metadata maps with overlapped coordinates into groups, this code
             // assumes that metadata maps are already sorted by longitude and latitude:
             for (int i = 1; i < metadataMaps.Length; i++)
             {
-                Dictionary<string, string> currentMap = metadataMaps[i];
+                MetadataMap currentMap = metadataMaps[i];
 
                 if (coordinatesMatch(firstGroupMap, currentMap))
                 {
@@ -206,7 +227,7 @@ partial class GrafanaDataSourceBase
                     if (matchingMaps.Count > 1)
                         groupedMaps.Add(matchingMaps.ToArray());
 
-                    matchingMaps = new List<Dictionary<string, string>> { currentMap };
+                    matchingMaps = new List<MetadataMap> { currentMap };
                     firstGroupMap = currentMap;
                 }
             }
@@ -217,7 +238,7 @@ partial class GrafanaDataSourceBase
             // Create radial distribution for overlapped coordinates, leaving one item at center
             EPSG3857 coordinateReference = new();
 
-            foreach (Dictionary<string, string>[] maps in groupedMaps)
+            foreach (MetadataMap[] maps in groupedMaps)
             {
                 int count = maps.Length;
                 double interval = 2.0D * Math.PI / (count - 1);
@@ -225,7 +246,7 @@ partial class GrafanaDataSourceBase
                 // Skip first map since it is the center
                 for (int i = 1; i < count; i++)
                 {
-                    Dictionary<string, string> map = maps[i];
+                    MetadataMap map = maps[i];
                     Point point = coordinateReference.Translate(new GeoCoordinate(double.Parse(map["Latitude"]), double.Parse(map["Longitude"])), zoom);
 
                     double theta = interval * i;
@@ -246,28 +267,28 @@ partial class GrafanaDataSourceBase
             return value;
         }
 
-        static bool tryParseCoordinate(Dictionary<string, string> metadataMap, string coordinate, out double value)
+        static bool tryParseCoordinate(MetadataMap metadataMap, string coordinate, out double value)
         {
             value = default;
             return metadataMap.TryGetValue(coordinate, out string setting) && double.TryParse(setting, out value);
         }
 
-        static bool tryParseLongitude(Dictionary<string, string> metadataMap, out double longitude)
+        static bool tryParseLongitude(MetadataMap metadataMap, out double longitude)
         {
             return tryParseCoordinate(metadataMap, "Longitude", out longitude);
         }
 
-        static bool tryParseLatitude(Dictionary<string, string> metadataMap, out double latitude)
+        static bool tryParseLatitude(MetadataMap metadataMap, out double latitude)
         {
             return tryParseCoordinate(metadataMap, "Latitude", out latitude);
         }
 
-        static bool coordinatesAreValid(Dictionary<string, string> metadataMap)
+        static bool coordinatesAreValid(MetadataMap metadataMap)
         {
             return tryParseLongitude(metadataMap, out _) && tryParseLatitude(metadataMap, out _);
         }
 
-        bool coordinatesMatch(Dictionary<string, string> first, Dictionary<string, string> current)
+        bool coordinatesMatch(MetadataMap first, MetadataMap current)
         {
             if (!tryParseLongitude(first, out double longitude1) || !tryParseLatitude(first, out double latitude1))
                 return false;

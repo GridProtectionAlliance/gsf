@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using GrafanaAdapters.Functions;
+using GrafanaAdapters.Metadata;
 using GSF.TimeSeries;
 using System;
 using System.Collections.Generic;

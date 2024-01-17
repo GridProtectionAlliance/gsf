@@ -79,12 +79,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataSources\DataSourceValueCache.cs" />
-    <Compile Include="DataSources\MetadataExtensions.cs" />
+    <Compile Include="Metadata\Metadata.cs" />
+    <Compile Include="Metadata\MetadataExtensions.cs" />
     <Compile Include="Functions\BuiltIn\Sqrt.cs" />
     <Compile Include="Functions\BuiltIn\Pow.cs" />
     <Compile Include="Functions\BuiltIn\RollingAverage.cs" />
     <Compile Include="Functions\ParameterParsing.cs" />
     <Compile Include="Functions\Parameters.cs" />
+    <Compile Include="GlobalUsings.cs" />
     <Compile Include="GrafanaDataSourceBase_ApiControllerOperations.cs" />
     <Compile Include="Model\Common\AdHocFilter.cs" />
     <Compile Include="DataSources\BuiltIn\DataSourceValue_AncillaryOperations.cs" />

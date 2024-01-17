@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using GrafanaAdapters.DataSources;
 using GrafanaAdapters.DataSources.BuiltIn;
 using GrafanaAdapters.Functions;
 using GSF;
@@ -33,7 +34,7 @@ using System.Data;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace GrafanaAdapters.DataSources;
+namespace GrafanaAdapters.Metadata;
 
 internal static class MetadataExtensions
 {
@@ -177,7 +178,7 @@ internal static class MetadataExtensions
     /// </remarks>
     public static DataRow RecordFromTag(this string pointTag, DataSet metadata, string table = DataSourceValue.MetadataTableName, string pointTagField = "PointTag")
     {
-        return GetMetadata(metadata, table, $"{pointTagField} = '{SplitAlias(pointTag, out string _)}'");
+        return metadata.GetMetadata(table, $"{pointTagField} = '{SplitAlias(pointTag, out string _)}'");
     }
 
     /// <summary>
@@ -195,7 +196,7 @@ internal static class MetadataExtensions
     /// </remarks>
     public static DataRow RecordFromSignalID(this string signalID, DataSet metadata, string table = DataSourceValue.MetadataTableName, string signalIDField = "SignalID")
     {
-        return GetMetadata(metadata, table, $"{signalIDField} = '{signalID}'");
+        return metadata.GetMetadata(table, $"{signalIDField} = '{signalID}'");
     }
 
     /// <summary>
@@ -208,7 +209,7 @@ internal static class MetadataExtensions
     /// <returns>Metadata record from source metadata for provided measurement key.</returns>
     public static DataRow RecordFromKey(this string key, DataSet metadata, string table = DataSourceValue.MetadataTableName, string idField = "ID")
     {
-        return GetMetadata(metadata, table, $"{idField} = '{key}'");
+        return metadata.GetMetadata(table, $"{idField} = '{key}'");
     }
 
     /// <summary>
@@ -218,7 +219,7 @@ internal static class MetadataExtensions
     /// <param name="table">Table to search.</param>
     /// <param name="expression">Expression to filter metadata.</param>
     /// <returns>Metadata record from source metadata, if expression is found; otherwise <c>null</c>.</returns>
-    public static DataRow GetMetadata(DataSet metadata, string table, string expression)
+    public static DataRow GetMetadata(this DataSet metadata, string table, string expression)
     {
         try
         {
@@ -243,7 +244,7 @@ internal static class MetadataExtensions
     /// <returns>
     /// Measurement key associated with specified signal ID, if found; otherwise <see cref="MeasurementKey.Undefined"/>.
     /// </returns>
-    public static MeasurementKey KeyFromSignalID(string signalID)
+    public static MeasurementKey KeyFromSignalID(this string signalID)
     {
         return MeasurementKey.LookUpBySignalID(Guid.Parse(signalID));
     }
@@ -296,7 +297,7 @@ internal static class MetadataExtensions
     /// <param name="rootTarget">Root target to use for metadata lookup.</param>
     /// <param name="queryParameters">Query parameters.</param>
     /// <returns>Mapped metadata for the specified target and selections.</returns>
-    public static Dictionary<string, string> GetMetadataMap<T>(this DataSet metadata, string rootTarget, QueryParameters queryParameters) where T : struct, IDataSourceValue
+    public static MetadataMap GetMetadataMap<T>(this DataSet metadata, string rootTarget, QueryParameters queryParameters) where T : struct, IDataSourceValue
     {
         return metadata.GetMetadataMap<T>(rootTarget, queryParameters.MetadataSelections);
     }
@@ -308,10 +309,10 @@ internal static class MetadataExtensions
     /// <param name="rootTarget">Root target to use for metadata lookup.</param>
     /// <param name="metadataSelections">Metadata selections.</param>
     /// <returns>Mapped metadata for the specified target and selections.</returns>
-    public static Dictionary<string, string> GetMetadataMap<T>(this DataSet metadata, string rootTarget, IList<(string tableName, string[] fieldNames)> metadataSelections) where T : struct, IDataSourceValue
+    public static MetadataMap GetMetadataMap<T>(this DataSet metadata, string rootTarget, IList<(string tableName, string[] fieldNames)> metadataSelections) where T : struct, IDataSourceValue
     {
         // Create a new dictionary to hold the metadata values
-        Dictionary<string, string> metadataMap = new();
+        MetadataMap metadataMap = new();
 
         // Return an empty dictionary if metadataSelection is null or empty
         if (metadataSelections is null || metadataSelections.Count == 0)

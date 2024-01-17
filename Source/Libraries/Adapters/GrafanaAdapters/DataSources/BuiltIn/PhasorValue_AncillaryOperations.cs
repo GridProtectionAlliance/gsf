@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using GrafanaAdapters.Functions;
+using GrafanaAdapters.Metadata;
 using GSF.Collections;
 using GSF.Data;
 using GSF.Diagnostics;

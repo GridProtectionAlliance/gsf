@@ -47,47 +47,49 @@ public static class DataSourceValueCache
     private static readonly object s_defaultInstancesLock = new();
 
     /// <summary>
-    /// Gets a default instance list of all the defined data source value type implementations.
+    /// Gets default instance list of all the defined data source value type implementations.
     /// </summary>
-    /// <returns>Default instance list of all the defined data source value type implementations.</returns>
-    public static IDataSourceValue[] GetDefaultInstances()
+    public static IDataSourceValue[] DefaultInstances
     {
-        // Caching default data source value types and instances so expensive assembly load with
-        // type inspections and reflection-based instance creation of types are only done once.
-        // If dynamic reload is needed at runtime, call ReloadDataSourceValueTypes() method.
-        IDataSourceValue[] defaultInstances = Interlocked.CompareExchange(ref s_defaultInstances, null, null);
-
-        if (defaultInstances is not null)
-            return defaultInstances;
-
-        // If many external calls, e.g., web requests, are made to this function at the same time,
-        // there will be an initial pause while the first thread loads the data source values
-        lock (s_defaultInstancesLock)
+        get
         {
-            // Check if another thread already created the data source values
-            if (s_defaultInstances is not null)
-                return s_defaultInstances;
+            // Caching default data source value types and instances so expensive assembly load with
+            // type inspections and reflection-based instance creation of types are only done once.
+            // If dynamic reload is needed at runtime, call ReloadDataSourceValueTypes() method.
+            IDataSourceValue[] defaultInstances = Interlocked.CompareExchange(ref s_defaultInstances, null, null);
 
-            // Load all data source value types from any assemblies in the current directory
-            string dataSourceValuesPath = FilePath.GetAbsolutePath("").EnsureEnd(Path.DirectorySeparatorChar);
-            List<Type> implementations = typeof(IDataSourceValue).LoadImplementations(dataSourceValuesPath, true, false);
+            if (defaultInstances is not null)
+                return defaultInstances;
 
-            // To maintain consistent order between runs, we sort the data source value types by load order and then by name
-            IDataSourceValue[] instances = implementations
-                .Select(type => (IDataSourceValue)Activator.CreateInstance(type))
-                .OrderBy(dsv => dsv.LoadOrder)
-                .ThenBy(dsv => dsv.GetType().Name)
-                .ToArray();
+            // If many external calls, e.g., web requests, are made to this function at the same time,
+            // there will be an initial pause while the first thread loads the data source values
+            lock (s_defaultInstancesLock)
+            {
+                // Check if another thread already created the data source values
+                if (s_defaultInstances is not null)
+                    return s_defaultInstances;
 
-            Interlocked.Exchange(ref s_loadedTypes, instances.Select(dsv => dsv.GetType()).ToArray());
-            Interlocked.Exchange(ref s_defaultInstances, instances.ToArray());
+                // Load all data source value types from any assemblies in the current directory
+                string dataSourceValuesPath = FilePath.GetAbsolutePath("").EnsureEnd(Path.DirectorySeparatorChar);
+                List<Type> implementations = typeof(IDataSourceValue).LoadImplementations(dataSourceValuesPath, true, false);
+
+                // To maintain consistent order between runs, we sort the data source value types by load order and then by name
+                IDataSourceValue[] instances = implementations
+                    .Select(type => (IDataSourceValue)Activator.CreateInstance(type))
+                    .OrderBy(dsv => dsv.LoadOrder)
+                    .ThenBy(dsv => dsv.GetType().Name)
+                    .ToArray();
+
+                Interlocked.Exchange(ref s_loadedTypes, instances.Select(dsv => dsv.GetType()).ToArray());
+                Interlocked.Exchange(ref s_defaultInstances, instances.ToArray());
+            }
+
+            return s_defaultInstances;
         }
-
-        return s_defaultInstances;
     }
 
     /// <summary>
-    /// Gets a list of all the cached data source value types.
+    /// Gets cache of defined data source value types loaded from local assemblies.
     /// </summary>
     public static IReadOnlyCollection<Type> LoadedTypes
     {
@@ -101,8 +103,8 @@ public static class DataSourceValueCache
             // Initialize data source value type cache
             lock (s_defaultInstancesLock)
             {
-                // Generate list of data source value instances which creates loaded type cache in the process
-                GetDefaultInstances();
+                // Get list of data source value instances, this establishes cache of loaded types
+                _ = DefaultInstances;
                 return s_loadedTypes;
             }
         }
@@ -114,12 +116,16 @@ public static class DataSourceValueCache
     /// <param name="dataTypeIndex">Index of target <see cref="IDataSourceValue"/> to lookup.</param>
     /// <returns>Default instance of the specified data source value type, found by index.</returns>
     /// <exception cref="IndexOutOfRangeException">Invalid data type index provided.</exception>
+    /// <remarks>
+    /// Use this method to provide a cleaner, more specific, error message to the user when a
+    /// data source value type is specified that is not found.
+    /// </remarks>
     public static IDataSourceValue GetDefaultInstance(int dataTypeIndex)
     {
         if (dataTypeIndex < 0 || dataTypeIndex >= LoadedTypes.Count)
-            throw new IndexOutOfRangeException("Invalid data type index provided.");
+            throw new IndexOutOfRangeException($"Invalid data type index provided. Index must be between 0 and {LoadedTypes.Count - 1:N0}.");
 
-        return GetDefaultInstances()[dataTypeIndex];
+        return DefaultInstances[dataTypeIndex];
     }
 
     /// <summary>

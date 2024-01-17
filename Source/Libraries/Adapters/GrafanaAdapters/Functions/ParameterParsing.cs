@@ -24,6 +24,7 @@
 
 using GrafanaAdapters.DataSources;
 using GrafanaAdapters.Functions.BuiltIn;
+using GrafanaAdapters.Metadata;
 using GSF;
 using System;
 using System.Collections.Generic;

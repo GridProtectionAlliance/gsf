@@ -43,7 +43,7 @@ internal static class Common
         };
     }
 
-    public static void InsertRequiredSliceParameter(this List<IParameter> parameters)
+    public static List<IParameter> InsertRequiredSliceParameter(this List<IParameter> parameters)
     {
         parameters.Insert(0, new ParameterDefinition<double>()
         {
@@ -52,6 +52,8 @@ internal static class Common
             Description = "A floating-point value that must be greater than or equal to zero that represents the desired time tolerance, in seconds, for the time slice",
             Required = true
         });
+
+        return parameters;
     }
 
     // Gets type for specified data source type name, assuming local namespace if needed.

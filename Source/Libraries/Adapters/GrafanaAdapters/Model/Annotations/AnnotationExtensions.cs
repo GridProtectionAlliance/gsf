@@ -23,6 +23,7 @@
 // ReSharper disable CompareOfFloatsByEqualityOperator
 
 using GrafanaAdapters.DataSources.BuiltIn;
+using GrafanaAdapters.Metadata;
 using GrafanaAdapters.Model.Common;
 using GSF;
 using GSF.TimeSeries;
@@ -32,7 +33,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
-using static GrafanaAdapters.DataSources.MetadataExtensions;
 
 namespace GrafanaAdapters.Model.Annotations;
 
@@ -283,7 +283,7 @@ public static class AnnotationRequestExtensions
 
             foreach (DataRow row in rows)
             {
-                MeasurementKey key = KeyFromSignalID(row[type.TargetFieldName()].ToString());
+                MeasurementKey key = row[type.TargetFieldName()].ToString().KeyFromSignalID();
 
                 if (key != MeasurementKey.Undefined)
                     definitions[key.TagFromKey(source)] = row;
@@ -347,6 +347,6 @@ public static class AnnotationRequestExtensions
     internal static DataRow GetTargetMetaData(DataSet source, object signalIDFieldValue)
     {
         string signalID = signalIDFieldValue.ToNonNullNorWhiteSpace(Guid.Empty.ToString());
-        return TargetCache<DataRow>.GetOrAdd(signalID, () => GetMetadata(source, DataSourceValue.MetadataTableName, $"ID = '{KeyFromSignalID(signalID)}'"));
+        return TargetCache<DataRow>.GetOrAdd(signalID, () => source.GetMetadata(DataSourceValue.MetadataTableName, $"ID = '{signalID.KeyFromSignalID()}'"));
     }
 }
