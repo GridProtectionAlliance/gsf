@@ -267,8 +267,8 @@ internal static class MetadataExtensions
     /// </summary>
     /// <param name="target">Target expression to parse.</param>
     /// <param name="metadata">Source metadata.</param>
-    /// <returns>Tuple of point tags parsed from expression, any defined alias and target table.</returns>
-    public static (TargetIDSet[], string) Parse<T>(this string target, DataSet metadata) where T : struct, IDataSourceValue
+    /// <returns>Tuple representing set of target and associated IDs, as parsed from expression, and any defined alias.</returns>
+    public static (TargetIDSet[] targetIDSets, string alias) Parse<T>(this string target, DataSet metadata) where T : struct, IDataSourceValue
     {
         TargetIDSet[] targetIDSets;
         string aliasTarget = target.SplitAlias(out string alias);
