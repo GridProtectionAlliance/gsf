@@ -521,11 +521,10 @@ namespace GSF.Web.Model
                         search.SearchText = search.SearchText.Replace("*", "%");
                 }
 
-                SQLSearchFilter updated = search;
                 if (SQLSearchModifier is not null)
-                    updated = (SQLSearchFilter)SQLSearchModifier.Invoke(null, new[] { search });
-
-                clauses.Add(updated.GenerateConditional(parameters));
+                    clauses.Add((string)SQLSearchModifier.Invoke(null, new[] { search, parameters }));
+                else
+                    clauses.Add(search.GenerateConditional(parameters));
             }
 
             return string.Join(" AND ", clauses);
