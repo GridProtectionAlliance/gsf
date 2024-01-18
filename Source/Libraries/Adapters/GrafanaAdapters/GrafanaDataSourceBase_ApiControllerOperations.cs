@@ -90,6 +90,9 @@ partial class GrafanaDataSourceBase
     /// <param name="cancellationToken">Cancellation token.</param>
     public virtual Task<IEnumerable<FieldDescription>> GetValueTypeTableFields(SearchRequest request, CancellationToken cancellationToken)
     {
+        if (string.IsNullOrWhiteSpace(request?.expression))
+            return Task.FromResult(Enumerable.Empty<FieldDescription>());
+
         return Task.Run(() =>
         {
             return TargetCache<IEnumerable<FieldDescription>>.GetOrAdd($"{request.dataTypeIndex}:{request.expression}", () =>
@@ -247,6 +250,9 @@ partial class GrafanaDataSourceBase
     /// <param name="cancellationToken">Cancellation token.</param>
     public virtual Task<string[]> Search(SearchRequest request, CancellationToken cancellationToken)
     {
+        if (string.IsNullOrWhiteSpace(request?.expression))
+            return Task.FromResult(Array.Empty<string>());
+
         return Task.Factory.StartNew(() =>
         {
             return TargetCache<string[]>.GetOrAdd($"search!{request.dataTypeIndex}:{request.expression}", () =>
