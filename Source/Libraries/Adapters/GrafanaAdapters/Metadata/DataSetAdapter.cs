@@ -57,7 +57,6 @@ namespace GrafanaAdapters.Metadata
         /// Gets the Grafana data source metadata, augmented as needed for the target data
         /// source value type instance <paramref name="value"/>.
         /// </summary>
-        /// <typeparam name="T">Data source value type for metadata augmentation.</typeparam>
         /// <param name="value">Instance of data source value type to use for metadata augmentation.</param>
         /// <returns>
         /// Grafana data source metadata, augmented as needed for the target data source

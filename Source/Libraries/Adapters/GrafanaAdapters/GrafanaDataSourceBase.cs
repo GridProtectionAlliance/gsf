@@ -259,47 +259,21 @@ public abstract partial class GrafanaDataSourceBase
             yield break;
 
         // Create a map of the queryable data source point IDs to point tags - this will be used to query the data source
-        // for the needed data points in the derived class 'QueryDataSourceValues' implementation. This map is cached by
-        // data source value type index and queryExpression for improved performance.
-        Dictionary<ulong, string> targetMap = TargetCache<Dictionary<ulong, string>>.GetOrAdd($"{default(T).DataTypeIndex}:{queryExpression}", () => 
-        {
-            Dictionary<ulong, string> targetMap = new();
-
-            // Split remaining targets on semi-colon which will include possible filter expressions being used
-            // as inputs to functions, also since expression includes user provided input, casing is ignored.
-            HashSet<string> targetSet = new(s_semiColonSplitter.Split(queryExpression).Where(NotEmpty), StringComparer.OrdinalIgnoreCase);
-
-            // Parse each target expression converting any encountered filter expressions, measurement keys and
-            // Guid-based signal IDs into point tags; any other encountered inputs will throw an exception.
-            foreach (string target in targetSet)
-            {
-                (MeasurementKey[] keys, string alias, string tableName) = target.Parse<T>(metadata);
-
-                if (!string.IsNullOrWhiteSpace(alias))
-                {
-                    // Aliased tags take precedence over other target maps
-                    targetMap[keys[0].ID] = $"{alias}={keys[0].TagFromKey(metadata, tableName)}";
-                }
-                else
-                {
-                    foreach (MeasurementKey key in keys)
-                    {
-                        // Only execute tag lookup once per ID
-                        if (!targetMap.ContainsKey(key.ID))
-                            targetMap[key.ID] = key.TagFromKey(metadata, tableName);
-                    }
-                }
-            }
-
-            return targetMap;
-        });
+        // for the needed data points in the derived class 'QueryDataSourceValues' implementation
+        Dictionary<ulong, string> targetMap = CreateTargetMap<T>(metadata, queryExpression);
 
         // Create a map of each target to its own time-value map which will group target values that are sorted by time
         Dictionary<string, SortedList<double, T>> targetValues = new(StringComparer.OrdinalIgnoreCase);
 
         // Query underlying data source, assigning each value to its own data source target time-value map
         await foreach (DataSourceValue dataValue in instance.QueryDataSourceValues(queryParameters, targetMap, cancellationToken).ConfigureAwait(false))
-            default(T).AssignToTimeValueMap(dataValue, targetValues.GetOrAdd(dataValue.Target, _ => new SortedList<double, T>()), metadata);
+        {
+            // Split combined target into point tag and target
+            (string pointTag, string target) = dataValue.Target.SplitComponents();
+
+            // Assign data value, identified by pointTag, to its own time-value map based on its target
+            default(T).AssignToTimeValueMap(pointTag, dataValue with { Target = target }, targetValues.GetOrAdd(target, _ => new SortedList<double, T>()), metadata);
+        }
 
         // Transpose each target into a data source value group along with its associated queried values
         foreach (KeyValuePair<string, SortedList<double, T>> item in targetValues)
@@ -315,6 +289,52 @@ public abstract partial class GrafanaDataSourceBase
                 MetadataMap = metadata.GetMetadataMap<T>(item.Key, queryParameters)
             };
         }
+    }
+
+    private static Dictionary<ulong, string> CreateTargetMap<T>(DataSet metadata, string queryExpression) where T : struct, IDataSourceValue<T>
+    {
+        // Caching map by data source value type index and queryExpression for improved performance
+        return TargetCache<Dictionary<ulong, string>>.GetOrAdd($"{default(T).DataTypeIndex}:{queryExpression}", () => 
+        {
+            Dictionary<ulong, string> targetMap = new();
+
+            // Split remaining targets on semi-colon which will include possible filter expressions being used
+            // as inputs to functions, also since expression includes user provided input, casing is ignored.
+            HashSet<string> targetSet = new(s_semiColonSplitter.Split(queryExpression).Where(NotEmpty), StringComparer.OrdinalIgnoreCase);
+
+            // Parse each target expression converting any encountered filter expressions, measurement keys and
+            // Guid-based signal IDs into point tags; any other encountered inputs will throw an exception.
+            foreach (string target in targetSet)
+            {
+                (TargetIDSet[] targetIDSets, string alias) = target.Parse<T>(metadata);
+
+                if (!string.IsNullOrWhiteSpace(alias))
+                {
+                    // Aliased tags take precedence over other target maps
+                    (string target, (MeasurementKey key, string pointTag)[] idSet) targetIDSet = targetIDSets[0];
+
+                    foreach ((MeasurementKey key, string pointTag) in targetIDSet.idSet)
+                        targetMap[key.ID] = $"{pointTag}/{alias} = {targetIDSet.target}";
+                }
+                else
+                {
+                    foreach ((string target, (MeasurementKey, string)[] idSet) targetIDSet in targetIDSets)
+                    {
+                        foreach ((MeasurementKey key, string pointTag) in targetIDSet.idSet)
+                        {
+                            if (targetMap.ContainsKey(key.ID))
+                                continue;
+
+                            // Target may represent multiple point tags based on data value type composition,
+                            // so we track point tag and target as a combined value in the target map:
+                            targetMap[key.ID] = $"{pointTag}/{targetIDSet.target}";
+                        }
+                    }
+                }
+            }
+
+            return targetMap;
+        });
     }
 
     private static async IAsyncEnumerable<DataSourceValueGroup<T>> ExecuteGrafanaFunctionAsync<T>(GrafanaDataSourceBase instance, ParsedGrafanaFunction<T> parsedFunction, QueryParameters queryParameters, DataSet metadata, [EnumeratorCancellation] CancellationToken cancellationToken) where T : struct, IDataSourceValue<T>

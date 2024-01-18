@@ -126,14 +126,21 @@ public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
         return record;
     }
 
-    MeasurementKey[] IDataSourceValue.RecordToKeys(DataRow record)
+    readonly TargetIDSet IDataSourceValue.GetTargetIDSet(DataRow record)
     {
-        return new[] { record.KeyFromRecord() };
+        // A target ID set is: (target, (measurementKey, pointTag)[])
+        string pointTag = record["PointTag"].ToString();
+        return (pointTag, new[] { (record.KeyFromRecord(), pointTag) });
     }
-    
-    int IDataSourceValue.DataTypeIndex => TypeIndex;
 
-    readonly void IDataSourceValue<DataSourceValue>.AssignToTimeValueMap(DataSourceValue dataValue, SortedList<double, DataSourceValue> timeValueMap, DataSet metadata)
+    readonly DataRow IDataSourceValue.RecordFromKey(MeasurementKey key, DataSet metadata)
+    {
+        return key.ToString().RecordFromKey(metadata);
+    }
+
+    readonly int IDataSourceValue.DataTypeIndex => TypeIndex;
+
+    readonly void IDataSourceValue<DataSourceValue>.AssignToTimeValueMap(string pointTag, DataSourceValue dataValue, SortedList<double, DataSourceValue> timeValueMap, DataSet metadata)
     {
         timeValueMap[dataValue.Time] = dataValue;
     }

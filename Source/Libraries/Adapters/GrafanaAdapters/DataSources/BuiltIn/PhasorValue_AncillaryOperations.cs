@@ -139,34 +139,46 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
         return record;
     }
 
-    MeasurementKey[] IDataSourceValue.RecordToKeys(DataRow record)
+    readonly TargetIDSet IDataSourceValue.GetTargetIDSet(DataRow record)
     {
-        return new[]
-        {
-            record.KeyFromRecord("MagnitudeID", "MagnitudeSignalID"),
-            record.KeyFromRecord("AngleID", "AngleSignalID")
-        };
+        // A target ID set is: (target, (measurementKey, pointTag)[])
+        return
+        (
+            record["PointTag"].ToString(), new []
+            {
+                (record.KeyFromRecord("MagnitudeID", "MagnitudeSignalID"), record["MagnitudePointTag"].ToString()),
+                (record.KeyFromRecord("AngleID", "AngleSignalID"), record["AnglePointTag"].ToString())
+            }
+        );
     }
 
-    int IDataSourceValue.DataTypeIndex => TypeIndex;
+    readonly DataRow IDataSourceValue.RecordFromKey(MeasurementKey key, DataSet metadata)
+    {
+        string keyName = key.ToString();
 
-    readonly void IDataSourceValue<PhasorValue>.AssignToTimeValueMap(DataSourceValue dataValue, SortedList<double, PhasorValue> timeValueMap, DataSet metadata)
+        return keyName.RecordFromKey(metadata, MetadataTableName, "MagnitudeID") ??
+               keyName.RecordFromKey(metadata, MetadataTableName, "AngleID");
+    }
+
+    readonly int IDataSourceValue.DataTypeIndex => TypeIndex;
+
+    readonly void IDataSourceValue<PhasorValue>.AssignToTimeValueMap(string pointTag, DataSourceValue dataValue, SortedList<double, PhasorValue> timeValueMap, DataSet metadata)
     {
         string target = dataValue.Target;
 
         // Lookup queried data source value target in 'PhasorValues' metadata
-        (string phasorTarget, string magnitudeTarget, string angleTarget, bool isMagnitudeValue) = TargetCache<(string, string, string, bool)>.GetOrAdd(target, () =>
+        (string phasorTarget, string magnitudeTarget, string angleTarget, bool isMagnitudeValue) = TargetCache<(string, string, string, bool)>.GetOrAdd(pointTag, () =>
         {
             // Lookup queried data source target as a point tag for either magnitude or angle
-            DataRow record = target.RecordFromTag(metadata, MetadataTableName, "MagnitudePointTag") ??
-                             target.RecordFromTag(metadata, MetadataTableName, "AnglePointTag");
+            DataRow record = pointTag.RecordFromTag(metadata, MetadataTableName, "MagnitudePointTag") ??
+                             pointTag.RecordFromTag(metadata, MetadataTableName, "AnglePointTag");
 
             Debug.Assert(record is not null, $"Unexpected null metadata record for '{target}'");
 
             string phasorTarget = record["PointTag"].ToString();
             string magnitudeTarget = record["MagnitudePointTag"].ToString();
             string angleTarget = record["AnglePointTag"].ToString();
-            bool isMagnitudeValue = target.Equals(magnitudeTarget, StringComparison.OrdinalIgnoreCase);
+            bool isMagnitudeValue = pointTag.Equals(magnitudeTarget, StringComparison.OrdinalIgnoreCase);
 
             // Since the record lookup results will be the same for both magnitude and angle, we pre-cache the results for the other target
             TargetCache<(string, string, string, bool)>.GetOrAdd(isMagnitudeValue ? angleTarget : magnitudeTarget, () => (phasorTarget, magnitudeTarget, angleTarget, !isMagnitudeValue));
@@ -271,13 +283,16 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
 
                 // Add columns to phasor metadata table
                 phasorValues.Columns.Add("Device", typeof(string));
-                phasorValues.Columns.Add("PointTag", typeof(string));
+
+                // These are standard required fields for metadata lookup functions
+                phasorValues.Columns.Add("PointTag", typeof(string));   // Unique point tag for phasor
+                phasorValues.Columns.Add("ID", typeof(string));         // Mapped to magnitude ID
+                phasorValues.Columns.Add("SignalID", typeof(Guid));     // Mapped to magnitude SignalID
+
                 phasorValues.Columns.Add("MagnitudePointTag", typeof(string));
                 phasorValues.Columns.Add("AnglePointTag", typeof(string));
-                phasorValues.Columns.Add("ID", typeof(string));
                 phasorValues.Columns.Add("MagnitudeID", typeof(string));
                 phasorValues.Columns.Add("AngleID", typeof(string));
-                phasorValues.Columns.Add("SignalID", typeof(Guid));
                 phasorValues.Columns.Add("MagnitudeSignalID", typeof(Guid));
                 phasorValues.Columns.Add("AngleSignalID", typeof(Guid));
                 phasorValues.Columns.Add("MagnitudeSignalReference", typeof(string));
@@ -306,15 +321,17 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
                     // Find overlapping point tag name that will become primary phasor point tag
                     string pointTag = magnitudePointTag.LongestCommonSubstring(anglePointTag);
 
+                    // Remove any trailing non-alphanumeric characters from point tag
+                    while (pointTag.Length > 0 && !char.IsLetterOrDigit(pointTag[pointTag.Length - 1]))
+                        pointTag = pointTag.Substring(0, pointTag.Length - 1);
+
                     // Copy in specific magnitude and angle phasor metadata, default to magnitude metadata for common values
                     phasorRow["Device"] = magnitude["Device"];
                     phasorRow["PointTag"] = pointTag;
                     phasorRow["MagnitudePointTag"] = magnitudePointTag;
                     phasorRow["AnglePointTag"] = anglePointTag;
-                    phasorRow["ID"] = magnitude["ID"]; // Use magnitude for ID only lookups
                     phasorRow["MagnitudeID"] = magnitude["ID"];
                     phasorRow["AngleID"] = angle["ID"];
-                    phasorRow["SignalID"] = magnitude.ConvertGuidField("SignalID");
                     phasorRow["MagnitudeSignalID"] = magnitude.ConvertGuidField("SignalID");
                     phasorRow["AngleSignalID"] = angle.ConvertGuidField("SignalID");
                     phasorRow["MagnitudeSignalReference"] = magnitude["SignalReference"];
@@ -327,6 +344,10 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
                     phasorRow["Latitude"] = Convert.ToDecimal(magnitude["Latitude"]);
                     phasorRow["Company"] = magnitude["Company"];
                     phasorRow["UpdatedOn"] = magnitude["UpdatedOn"];
+
+                    // Use magnitude values for standard field values
+                    phasorRow["ID"] = phasorRow["MagnitudeID"];
+                    phasorRow["SignalID"] = phasorRow["MagnitudeSignalID"];
 
                     phasorValues.Rows.Add(phasorRow);
                 }

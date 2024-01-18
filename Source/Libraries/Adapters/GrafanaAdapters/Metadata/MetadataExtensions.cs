@@ -65,7 +65,7 @@ internal static class MetadataExtensions
     /// Looks up point tag from measurement <paramref name="key"/> value.
     /// </summary>
     /// <param name="key"><see cref="MeasurementKey"/> to lookup.</param>
-    /// <param name="source">Source metadata.</param>
+    /// <param name="metadata">Source metadata.</param>
     /// <param name="table">Table to search.</param>
     /// <param name="pointTagField">Point tag field name.</param>
     /// <param name="idField">Measurement key-based ID field name.</param>
@@ -75,10 +75,13 @@ internal static class MetadataExtensions
     /// search algorithm that can be slow for large data sets, it is recommended that any results
     /// for calls to this function be cached to improve performance.
     /// </remarks>
-    public static string TagFromKey(this MeasurementKey key, DataSet source, string table = DataSourceValue.MetadataTableName, string pointTagField = "PointTag", string idField = "ID")
+    public static string TagFromKey(this MeasurementKey key, DataSet metadata, string table = DataSourceValue.MetadataTableName, string pointTagField = "PointTag", string idField = "ID")
     {
-        DataRow record = key.ToString().RecordFromKey(source, table, idField);
-        return record is null ? key.ToString() : record[pointTagField].ToNonNullString(key.ToString());
+        string keyName = key.ToString();
+        
+        DataRow record = keyName.RecordFromKey(metadata, table, idField);
+        
+        return record?[pointTagField]?.ToString() ?? keyName;
     }
 
     /// <summary>
@@ -107,14 +110,14 @@ internal static class MetadataExtensions
     /// <summary>
     /// Looks up metadata record from measurement key.
     /// </summary>
-    /// <param name="key">Measurement key, as string, to lookup.</param>
+    /// <param name="keyName">Measurement key, as string, to lookup.</param>
     /// <param name="metadata">Source metadata.</param>
     /// <param name="table">Table to search.</param>
     /// <param name="idField">Measurement key-based ID field name.</param>
     /// <returns>Metadata record from source metadata for provided measurement key.</returns>
-    public static DataRow RecordFromKey(this string key, DataSet metadata, string table = DataSourceValue.MetadataTableName, string idField = "ID")
+    public static DataRow RecordFromKey(this string keyName, DataSet metadata, string table = DataSourceValue.MetadataTableName, string idField = "ID")
     {
-        return metadata.GetMetadata(table, $"{idField} = '{key}'");
+        return metadata.GetMetadata(table, $"{idField} = '{keyName}'");
     }
 
     /// <summary>
@@ -259,41 +262,53 @@ internal static class MetadataExtensions
     }
 
     /// <summary>
-    /// Parses a user provided target expression as measurement keys, any defined alias and target table.
+    /// Parses a user provided target expression as the the set of measurement key and point tag
+    /// identifiers associated with a target and any defined alias and target table.
     /// </summary>
     /// <param name="target">Target expression to parse.</param>
     /// <param name="metadata">Source metadata.</param>
     /// <returns>Tuple of point tags parsed from expression, any defined alias and target table.</returns>
-    public static (MeasurementKey[] keys, string alias, string tableName) Parse<T>(this string target, DataSet metadata) where T : struct, IDataSourceValue
+    public static (TargetIDSet[], string) Parse<T>(this string target, DataSet metadata) where T : struct, IDataSourceValue
     {
-        MeasurementKey[] keys;
+        TargetIDSet[] targetIDSets;
         string aliasTarget = target.SplitAlias(out string alias);
 
-        // Attempt to parse expression as a filter expression first as this will provide target table name for tag to key lookups
+        // Attempt to parse expression as a filter expression first so that we can use the target table
         if (AdapterBase.ParseFilterExpression(aliasTarget, out string tableName, out string expression, out string sortField, out int takeCount))
         {
-            keys = metadata.Tables[tableName]
+            targetIDSets = metadata.Tables[tableName]
                 .Select(expression, sortField)
                 .Take(takeCount)
-                .SelectMany(default(T).RecordToKeys)
+                .Select(default(T).GetTargetIDSet)
                 .ToArray();
         }
         else
         {
-            // Fall back on standard tag expression parsing which will attempt to parse target as measurement keys or signal IDs
-            keys = AdapterBase.ParseInputMeasurementKeys(metadata, false, aliasTarget, default(T).MetadataTableName);
+            // Fall back on standard tag expression parsing which will attempt to parse target as measurement keys
+            // or signal IDs -- this will always use default metadata table for the data source value type
+            targetIDSets = AdapterBase.ParseInputMeasurementKeys(metadata, false, aliasTarget, default(T).MetadataTableName)
+                .Select(key => default(T).RecordFromKey(key, metadata))
+                .Select(default(T).GetTargetIDSet)
+                .ToArray();
         }
 
-        if (string.IsNullOrWhiteSpace(tableName))
-            tableName = default(T).MetadataTableName;
+        return (targetIDSets, !string.IsNullOrWhiteSpace(alias) && targetIDSets.Length == 1 ? alias : null);
+    }
 
-        if (!string.IsNullOrWhiteSpace(alias) && keys.Length == 1)
-            return (keys, alias, tableName);
+    /// <summary>
+    /// Splits a combined target into a point tag and target.
+    /// </summary>
+    /// <param name="target">Combined target of point tag and target.</param>
+    /// <returns>Tuple of point tag and target.</returns>
+    /// <exception cref="InvalidOperationException">Invalid combined target encountered.</exception>
+    public static (string pointTag, string target) SplitComponents(this string target)
+    {
+        int index = target.IndexOf('/');
 
-        return (keys.Where(notUndefined).ToArray(), null, tableName);
-        
-        static bool notUndefined(MeasurementKey key) =>
-            key != MeasurementKey.Undefined;
+        if (index <= 0)
+            throw new InvalidOperationException($"Invalid combined target encountered: \"{target}\" -- expected format as \"PointTag/Target\". Verify derived data source implementation does not change provided target map value.");
+
+        return (target.Substring(0, index), target.Substring(index + 1));
     }
 
     #region [ Old Code ]

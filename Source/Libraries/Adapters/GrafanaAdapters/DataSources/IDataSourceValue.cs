@@ -108,12 +108,15 @@ public interface IDataSourceValue
     /// This defines a list of the required metadata fields for a table in the data source. If any of
     /// these are missing, the data source table will not be available for use. This list should at
     /// least include key field names for the <see cref="MetadataTableName"/> that may be needed by
-    /// the <see cref="RecordToKeys"/> or <see cref="IDataSourceValue{T}.AssignToTimeValueMap"/>
+    /// the <see cref="GetTargetIDSet"/> or <see cref="IDataSourceValue{T}.AssignToTimeValueMap"/>
     /// functions. For example, in order to use a table named 'ActiveMeasurements', the required
     /// metadata field names might be: 'ID', 'SignalID', and 'PointTag'.
     /// </para>
     /// <para>
-    /// Note that system generally assumes that a 'PointTag' field exists in the metadata table.
+    /// Note that system generally assumes that the fields 'PointTag', a unique string-based alpha-numeric
+    /// identifier for a measurement, 'ID', a unique string-based measurement-key formatted identifier
+    /// (e.g., PPA:101), and 'SignalID', a unique Guid-based identifier all exist in the metadata table.
+    /// However, these field does not need to be included as required metadata field names.
     /// </para>
     /// </remarks>
     string[] RequiredMetadataFieldNames { get; }
@@ -144,11 +147,24 @@ public interface IDataSourceValue
     DataRow LookupMetadata(DataSet metadata, string tableName, string target);
 
     /// <summary>
-    /// Converts a metadata record to an associated set of measurement keys.
+    /// Gets the set of measurement key and point tag identifiers associated with a target.
     /// </summary>
     /// <param name="record">Source metadata record.</param>
-    /// <returns>An enumeration of associated set of measurement keys.</returns>
-    MeasurementKey[] RecordToKeys(DataRow record);
+    /// <returns>set of measurement key and point tag identifiers associated with a target.</returns>
+    /// <remarks>
+    /// A single target will be associated with a measurement key and point tag for each value
+    /// in the data source value. The target will be a common name for the group of values in
+    /// the data source value structure.
+    /// </remarks>
+    TargetIDSet GetTargetIDSet(DataRow record);
+
+    /// <summary>
+    /// Gets the metadata record for the specified measurement key.
+    /// </summary>
+    /// <param name="key">Source measurement key.</param>
+    /// <param name="metadata">Source metadata.</param>
+    /// <returns>The metadata record for the specified measurement key.</returns>
+    DataRow RecordFromKey(MeasurementKey key, DataSet metadata);
 
     /// <summary>
     /// Gets the data source value type index.
@@ -165,6 +181,7 @@ public interface IDataSourceValue<T> : IDataSourceValue, IComparable<T>, IEquata
     /// <summary>
     /// Assign queried data source value to time-value map.
     /// </summary>
+    /// <param name="pointTag">Measurement point tag.</param>
     /// <param name="dataValue">Queried data source value.</param>
     /// <param name="timeValueMap">Time-value map for specified <paramref name="dataValue"/>.</param>
     /// <param name="metadata">Source metadata.</param>
@@ -174,7 +191,7 @@ public interface IDataSourceValue<T> : IDataSourceValue, IComparable<T>, IEquata
     /// time-value map. If the data source value type has multiple fields, this function will be called once
     /// per each field in the data source value for a given timestamp.
     /// </remarks>
-    void AssignToTimeValueMap(DataSourceValue dataValue, SortedList<double, T> timeValueMap, DataSet metadata);
+    void AssignToTimeValueMap(string pointTag, DataSourceValue dataValue, SortedList<double, T> timeValueMap, DataSet metadata);
 
     /// <summary>
     /// Gets the parameter definition for data source values.
