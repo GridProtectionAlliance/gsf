@@ -6,24 +6,25 @@ using System.Threading;
 namespace GrafanaAdapters.Functions.BuiltIn;
 
 /// <summary>
-/// Returns a series of values that represent each of the values in the source series divided by <c>N</c>.
-/// <c>N</c> is a floating point value representing a divisive factor to be applied to each value the source series.
+/// Returns a series of values that represent each of the values in the source series shifted by <c>N</c>.
+/// <c>N</c> is a floating point value representing an additive (positive or negative) offset to be applied to each value the source series.
 /// <c>N</c> can either be constant value or a named target available from the expression.
 /// </summary>
 /// <remarks>
-/// Signature: <c>Divide(N, expression)</c><br/>
+/// Signature: <c>Shift(N, expression)</c><br/>
 /// Returns: Series of values.<br/>
-/// Example: <c>Divide(1.732, FILTER ActiveMeasurements WHERE SignalType='CALC')</c><br/>
-/// Variants: Divide<br/>
+/// Example 1: <c>Shift(2.2, FILTER ActiveMeasurements WHERE SignalType='CALC')</c><br/>
+/// Example 2: <c>Shift(-60, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
+/// Variants: Shift<br/>
 /// Execution: Deferred enumeration.
 /// </remarks>
-public abstract class Divide<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
+public abstract class Shift<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
 {
     /// <inheritdoc />
-    public override string Name => nameof(Divide<T>);
+    public override string Name => nameof(Shift<T>);
 
     /// <inheritdoc />
-    public override string Description => "Returns a series of values that represent each of the values in the source series divided with N.";
+    public override string Description => "Returns a series of values that represent each of the values in the source series shifted by N.";
 
     /// <inheritdoc />
     // Hiding slice operation since result matrix would be the same when tolerance matches data rate
@@ -35,8 +36,8 @@ public abstract class Divide<T> : GrafanaFunctionBase<T> where T : struct, IData
         new ParameterDefinition<double>
         {
             Name = "N",
-            Default = 1.0D,
-            Description = "A floating point value representing an divisive offset to be applied to each value the source series.",
+            Default = 0.0D,
+            Description = "A floating point value representing an additive (positive or nega offset to be applied to each value the source series.",
             Required = true
         }
     };
@@ -45,16 +46,16 @@ public abstract class Divide<T> : GrafanaFunctionBase<T> where T : struct, IData
     public override IAsyncEnumerable<T> ComputeAsync(Parameters parameters, CancellationToken cancellationToken)
     {
         double valueN = parameters.Value<double>(0);
-        return ExecuteFunction(value => value / valueN, parameters);
+        return ExecuteFunction(value => value - valueN, parameters);
     }
 
     /// <inheritdoc />
-    public class ComputeDataSourceValue : Divide<DataSourceValue>
+    public class ComputeDataSourceValue : Shift<DataSourceValue>
     {
     }
 
     /// <inheritdoc />
-    public class ComputePhasorValue : Divide<PhasorValue>
+    public class ComputePhasorValue : Shift<PhasorValue>
     {
         // Function computed for both magnitude and angle
     }

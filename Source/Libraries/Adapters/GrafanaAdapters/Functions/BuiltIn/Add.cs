@@ -26,8 +26,10 @@ public abstract class Add<T> : GrafanaFunctionBase<T> where T : struct, IDataSou
     public override string Description => "Returns a series of values that represent each of the values in the source series added with N.";
 
     /// <inheritdoc />
-    // Hiding slice operation since result matrix would be the same when tolerance matches data rate
-    public override GroupOperations PublishedGroupOperations => GroupOperations.None | GroupOperations.Set;
+    public override GroupOperations AllowedGroupOperations => GroupOperations.Slice;
+
+    /// <inheritdoc />
+    public override GroupOperations PublishedGroupOperations => GroupOperations.Slice;
 
     /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>

@@ -129,7 +129,6 @@
     <Compile Include="Functions\BuiltIn\Derivative.cs" />
     <Compile Include="Functions\BuiltIn\Difference.cs" />
     <Compile Include="Functions\BuiltIn\Distinct.cs" />
-    <Compile Include="Functions\BuiltIn\Divide.cs" />
     <Compile Include="Functions\BuiltIn\ExcludeRange.cs" />
     <Compile Include="Functions\BuiltIn\FilterNaN.cs" />
     <Compile Include="Functions\BuiltIn\First.cs" />
@@ -144,13 +143,13 @@
     <Compile Include="Functions\BuiltIn\Mode.cs" />
     <Compile Include="Functions\BuiltIn\Modulo.cs" />
     <Compile Include="Functions\BuiltIn\MovingAverage.cs" />
-    <Compile Include="Functions\BuiltIn\Multiply.cs" />
+    <Compile Include="Functions\BuiltIn\Scale.cs" />
     <Compile Include="Functions\BuiltIn\Percentile.cs" />
     <Compile Include="Functions\BuiltIn\Random.cs" />
     <Compile Include="Functions\BuiltIn\Range.cs" />
     <Compile Include="Functions\BuiltIn\Round.cs" />
     <Compile Include="Functions\BuiltIn\StandardDeviation.cs" />
-    <Compile Include="Functions\BuiltIn\Subtract.cs" />
+    <Compile Include="Functions\BuiltIn\Shift.cs" />
     <Compile Include="Functions\BuiltIn\TimeDifference.cs" />
     <Compile Include="Functions\BuiltIn\TimeIntegration.cs" />
     <Compile Include="Functions\BuiltIn\Top.cs" />
