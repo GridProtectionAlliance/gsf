@@ -274,10 +274,21 @@ internal static class FunctionParsing
                 return derivedLabel;
             });
 
-            // TODO: JRC - check if these would be better handled with an index suffix
             // Verify that series label is unique
             while (uniqueLabelSet.Contains(seriesLabel))
-                seriesLabel = $"{seriesLabel}\u00A0"; // non-breaking space
+            {
+                Match match = s_uniqueSeriesRegex.Match(seriesLabel);
+
+                if (match.Success)
+                {
+                    int count = int.Parse(match.Result("${Count}")) + 1;
+                    seriesLabel = $"{match.Result("${Label}")} {count}";
+                }
+                else
+                {
+                    seriesLabel = $"{seriesLabel} 1";
+                }
+            }
 
             uniqueLabelSet.Add(seriesLabel);
 
@@ -341,4 +352,6 @@ internal static class FunctionParsing
             }
         }
     }
+
+    private static readonly Regex s_uniqueSeriesRegex = new(@"(?<Label>.+) (?<Count>\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 }

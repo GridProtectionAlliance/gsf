@@ -71,10 +71,10 @@ public static class DataSourceValueCache
 
                 // Load all data source value types from any assemblies in the current directory
                 string dataSourceValuesPath = FilePath.GetAbsolutePath("").EnsureEnd(Path.DirectorySeparatorChar);
-                List<Type> implementations = typeof(IDataSourceValue).LoadImplementations(dataSourceValuesPath, true, false);
+                List<Type> implementationTypes = typeof(IDataSourceValue).LoadImplementations(dataSourceValuesPath, true, false);
 
                 // To maintain consistent order between runs, we sort the data source value types by load order and then by name
-                IDataSourceValue[] instances = implementations
+                IDataSourceValue[] instances = implementationTypes
                     .Select(type => (IDataSourceValue)Activator.CreateInstance(type))
                     .OrderBy(dsv => dsv.LoadOrder)
                     .ThenBy(dsv => dsv.GetType().Name)
