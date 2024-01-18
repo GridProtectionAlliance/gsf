@@ -32,7 +32,7 @@ public class Target
     /// <summary>
     /// Gets or sets reference ID.
     /// </summary>
-    public string refId { get; set; }
+    public string refID { get; set; }
 
     /// <summary>
     /// Gets or sets target point/tag name.

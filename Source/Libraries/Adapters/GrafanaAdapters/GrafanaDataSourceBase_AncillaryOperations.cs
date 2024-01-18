@@ -183,7 +183,7 @@ partial class GrafanaDataSourceBase
         // For this use case, we consider coordinates to be the "same" if they are within 100 feet.
         //
         // As long as coordinates are not near the poles, the following formula works to calculate
-        // the degree of difference to use for a default coordinate tolerance of about 100 feet:
+        // the degree of difference to use for a default coordinate tolerance of roughly 100 feet:
         //
         //   1 degree of latitude (or longitude) at equator ≈ 111 kilometers, and
         //   1 foot ≈ 0.0003048 kilometers, so 100 feet ≈ 0.03048 kilometers, which means
@@ -202,7 +202,7 @@ partial class GrafanaDataSourceBase
             .ThenBy(metadataMap => numericValueOf(metadataMap["Latitude"]))
             .ToArray();
 
-        // No work to do if no metadata maps contain longitude and latitude values
+        // No work to do if no metadata maps contain valid longitude and latitude values
         if (metadataMaps.Length == 0)
             return Task.CompletedTask;
 

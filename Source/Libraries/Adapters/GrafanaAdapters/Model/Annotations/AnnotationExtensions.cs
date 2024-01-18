@@ -176,7 +176,7 @@ public static class AnnotationRequestExtensions
             dataTypeIndex = DataSourceValue.TypeIndex,
             range = request.range,
             interval = "*",
-            targets = targets.Select((target, index) => new Target { refId = $"ID{index}", target = $"Interval(0, {target})" }).ToArray(),
+            targets = targets.Select((target, index) => new Target { refID = $"ID{index}", target = $"Interval(0, {target})" }).ToArray(),
             maxDataPoints = maxDataPoints
         };
     }

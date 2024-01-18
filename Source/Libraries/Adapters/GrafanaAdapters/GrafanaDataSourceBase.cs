@@ -149,7 +149,7 @@ public abstract partial class GrafanaDataSourceBase
         // enumerations that need evaluation before the final result can be serialized and returned to Grafana
         foreach (QueryParameters queryParameters in targetQueryParameters)
         {
-            // Capture value groups for a given Grafana target data source query, i.e., all results with the same RefID
+            // Organize value groups by given Grafana target data source query, i.e., all results with the same RefID
             List<DataSourceValueGroup<T>> queryValueGroups = new();
 
             await foreach (DataSourceValueGroup<T> valueGroup in QueryTargetAsync<T>(instance, queryParameters, metadata, queryParameters.SourceTarget.target, cancellationToken).ConfigureAwait(false))
@@ -212,36 +212,32 @@ public abstract partial class GrafanaDataSourceBase
     {
         // A single target might look like the following - nested functions with multiple targets are supported:
         // PPA:15; STAT:20; SETSUM(COUNT(PPA:8; PPA:9; PPA:10)); FILTER ActiveMeasurements WHERE SignalType IN ('IPHA', 'VPHA'); RANGE(PPA:99; SUM(FILTER ActiveMeasurements WHERE SignalType = 'FREQ'; STAT:12))
-        HashSet<string> targetSet = new(new[] { queryExpression }, StringComparer.OrdinalIgnoreCase); // Targets include user provided input, so casing is ignored
 
-        // Parse out and cache any top-level grafana functions found in target expression
-        (ParsedGrafanaFunction<T>[] grafanaFunctions, HashSet<string> reducedTargetSet) = TargetCache<(ParsedGrafanaFunction<T>[], HashSet<string>)>.GetOrAdd($"{default(T).DataTypeIndex}:{queryExpression}", () =>
+        // Parse out and cache any top-level grafana functions found in query expression
+        (ParsedGrafanaFunction<T>[] grafanaFunctions, string reducedQueryExpression) = TargetCache<(ParsedGrafanaFunction<T>[], string)>.GetOrAdd($"{default(T).DataTypeIndex}:{queryExpression}", () =>
         {
             // Match any top-level grafana functions in target query expression
             ParsedGrafanaFunction<T>[] matchedFunctions = FunctionParsing.MatchFunctions<T>(queryExpression);
-            HashSet<string> reducedTargetSet = new(StringComparer.OrdinalIgnoreCase);
 
-            if (matchedFunctions.Length > 0)
-            {
-                // Reduce target to non-function expressions - important so later split on ';' succeeds properly
-                string reducedTarget = queryExpression;
+            if (matchedFunctions.Length == 0)
+                return (matchedFunctions, string.Empty);
 
-                foreach (string functionExpression in matchedFunctions.Select(function => function.MatchedValue))
-                    reducedTarget = reducedTarget.Replace(functionExpression, "");
+            // Reduce query expression to non-function expressions
+            string reducedQueryExpression = queryExpression;
 
-                // FUTURE: as a convenience to the end user, it should be possible here to check for any named targets in the
-                // function expressions and make sure they get added to the reduced target set -- note: because of the recursive
-                // nature of this function, only the top-level named targets would be checked. Doing this would allow targets that
-                // were only defined as named targets to be queried without the user having to additionally specify them in the
-                // query expression. This would not, however, prevent the data from being trended. In order to prevent named
-                // targets from appearing in the trended data (at least for those that were not already in the query results),
-                // named targets would have to be tracked here and removed from the trended data before exiting this function.
+            foreach (string functionExpression in matchedFunctions.Select(function => function.MatchedValue))
+                reducedQueryExpression = reducedQueryExpression.Replace(functionExpression, "");
 
-                if (!string.IsNullOrWhiteSpace(reducedTarget))
-                    reducedTargetSet.Add(reducedTarget);
-            }
+            // FUTURE: as a convenience to the end user, it should be possible here to check for any named targets in the
+            // function expressions and make sure they get added to the reduced query expression -- note: because of the
+            // recursive nature of this function, only the top-level named targets would be checked. Doing this would allow
+            // targets that were only defined as named targets to be queried without the user having to additionally
+            // specify them in the query expression. This would not, however, prevent the data from being trended. In order
+            // to prevent named targets from appearing in the trended data (at least for those that were not already in the
+            // query results), named targets would have to be tracked here and removed from the trended data before exiting
+            // this function.
 
-            return (matchedFunctions, reducedTargetSet);
+            return (matchedFunctions, reducedQueryExpression);
         });
 
         if (grafanaFunctions.Length > 0)
@@ -254,31 +250,56 @@ public abstract partial class GrafanaDataSourceBase
                     yield return valueGroup;
             }
 
-            // Further operations use reduced target set that exclude any now handled grafana functions
-            targetSet = reducedTargetSet;
+            // Any further operations use reduced query expression that excludes any now-handled grafana functions
+            queryExpression = reducedQueryExpression;
         }
 
-        // Continue when there are any remaining targets to query
-        if (targetSet.Count == 0)
+        // Continue only when there is any remaining query expression
+        if (string.IsNullOrWhiteSpace(queryExpression))
             yield break;
 
-        // Split remaining targets on semi-colon, this way even multiple filter expressions can be used as inputs to functions
-        string[] allTargets = targetSet.Select(target => target.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)).SelectMany(currentTargets => currentTargets).ToArray();
+        // Create a map of the queryable data source point IDs to point tags - this will be used to query the data source
+        // for the needed data points in the derived class 'QueryDataSourceValues' implementation. This map is cached by
+        // data source value type index and queryExpression for improved performance.
+        Dictionary<ulong, string> targetMap = TargetCache<Dictionary<ulong, string>>.GetOrAdd($"{default(T).DataTypeIndex}:{queryExpression}", () => 
+        {
+            Dictionary<ulong, string> targetMap = new();
 
-        // Expand target set to include point tags for all parsed inputs, parsing target expression into individual point tags,
-        // this step will convert any defined filter expressions into point tags:
-        foreach (string target in allTargets)
-            targetSet.UnionWith(TargetCache<string[]>.GetOrAdd(target, () => target.ParseExpressionAsTags<T>(metadata)));
+            // Split remaining targets on semi-colon which will include possible filter expressions being used
+            // as inputs to functions, also since expression includes user provided input, casing is ignored.
+            HashSet<string> targetSet = new(s_semiColonSplitter.Split(queryExpression).Where(NotEmpty), StringComparer.OrdinalIgnoreCase);
 
-        // Target set may now contain both original expressions, e.g., Guid (signal ID) or measurement key (source:ID), and newly
-        // parsed individual point tags. For the final point list we are only interested in the point tags. Convert all remaining
-        // targets to point tags, removing any duplicates, and create a map of the queryable data source point IDs to point tags:
-        (Dictionary<ulong, string> targetMap, object state) = default(T).GetIDTargetMap(metadata, targetSet);
+            // Parse each target expression converting any encountered filter expressions, measurement keys and
+            // Guid-based signal IDs into point tags; any other encountered inputs will throw an exception.
+            foreach (string target in targetSet)
+            {
+                (MeasurementKey[] keys, string alias, string tableName) = target.Parse<T>(metadata);
+
+                if (!string.IsNullOrWhiteSpace(alias))
+                {
+                    // Aliased tags take precedence over other target maps
+                    targetMap[keys[0].ID] = $"{alias}={keys[0].TagFromKey(metadata, tableName)}";
+                }
+                else
+                {
+                    foreach (MeasurementKey key in keys)
+                    {
+                        // Only execute tag lookup once per ID
+                        if (!targetMap.ContainsKey(key.ID))
+                            targetMap[key.ID] = key.TagFromKey(metadata, tableName);
+                    }
+                }
+            }
+
+            return targetMap;
+        });
+
+        // Create a map of each target to its own time-value map which will group target values that are sorted by time
         Dictionary<string, SortedList<double, T>> targetValues = new(StringComparer.OrdinalIgnoreCase);
 
-        // Query underlying data source, assigning each value to its own data source target time-value map, thus sorting values per target and time
+        // Query underlying data source, assigning each value to its own data source target time-value map
         await foreach (DataSourceValue dataValue in instance.QueryDataSourceValues(queryParameters, targetMap, cancellationToken).ConfigureAwait(false))
-            default(T).AssignToTimeValueMap(dataValue, targetValues.GetOrAdd(dataValue.Target, _ => new SortedList<double, T>()), state);
+            default(T).AssignToTimeValueMap(dataValue, targetValues.GetOrAdd(dataValue.Target, _ => new SortedList<double, T>()), metadata);
 
         // Transpose each target into a data source value group along with its associated queried values
         foreach (KeyValuePair<string, SortedList<double, T>> item in targetValues)
@@ -290,7 +311,7 @@ public abstract partial class GrafanaDataSourceBase
                 SourceTarget = queryParameters.SourceTarget,
                 Source = item.Value.Values.ToAsyncEnumerable(),
                 DropEmptySeries = queryParameters.DropEmptySeries,
-                RefID = queryParameters.SourceTarget.refId,
+                RefID = queryParameters.SourceTarget.refID,
                 MetadataMap = metadata.GetMetadataMap<T>(item.Key, queryParameters)
             };
         }
@@ -336,7 +357,7 @@ public abstract partial class GrafanaDataSourceBase
                         SourceTarget = queryParameters.SourceTarget,
                         Source = function.ComputeAsync(parameters, cancellationToken),
                         DropEmptySeries = queryParameters.DropEmptySeries,
-                        RefID = queryParameters.SourceTarget.refId,
+                        RefID = queryParameters.SourceTarget.refID,
                         MetadataMap = metadataMap
                     };
                 }
@@ -361,7 +382,7 @@ public abstract partial class GrafanaDataSourceBase
                         SourceTarget = queryParameters.SourceTarget,
                         Source = valueGroup.Source,
                         DropEmptySeries = queryParameters.DropEmptySeries,
-                        RefID = queryParameters.SourceTarget.refId,
+                        RefID = queryParameters.SourceTarget.refID,
                         MetadataMap = metadata.GetMetadataMap<T>(rootTarget, queryParameters)
                     };
                 }
@@ -382,7 +403,7 @@ public abstract partial class GrafanaDataSourceBase
                     SourceTarget = queryParameters.SourceTarget,
                     Source = function.ComputeSetAsync(parameters, cancellationToken),
                     DropEmptySeries = queryParameters.DropEmptySeries,
-                    RefID = queryParameters.SourceTarget.refId,
+                    RefID = queryParameters.SourceTarget.refID,
                     MetadataMap = metadataMap
                 };
 
@@ -507,4 +528,15 @@ public abstract partial class GrafanaDataSourceBase
     private static readonly Regex s_fullResolutionQueryCommand = new(@";\s*FullResolutionQuery", RegexOptions.Compiled | RegexOptions.IgnoreCase);
     private static readonly Regex s_importsCommand = new(@";\s*Imports\s*=\s*\{(?<Expression>.+)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
     private static readonly Regex s_radialDistributionCommand = new(@";\s*RadialDistribution\s*=\s*\{(?<Expression>.+)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+    // Define a regular expression that splits on semi-colon except when semi-colon is inside of a single-quoted string. A simple
+    // string.Split on semi-colon will not work properly for cases where a semi-colon is used inside of a filter expression that
+    // contains a string literal with a semi-colon, e.g., FILTER ActiveMeasurements WHERE Description LIKE '%A;B%'
+    private static readonly Regex s_semiColonSplitter = new(@";(?=(?:[^']*'[^']*')*[^']*$)", RegexOptions.Compiled);
+    
+    // To ensure RegEx split ignores empty entries, define a predicate function that returns true if string is not empty
+    private static bool NotEmpty(string value)
+    {
+        return !string.IsNullOrWhiteSpace(value);
+    }
 }

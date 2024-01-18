@@ -108,16 +108,12 @@ public interface IDataSourceValue
     /// This defines a list of the required metadata fields for a table in the data source. If any of
     /// these are missing, the data source table will not be available for use. This list should at
     /// least include key field names for the <see cref="MetadataTableName"/> that may be needed by
-    /// the <see cref="GetIDTargetMap"/> or <see cref="IDataSourceValue{T}.AssignToTimeValueMap"/>
+    /// the <see cref="RecordToKeys"/> or <see cref="IDataSourceValue{T}.AssignToTimeValueMap"/>
     /// functions. For example, in order to use a table named 'ActiveMeasurements', the required
     /// metadata field names might be: 'ID', 'SignalID', and 'PointTag'.
     /// </para>
     /// <para>
-    /// Note that system generally assumes that a 'PointTag' field exists in the metadata table and
-    /// to use some of the metadata functions, e.g., parsing a filter expression, then an 'ID' and
-    /// 'SignalID' field will also be required. In these cases, pick a primary key field that will
-    /// mirror to these required fields for needed values. These do not need to be marked as required
-    /// metadata fields, but they will need to be included in the table as available fields.
+    /// Note that system generally assumes that a 'PointTag' field exists in the metadata table.
     /// </para>
     /// </remarks>
     string[] RequiredMetadataFieldNames { get; }
@@ -148,18 +144,11 @@ public interface IDataSourceValue
     DataRow LookupMetadata(DataSet metadata, string tableName, string target);
 
     /// <summary>
-    /// Gets the ID to target map for the specified metadata and targets along with any intermediate state.
+    /// Converts a metadata record to an associated set of measurement keys.
     /// </summary>
-    /// <param name="metadata">Source metadata.</param>
-    /// <param name="targetSet">Target set to query.</param>
-    /// <returns>Target map for the specified metadata and targets along with any intermediate state.</returns>
-    /// <remarks>
-    /// For a given data source type, this function will be called once per query to build a map of IDs to
-    /// targets. Since this step involves the metadata lookups for targets, any intermediate state can be
-    /// used with the <see cref="IDataSourceValue{T}.AssignToTimeValueMap"/> function to avoid any
-    /// redundant metadata lookups after the data query operation.
-    /// </remarks>
-    (Dictionary<ulong, string> targetMap, object state) GetIDTargetMap(DataSet metadata, HashSet<string> targetSet);
+    /// <param name="record">Source metadata record.</param>
+    /// <returns>An enumeration of associated set of measurement keys.</returns>
+    MeasurementKey[] RecordToKeys(DataRow record);
 
     /// <summary>
     /// Gets the data source value type index.
@@ -178,14 +167,14 @@ public interface IDataSourceValue<T> : IDataSourceValue, IComparable<T>, IEquata
     /// </summary>
     /// <param name="dataValue">Queried data source value.</param>
     /// <param name="timeValueMap">Time-value map for specified <paramref name="dataValue"/>.</param>
-    /// <param name="state">Optional intermediate state.</param>
+    /// <param name="metadata">Source metadata.</param>
     /// <remarks>
     /// Provided time-value map is specific to the queried data source value, by target, and is keyed by Unix
     /// epoch milliseconds timestamp. This function is used to assign the queried data source value to the
     /// time-value map. If the data source value type has multiple fields, this function will be called once
     /// per each field in the data source value for a given timestamp.
     /// </remarks>
-    void AssignToTimeValueMap(DataSourceValue dataValue, SortedList<double, T> timeValueMap, object state);
+    void AssignToTimeValueMap(DataSourceValue dataValue, SortedList<double, T> timeValueMap, DataSet metadata);
 
     /// <summary>
     /// Gets the parameter definition for data source values.

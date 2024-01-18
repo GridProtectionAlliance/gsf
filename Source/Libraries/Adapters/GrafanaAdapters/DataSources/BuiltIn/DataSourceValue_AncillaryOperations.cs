@@ -126,51 +126,14 @@ public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
         return record;
     }
 
-    readonly (Dictionary<ulong, string>, object) IDataSourceValue.GetIDTargetMap(DataSet metadata, HashSet<string> targetSet)
+    MeasurementKey[] IDataSourceValue.RecordToKeys(DataRow record)
     {
-        Dictionary<ulong, string> targetMap = new();
-
-        // Reduce all targets down to a dictionary of data source point ID's mapped to point tags
-        foreach (string target in targetSet)
-        {
-            // Check if target is already in the form of a point tag
-            MeasurementKey key = TargetCache<MeasurementKey>.GetOrAdd($"{TypeIndex}:{target}", () => target.KeyFromTag(metadata));
-
-            if (key == MeasurementKey.Undefined)
-            {
-                // Check if target is in the form of a Guid-based signal ID, e.g., {00000000-0000-0000-0000-000000000000}
-                (key, string pointTag) = TargetCache<(MeasurementKey, string)>.GetOrAdd($"signalID@{TypeIndex}:{target}", () => target.KeyAndTagFromSignalID(metadata));
-
-                if (key == MeasurementKey.Undefined)
-                {
-                    // Check if target is in the form of a measurement key, e.g., PPA:101
-                    (key, pointTag) = TargetCache<(MeasurementKey, string)>.GetOrAdd($"key@{TypeIndex}:{target}", () =>
-                    {
-                        MeasurementKey.TryParse(target, out MeasurementKey parsedKey);
-                        return (parsedKey, parsedKey.TagFromKey(metadata));
-                    });
-
-                    if (key != MeasurementKey.Undefined)
-                        targetMap[key.ID] = pointTag;
-                }
-                else
-                {
-                    targetMap[key.ID] = pointTag;
-                }
-            }
-            else
-            {
-                targetMap[key.ID] = target;
-            }
-        }
-
-        // Return target map and null state
-        return (targetMap, null);
+        return new[] { record.KeyFromRecord() };
     }
-
+    
     int IDataSourceValue.DataTypeIndex => TypeIndex;
 
-    readonly void IDataSourceValue<DataSourceValue>.AssignToTimeValueMap(DataSourceValue dataValue, SortedList<double, DataSourceValue> timeValueMap, object state)
+    readonly void IDataSourceValue<DataSourceValue>.AssignToTimeValueMap(DataSourceValue dataValue, SortedList<double, DataSourceValue> timeValueMap, DataSet metadata)
     {
         timeValueMap[dataValue.Time] = dataValue;
     }

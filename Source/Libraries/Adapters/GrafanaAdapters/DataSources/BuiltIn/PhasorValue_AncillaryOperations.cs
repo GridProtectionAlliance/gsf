@@ -139,96 +139,22 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
         return record;
     }
 
-    readonly (Dictionary<ulong, string>, object) IDataSourceValue.GetIDTargetMap(DataSet metadata, HashSet<string> targetSet)
+    MeasurementKey[] IDataSourceValue.RecordToKeys(DataRow record)
     {
-        Dictionary<ulong, string> targetMap = new();
-
-        // Reduce all targets down to a dictionary of data source point ID's mapped to point tags
-        foreach (string target in targetSet)
+        return new[]
         {
-            // Check if target is already in the form of a point tag
-            ((MeasurementKey magnitudeKey, string magnitudePointTag), (MeasurementKey angleKey, string anglePointTag)) = TargetCache<((MeasurementKey, string), (MeasurementKey, string))>.GetOrAdd($"{TypeIndex}:{target}", () =>
-            {
-                // Lookup target as common phasor point tag name from phasor metadata table, if this
-                // doesn't match, try looking up target as a point tag for either magnitude or angle
-                DataRow record = target.RecordFromTag(metadata, MetadataTableName) ??
-                                 target.RecordFromTag(metadata, MetadataTableName, "MagnitudePointTag") ??
-                                 target.RecordFromTag(metadata, MetadataTableName, "AnglePointTag");
-
-                // If point tag matches, return associated keys and point tags for both magnitude and angle
-                return record is null ? ((MeasurementKey.Undefined, null), (MeasurementKey.Undefined, null)) :
-                (
-                    record.KeyAndTagFromRecord("MagnitudeSignalID", "MagnitudePointTag", "MagnitudeID"),
-                    record.KeyAndTagFromRecord("AngleSignalID", "AnglePointTag", "AngleID")
-                );
-            });
-
-            if (magnitudeKey == MeasurementKey.Undefined && angleKey == MeasurementKey.Undefined)
-            {
-                // Check if target is in the form of a Guid-based signal ID, e.g., {00000000-0000-0000-0000-000000000000}
-                ((magnitudeKey, magnitudePointTag), (angleKey, anglePointTag)) = TargetCache<((MeasurementKey, string), (MeasurementKey, string))>.GetOrAdd($"signalID@{TypeIndex}:{target}", () =>
-                {
-                    // Search for magnitude signal ID first, then angle signal ID next
-                    DataRow record = target.RecordFromSignalID(metadata, MetadataTableName, "MagnitudeSignalID") ??
-                                     target.RecordFromSignalID(metadata, MetadataTableName, "AngleSignalID");
-
-                    // If Guid matches either magnitude or angle signal ID, return associated keys and point tags
-                    return record is null ? ((MeasurementKey.Undefined, null), (MeasurementKey.Undefined, null)) :
-                    (
-                        record.KeyAndTagFromRecord("MagnitudeSignalID", "MagnitudePointTag", "MagnitudeID"),
-                        record.KeyAndTagFromRecord("AngleSignalID", "AnglePointTag", "AngleID")
-                    );
-                });
-
-                if (magnitudeKey == MeasurementKey.Undefined && angleKey == MeasurementKey.Undefined)
-                {
-                    // Check if target is in the form of a measurement key, e.g., PPA:101
-                    ((magnitudeKey, magnitudePointTag), (angleKey, anglePointTag)) = TargetCache<((MeasurementKey, string), (MeasurementKey, string))>.GetOrAdd($"key@{TypeIndex}:{target}", () =>
-                    {
-                        // Search for magnitude measurement key first, then angle measurement key next
-                        DataRow record = target.RecordFromKey(metadata, MetadataTableName, "MagnitudeID") ??
-                                         target.RecordFromKey(metadata, MetadataTableName, "AngleID");
-
-                        // If measurement key matches either magnitude or angle, return associated keys and point tags
-                        return record is null ? ((MeasurementKey.Undefined, null), (MeasurementKey.Undefined, null)) :
-                        (
-                            record.KeyAndTagFromRecord("MagnitudeSignalID", "MagnitudePointTag", "MagnitudeID"),
-                            record.KeyAndTagFromRecord("AngleSignalID", "AnglePointTag", "AngleID")
-                        );
-                    });
-
-                    // Unmatched magnitude and angle pairs are ignored
-                    if (magnitudeKey == MeasurementKey.Undefined || angleKey == MeasurementKey.Undefined)
-                        continue;
-
-                    targetMap[magnitudeKey.ID] = magnitudePointTag;
-                    targetMap[angleKey.ID] = anglePointTag;
-                }
-                else
-                {
-                    targetMap[magnitudeKey.ID] = magnitudePointTag;
-                    targetMap[angleKey.ID] = anglePointTag;
-                }
-            }
-            else
-            {
-                targetMap[magnitudeKey.ID] = magnitudePointTag;
-                targetMap[angleKey.ID] = anglePointTag;
-            }
-        }
-
-        // Return target map along wih metadata as state
-        return (targetMap, metadata);
+            record.KeyFromRecord("MagnitudeID", "MagnitudeSignalID"),
+            record.KeyFromRecord("AngleID", "AngleSignalID")
+        };
     }
 
-    readonly void IDataSourceValue<PhasorValue>.AssignToTimeValueMap(DataSourceValue dataValue, SortedList<double, PhasorValue> timeValueMap, object state)
-    {
-        DataSet metadata = state as DataSet;
-        Debug.Assert(metadata is not null, "Unexpected null metadata");
+    int IDataSourceValue.DataTypeIndex => TypeIndex;
 
+    readonly void IDataSourceValue<PhasorValue>.AssignToTimeValueMap(DataSourceValue dataValue, SortedList<double, PhasorValue> timeValueMap, DataSet metadata)
+    {
         string target = dataValue.Target;
 
-        // Lookup queried data source value target in 'PhasorValues' metadata - this will only either be a magnitude or angle point tag
+        // Lookup queried data source value target in 'PhasorValues' metadata
         (string phasorTarget, string magnitudeTarget, string angleTarget, bool isMagnitudeValue) = TargetCache<(string, string, string, bool)>.GetOrAdd(target, () =>
         {
             // Lookup queried data source target as a point tag for either magnitude or angle
@@ -281,8 +207,6 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
             });
         }
     }
-
-    int IDataSourceValue.DataTypeIndex => TypeIndex;
 
     /// <inheritdoc />
     public readonly ParameterDefinition<IAsyncEnumerable<PhasorValue>> DataSourceValuesParameterDefinition => s_dataSourceValuesParameterDefinition;
@@ -387,7 +311,7 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
                     phasorRow["PointTag"] = pointTag;
                     phasorRow["MagnitudePointTag"] = magnitudePointTag;
                     phasorRow["AnglePointTag"] = anglePointTag;
-                    phasorRow["ID"] = magnitude["ID"]; // Fall back on magnitude for possible ID only lookups
+                    phasorRow["ID"] = magnitude["ID"]; // Use magnitude for ID only lookups
                     phasorRow["MagnitudeID"] = magnitude["ID"];
                     phasorRow["AngleID"] = angle["ID"];
                     phasorRow["SignalID"] = magnitude.ConvertGuidField("SignalID");

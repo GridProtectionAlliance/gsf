@@ -288,7 +288,7 @@ internal static class FunctionParsing
                 SourceTarget = queryParameters.SourceTarget,
                 Source = valueGroup.Source,
                 DropEmptySeries = queryParameters.DropEmptySeries,
-                RefID = queryParameters.SourceTarget.refId
+                RefID = queryParameters.SourceTarget.refID
             };
         }
     }

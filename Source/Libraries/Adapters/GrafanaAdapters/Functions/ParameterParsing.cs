@@ -61,7 +61,7 @@ internal static class ParameterParsing
     /// <exception cref="FormatException">Expected parameters did not match those received.</exception>
     public static (string[] parsedParameters, string queryExpression) ParseParameters(this IGrafanaFunction function, QueryParameters queryParameters, string queryExpression, GroupOperations groupOperation)
     {
-        return TargetCache<(string[], string)>.GetOrAdd(queryExpression, () =>
+        return TargetCache<(string[], string)>.GetOrAdd($"{function.Name}:{queryExpression}", () =>
         {
             // Check if function defines any custom parameter parsing
             (List<string> parsedParameters, string updatedQueryExpression) = function.ParseParameters(queryParameters, queryExpression);
@@ -351,11 +351,11 @@ internal static class ParameterParsing
         (string tableName, string fieldName) = value.ParseAsTableAndField<TDataSourceValue>();
 
         // Attempt to lookup target in metadata
-        DataRow row = default(TDataSourceValue).LookupMetadata(metadata, tableName, target);
+        DataRow record = default(TDataSourceValue).LookupMetadata(metadata, tableName, target);
 
-        if (row is null || !row.Table.Columns.Contains(fieldName))
+        if (record is null || !record.Table.Columns.Contains(fieldName))
             return (default, false);
 
-        return (row[fieldName].ToString(), true);
+        return (record[fieldName].ToString(), true);
     }
 }
