@@ -118,6 +118,10 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         {
             // Deserialize command frame
             m_frameHeader = (CommonFrameHeader)info.GetValue("frameHeader", typeof(CommonFrameHeader));
+
+            // Copy in associated properties from base class deserialization that are proxied for use by CommonFrameHeader
+            m_frameHeader.Timestamp = base.Timestamp;
+            m_frameHeader.IDCode = base.IDCode;
         }
 
         #endregion
@@ -158,6 +162,20 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                 // Keep timestamp updates synchronized...
                 CommonHeader.Timestamp = value;
                 base.Timestamp = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the ID code.
+        /// </summary>
+        public override ushort IDCode
+        {
+            get => CommonHeader.IDCode;
+            set
+            {
+                // Keep ID code updates synchronized...
+                CommonHeader.IDCode = value;
+                base.IDCode = value;
             }
         }
 

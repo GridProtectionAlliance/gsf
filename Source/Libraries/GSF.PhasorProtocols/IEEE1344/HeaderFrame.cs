@@ -73,7 +73,10 @@ namespace GSF.PhasorProtocols.IEEE1344
         {
             // Deserialize header frame
             m_frameHeader = (CommonFrameHeader)info.GetValue("frameHeader", typeof(CommonFrameHeader));
-            m_idCode = info.GetUInt64("idCode64Bit");
+            IDCode = info.GetUInt64("idCode64Bit");
+
+            // Copy in associated properties from base class deserialization that are proxied for use by CommonFrameHeader
+            m_frameHeader.Timestamp = base.Timestamp;
         }
 
         #endregion

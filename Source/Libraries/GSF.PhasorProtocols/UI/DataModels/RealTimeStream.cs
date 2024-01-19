@@ -22,6 +22,7 @@
 //       Added virtual device for subscribed measurements when two nodes share a single database.
 //
 //******************************************************************************************************
+// ReSharper disable ValueParameterNotUsed
 
 using System;
 using System.Collections.Generic;
@@ -51,6 +52,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         private bool m_enabled;
         private bool m_expanded;
         private string m_statusColor;
+        private bool? m_configurationOutOfSync;
         private ObservableCollection<RealTimeDevice> m_deviceList;
 
         #endregion
@@ -144,8 +146,72 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 m_statusColor = value;
                 OnPropertyChanged(nameof(StatusColor));
+                OnPropertyChanged(nameof(ConfigurationOutOfSyncContent));
+                OnPropertyChanged(nameof(ConfigurationOutOfSyncToolTip));
+                OnPropertyChanged(nameof(ConfigurationOutOfSyncColor));
             }
         }
+
+        /// <summary>
+        /// Gets or sets flag that determines if the input stream configuration is out of sync.
+        /// </summary>
+        public bool ConfigurationOutOfSync
+        {
+            get => m_configurationOutOfSync ?? false;
+            set
+            {
+                m_configurationOutOfSync = value;
+                OnPropertyChanged(nameof(ConfigurationOutOfSync));
+                OnPropertyChanged(nameof(ConfigurationOutOfSyncContent));
+                OnPropertyChanged(nameof(ConfigurationOutOfSyncToolTip));
+                OnPropertyChanged(nameof(ConfigurationOutOfSyncColor));
+            }
+        }
+
+        /// <summary>
+        /// Gets content message for input stream configuration sync state.
+        /// </summary>
+        public string ConfigurationOutOfSyncContent
+        {
+            get => DeviceStateUnavailable ? "Loading..." :
+                m_configurationOutOfSync is null ? "Checking Config..." :
+                    m_configurationOutOfSync.Value ?
+                        "Config Out of Sync" :
+                        "Config In Sync";
+            set { }
+        }
+
+        /// <summary>
+        /// Gets tool tip for input stream configuration sync state.
+        /// </summary>
+        public string ConfigurationOutOfSyncToolTip
+        {
+            get => DeviceStateUnavailable ? "Loading device state..." :
+                m_configurationOutOfSync is null ? "Evaluating configuration synchronization state..." :
+                    m_configurationOutOfSync.Value ?
+                        "Latest received device configuration is not synchronized with host system. Click to resynchronize." :
+                        "Latest received device configuration is synchronized with host system.";
+            set { }
+        }
+
+        /// <summary>
+        /// Gets color for input stream configuration sync state.
+        /// </summary>
+        public Color ConfigurationOutOfSyncColor
+        {
+            get => DeviceStateUnavailable ? Colors.Gray :
+                m_configurationOutOfSync is null ? Colors.Blue :
+                m_configurationOutOfSync.Value ?
+                    Colors.Red :
+                    GreenColor;
+            set { }
+        }
+
+        /// <summary>
+        /// Gets flag that determines if device state is not yet available, e.g., loading.
+        /// </summary>
+        public bool DeviceStateUnavailable => string.IsNullOrWhiteSpace(StatusColor) || StatusColor is "Gray" or "Transparent";
+
 
         /// <summary>
         /// Gets or sets whether the current <see cref="RealTimeStream"/> is enabled.
@@ -178,6 +244,20 @@ namespace GSF.PhasorProtocols.UI.DataModels
         #region [ Static ]
 
         private const int GroupAccessID = -99999;
+        internal static readonly Color GreenColor;
+
+        static RealTimeStream()
+        {
+            try
+            {
+                object parsedColor = ColorConverter.ConvertFromString("#FF19C819");
+                GreenColor = parsedColor is Color color ? color : Colors.Green;
+            }
+            catch
+            {
+                GreenColor = Colors.Green;
+            }
+        }
 
         // Static Methods
 
@@ -205,11 +285,11 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 // Add a dummy device row in PDC table to associate PMUs which are not PDC and connected directly.
                 DataRow row = resultSet.Tables["PdcTable"].NewRow();
-                row["ID"] = 0;
-                row["Acronym"] = string.Empty;
-                row["Name"] = "Devices Connected Directly";
-                row["CompanyName"] = string.Empty;
-                row["Enabled"] = false;
+                row[nameof(ID)] = 0;
+                row[nameof(Acronym)] = string.Empty;
+                row[nameof(Name)] = "Devices Connected Directly";
+                row[nameof(CompanyName)] = string.Empty;
+                row[nameof(Enabled)] = false;
                 resultSet.Tables["PdcTable"].Rows.Add(row);
 
                 // Get Non-PDC device list.
@@ -253,33 +333,33 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     let settings = parseKeyValuePairs(pdc.Field<string>("ConnectionString").ToNonNullString())
                     select new RealTimeStream
                     {
-                        ID = pdc.ConvertField<int>("ID"),
-                        Acronym = string.IsNullOrEmpty(pdc.Field<string>("Acronym")) ? "DIRECT CONNECTED" : pdc.Field<string>("Acronym"),
-                        Name = pdc.Field<string>("Name"),
-                        CompanyName = pdc.Field<string>("CompanyName"),
-                        StatusColor = string.IsNullOrEmpty(pdc.Field<string>("Acronym")) ? "Transparent" : "Gray",
-                        Enabled = Convert.ToBoolean(pdc.Field<object>("Enabled")),
+                        ID = pdc.ConvertField<int>(nameof(ID)),
+                        Acronym = string.IsNullOrEmpty(pdc.Field<string>(nameof(Acronym))) ? "DIRECT CONNECTED" : pdc.Field<string>(nameof(Acronym)),
+                        Name = pdc.Field<string>(nameof(Name)),
+                        CompanyName = pdc.Field<string>(nameof(CompanyName)),
+                        StatusColor = string.IsNullOrEmpty(pdc.Field<string>(nameof(Acronym))) ? "Transparent" : "Gray",
+                        Enabled = Convert.ToBoolean(pdc.Field<object>(nameof(Enabled))),
                         Expanded = false,
                         DeviceList = new ObservableCollection<RealTimeDevice>(
                             from device in resultSet.Tables["DeviceTable"].AsEnumerable()
-                            where device.Field<string>("ParentAcronym").ToNonNullString() == pdc.Field<string>("Acronym") && (device.ConvertField<int>("AccessID") != GroupAccessID || resultSet.Tables["MeasurementTable"].Select($"DeviceID = {device.ConvertField<int>("ID")}").Length > 0)
+                            where device.Field<string>("ParentAcronym").ToNonNullString() == pdc.Field<string>(nameof(Acronym)) && (device.ConvertField<int>("AccessID") != GroupAccessID || resultSet.Tables["MeasurementTable"].Select($"DeviceID = {device.ConvertField<int>(nameof(ID))}").Length > 0)
                             select new RealTimeDevice
                             {
-                                ID = device.ConvertNullableField<int>("ID"),
-                                Acronym = device.Field<string>("Acronym"),
-                                Name = device.Field<string>("Name"),
+                                ID = device.ConvertNullableField<int>(nameof(ID)),
+                                Acronym = device.Field<string>(nameof(Acronym)),
+                                Name = device.Field<string>(nameof(Name)),
                                 ProtocolName = device.Field<string>("ProtocolName"),
                                 VendorDeviceName = device.Field<string>("VendorDeviceName"),
                                 ParentAcronym = string.IsNullOrEmpty(device.Field<string>("ParentAcronym")) ? "DIRECT CONNECTED" : device.Field<string>("ParentAcronym"),
                                 Expanded = false,
-                                StatusColor = device.ConvertNullableField<int>("ID") is null ? "Transparent" : "Gray",
-                                Enabled = Convert.ToBoolean(device.Field<object>("Enabled")),
+                                StatusColor = device.ConvertNullableField<int>(nameof(ID)) is null ? "Transparent" : "Gray",
+                                Enabled = Convert.ToBoolean(device.Field<object>(nameof(Enabled))),
                                 MeasurementList = new ObservableCollection<RealTimeMeasurement>(
                                     from measurement in resultSet.Tables["MeasurementTable"].AsEnumerable()
-                                    where measurement.ConvertNullableField<int>("DeviceID") == device.ConvertNullableField<int>("ID") && (measurement.ConvertField<bool>("Subscribed") || measurement.ConvertField<bool>("Internal") || (settings.ContainsKey("securityMode") && settings["securityMode"].Equals("None", StringComparison.OrdinalIgnoreCase)))   //We will only display measurements which are internal or subscribed to avoid confusion.
+                                    where measurement.ConvertNullableField<int>("DeviceID") == device.ConvertNullableField<int>(nameof(ID)) && (measurement.ConvertField<bool>("Subscribed") || measurement.ConvertField<bool>("Internal") || (settings.ContainsKey("securityMode") && settings["securityMode"].Equals("None", StringComparison.OrdinalIgnoreCase)))   //We will only display measurements which are internal or subscribed to avoid confusion.
                                     select new RealTimeMeasurement
                                     {
-                                        ID = measurement.Field<string>("ID"),
+                                        ID = measurement.Field<string>(nameof(ID)),
                                         DeviceID = measurement.ConvertNullableField<int>("DeviceID"),
                                         SignalID = Guid.Parse(measurement.Field<object>("SignalID").ToString()),
                                         PointID = measurement.ConvertField<int>("PointID"),
@@ -340,7 +420,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                                             .Where(measurement => measurement.ConvertNullableField<int>("DeviceID") is null && measurement.Field<string>("SignalReference").StartsWith(source))
                                             .Select(measurement => new RealTimeMeasurement
                                                 {
-                                                    ID = measurement.Field<string>("ID"),
+                                                    ID = measurement.Field<string>(nameof(ID)),
                                                     DeviceID = measurement.ConvertNullableField<int>("DeviceID"),
                                                     SignalID = Guid.Parse(measurement.Field<object>("SignalID").ToString()),
                                                     PointID = measurement.ConvertField<int>("PointID"),
@@ -401,7 +481,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                                             .Where(measurement => measurement.ConvertNullableField<int>("DeviceID") is null && measurement.Field<string>("SignalReference").StartsWith(source))
                                             .Select(measurement => new RealTimeMeasurement
                                                 {
-                                                    ID = measurement.Field<string>("ID"),
+                                                    ID = measurement.Field<string>(nameof(ID)),
                                                     DeviceID = measurement.ConvertNullableField<int>("DeviceID"),
                                                     SignalID = Guid.Parse(measurement.Field<object>("SignalID").ToString()),
                                                     PointID = measurement.ConvertField<int>("PointID"),
@@ -504,13 +584,13 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
         private static string GetSourceName(string signalReference)
         {
-            // Try to parse source name based on properly formatted signal reference (SOURCENAME-XX#)
+            // Try to parse source name based on properly formatted signal reference (SOURCE-ID)
             int hyphenIndex = signalReference.LastIndexOf('-');
 
             if (hyphenIndex >= 0)
                 return signalReference.Substring(0, hyphenIndex);
 
-            // Try to parse source name from signal reference formatted like point tag (SOURCENAME:XXXY#).
+            // Try to parse source name from signal reference formatted like point tag (SOURCE:ID).
             // This format may include company name, but should be the same for all points from the same device
             int colonIndex = signalReference.LastIndexOf(':');
 
@@ -538,13 +618,13 @@ namespace GSF.PhasorProtocols.UI.DataModels
         // Fields        
         private int? m_id;
         private string m_acronym;
-        private string m_acronymTruncated;
         private string m_name;
         private string m_protocolName;
         private string m_vendorDeviceName;
         private string m_parentAcronym;
         private bool m_expanded;
         private string m_statusColor;
+        private bool? m_configurationOutOfSync;
         private bool m_enabled;
         private double m_maximumSignalReferenceWidth = double.NaN;
         private double m_maximumShortSignalReferenceWidth = double.NaN;
@@ -597,11 +677,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// <summary>
         /// Gets truncated acronym, i.e. removed parent device prefix. This is only for display purpose.
         /// </summary>
-        public string AcronymTruncated
-        {
-            get => m_acronymTruncated;
-            set => m_acronymTruncated = value;
-        }
+        public string AcronymTruncated { get; set; }
 
         /// <summary>
         /// Gets or sets Name of the <see cref="RealTimeDevice"/>
@@ -656,6 +732,15 @@ namespace GSF.PhasorProtocols.UI.DataModels
         }
 
         /// <summary>
+        /// Gets flag that determines if the <see cref="RealTimeDevice"/> is a direct connection.
+        /// </summary>
+        public bool IsDirectConnectedDevice
+        {
+            get => ParentAcronym.Equals("DIRECT CONNECTED");
+            set { }
+        } 
+
+        /// <summary>
         /// Gets or sets Expanded flag of the <see cref="RealTimeDevice"/>.
         /// </summary>
         public bool Expanded
@@ -678,8 +763,71 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 m_statusColor = value;
                 OnPropertyChanged(nameof(StatusColor));
+                OnPropertyChanged(nameof(ConfigurationOutOfSyncContent));
+                OnPropertyChanged(nameof(ConfigurationOutOfSyncToolTip));
+                OnPropertyChanged(nameof(ConfigurationOutOfSyncColor));
             }
         }
+
+        /// <summary>
+        /// Gets or sets flag that determines if the input stream configuration is out of sync.
+        /// </summary>
+        public bool ConfigurationOutOfSync
+        {
+            get => m_configurationOutOfSync ?? false;
+            set
+            {
+                m_configurationOutOfSync = value;
+                OnPropertyChanged(nameof(ConfigurationOutOfSync));
+                OnPropertyChanged(nameof(ConfigurationOutOfSyncContent));
+                OnPropertyChanged(nameof(ConfigurationOutOfSyncToolTip));
+                OnPropertyChanged(nameof(ConfigurationOutOfSyncColor));
+            }
+        }
+
+        /// <summary>
+        /// Gets content message for input stream configuration sync state.
+        /// </summary>
+        public string ConfigurationOutOfSyncContent
+        {
+            get => DeviceStateUnavailable ? "Loading..." :
+                m_configurationOutOfSync is null ? "Checking Config..." : 
+                m_configurationOutOfSync.Value ? 
+                    "Config Out of Sync" : 
+                    "Config In Sync";
+            set { }
+        }
+
+        /// <summary>
+        /// Gets tool tip for input stream configuration sync state.
+        /// </summary>
+        public string ConfigurationOutOfSyncToolTip
+        {
+            get => DeviceStateUnavailable ? "Loading device state..." : 
+                m_configurationOutOfSync is null ? "Evaluating configuration synchronization state..." : 
+                m_configurationOutOfSync.Value ? 
+                    "Latest received device configuration is not synchronized with host system. Click to resynchronize." : 
+                    "Latest received device configuration is synchronized with host system.";
+            set { }
+        }
+
+        /// <summary>
+        /// Gets color for input stream configuration sync state.
+        /// </summary>
+        public Color ConfigurationOutOfSyncColor
+        {
+            get => DeviceStateUnavailable ? Colors.Gray : 
+                m_configurationOutOfSync is null ? Colors.Blue: 
+                m_configurationOutOfSync.Value ? 
+                    Colors.Red :
+                    RealTimeStream.GreenColor;
+            set { }
+        }
+
+        /// <summary>
+        /// Gets flag that determines if device state is not yet available, e.g., loading.
+        /// </summary>
+        public bool DeviceStateUnavailable => string.IsNullOrWhiteSpace(StatusColor) || StatusColor is "Gray" or "Transparent";
 
         /// <summary>
         /// Gets or sets Enabled flag of the <see cref="RealTimeDevice"/>.
@@ -834,9 +982,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 double width = m_parent.MaximumSignalReferenceWidth;
 
-                return double.IsNaN(width) ? "Auto" : width.ToString();
+                return double.IsNaN(width) ? "Auto" : width.ToString(CultureInfo.InvariantCulture);
             }
-            // ReSharper disable once ValueParameterNotUsed
             set
             {
             }
@@ -854,7 +1001,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 double width = m_parent.MaximumShortSignalReferenceWidth;
 
-                return double.IsNaN(width) ? "Auto" : width.ToString();
+                return double.IsNaN(width) ? "Auto" : width.ToString(CultureInfo.InvariantCulture);
             }
             // ReSharper disable once ValueParameterNotUsed
             set

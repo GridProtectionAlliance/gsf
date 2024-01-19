@@ -138,6 +138,10 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
             m_configurationRevision = info.GetUInt32("configurationRevision");
             SampleSynchronization = info.GetByte("sampleSynchronization");
             m_sampleRate = info.GetUInt16("sampleRate");
+
+            // Copy in associated properties from base class deserialization that are proxied for use by CommonFrameHeader
+            m_frameHeader.Timestamp = base.Timestamp;
+            m_frameHeader.IDCode = base.IDCode;
         }
 
         #endregion
@@ -173,6 +177,16 @@ namespace GSF.PhasorProtocols.IEC61850_90_5
                 CommonHeader.Timestamp = value;
                 base.Timestamp = value;
             }
+        }
+
+        /// <summary>
+        /// Gets or sets the ID code.
+        /// </summary>
+        public override ushort IDCode
+        {
+            get => CommonHeader.IDCode;
+            // Keep ID code updates synchronized...
+            set => CommonHeader.IDCode = value;
         }
 
         /// <summary>

@@ -43,25 +43,22 @@ namespace GSF.Web.Model
     /// Base Class for A Webcontroller that provides common Model endpoints such as Edit, Delete, Search.
     /// </summary>
     /// <typeparam name="T">The corresponding Model.</typeparam>
-    public class ModelController<T> : ApiController where T : class, new()
+    public class ModelController<T> : ModelController<T, T> where T : class, new() { }
+
+    /// <summary>
+    /// Base Class for A Webcontroller that provides common Model endpoints such as Edit, Delete, Search.
+    /// </summary>
+    /// <typeparam name="T">The corresponding Model for Search/Fetch Results.</typeparam>
+    /// <typeparam name="U">The corresponding Model for database editing.</typeparam>
+    public class ModelController<T, U> : ApiController
+        where T : class, U, new()
+        where U : class, new()
     {
         #region [ Members ]
 
-        /// <summary>
-        /// Class Providing Search Parameters for the Search Endpoints
-        /// </summary>
-        public class Search
-        {
-            public string FieldName { get; set; }
-            public string SearchText { get; set; }
-            public string Operator { get; set; }
-            public string Type { get; set; }
-            public bool isPivotColumn { get; set; } = false;
-        }
-
         public class PostData
         {
-            public IEnumerable<Search> Searches { get; set; }
+            public IEnumerable<SQLSearchFilter> Searches { get; set; }
             public string OrderBy { get; set; }
             public bool Ascending { get; set; }
         }
@@ -79,7 +76,7 @@ namespace GSF.Web.Model
         #region [ Constructor ]
 
         /// <summary>
-        /// Creates a new <see cref="ModelController{T}"/>
+        /// Creates a new <see cref="ModelController{T,U}"/>
         /// </summary>
         public ModelController()
         {
@@ -97,10 +94,20 @@ namespace GSF.Web.Model
             {
                 SecurityType = "Claims";
 
-                IEnumerable<ClaimAttribute> claimAttributes = typeof(T).GetCustomAttributes<ClaimAttribute>();
+                IEnumerable<ClaimAttribute> claimViewAttributes = typeof(T).GetCustomAttributes<ClaimAttribute>();
+                IEnumerable<ClaimAttribute> claimEditAttributes = typeof(U).GetCustomAttributes<ClaimAttribute>();
 
-                foreach (ClaimAttribute claimAttribute in claimAttributes)
+                foreach (ClaimAttribute claimAttribute in claimViewAttributes)
                 {
+                    if (claimAttribute.Verb != "GET") continue;
+                    if (Claims.ContainsKey(claimAttribute.Verb))
+                        Claims[claimAttribute.Verb].Add(claimAttribute.Claim);
+                    else
+                        Claims.Add(claimAttribute.Verb, new List<Claim>() { claimAttribute.Claim });
+                }
+                foreach (ClaimAttribute claimAttribute in claimEditAttributes)
+                {
+                    if (claimAttribute.Verb == "GET") continue;
                     if (Claims.ContainsKey(claimAttribute.Verb))
                         Claims[claimAttribute.Verb].Add(claimAttribute.Claim);
                     else
@@ -119,20 +126,22 @@ namespace GSF.Web.Model
             {
 
                 SecurityType = "Roles";
-                PostRoles = typeof(T).GetCustomAttribute<PostRolesAttribute>()?.Roles ?? "Administrator";
+                PostRoles = typeof(U).GetCustomAttribute<PostRolesAttribute>()?.Roles ?? "Administrator";
                 GetRoles = typeof(T).GetCustomAttribute<GetRolesAttribute>()?.Roles ?? "";
-                PatchRoles = typeof(T).GetCustomAttribute<PatchRolesAttribute>()?.Roles ?? "Administrator";
-                DeleteRoles = typeof(T).GetCustomAttribute<DeleteRolesAttribute>()?.Roles ?? "Administrator";
+                PatchRoles = typeof(U).GetCustomAttribute<PatchRolesAttribute>()?.Roles ?? "Administrator";
+                DeleteRoles = typeof(U).GetCustomAttribute<DeleteRolesAttribute>()?.Roles ?? "Administrator";
             }
             CustomView = typeof(T).GetCustomAttribute<CustomViewAttribute>()?.CustomView ?? "";
-            ViewOnly = typeof(T).GetCustomAttribute<ViewOnlyAttribute>()?.ViewOnly ?? false;
             AllowSearch = typeof(T).GetCustomAttribute<AllowSearchAttribute>()?.AllowSearch ?? false;
 
             SearchSettings = typeof(T).GetCustomAttribute<AdditionalFieldSearchAttribute>();
             Take = typeof(T).GetCustomAttribute<ReturnLimitAttribute>()?.Limit ?? null;
 
+            SQLSearchModifier = typeof(T).GetMethods(BindingFlags.Static).FirstOrDefault(p => p.GetCustomAttributes<SQLSearchModifierAttribute>().Any());
+
             // Custom View Models are ViewOnly.
-            ViewOnly = ViewOnly || CustomView != String.Empty;
+            ViewOnly = (typeof(U).GetCustomAttribute<ViewOnlyAttribute>()?.ViewOnly ?? false) ||
+                (typeof(U).GetCustomAttribute<CustomViewAttribute>()?.CustomView ?? "") != "";
 
             RootQueryRestrictionAttribute rqra = typeof(T).GetCustomAttribute<RootQueryRestrictionAttribute>();
             if (rqra != null)
@@ -157,10 +166,10 @@ namespace GSF.Web.Model
         private int? Take { get; } = null;
 
         private string SecurityType = "";
-
         protected Dictionary<string, List<Claim>> Claims { get; } = new Dictionary<string, List<Claim>>();
-
         protected AdditionalFieldSearchAttribute SearchSettings { get; } = null;
+        protected MethodInfo SQLSearchModifier { get; } = null;
+
         #endregion
 
         #region [ Http Methods ]
@@ -177,7 +186,7 @@ namespace GSF.Web.Model
 
             using (AdoDataConnection connection = new AdoDataConnection(Connection))
             {
-                return Ok(new TableOperations<T>(connection).NewRecord());
+                return Ok(new TableOperations<U>(connection).NewRecord());
             }
         }
 
@@ -289,7 +298,7 @@ namespace GSF.Web.Model
         /// <summary>
         /// Adds a new Record.
         /// </summary>
-        /// <param name="record"> The <typeparamref name="T"/> record to be added.</param>
+        /// <param name="record"> The <typeparamref name="U"/> record to be added.</param>
         /// <returns><see cref="IHttpActionResult"/> containing the added record or <see cref="Exception"/> </returns>
         [HttpPost, Route("Add")]
         public virtual IHttpActionResult Post([FromBody] JObject record)
@@ -299,8 +308,8 @@ namespace GSF.Web.Model
                 
             using (AdoDataConnection connection = new AdoDataConnection(Connection))
             {
-                T newRecord = record.ToObject<T>();
-                int result = new TableOperations<T>(connection).AddNewRecord(newRecord);
+                U newRecord = record.ToObject<U>();
+                int result = new TableOperations<U>(connection).AddNewRecord(newRecord);
                 return Ok(result);
             }
         }
@@ -308,27 +317,27 @@ namespace GSF.Web.Model
         /// <summary>
         /// Updates an existing Record.
         /// </summary>
-        /// <param name="record"> The <typeparamref name="T"/> record to be updated.</param>
+        /// <param name="record"> The <typeparamref name="U"/> record to be updated.</param>
         /// <returns><see cref="IHttpActionResult"/> containing the updated record or <see cref="Exception"/> </returns>
 
         [HttpPatch, Route("Update")]
-        public virtual IHttpActionResult Patch([FromBody] T record)
+        public virtual IHttpActionResult Patch([FromBody] U record)
         {
             if (!PatchAuthCheck() || ViewOnly)
                 return Unauthorized();
 
             using (AdoDataConnection connection = new AdoDataConnection(Connection))
             {
-                int result = new TableOperations<T>(connection).AddNewOrUpdateRecord(record);
+                int result = new TableOperations<U>(connection).AddNewOrUpdateRecord(record);
 
                 if (PrimaryKeyField != string.Empty)
                 {
-                    T newRecord = record;
-                    PropertyInfo prop = typeof(T).GetProperty(PrimaryKeyField);
+                    U newRecord = record;
+                    PropertyInfo prop = typeof(U).GetProperty(PrimaryKeyField);
                     if (prop != null)
                     {
                         object uniqueKey = prop.GetValue(newRecord);
-                        newRecord = new TableOperations<T>(connection).QueryRecordWhere(PrimaryKeyField + " = {0}", uniqueKey);
+                        newRecord = new TableOperations<U>(connection).QueryRecordWhere(PrimaryKeyField + " = {0}", uniqueKey);
                         return Ok(newRecord);
                     }
                 }
@@ -340,20 +349,20 @@ namespace GSF.Web.Model
         /// <summary>
         /// Deletes an existing Record.
         /// </summary>
-        /// <param name="record"> The <typeparamref name="T"/> record to be deleted.</param>
+        /// <param name="record"> The <typeparamref name="U"/> record to be deleted.</param>
         /// <returns><see cref="IHttpActionResult"/> containing the number of records deleted or <see cref="Exception"/> </returns>
 
         [HttpDelete, Route("Delete")]
-        public virtual IHttpActionResult Delete(T record)
+        public virtual IHttpActionResult Delete(U record)
         {
             if (!DeleteAuthCheck() || ViewOnly)
                 return Unauthorized();
 
             using (AdoDataConnection connection = new AdoDataConnection(Connection))
             {
-                string tableName = new TableOperations<T>(connection).TableName;
+                string tableName = new TableOperations<U>(connection).TableName;
 
-                PropertyInfo idProp = typeof(T).GetProperty(PrimaryKeyField);
+                PropertyInfo idProp = typeof(U).GetProperty(PrimaryKeyField);
                 int result;
 
                 if (idProp.PropertyType == typeof(int))
@@ -372,7 +381,7 @@ namespace GSF.Web.Model
                     result = connection.ExecuteNonQuery($"EXEC UniversalCascadeDelete {tableName}, '{PrimaryKeyField} = ''{id}'''");
                 }
                 else
-                    result = new TableOperations<T>(connection).DeleteRecord(record);
+                    result = new TableOperations<U>(connection).DeleteRecord(record);
                 
                 return Ok(result);
             }
@@ -408,7 +417,7 @@ namespace GSF.Web.Model
                 return Unauthorized();
 
             if (!AllowSearch)
-                postData.Searches = new List<Search>();
+                postData.Searches = new List<SQLSearchFilter>();
 
             using DataTable table = GetSearchResults(postData, page);
             int recordCount = CountSearchResults(postData);
@@ -438,12 +447,12 @@ namespace GSF.Web.Model
 
             if (ParentKey != string.Empty && parentID != null)
             {
-                List<Search> searches = postData.Searches.ToList();
+                List<SQLSearchFilter> searches = postData.Searches.ToList();
                 PropertyInfo parentKey = typeof(T).GetProperty(ParentKey);
                 if (parentKey.PropertyType == typeof(int))
-                    searches.Add(new Search() { FieldName = ParentKey, isPivotColumn = false, Operator = "=", Type = "number", SearchText = parentID });
+                    searches.Add(new SQLSearchFilter() { FieldName = ParentKey, IsPivotColumn = false, Operator = "=", Type = "number", SearchText = parentID });
                 else 
-                    searches.Add(new Search() { FieldName = ParentKey, isPivotColumn = false, Operator = "=", Type = "string", SearchText = parentID });
+                    searches.Add(new SQLSearchFilter() { FieldName = ParentKey, IsPivotColumn = false, Operator = "=", Type = "string", SearchText = parentID });
 
                 postData.Searches = searches;
             }
@@ -467,16 +476,16 @@ namespace GSF.Web.Model
                 return Unauthorized();
 
             if (!AllowSearch)
-                postData.Searches = new List<Search>();
+                postData.Searches = new List<SQLSearchFilter>();
 
             if (ParentKey != string.Empty && parentID != null)
             {
-                List<Search> searches = postData.Searches.ToList();
+                List<SQLSearchFilter> searches = postData.Searches.ToList();
                 PropertyInfo parentKey = typeof(T).GetProperty(ParentKey);
                 if (parentKey.PropertyType == typeof(int))
-                    searches.Add(new Search() { FieldName = ParentKey, isPivotColumn = false, Operator = "=", Type = "number", SearchText = parentID });
+                    searches.Add(new SQLSearchFilter() { FieldName = ParentKey, IsPivotColumn = false, Operator = "=", Type = "number", SearchText = parentID });
                 else
-                    searches.Add(new Search() { FieldName = ParentKey, isPivotColumn = false, Operator = "=", Type = "string", SearchText = parentID });
+                    searches.Add(new SQLSearchFilter() { FieldName = ParentKey, IsPivotColumn = false, Operator = "=", Type = "string", SearchText = parentID });
 
                 postData.Searches = searches;
             }
@@ -498,37 +507,28 @@ namespace GSF.Web.Model
 
         #region [Helper Methods]
 
-        protected string BuildWhereClause(IEnumerable<Search> searches)
+        protected string BuildWhereClause(IEnumerable<SQLSearchFilter> searches, List<object> parameters)
         {
+            List<string> clauses = new();
 
-            string whereClause = string.Join(" AND ", searches.Select(search => {
-                bool isQuery = false;
-                string searchText = search.SearchText;
-                if (searchText == string.Empty) searchText = "%";
-                else searchText = searchText.Replace("*", "%");
-
-                if (search.Type == "string" || search.Type == "datetime")
-                    searchText = $"'{searchText}'";
-                else if (Array.IndexOf(new[] { "integer", "number", "boolean", "query" }, search.Type) < 0)
+            foreach (SQLSearchFilter search in searches)
+            {
+                if (search.Operator == "LIKE" || search.Operator == "NOT LIKE")
                 {
-                    string text = searchText.Replace("(", "").Replace(")", "");
-                    List<string> things = text.Split(',').ToList();
-                    things = things.Select(t => $"'{t}'").ToList();
-                    searchText = $"({string.Join(",", things)})";
+                    if (search.SearchText == string.Empty)
+                        search.SearchText = "%";
+                    else
+                        search.SearchText = search.SearchText.Replace("*", "%");
                 }
-                else if (search.Type == "query")
-                    isQuery = true;
-                    
-                string escape = "ESCAPE '$'";
-                if(search.Operator != "LIKE")
-                    escape = "";
-                return $"{(!isQuery ? "[" : "")}{(search.isPivotColumn ? "AFV_" : "") + search.FieldName}{(!isQuery ? "]" : "")} {search.Operator} {searchText} {escape}";
-            }));
 
-            if (searches.Any())
-                whereClause = "WHERE \n" + whereClause;
+                SQLSearchFilter updated = search;
+                if (SQLSearchModifier is not null)
+                    updated = (SQLSearchFilter)SQLSearchModifier.Invoke(null, new[] { search });
 
-            return whereClause;
+                clauses.Add(updated.GenerateConditional(parameters));
+            }
+
+            return string.Join(" AND ", clauses);
         }
 
         protected virtual IEnumerable<T> QueryRecordsWhere(string filterExpression, params object[] parameters) => QueryRecordsWhere(null, false, filterExpression, parameters);
@@ -736,18 +736,20 @@ namespace GSF.Web.Model
         /// <returns>A <see cref="DataTable"/> containing the results of the search.</returns>
         protected virtual DataTable GetSearchResults(PostData postData, int? page = null)
         {
-            string whereClause = BuildWhereClause(postData.Searches);
+            string whereClause = "";
+            List<object> param = new();
 
-            object[] param = new object[] { };
             if (RootQueryRestriction != null)
             {
-                if (whereClause == "")
-                    whereClause = $" WHERE {RootQueryRestriction.FilterExpression}";
-                else
-                    whereClause = whereClause + " AND " + RootQueryRestriction.FilterExpression;
-
-                param = RootQueryRestriction.Parameters.ToArray();
+                whereClause = $"WHERE {RootQueryRestriction.FilterExpression}";
+                param = RootQueryRestriction.Parameters.ToList();
             }
+
+            string conditions = BuildWhereClause(postData.Searches, param);
+            if (string.IsNullOrEmpty(whereClause) && !string.IsNullOrEmpty(conditions))
+                whereClause = $"WHERE {conditions}";
+            else if (!string.IsNullOrEmpty(conditions))
+                whereClause += $" AND {conditions}";
 
             using (AdoDataConnection connection = new AdoDataConnection(Connection))
             {
@@ -771,7 +773,7 @@ namespace GSF.Web.Model
                         ORDER BY {postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")}";
                 else
                 {
-                    string pivotCollums = "(" + String.Join(",", postData.Searches.Where(item => item.isPivotColumn).Select(search => "'" + search.FieldName + "'")) + ")";
+                    string pivotCollums = "(" + String.Join(",", postData.Searches.Where(item => item.IsPivotColumn).Select(search => "'" + search.FieldName + "'")) + ")";
 
                     if (pivotCollums == "()")
                         pivotCollums = "('')";
@@ -833,18 +835,20 @@ namespace GSF.Web.Model
         /// <returns>The number of records that match the search filters.</returns>
         protected virtual int CountSearchResults(PostData postData)
         {
-            string whereClause = BuildWhereClause(postData.Searches);
+            string whereClause = "";
+            List<object> param = new();
 
-            object[] param = new object[0];
             if (RootQueryRestriction is not null)
             {
-                if (whereClause == "")
-                    whereClause = $"WHERE {RootQueryRestriction.FilterExpression}";
-                else
-                    whereClause = whereClause + " AND " + RootQueryRestriction.FilterExpression;
-
-                param = RootQueryRestriction.Parameters.ToArray();
+                whereClause = $"WHERE {RootQueryRestriction.FilterExpression}";
+                param = RootQueryRestriction.Parameters.ToList();
             }
+
+            string conditions = BuildWhereClause(postData.Searches, param);
+            if (string.IsNullOrEmpty(whereClause) && !string.IsNullOrEmpty(conditions))
+                whereClause = $"WHERE {conditions}";
+            else if (!string.IsNullOrEmpty(conditions))
+                whereClause += $" AND {conditions}";
 
             using AdoDataConnection connection = new(Connection);
             string tableName = TableOperations<T>.GetTableName();
@@ -857,7 +861,7 @@ namespace GSF.Web.Model
                 sql = $@"SELECT COUNT(*) FROM ({CustomView}) FullTbl {whereClause}";
             else
             {
-                string pivotColumns = "(" + string.Join(",", postData.Searches.Where(item => item.isPivotColumn).Select(search => "'" + search.FieldName + "'")) + ")";
+                string pivotColumns = "(" + string.Join(",", postData.Searches.Where(item => item.IsPivotColumn).Select(search => "'" + search.FieldName + "'")) + ")";
 
                 if (pivotColumns == "()")
                     pivotColumns = "('')";

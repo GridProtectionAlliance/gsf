@@ -63,7 +63,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
         private RealTimeStreams CreateDataContext()
         {
-            RealTimeStreams dataContext = new RealTimeStreams(1, m_measurementsDataRefreshInterval);
+            RealTimeStreams dataContext = new(1, m_measurementsDataRefreshInterval);
             List<RealTimeStream> realTimeStreams = dataContext.ItemsSource.ToList();
             List<RealTimeDevice> realTimeDevices = realTimeStreams.SelectMany(stream => stream.DeviceList).ToList();
             List<RealTimeMeasurement> realTimeMeasurements = realTimeDevices.SelectMany(device => device.MeasurementList).ToList();
@@ -104,6 +104,12 @@ namespace GSF.PhasorProtocols.UI.UserControls
         {
             if (e.Key == Key.Escape && PopupSettings.IsOpen)
                 PopupSettings.IsOpen = false;
+        }
+
+        private void ButtonOutOfSync_Click(object sender, RoutedEventArgs e)
+        {
+            Device device = Device.GetDevice(null, "WHERE Acronym = '" + ((Button)sender).Tag + "'");
+            CommonFunctions.LoadUserControl("Input Device Configuration Wizard", typeof(InputWizardUserControl), device);
         }
 
         private void ButtonEdit_Click(object sender, RoutedEventArgs e)

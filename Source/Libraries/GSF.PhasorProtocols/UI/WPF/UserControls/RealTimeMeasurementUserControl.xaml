@@ -6,6 +6,7 @@
              mc:Ignorable="d" d:DesignHeight="590" d:DesignWidth="850"
              xmlns:tsfBinding="clr-namespace:GSF.TimeSeries.UI.Binding;assembly=GSF.TimeSeries.UI"
              xmlns:tsf="clr-namespace:GSF.TimeSeries.UI;assembly=GSF.TimeSeries.UI.WPF"
+             xmlns:system="clr-namespace:System;assembly=mscorlib"
              Background="Transparent">
 
     <UserControl.Resources>
@@ -54,12 +55,22 @@
                     </StackPanel.Resources>
 
                     <Ellipse Width="12" Height="12" VerticalAlignment="Center" Fill="{tsfBinding:Column Path=StatusColor, Converter={StaticResource StringToStatusColorConverter}}" Margin="2"/>
-                    <TextBlock Text="{tsfBinding:Column Path=Acronym}" Width="175" FontWeight="Bold"/>
-                    <TextBlock Text="{tsfBinding:Column Path=Name}" Width="300" FontWeight="Bold"/>
-                    <TextBlock Text="{tsfBinding:Column Path=ProtocolName}" Width="135" FontWeight="Bold"/>
-                    <TextBlock Text="{tsfBinding:Column Path=VendorDeviceName}" Width="100" FontWeight="Bold"/>
+                    <TextBlock Text="{tsfBinding:Column Path=Acronym}" Width="200" FontWeight="Bold"/>
+                    <TextBlock Text="{tsfBinding:Column Path=Name}" Width="200" FontWeight="Bold"/>
+                    <TextBlock Text="{tsfBinding:Column Path=ProtocolName}" Width="125" FontWeight="Bold"/>
+                    <TextBlock Text="{tsfBinding:Column Path=VendorDeviceName}" Width="65" FontWeight="Bold"/>
+                    <Button Content="{tsfBinding:Column Path=ConfigurationOutOfSyncContent}" 
+                            Template="{StaticResource HyperlinkStyleButtonTemplate}"
+                            ToolTip="{tsfBinding:Column Path=ConfigurationOutOfSyncToolTip}"
+                            Tag="{tsfBinding:Column Path=Acronym}"
+                            Width="120" FontWeight="Bold" Click="ButtonOutOfSync_Click"
+                            Visibility="{tsfBinding:Column Path=IsDirectConnectedDevice, Converter={StaticResource ObjectToVisibilityConverter}, ConverterParameter=Hidden}">
+                        <Button.Foreground>
+                            <SolidColorBrush Color="{tsfBinding:Column Path=ConfigurationOutOfSyncColor}"/>
+                        </Button.Foreground>
+                    </Button>
                     <Button Content="Edit" Tag="{tsfBinding:Column Path=Acronym}" Template="{StaticResource HyperlinkStyleButtonTemplate}" 
-                            Width="50" Click="ButtonEdit_Click"  />
+                            Width="50" Click="ButtonEdit_Click" />
                 </StackPanel>
             </HierarchicalDataTemplate>
 
@@ -77,9 +88,20 @@
 
                     <Ellipse Width="12" Height="12" VerticalAlignment="Center" Fill="{tsfBinding:Column Path=StatusColor, Converter={StaticResource StringToStatusColorConverter}}" Margin="2"/>
                     <TextBlock Text="{tsfBinding:Column Path=Acronym}" Width="175" FontWeight="Bold"/>
-                    <TextBlock Text="{tsfBinding:Column Path=Name}" Width="550" FontWeight="Bold"/>
-                    <Button Content="Edit" Template="{StaticResource HyperlinkStyleButtonTemplate}" Width="50" Click="ButtonEdit_Click"
-                                Visibility="{tsfBinding:Column Path=ID, Converter={StaticResource ObjectToVisibilityConverter}}"/>
+                    <TextBlock Text="{tsfBinding:Column Path=Name}" Width="425" FontWeight="Bold"/>
+                    <Button Content="{tsfBinding:Column Path=ConfigurationOutOfSyncContent}" 
+                            Template="{StaticResource HyperlinkStyleButtonTemplate}"
+                            ToolTip="{tsfBinding:Column Path=ConfigurationOutOfSyncToolTip}"
+                            Tag="{tsfBinding:Column Path=Acronym}"
+                            Width="135" FontWeight="Bold" Click="ButtonOutOfSync_Click"
+                            Visibility="{tsfBinding:Column Path=ID, Converter={StaticResource ObjectToVisibilityConverter}, ConverterParameter=Hidden}">
+                        <Button.Foreground>
+                            <SolidColorBrush Color="{tsfBinding:Column Path=ConfigurationOutOfSyncColor}"/>
+                        </Button.Foreground>
+                    </Button>
+                    <Button Content="Edit"  Tag="{tsfBinding:Column Path=Acronym}" Template="{StaticResource HyperlinkStyleButtonTemplate}"
+                            Visibility="{tsfBinding:Column Path=ID, Converter={StaticResource ObjectToVisibilityConverter}}"
+                            Width="37" Click="ButtonEdit_Click" />
                 </StackPanel>
 
             </HierarchicalDataTemplate>

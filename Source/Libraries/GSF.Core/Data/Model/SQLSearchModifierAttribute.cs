@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  AssemblyInfo.cs - Gbtc
+//  SQLSearchModifierAttribute.cs - Gbtc
 //
-//  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2023, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,36 +16,20 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  03/09/2017 - J. Ritchie Carroll
+//  09/20/2023 - C. Lackner
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
 using System;
-using System.Reflection;
-using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("eDNAAdapters")]
-[assembly: AssemblyDescription("Instep eDNA Adapters for the Grid Solutions Framework")]
-[assembly: AssemblyDefaultAlias("eDNAAdapters")]
-[assembly: AssemblyProduct("Grid Solutions Framework")]
-[assembly: AssemblyCopyright("Copyright © GPA, 2017.  All Rights Reserved.")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
-
-// Assembly manifest attributes.
-#if DEBUG
-[assembly: AssemblyConfiguration("Debug Build")]
-#else
-[assembly: AssemblyConfiguration("Release Build")]
-#endif
-
-// Other configuration attributes.
-[assembly: CLSCompliant(false)]
-[assembly: ComVisible(false)]
-[assembly: Guid("1c165fad-7d51-4d8e-9311-4a3be266d877")]
-
-// Assembly identity attributes.
-[assembly: AssemblyVersion("2.4.162.0")]
-[assembly: AssemblyFileVersion("2.4.162.0")]
-[assembly: AssemblyInformationalVersion("2.4.162-beta")]
+namespace GSF.Data.Model
+{
+    /// <summary>
+    /// Defines an attribute that translates Search Queries to more complex SQL Queries 
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+    public sealed class SQLSearchModifierAttribute : Attribute 
+    {
+    }
+}

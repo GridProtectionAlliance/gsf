@@ -127,7 +127,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
 
                 CommonHeader.BinaryImage.CopyImage(buffer, ref index, CommonFrameHeader.FixedLength);
                 BigEndian.CopyBytes((ushort)0, buffer, index); // CONT_IDX
-                BigEndian.CopyBytes(m_timebase, buffer, index + 2);
+                BigEndian.CopyBytes(Timebase, buffer, index + 2);
                 BigEndian.CopyBytes((ushort)Cells.Count, buffer, index + 6);
 
                 return buffer;
@@ -300,8 +300,7 @@ namespace GSF.PhasorProtocols.IEEEC37_118
             // Skip past header that was already parsed...
             startIndex += FrameHeaderLength; // Includes CONT_IDX
 
-            m_timebase = BigEndian.ToUInt32(buffer, startIndex) & ~Common.TimeQualityFlagsMask;
-            CommonHeader.Timebase = m_timebase;
+            Timebase = BigEndian.ToUInt32(buffer, startIndex) & ~Common.TimeQualityFlagsMask;
             State.CellCount = BigEndian.ToUInt16(buffer, startIndex + 4);
 
             return FixedHeaderLength;

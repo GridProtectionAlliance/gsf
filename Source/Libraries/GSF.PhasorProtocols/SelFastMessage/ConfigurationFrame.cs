@@ -126,7 +126,7 @@ namespace GSF.PhasorProtocols.SelFastMessage
             // Deserialize configuration frame
             FrameSize = (FrameSize)info.GetValue("frameSize", typeof(FrameSize));
             MessagePeriod = (MessagePeriod)info.GetValue("messagePeriod", typeof(MessagePeriod));
-            m_idCode = info.GetUInt32("idCode32Bit");
+            IDCode = info.GetUInt32("idCode32Bit");
         }
 
         #endregion

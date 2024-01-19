@@ -26,6 +26,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.Runtime.Serialization;
 using GSF.Units;
 
@@ -106,6 +107,15 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         }
 
         /// <summary>
+        /// Gets or sets the <see cref="PhasorDefinition3"/> associated with this <see cref="PhasorValue"/>.
+        /// </summary>
+        public virtual PhasorDefinition3 Definition3
+        {
+            get => base.Definition as PhasorDefinition3;
+            set => base.Definition = value;
+        }
+
+        /// <summary>
         /// Gets or sets the unscaled integer representation of the real value of this <see cref="PhasorValue"/>.
         /// </summary>
         public override int UnscaledReal
@@ -132,6 +142,27 @@ namespace GSF.PhasorProtocols.IEEEC37_118
                     Imaginary = double.NaN;
                 else
                     base.UnscaledImaginary = value;
+            }
+        }
+
+        /// <summary>
+        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="AnalogValueBase"/> object.
+        /// </summary>
+        public override Dictionary<string, string> Attributes
+        {
+            get
+            {
+                PhasorDefinition3 definition3 = Definition3;
+
+                if (definition3 is null)
+                    return base.Attributes;
+
+                Dictionary<string, string> baseAttributes = base.Attributes;
+
+                baseAttributes.Add("Angle Value Scaled", $"{Angle.ToDegrees() + definition3.AngleAdder}°");
+                baseAttributes.Add("Magnitude Value Scaled", $"{Magnitude * definition3.MagnitudeMultiplier}");
+
+                return baseAttributes;
             }
         }
 

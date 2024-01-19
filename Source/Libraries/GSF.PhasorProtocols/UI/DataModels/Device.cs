@@ -185,7 +185,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         }
 
         /// <summary>
-        ///  Gets or sets <see cref="Device"/> Acronym.
+        /// Gets or sets <see cref="Device"/> Acronym.
         /// </summary>
         [Required(ErrorMessage = "Device acronym is a required field, please provide value.")]
         [StringLength(200, ErrorMessage = "Device Acronym cannot exceed 200 characters.")]
@@ -223,7 +223,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         public string OriginalSource { get; private set; }
 
         /// <summary>
-        ///  Gets or sets <see cref="Device"/> IsConcenttrator.
+        /// Gets or sets flag that determines if <see cref="Device"/> is a concentrator.
         /// </summary>
         [DefaultValue(false)]
         public bool IsConcentrator
@@ -240,7 +240,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         }
 
         /// <summary>
-        ///  Gets or sets <see cref="Device"/> CompanyID.
+        /// Gets or sets <see cref="Device"/> CompanyID.
         /// </summary>
         // Because of database design, no validation attributes are applied.
         public int? CompanyID
@@ -254,7 +254,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         }
 
         /// <summary>
-        ///  Gets or sets <see cref="Device"/> HistrianID.
+        /// Gets or sets <see cref="Device"/> historian ID.
         /// </summary>
         // Because of database design, no validation attributes are applied.
         public int? HistorianID
@@ -268,7 +268,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         }
 
         /// <summary>
-        ///  Gets or sets <see cref="Device"/> AccessID.
+        /// Gets or sets <see cref="Device"/> AccessID.
         /// </summary>
         [Required(ErrorMessage = "Device access ID is a required field, please provide value.")]
         [DefaultValue(0)]
@@ -283,7 +283,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         }
 
         /// <summary>
-        ///  Gets or sets <see cref="Device"/> VendorDeviceID.
+        /// Gets or sets <see cref="Device"/> VendorDeviceID.
         /// </summary>
         // Because of database design, no validation attributes are applied.
         public int? VendorDeviceID
@@ -297,7 +297,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         }
 
         /// <summary>
-        ///  Gets or sets <see cref="Device"/> protocolID.
+        /// Gets or sets <see cref="Device"/> protocolID.
         /// </summary>
         // Because of database design, no validation attributes are applied.
         public int? ProtocolID
@@ -311,7 +311,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         }
 
         /// <summary>
-        ///  Gets or sets <see cref="Device"/> Longitude.
+        /// Gets or sets <see cref="Device"/> Longitude.
         /// </summary>
         // Because of database design, no validation attributes are applied.        
         [RegularExpression(@"^[-]?([0-9]{1,3})?([.][0-9]{1,6})?$", ErrorMessage = "Invalid value. Please provide value in decimal(9,6) format.")]
@@ -326,7 +326,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         }
 
         /// <summary>
-        ///  Gets or sets <see cref="Device"/> Latitude.
+        /// Gets or sets <see cref="Device"/> Latitude.
         /// </summary>
         // Because of database design, no validation attributes are applied.        
         [RegularExpression(@"^[-]?([0-9]{1,3})?([.][0-9]{1,6})?$", ErrorMessage = "Invalid value. Please provide value in decimal(9,6) format.")]
@@ -341,7 +341,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         }
 
         /// <summary>
-        ///  Gets or sets <see cref="Device"/> InterconnectionID.
+        /// Gets or sets <see cref="Device"/> InterconnectionID.
         /// </summary>
         // Because of database design, no validation attributes are applied.
         public int? InterconnectionID
@@ -355,7 +355,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         }
 
         /// <summary>
-        ///  Gets or sets <see cref="Device"/> ConnectionString.
+        /// Gets or sets <see cref="Device"/> ConnectionString.
         /// </summary>
         // Because of database design, no validation attributes are applied.
         public string ConnectionString
@@ -664,13 +664,13 @@ namespace GSF.PhasorProtocols.UI.DataModels
         public string CreatedBy { get; set; }
 
         /// <summary>
-        ///  Gets or sets <see cref="Device"/> UpdatedOn.
+        /// Gets or sets <see cref="Device"/> UpdatedOn.
         /// </summary>
         // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
         public DateTime UpdatedOn { get; set; }
 
         /// <summary>
-        ///  Gets or sets <see cref="Device"/> UpdatedBy.
+        /// Gets or sets <see cref="Device"/> UpdatedBy.
         /// </summary>
         // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
         public string UpdatedBy { get; set; }
@@ -1099,13 +1099,13 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     query = database.ParameterizedQueryString("INSERT INTO Device (NodeID, ParentID, UniqueID, Acronym, Name, IsConcentrator, CompanyID, HistorianID, AccessID, VendorDeviceID, " +
                         "ProtocolID, Longitude, Latitude, InterconnectionID, ConnectionString, TimeZone, FramesPerSecond, TimeAdjustmentTicks, DataLossInterval, ContactList, " +
                         "MeasuredLines, LoadOrder, Enabled, AllowedParsingExceptions, ParsingExceptionWindow, DelayedConnectionInterval, AllowUseOfCachedConfiguration, " +
-                        "AutoStartDataParsingSequence, SkipDisableRealTimeData, MeasurementReportingInterval, ConnectOndemand, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values " +
+                        "AutoStartDataParsingSequence, SkipDisableRealTimeData, MeasurementReportingInterval, ConnectOnDemand, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values " +
                         "({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}, {18}, {19}, {20}, {21}, {22}, {23}, {24}, {25}, " +
                         "{26}, {27}, {28}, {29}, {30}, {31}, {32}, {33}, {34})", "nodeID", "parentID", "uniqueID", "acronym", "name", "isConcentrator", "companyID",
                         "historianID", "accessID", "vendorDeviceID", "protocolID", "longitude", "latitude", "interconnectionID", "connectionString", "timezone",
                         "framesPerSecond", "timeAdjustmentTicks", "dataLossInterval", "contactList", "measuredLines", "loadOrder", "enabled", "allowedParsingExceptions",
                         "parsingExceptionWindow", "delayedConnectionInterval", "allowUseOfCachedConfiguration", "autoStartDataParsingSequence", "skipDisableRealTimeData",
-                        "measurementReportingInterval", "connectOndemand", "updatedBy", "updatedOn", "createdBy", "createdOn");
+                        "measurementReportingInterval", "connectOnDemand", "updatedBy", "updatedOn", "createdBy", "createdOn");
 
                     database.Connection.ExecuteNonQuery(query, DefaultTimeout, nodeID,
                         device.ParentID.ToNotNull(), database.Guid(device.UniqueID == Guid.Empty ? Guid.NewGuid() : device.UniqueID), 
@@ -1631,9 +1631,9 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 settings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             }
 
-            if (settings.ContainsKey("commandchannel"))
+            if (settings.ContainsKey("commandChannel"))
             {
-                settings.Remove("commandchannel");
+                settings.Remove("commandChannel");
                 return settings.JoinKeyValuePairs();
             }
 
@@ -1653,7 +1653,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 settings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             }
 
-            return settings.TryGetValue("commandchannel", out string setting) ? 
+            return settings.TryGetValue("commandChannel", out string setting) ? 
                 setting.Replace("{", "").Replace("}", "") : 
                 string.Empty;
         }
@@ -1671,7 +1671,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             if (!connectionString.EndsWith(";"))
                 connectionString += ";";
 
-            connectionString += $"commandchannel={{{device.AlternateCommandChannel}}}";
+            connectionString += $"commandChannel={{{device.AlternateCommandChannel}}}";
 
             return connectionString;
         }

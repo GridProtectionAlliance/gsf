@@ -1671,7 +1671,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
             try
             {
-                if (ConnectToConcentrator && (PdcID is null || PdcID == 0))
+                if (ConnectToConcentrator && PdcID is null or 0)
                 {
                     Device device = new Device
                     {
@@ -1941,6 +1941,11 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                     if (!ItemsSource.Any(child => child.Include && device.Acronym == child.Acronym))
                         Device.Delete(database, device);
                 }
+
+                string configurationName = ConnectToConcentrator && PdcID is null or 0 ? PdcAcronym : ItemsSource.First().Name;
+
+                // Remove marker that indicates device configuration is out of sync with host system
+                PhasorMeasurementMapper.SaveConfigurationOutOfSyncMarker(configurationName, false);
 
                 DisplayPopup("Configuration information saved successfully.", "Input Wizard Configuration", MessageBoxImage.Information);
 
