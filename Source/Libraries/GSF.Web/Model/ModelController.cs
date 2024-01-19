@@ -522,7 +522,7 @@ namespace GSF.Web.Model
                 }
 
                 if (SQLSearchModifier is not null)
-                    clauses.Add((string)SQLSearchModifier.Invoke(null, new[] { search, parameters }));
+                    clauses.Add((string)SQLSearchModifier.Invoke(null, new object[] { search, parameters }));
                 else
                     clauses.Add(search.GenerateConditional(parameters));
             }
