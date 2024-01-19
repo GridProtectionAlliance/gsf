@@ -134,6 +134,10 @@ public abstract partial class GrafanaDataSourceBase
                 Imports = imports,
                 RadialDistribution = radialDistribution,
                 MetadataSelections = target.metadataSelections?
+                     .Where(selection =>
+                         !string.IsNullOrWhiteSpace(selection.tableName) &&
+                         selection.fieldNames.Length > 0 &&
+                         selection.fieldNames.All(fieldName => !string.IsNullOrWhiteSpace(fieldName)))
                     .Select(selection => (selection.tableName, selection.fieldNames))
                     .ToArray()
                     ?? Array.Empty<(string, string[])>()
