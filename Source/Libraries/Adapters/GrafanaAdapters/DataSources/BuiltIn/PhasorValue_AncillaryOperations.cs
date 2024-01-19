@@ -146,7 +146,7 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
         // A target ID set is: (target, (measurementKey, pointTag)[])
         return
         (
-            record["PointTag"].ToString(), new []
+            record["PointTag"].ToString(), new[]
             {
                 (record.KeyFromRecord("MagnitudeID", "MagnitudeSignalID"), record["MagnitudePointTag"].ToString()),
                 (record.KeyFromRecord("AngleID", "AngleSignalID"), record["AnglePointTag"].ToString())
@@ -274,11 +274,11 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
                     int phasorID = Convert.ToInt32(row["PhasorID"]);
                     (DataRow magnitude, DataRow angle) = phasorTargets.GetOrAdd(phasorID, _ => (null, null));
 
-                    string signalType = row["SignalType"].ToString();
+                    string signalType = row["SignalType"].ToString().Trim();
 
-                    if (signalType.EndsWith("PHA"))
+                    if (signalType.EndsWith("PHA", StringComparison.OrdinalIgnoreCase))
                         angle = row;
-                    else if (signalType.EndsWith("PHM"))
+                    else if (signalType.EndsWith("PHM", StringComparison.OrdinalIgnoreCase))
                         magnitude = row;
 
                     phasorTargets[phasorID] = (magnitude, angle);
@@ -291,7 +291,8 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
                 // Add columns to phasor metadata table
                 phasorValues.Columns.Add("Device", typeof(string));
 
-                // These are standard required fields for metadata lookup functions
+                // These are standard required fields for metadata lookup functions,
+                // especially as related to AdapterBase.ParseFilterExpression
                 phasorValues.Columns.Add("PointTag", typeof(string));   // Unique point tag for phasor
                 phasorValues.Columns.Add("ID", typeof(string));         // Mapped to magnitude ID
                 phasorValues.Columns.Add("SignalID", typeof(Guid));     // Mapped to magnitude SignalID
@@ -348,8 +349,8 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
                         phasorRow["MagnitudeSignalReference"] = magnitude["SignalReference"];
                         phasorRow["AngleSignalReference"] = angle["SignalReference"];
                         phasorRow["Label"] = magnitude["PhasorLabel"];
-                        phasorRow["Type"] = magnitude["PhasorType"].ToString()[0];
-                        phasorRow["Phase"] = magnitude["Phase"].ToString()[0];
+                        phasorRow["Type"] = magnitude["PhasorType"].ToString().Trim()[0];
+                        phasorRow["Phase"] = magnitude["Phase"].ToString().Trim()[0];
                         phasorRow["BaseKV"] = magnitude["BaseKV"];
                         phasorRow["Longitude"] = Convert.ToDecimal(magnitude["Longitude"]);
                         phasorRow["Latitude"] = Convert.ToDecimal(magnitude["Latitude"]);
@@ -364,7 +365,7 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
                     }
                     catch (Exception ex)
                     {
-                        s_log.Publish(MessageLevel.Error, EventName, $"Failed while attempting to add augmented metadata row to {nameof(PhasorValue)} data source value type (magnitudePointTag = '{magnitudePointTag}' / anglePointTag = '{anglePointTag}'): {ex.Message}", exception: ex);
+                        s_log.Publish(MessageLevel.Error, EventName, $"Failed while attempting to add augmented metadata row for {nameof(PhasorValue)} data source value type (magnitudePointTag = '{magnitudePointTag}' / anglePointTag = '{anglePointTag}'): {ex.Message}", exception: ex);
                     }
                 }
 

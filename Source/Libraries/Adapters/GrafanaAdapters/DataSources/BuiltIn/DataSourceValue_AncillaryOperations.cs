@@ -129,6 +129,7 @@ public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
     readonly TargetIDSet IDataSourceValue.GetTargetIDSet(DataRow record)
     {
         // A target ID set is: (target, (measurementKey, pointTag)[])
+        // For the simple DataSourceValue functionality the target is the point tag
         string pointTag = record["PointTag"].ToString();
         return (pointTag, new[] { (record.KeyFromRecord(), pointTag) });
     }

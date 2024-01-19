@@ -262,8 +262,9 @@ internal static class MetadataExtensions
     }
 
     /// <summary>
-    /// Parses a user provided target expression as the the set of measurement key and point tag
-    /// identifiers associated with a target and any defined alias and target table.
+    /// Parses a user provided target expression which could contain point tags, measurement keys, Guid-based signal IDs,
+    /// or filter expressions, then returning the set of measurement key and point tag identifiers associated with the
+    /// target along with any defined alias for the target.
     /// </summary>
     /// <param name="target">Target expression to parse.</param>
     /// <param name="metadata">Source metadata.</param>
