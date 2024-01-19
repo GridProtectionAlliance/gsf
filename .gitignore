@@ -218,6 +218,4 @@ FakesAssemblies/
 **/*.Server/GeneratedArtifacts
 **/*.Server/ModelManifest.xml
 _Pvt_Extensions
-*.DotSettings
-*.DotSettings
 /Source/GridSolutionsFramework.VC.db

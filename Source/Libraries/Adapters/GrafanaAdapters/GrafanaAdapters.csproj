@@ -24,6 +24,8 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>$(OutputPath)\$(AssemblyName).XML</DocumentationFile>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <NoWarn>NU5128; IDE0028</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -35,6 +37,7 @@
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>$(OutputPath)\$(AssemblyName).XML</DocumentationFile>
     <RunCodeAnalysis>false</RunCodeAnalysis>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Mono|AnyCPU'">
     <OutputPath>..\..\..\..\Build\Output\$(Configuration)\Libraries\</OutputPath>
@@ -44,10 +47,14 @@
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Ciloci.Flee">
       <HintPath>..\..\..\Dependencies\FLEE\Ciloci.Flee.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=6.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\..\..\Dependencies\NuGet\Microsoft.Bcl.AsyncInterfaces.6.0.0\lib\net461\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\..\..\Dependencies\NuGet\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -55,55 +62,112 @@
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Linq.Async, Version=6.0.0.0, Culture=neutral, PublicKeyToken=94bc3704cddfc263, processorArchitecture=MSIL">
+      <HintPath>..\..\..\Dependencies\NuGet\System.Linq.Async.6.0.1\lib\net48\System.Linq.Async.dll</HintPath>
+    </Reference>
     <Reference Include="System.Runtime.Caching" />
-    <Reference Include="System.ServiceModel" />
-    <Reference Include="System.ServiceModel.Web" />
-    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\..\Dependencies\NuGet\System.Runtime.CompilerServices.Unsafe.6.0.0\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\..\..\Dependencies\NuGet\System.Threading.Tasks.Extensions.4.5.4\lib\net461\System.Threading.Tasks.Extensions.dll</HintPath>
+    </Reference>
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AdHocFilter.cs" />
-    <Compile Include="Annotation.cs" />
-    <Compile Include="AnnotationExtensions.cs" />
-    <Compile Include="AnnotationRequest.cs" />
-    <Compile Include="AnnotationResponse.cs" />
-    <Compile Include="AnnotationType.cs" />
-    <Compile Include="Column.cs" />
-    <Compile Include="DataSourceValueGroup.cs" />
+    <Compile Include="DataSources\DataSourceValueCache.cs" />
+    <Compile Include="Metadata\DataSetAdapter.cs" />
+    <Compile Include="Metadata\MetadataExtensions.cs" />
+    <Compile Include="Functions\BuiltIn\Sqrt.cs" />
+    <Compile Include="Functions\BuiltIn\Pow.cs" />
+    <Compile Include="Functions\BuiltIn\RollingAverage.cs" />
+    <Compile Include="Functions\ParameterParsing.cs" />
+    <Compile Include="Functions\Parameters.cs" />
+    <Compile Include="GlobalUsings.cs" />
+    <Compile Include="GrafanaDataSourceBase_ApiControllerOperations.cs" />
+    <Compile Include="Model\Common\AdHocFilter.cs" />
+    <Compile Include="DataSources\BuiltIn\DataSourceValue_AncillaryOperations.cs" />
+    <Compile Include="Functions\ParameterDefinition.cs" />
+    <Compile Include="Functions\GrafanaFunctionBase.cs" />
+    <Compile Include="Functions\IParameter.cs" />
+    <Compile Include="Functions\IsExternalInit.cs" />
+    <Compile Include="Functions\ParameterDefinitions.cs" />
+    <Compile Include="Functions\Parameter.cs" />
+    <Compile Include="Functions\ParsedGrafanaFunction.cs" />
+    <Compile Include="Functions\QueryParameters.cs" />
+    <Compile Include="Functions\BuiltIn\Evaluate.cs" />
+    <Compile Include="DataSources\IDataSourceValue.cs" />
+    <Compile Include="Model\Annotations\AnnotationExtensions.cs" />
+    <Compile Include="Model\Annotations\AnnotationRequest.cs" />
+    <Compile Include="Model\Annotations\AnnotationResponse.cs" />
+    <Compile Include="Model\Annotations\AnnotationType.cs" />
+    <Compile Include="DataSources\DataSourceValueGroup.cs" />
     <Compile Include="DeviceAlarmStateAdapter.cs" />
-    <Compile Include="DeviceGroupModel.cs" />
-    <Compile Include="DeviceStateModels.cs" />
-    <Compile Include="GrafanaDataService.cs" />
-    <Compile Include="GrafanaDataService.NET.cs" />
-    <Compile Include="GrafanaDataServiceMono.cs" />
+    <Compile Include="Model\Common\MetadataSelections.cs" />
+    <Compile Include="Model\Metadata\DataSourceValueType.cs" />
+    <Compile Include="Model\Metadata\FieldDescription.cs" />
+    <Compile Include="Model\Common\SearchRequest.cs" />
+    <Compile Include="Model\Database\AlarmDevice.cs" />
+    <Compile Include="Model\Database\AlarmState.cs" />
+    <Compile Include="Model\Database\DeviceGroup.cs" />
+    <Compile Include="Model\Database\AlarmDeviceStateView.cs" />
     <Compile Include="GrafanaDataSourceBase.cs" />
     <Compile Include="GrafanaDataSourceBase_AncillaryOperations.cs" />
-    <Compile Include="GrafanaDataSourceBase_FunctionExecution.cs" />
-    <Compile Include="GrafanaDataSourceBase_FunctionParsing.cs" />
-    <Compile Include="IGrafanaDataService.cs" />
-    <Compile Include="IGrafanaDataService.NET.cs" />
-    <Compile Include="IGrafanaDataServiceMono.cs" />
-    <Compile Include="LocationData.cs" />
-    <Compile Include="GrafanaAlarm.cs" />
+    <Compile Include="Functions\FunctionParsing.cs" />
+    <Compile Include="Functions\Common.cs" />
+    <Compile Include="Functions\IGrafanaFunction.cs" />
+    <Compile Include="Functions\TargetTimeUnit.cs" />
+    <Compile Include="Functions\BuiltIn\AbsoluteValue.cs" />
+    <Compile Include="Functions\BuiltIn\Average.cs" />
+    <Compile Include="Functions\BuiltIn\Bottom.cs" />
+    <Compile Include="Functions\BuiltIn\Ceiling.cs" />
+    <Compile Include="Functions\BuiltIn\Count.cs" />
+    <Compile Include="Functions\BuiltIn\Derivative.cs" />
+    <Compile Include="Functions\BuiltIn\Difference.cs" />
+    <Compile Include="Functions\BuiltIn\Distinct.cs" />
+    <Compile Include="Functions\BuiltIn\ExcludeRange.cs" />
+    <Compile Include="Functions\BuiltIn\FilterNaN.cs" />
+    <Compile Include="Functions\BuiltIn\First.cs" />
+    <Compile Include="Functions\BuiltIn\Floor.cs" />
+    <Compile Include="Functions\BuiltIn\IncludeRange.cs" />
+    <Compile Include="Functions\BuiltIn\Interval.cs" />
+    <Compile Include="Functions\BuiltIn\Label.cs" />
+    <Compile Include="Functions\BuiltIn\Last.cs" />
+    <Compile Include="Functions\BuiltIn\Maximum.cs" />
+    <Compile Include="Functions\BuiltIn\Median.cs" />
+    <Compile Include="Functions\BuiltIn\Minimum.cs" />
+    <Compile Include="Functions\BuiltIn\Mode.cs" />
+    <Compile Include="Functions\BuiltIn\Modulo.cs" />
+    <Compile Include="Functions\BuiltIn\MovingAverage.cs" />
+    <Compile Include="Functions\BuiltIn\Scale.cs" />
+    <Compile Include="Functions\BuiltIn\Percentile.cs" />
+    <Compile Include="Functions\BuiltIn\Random.cs" />
+    <Compile Include="Functions\BuiltIn\Range.cs" />
+    <Compile Include="Functions\BuiltIn\Round.cs" />
+    <Compile Include="Functions\BuiltIn\StandardDeviation.cs" />
+    <Compile Include="Functions\BuiltIn\Shift.cs" />
+    <Compile Include="Functions\BuiltIn\TimeDifference.cs" />
+    <Compile Include="Functions\BuiltIn\TimeIntegration.cs" />
+    <Compile Include="Functions\BuiltIn\Top.cs" />
+    <Compile Include="Functions\BuiltIn\Total.cs" />
+    <Compile Include="Functions\BuiltIn\Truncate.cs" />
+    <Compile Include="Functions\BuiltIn\UnwrapAngle.cs" />
+    <Compile Include="Functions\BuiltIn\WrapAngle.cs" />
+    <Compile Include="Model\Functions\ParameterDescription.cs" />
+    <Compile Include="Model\Functions\FunctionDescription.cs" />
+    <Compile Include="DataSources\BuiltIn\PhasorValue.cs" />
+    <Compile Include="DataSources\BuiltIn\PhasorValue_AncillaryOperations.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="QueryRequest.cs" />
-    <Compile Include="Range.cs" />
-    <Compile Include="RangeRaw.cs" />
-    <Compile Include="Table.cs" />
-    <Compile Include="LocationRequest.cs" />
-    <Compile Include="TagKeysRequest.cs" />
-    <Compile Include="TagKeysResponse.cs" />
-    <Compile Include="TagValuesRequest.cs" />
-    <Compile Include="TagValuesResponse.cs" />
-    <Compile Include="Target.cs" />
+    <Compile Include="Model\Common\QueryRequest.cs" />
+    <Compile Include="Model\Common\Range.cs" />
+    <Compile Include="Model\Common\Target.cs" />
     <Compile Include="TargetCache.cs" />
-    <Compile Include="DataSourceValue.cs" />
-    <Compile Include="TimeSeriesValues.cs" />
-    <Compile Include="TimeSliceScanner.cs" />
+    <Compile Include="DataSources\BuiltIn\DataSourceValue.cs" />
+    <Compile Include="Model\Common\TimeSeriesValues.cs" />
+    <Compile Include="TimeSliceScannerAsync.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\GSF.Core\GSF.Core.csproj">
@@ -114,14 +178,6 @@
       <Project>{9d432c71-14d8-407d-9b91-a311f850aa38}</Project>
       <Name>GSF.Geo</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\GSF.Historian\GSF.Historian.csproj">
-      <Project>{7e1abf87-8936-44e5-85c0-37044e0d3877}</Project>
-      <Name>GSF.Historian</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\GSF.ServiceModel\GSF.ServiceModel.csproj">
-      <Project>{0622c318-5032-4d56-bb71-5ce64b502fb0}</Project>
-      <Name>GSF.ServiceModel</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\GSF.TimeSeries\GSF.TimeSeries.csproj">
       <Project>{412f9f59-d9b9-4c8e-96d2-20492644198c}</Project>
       <Name>GSF.TimeSeries</Name>
@@ -130,14 +186,13 @@
       <Project>{0501c2dc-3428-4413-ae92-f0d82ff3dbbc}</Project>
       <Name>GSF.Web</Name>
     </ProjectReference>
-    <ProjectReference Include="..\HistorianAdapters\HistorianAdapters.csproj">
-      <Project>{8a1bcfaa-19e8-408a-8c72-170b1211dc27}</Project>
-      <Name>HistorianAdapters</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="DataSources\BuiltIn\README.md" />
+    <None Include="Functions\BuiltIn\README.md" />
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterBuild">
     <CallTarget Targets="SignBuild" />
