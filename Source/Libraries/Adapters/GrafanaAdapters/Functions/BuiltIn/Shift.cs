@@ -37,7 +37,7 @@ public abstract class Shift<T> : GrafanaFunctionBase<T> where T : struct, IDataS
         {
             Name = "N",
             Default = 0.0D,
-            Description = "A floating point value representing an additive (positive or negative offset to be applied to each value the source series.",
+            Description = "A floating point value representing an additive (positive or negative) offset to be applied to each value the source series.",
             Required = true
         }
     };
