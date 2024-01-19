@@ -15,7 +15,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Signature: <c>Total(expression)</c><br/>
 /// Returns: Single value.<br/>
 /// Example: <c>Total(FILTER ActiveMeasurements WHERE SignalType='IPHM')</c><br/>
-/// Variants: Total, Sum<br/>
+/// Variants: Total, Add, Sum<br/>
 /// Execution: Immediate enumeration.
 /// </remarks>
 public abstract class Total<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
@@ -27,7 +27,7 @@ public abstract class Total<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     public override string Description => "Returns a single value that represents the sum of the values in the source series.";
 
     /// <inheritdoc />
-    public override string[] Aliases => new[] { "Sum" };
+    public override string[] Aliases => new[] { "Add", "Sum" };
 
     /// <inheritdoc />
     public class ComputeDataSourceValue : Total<DataSourceValue>

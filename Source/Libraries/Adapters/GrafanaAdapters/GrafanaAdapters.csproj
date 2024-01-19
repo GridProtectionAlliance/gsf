@@ -121,7 +121,6 @@
     <Compile Include="Functions\IGrafanaFunction.cs" />
     <Compile Include="Functions\TargetTimeUnit.cs" />
     <Compile Include="Functions\BuiltIn\AbsoluteValue.cs" />
-    <Compile Include="Functions\BuiltIn\Add.cs" />
     <Compile Include="Functions\BuiltIn\Average.cs" />
     <Compile Include="Functions\BuiltIn\Bottom.cs" />
     <Compile Include="Functions\BuiltIn\Ceiling.cs" />
