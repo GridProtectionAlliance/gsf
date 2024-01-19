@@ -169,14 +169,14 @@ public static class AnnotationRequestExtensions
         if (targets is null)
             throw new ArgumentNullException(nameof(targets));
 
-        // Create annotation query request for full resolution data using "Interval(0, {target})"
+        // Create annotation query requesting full resolution data
         // function so that any encountered alarms not will not be down-sampled
         return new QueryRequest
         {
             dataTypeIndex = DataSourceValue.TypeIndex,
             range = request.range,
             interval = "*",
-            targets = targets.Select((target, index) => new Target { refID = $"ID{index}", target = $"Interval(0, {target})" }).ToArray(),
+            targets = targets.Select((target, index) => new Target { refID = $"ID{index}", target = $"{target}; fullResolutionQuery" }).ToArray(),
             maxDataPoints = maxDataPoints
         };
     }

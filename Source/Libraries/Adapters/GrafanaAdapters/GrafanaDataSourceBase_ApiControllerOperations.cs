@@ -373,19 +373,7 @@ partial class GrafanaDataSourceBase
 
         foreach (TimeSeriesValues values in annotationData)
         {
-            string[] parts = values.target.Split(',');
-            string target;
-
-            // Remove "Interval(0, {target})" from target if defined
-            if (parts.Length > 1)
-            {
-                target = parts[1].Trim();
-                target = target.Length > 1 ? target.Trim() : parts[0].Trim();
-            }
-            else
-            {
-                target = parts[0].Trim();
-            }
+            string target = values.target;
 
             if (!definitions.TryGetValue(target, out DataRow definition))
                 continue;

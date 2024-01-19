@@ -13,14 +13,12 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// <c>N</c> is a floating-point value that must be greater than or equal to zero that represents the desired time interval, in time units, for the returned
 /// data. The <c>units</c>parameter, optional, specifies the type of time units and must be one of the following: Seconds, Nanoseconds, Microseconds,
 /// Milliseconds, Minutes, Hours, Days, Weeks, Ke (i.e., traditional Chinese unit of decimal time), Ticks (i.e., 100-nanosecond intervals), PlanckTime or
-/// AtomicUnitsOfTime - defaults to Seconds. Setting <c>N</c> value to zero will request non-decimated, full resolution data from the data source. A zero
-/// <c>N</c> value will always produce the most accurate aggregation calculation results but will increase query burden for large time ranges. <c>N</c> can
-/// either be constant value or a named target available from the expression.
+/// AtomicUnitsOfTime - defaults to Seconds. <c>N</c> can either be constant value or a named target available from the expression.
 /// </summary>
 /// <remarks>
 /// Signature: <c>Interval(N, [units = Seconds], expression)</c><br/>
 /// Returns: Series of values.<br/>
-/// Example: <c>Sum(Interval(0, FILTER ActiveMeasurements WHERE SignalType LIKE '%PHM'))</c><br/>
+/// Example: <c>Sum(Interval(5, FILTER ActiveMeasurements WHERE SignalType LIKE '%PHM'))</c><br/>
 /// Variants: Interval<br/>
 /// Execution: Deferred enumeration.
 /// </remarks>
@@ -98,21 +96,4 @@ public abstract class Interval<T> : GrafanaFunctionBase<T> where T : struct, IDa
     {
     }
 
-    /// <inheritdoc />
-    // 'Interval' function has special 'N' parameter requirements for zero value, so we override the default parsing implementation
-    public override (List<string>, string) ParseParameters(QueryParameters queryParameters, string queryExpression)
-    {
-        // First parameter is interval value
-        int index = queryExpression.IndexOf(',');
-
-        // When 'Interval' function 'N' parameter is zero, user is requesting to query data source at full resolution
-        if (index > -1 && double.TryParse(queryExpression.Substring(0, index), out double valueN) && valueN == 0.0D)
-        {
-            queryParameters.IncludePeaks = false;
-            queryParameters.Interval = "0s";
-        }
-
-        // Continue with default parameter parsing
-        return (null, null);
-    }
 }
