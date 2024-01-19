@@ -23,6 +23,7 @@
 
 using GrafanaAdapters.Functions;
 using GrafanaAdapters.Metadata;
+using GSF;
 using GSF.Collections;
 using GSF.Data;
 using GSF.Diagnostics;
@@ -32,6 +33,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
+using Common = GrafanaAdapters.Functions.Common;
 
 namespace GrafanaAdapters.DataSources.BuiltIn;
 
@@ -243,6 +245,8 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
     // Augments metadata for PhasorValue data source
     private static void AugmentMetadata(DataSet metadata)
     {
+        const string EventName = $"{nameof(PhasorValue)} Metadata Augmentation";
+
         // Check if phasor metadata augmentation has already been performed for this dataset
         if (metadata.Tables.Contains(MetadataTableName))
             return;
@@ -255,6 +259,9 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
 
             try
             {
+                s_log.Publish(MessageLevel.Info, EventName, $"Starting metadata augmentation for {nameof(PhasorValue)} data source value type...");
+                long startTime = DateTime.UtcNow.Ticks;
+
                 // Extract phasor rows from active measurements table in current metadata
                 DataTable activeMeasurements = metadata.Tables[DataSourceValue.MetadataTableName];
                 DataRow[] phasorRows = activeMeasurements.Select("PhasorID IS NOT NULL", "PhasorID ASC");
@@ -312,50 +319,64 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
                     if (magnitude is null || angle is null)
                         continue;
 
-                    // Create a new row that will reference phasor magnitude and angle metadata
-                    DataRow phasorRow = phasorValues.NewRow();
+                    string magnitudePointTag = null, anglePointTag = null;
 
-                    string magnitudePointTag = magnitude["PointTag"].ToString();
-                    string anglePointTag = angle["PointTag"].ToString();
+                    try
+                    {
+                        // Create a new row that will reference phasor magnitude and angle metadata
+                        DataRow phasorRow = phasorValues.NewRow();
 
-                    // Find overlapping point tag name that will become primary phasor point tag
-                    string pointTag = magnitudePointTag.LongestCommonSubstring(anglePointTag);
+                        magnitudePointTag = magnitude["PointTag"].ToString();
+                        anglePointTag = angle["PointTag"].ToString();
 
-                    // Remove any trailing non-alphanumeric characters from point tag
-                    while (pointTag.Length > 0 && !char.IsLetterOrDigit(pointTag[pointTag.Length - 1]))
-                        pointTag = pointTag.Substring(0, pointTag.Length - 1);
+                        // Find overlapping point tag name that will become primary phasor point tag
+                        string pointTag = magnitudePointTag.LongestCommonSubstring(anglePointTag);
 
-                    // Copy in specific magnitude and angle phasor metadata, default to magnitude metadata for common values
-                    phasorRow["Device"] = magnitude["Device"];
-                    phasorRow["PointTag"] = pointTag;
-                    phasorRow["MagnitudePointTag"] = magnitudePointTag;
-                    phasorRow["AnglePointTag"] = anglePointTag;
-                    phasorRow["MagnitudeID"] = magnitude["ID"];
-                    phasorRow["AngleID"] = angle["ID"];
-                    phasorRow["MagnitudeSignalID"] = magnitude.ConvertGuidField("SignalID");
-                    phasorRow["AngleSignalID"] = angle.ConvertGuidField("SignalID");
-                    phasorRow["MagnitudeSignalReference"] = magnitude["SignalReference"];
-                    phasorRow["AngleSignalReference"] = angle["SignalReference"];
-                    phasorRow["Label"] = magnitude["PhasorLabel"];
-                    phasorRow["Type"] = magnitude["PhasorType"].ToString()[0];
-                    phasorRow["Phase"] = magnitude["Phase"].ToString()[0];
-                    phasorRow["BaseKV"] = magnitude["BaseKV"];
-                    phasorRow["Longitude"] = Convert.ToDecimal(magnitude["Longitude"]);
-                    phasorRow["Latitude"] = Convert.ToDecimal(magnitude["Latitude"]);
-                    phasorRow["Company"] = magnitude["Company"];
-                    phasorRow["UpdatedOn"] = magnitude["UpdatedOn"];
+                        // Remove any trailing non-alphanumeric characters from point tag
+                        while (pointTag.Length > 0 && !char.IsLetterOrDigit(pointTag[pointTag.Length - 1]))
+                            pointTag = pointTag.Substring(0, pointTag.Length - 1);
 
-                    // Use magnitude values for standard field values
-                    phasorRow["ID"] = phasorRow["MagnitudeID"];
-                    phasorRow["SignalID"] = phasorRow["MagnitudeSignalID"];
+                        // Copy in specific magnitude and angle phasor metadata, default to magnitude metadata for common values
+                        phasorRow["Device"] = magnitude["Device"];
+                        phasorRow["PointTag"] = pointTag;
+                        phasorRow["MagnitudePointTag"] = magnitudePointTag;
+                        phasorRow["AnglePointTag"] = anglePointTag;
+                        phasorRow["MagnitudeID"] = magnitude["ID"];
+                        phasorRow["AngleID"] = angle["ID"];
+                        phasorRow["MagnitudeSignalID"] = magnitude.ConvertGuidField("SignalID");
+                        phasorRow["AngleSignalID"] = angle.ConvertGuidField("SignalID");
+                        phasorRow["MagnitudeSignalReference"] = magnitude["SignalReference"];
+                        phasorRow["AngleSignalReference"] = angle["SignalReference"];
+                        phasorRow["Label"] = magnitude["PhasorLabel"];
+                        phasorRow["Type"] = magnitude["PhasorType"].ToString()[0];
+                        phasorRow["Phase"] = magnitude["Phase"].ToString()[0];
+                        phasorRow["BaseKV"] = magnitude["BaseKV"];
+                        phasorRow["Longitude"] = Convert.ToDecimal(magnitude["Longitude"]);
+                        phasorRow["Latitude"] = Convert.ToDecimal(magnitude["Latitude"]);
+                        phasorRow["Company"] = magnitude["Company"];
+                        phasorRow["UpdatedOn"] = magnitude["UpdatedOn"];
 
-                    phasorValues.Rows.Add(phasorRow);
+                        // Use magnitude values for standard field values
+                        phasorRow["ID"] = phasorRow["MagnitudeID"];
+                        phasorRow["SignalID"] = phasorRow["MagnitudeSignalID"];
+
+                        phasorValues.Rows.Add(phasorRow);
+                    }
+                    catch (Exception ex)
+                    {
+                        s_log.Publish(MessageLevel.Error, EventName, $"Failed while attempting to add augmented metadata row to {nameof(PhasorValue)} data source value type (magnitudePointTag = '{magnitudePointTag}' / anglePointTag = '{anglePointTag}'): {ex.Message}", exception: ex);
+                    }
                 }
+
+                string elapsedTime = new TimeSpan(DateTime.UtcNow.Ticks - startTime).ToElapsedTimeString(3);
+                s_log.Publish(MessageLevel.Info, EventName, $"Completed metadata augmentation for {nameof(PhasorValue)} data source value type: added {phasorValues.Rows.Count:N0} rows to '{MetadataTableName}' table in {elapsedTime}.");
             }
             catch (Exception ex)
             {
-                Logger.SwallowException(ex, $"Failed while attempting to augment metadata for PhasorValue data source: {ex.Message}");
+                s_log.Publish(MessageLevel.Error, EventName, $"Failed while attempting to augment metadata for {nameof(PhasorValue)} data source value type: {ex.Message}", exception: ex);
             }
         }
     }
+
+    private static readonly LogPublisher s_log = Logger.CreatePublisher(typeof(PhasorValue), MessageClass.Component);
 }

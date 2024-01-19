@@ -33,6 +33,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
+using GSF.Diagnostics;
 
 namespace GrafanaAdapters.DataSources;
 
@@ -45,6 +46,7 @@ public static class DataSourceValueCache
     private static Type[] s_loadedTypes;
     private static Dictionary<string, int> s_typeIndexMap;
     private static readonly object s_defaultInstancesLock = new();
+    private static readonly LogPublisher s_log = Logger.CreatePublisher(typeof(DataSourceValueCache), MessageClass.Component);
 
     /// <summary>
     /// Gets default instance list of all the defined data source value type implementations.
@@ -69,19 +71,34 @@ public static class DataSourceValueCache
                 if (s_defaultInstances is not null)
                     return s_defaultInstances;
 
-                // Load all data source value types from any assemblies in the current directory
-                string dataSourceValuesPath = FilePath.GetAbsolutePath("").EnsureEnd(Path.DirectorySeparatorChar);
-                List<Type> implementationTypes = typeof(IDataSourceValue).LoadImplementations(dataSourceValuesPath, true, false);
+                const string EventName = $"{nameof(DataSourceValueCache)} {nameof(IDataSourceValue)} Type Load";
 
-                // To maintain consistent order between runs, we sort the data source value types by load order and then by name
-                IDataSourceValue[] instances = implementationTypes
-                    .Select(type => (IDataSourceValue)Activator.CreateInstance(type))
-                    .OrderBy(dsv => dsv.LoadOrder)
-                    .ThenBy(dsv => dsv.GetType().Name)
-                    .ToArray();
+                try
+                {
+                    s_log.Publish(MessageLevel.Info, EventName, $"Starting load for {nameof(IDataSourceValue)} types...");
+                    long startTime = DateTime.UtcNow.Ticks;
 
-                Interlocked.Exchange(ref s_loadedTypes, instances.Select(dsv => dsv.GetType()).ToArray());
-                Interlocked.Exchange(ref s_defaultInstances, instances.ToArray());
+                    // Load all data source value types from any assemblies in the current directory
+                    string dataSourceValuesPath = FilePath.GetAbsolutePath("").EnsureEnd(Path.DirectorySeparatorChar);
+                    List<Type> implementationTypes = typeof(IDataSourceValue).LoadImplementations(dataSourceValuesPath, true, false);
+
+                    // To maintain consistent order between runs, we sort the data source value types by load order and then by name
+                    IDataSourceValue[] instances = implementationTypes
+                        .Select(type => (IDataSourceValue)Activator.CreateInstance(type))
+                        .OrderBy(dsv => dsv.LoadOrder)
+                        .ThenBy(dsv => dsv.GetType().Name)
+                        .ToArray();
+
+                    Interlocked.Exchange(ref s_loadedTypes, instances.Select(dsv => dsv.GetType()).ToArray());
+                    Interlocked.Exchange(ref s_defaultInstances, instances.ToArray());
+
+                    string elapsedTime = new TimeSpan(DateTime.UtcNow.Ticks - startTime).ToElapsedTimeString(3);
+                    s_log.Publish(MessageLevel.Info, EventName, $"Completed loading {nameof(IDataSourceValue)} types: loaded {s_loadedTypes.Length:N0} types in {elapsedTime}.");
+                }
+                catch (Exception ex)
+                {
+                    s_log.Publish(MessageLevel.Error, EventName, $"Failed while loading {nameof(IDataSourceValue)} types: {ex.Message}", exception: ex);
+                }
             }
 
             return s_defaultInstances;

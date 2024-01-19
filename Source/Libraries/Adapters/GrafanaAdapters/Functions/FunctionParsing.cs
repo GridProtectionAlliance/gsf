@@ -36,6 +36,7 @@ using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using GSF.Diagnostics;
 
 namespace GrafanaAdapters.Functions;
 
@@ -43,6 +44,7 @@ internal static class FunctionParsing
 {
     private static IGrafanaFunction[] s_grafanaFunctions;
     private static readonly object s_grafanaFunctionsLock = new();
+    private static readonly LogPublisher s_log = Logger.CreatePublisher(typeof(FunctionParsing), MessageClass.Component);
 
     // Calls to this expensive match operation should be temporally cached by expression
     public static ParsedGrafanaFunction<T>[] MatchFunctions<T>(string expression) where T : struct, IDataSourceValue<T>
@@ -108,22 +110,38 @@ internal static class FunctionParsing
             if (s_grafanaFunctions is not null)
                 return s_grafanaFunctions;
 
-            string grafanaFunctionsPath = FilePath.GetAbsolutePath("").EnsureEnd(Path.DirectorySeparatorChar);
-            List<Type> implementationTypes = typeof(IGrafanaFunction).LoadImplementations(grafanaFunctionsPath, true, false);
+            const string EventName = $"{nameof(FunctionParsing)} {nameof(IGrafanaFunction)} Type Load";
 
-            List<IGrafanaFunction> functions = new();
-
-            foreach (Type type in implementationTypes.Where(type => type.GetConstructor(Type.EmptyTypes) is not null))
+            try
             {
-                Type functionType = checkNestedType(type);
+                s_log.Publish(MessageLevel.Info, EventName, $"Starting load for {nameof(IGrafanaFunction)} types...");
+                long startTime = DateTime.UtcNow.Ticks;
 
-                if (functionType is null)
-                    continue;
+                string grafanaFunctionsPath = FilePath.GetAbsolutePath("").EnsureEnd(Path.DirectorySeparatorChar);
+                List<Type> implementationTypes = typeof(IGrafanaFunction).LoadImplementations(grafanaFunctionsPath, true, false);
 
-                functions.Add((IGrafanaFunction)Activator.CreateInstance(functionType));
+                List<IGrafanaFunction> functions = new();
+
+                foreach (Type type in implementationTypes.Where(type => type.GetConstructor(Type.EmptyTypes) is not null))
+                {
+                    Type functionType = checkNestedType(type);
+
+                    if (functionType is null)
+                        continue;
+
+                    functions.Add((IGrafanaFunction)Activator.CreateInstance(functionType));
+                }
+
+                Interlocked.Exchange(ref s_grafanaFunctions, functions.ToArray());
+
+                string elapsedTime = new TimeSpan(DateTime.UtcNow.Ticks - startTime).ToElapsedTimeString(3);
+                s_log.Publish(MessageLevel.Info, EventName, $"Completed loading {nameof(IGrafanaFunction)} types: loaded {s_grafanaFunctions.Length:N0} types in {elapsedTime}.");
+            }
+            catch (Exception ex)
+            {
+                s_log.Publish(MessageLevel.Error, EventName, $"Failed while loading {nameof(IGrafanaFunction)} types: {ex.Message}", exception: ex);
             }
 
-            Interlocked.Exchange(ref s_grafanaFunctions, functions.ToArray());
 
             return s_grafanaFunctions;
         }
