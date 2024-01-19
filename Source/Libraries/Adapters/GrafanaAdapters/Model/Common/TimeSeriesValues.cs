@@ -51,6 +51,11 @@ public class TimeSeriesValues
     public string refID;
 
     /// <summary>
+    /// Gets or sets a an error message that indicates a syntax error in the query request.
+    /// </summary>
+    public string syntaxError;
+
+    /// <summary>
     /// Gets or sets metadata attached to the <see cref="TimeSeriesValues"/>.
     /// </summary>
     public Dictionary<string, string> metadata;
