@@ -58,7 +58,7 @@ public abstract class Last<T> : GrafanaFunctionBase<T> where T : struct, IDataSo
             valueN = length;
 
         for (int i = 0; i < valueN; i++)
-            yield return values[length - i - i];
+            yield return values[length - 1 - i];
     }
 
     /// <inheritdoc />
