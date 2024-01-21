@@ -241,14 +241,14 @@ internal static class ParameterParsing
                 value = lookup.value;
         }
 
-        object result;
+        object result = null;
 
         // Check if parameter has a custom parse operation
         if (parameter.Parse is not null)
         {
             (result, bool success) = parameter.Parse(value);
 
-            // If custom parsing fails, continue with default parsing
+            // If custom parsing succeeds, return result; otherwise, continue with default parsing
             if (success)
             {
                 parameter.Value = result;
@@ -283,12 +283,10 @@ internal static class ParameterParsing
                 result = null;
             }
         }
-        else
-        {
-            // ConvertToType uses a TypeConverter which works for most types, including enums,
-            // note that this function returns null if conversion fails
-            result = value.ConvertToType(parameter.Type);
-        }
+
+        // ConvertToType uses a TypeConverter which works for most types, including enums,
+        // note that this function returns null if conversion fails
+        result ??= value.ConvertToType(parameter.Type);
 
         // If conversion fails, check if value is a named target
         if (result is null && char.IsLetter(value[0]))
@@ -317,11 +315,15 @@ internal static class ParameterParsing
 
             foreach (string targetName in targets)
             {
-                // Attempt to find named target in data source values. Named target parameters only return the first value
-                // in the series. This is often more useful in slice operations where the first value is the only one in
-                // the slice. In non-slice operations, the first value is only the first in in the series, which may not
-                // be the most recent value.
-                TDataSourceValue sourceResult = await dataSourceValues.FirstOrDefaultAsync(dataSourceValue => dataSourceValue.Target.Equals(targetName, StringComparison.OrdinalIgnoreCase), cancellationToken).ConfigureAwait(false);
+                // Attempt to find named target parameter values in data source values. In this implementation, where parameters are pre-parsed
+                // for function calls, the named target parameters only return the first value in the series. This will be more useful in slice
+                // operations where the first value is the only one in the slice. In non-slice operations, the first value is only the first
+                // in in the series, hence usually not be the most recent value - this means the same value will be returned for each function
+                // call with named parameter over the series operations. For example: Top(T1;5, T1;T2) will use the first T1 value for the
+                // initial Top function parameter for each value in both the T1 AND t2 series. This may be OK in some scenarios, but for others
+                // it is recommended that the user consider using slice operations when possible.
+                TDataSourceValue sourceResult = await dataSourceValues.FirstOrDefaultAsync(dataSourceValue => 
+                    dataSourceValue.Target.Equals(targetName, StringComparison.OrdinalIgnoreCase), cancellationToken).ConfigureAwait(false);
 
                 // Data source values are structs and cannot be null so an empty target means lookup failed
                 if (string.IsNullOrEmpty(sourceResult.Target))
