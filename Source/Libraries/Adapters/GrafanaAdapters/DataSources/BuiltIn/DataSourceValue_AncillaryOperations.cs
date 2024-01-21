@@ -71,6 +71,8 @@ public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
 
     readonly string[] IDataSourceValue.TimeSeriesValueDefinition => new[] { nameof(Value), nameof(Time) };
 
+    readonly int IDataSourceValue.ValueIndex => ValueIndex;
+
     /// <inheritdoc />
     public readonly int CompareTo(DataSourceValue other)
     {

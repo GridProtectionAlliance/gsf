@@ -317,16 +317,18 @@ internal static class ParameterParsing
 
             foreach (string targetName in targets)
             {
-                // TODO: JRC - adjust for multiple data source values, in sequence of processing, return a function?
-
-                // Attempt to find named target in data source values
+                // Attempt to find named target in data source values. Named target parameters only return the first value
+                // in the series. This is often more useful in slice operations where the first value is the only one in
+                // the slice. In non-slice operations, the first value is only the first in in the series, which may not
+                // be the most recent value.
                 TDataSourceValue sourceResult = await dataSourceValues.FirstOrDefaultAsync(dataSourceValue => dataSourceValue.Target.Equals(targetName, StringComparison.OrdinalIgnoreCase), cancellationToken).ConfigureAwait(false);
 
                 // Data source values are structs and cannot be null so an empty target means lookup failed
                 if (string.IsNullOrEmpty(sourceResult.Target))
                     continue;
 
-                double seriesValue = sourceResult.TimeSeriesValue[0];
+                // Get target value from time-series value array
+                double seriesValue = sourceResult.TimeSeriesValue[default(TDataSourceValue).ValueIndex];
 
                 result = parameter.Type.IsNumeric() ?
                     Convert.ChangeType(seriesValue, parameter.Type) :

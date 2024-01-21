@@ -84,6 +84,14 @@ public interface IDataSourceValue
     string[] TimeSeriesValueDefinition { get; }
 
     /// <summary>
+    /// Gets the index of the value within the <see cref="TimeSeriesValue"/> array.
+    /// </summary>
+    /// <remarks>
+    /// If data source value has multiple targets, this should be the value index of the primary target.
+    /// </remarks>
+    int ValueIndex { get; }
+
+    /// <summary>
     /// Gets the desired load order for the data source value type.
     /// </summary>
     /// <remarks>

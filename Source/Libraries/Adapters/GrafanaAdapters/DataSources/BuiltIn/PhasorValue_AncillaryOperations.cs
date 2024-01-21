@@ -74,6 +74,8 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
 
     readonly string[] IDataSourceValue.TimeSeriesValueDefinition => new[] { nameof(Magnitude), nameof(Angle), nameof(Time) };
 
+    readonly int IDataSourceValue.ValueIndex => (int)PrimaryValueTarget;
+
     /// <inheritdoc />
     public readonly int CompareTo(PhasorValue other)
     {
