@@ -562,7 +562,8 @@ public class ProcessLauncher : FacileActionAdapterBase
             if (!disposing)
                 return;
 
-            TerminateProcess(true);
+            if (ForceKillOnDispose)
+                TerminateProcess();
 
             m_process.Dispose();
             m_process.OutputDataReceived -= ProcessOutputDataReceived;
@@ -824,29 +825,21 @@ public class ProcessLauncher : FacileActionAdapterBase
     [AdapterCommand("Stops the launched process.")]
     public void Kill()
     {
-        TerminateProcess(false);
+        TerminateProcess();
     }
 
-    private void TerminateProcess(bool disposing)
+    private void TerminateProcess()
     {
-        if (ForceKillOnDispose)
+        try
         {
-            try
-            {
-                m_process.Kill();
+            m_process.Kill();
 
-                // Kill any child processes that were launched by the process by disposing of the child process manager
-                m_childProcessManager?.Dispose();
-            }
-            catch (Exception ex)
-            {
-                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Exception encountered while attempting to stop process launched from \"{FileName}\": {ex.Message}", ex));
-            }
+            // Kill any child processes that were launched by the process by disposing of the child process manager
+            m_childProcessManager?.Dispose();
         }
-        else
+        catch (Exception ex)
         {
-            if (!disposing)
-                m_process.Kill();
+            OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Exception encountered while attempting to stop process launched from \"{FileName}\": {ex.Message}", ex));
         }
     }
 
