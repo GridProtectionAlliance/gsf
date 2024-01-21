@@ -563,7 +563,7 @@ public class ProcessLauncher : FacileActionAdapterBase
                 return;
 
             if (ForceKillOnDispose)
-                TerminateProcess();
+                Kill();
 
             m_process.Dispose();
             m_process.OutputDataReceived -= ProcessOutputDataReceived;
@@ -824,11 +824,6 @@ public class ProcessLauncher : FacileActionAdapterBase
     /// </summary>
     [AdapterCommand("Stops the launched process.")]
     public void Kill()
-    {
-        TerminateProcess();
-    }
-
-    private void TerminateProcess()
     {
         try
         {
