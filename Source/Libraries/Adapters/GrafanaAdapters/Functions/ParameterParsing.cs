@@ -318,10 +318,10 @@ internal static class ParameterParsing
                 // Attempt to find named target parameter values in data source values. In this implementation, where parameters are pre-parsed
                 // for function calls, the named target parameters only return the first value in the series. This will be more useful in slice
                 // operations where the first value is the only one in the slice. In non-slice operations, the first value is only the first
-                // in in the series, hence usually not be the most recent value - this means the same value will be returned for each function
-                // call with named parameter over the series operations. For example: Top(T1;5, T1;T2) will use the first T1 value for the
-                // initial Top function parameter for each value in both the T1 AND t2 series. This may be OK in some scenarios, but for others
-                // it is recommended that the user consider using slice operations when possible.
+                // in in the series, hence usually not be the most recent value - this means the same value will be used for each function call
+                // with a named parameter over the series operations. For example: Shift(T1;0, T1;T2) will use the first T1 series value for the
+                // first function parameter over each value in both the T1 AND T2 series. This may be OK in some scenarios, but for others it is
+                // recommended that the user consider using slice operations when possible.
                 TDataSourceValue sourceResult = await dataSourceValues.FirstOrDefaultAsync(dataSourceValue => 
                     dataSourceValue.Target.Equals(targetName, StringComparison.OrdinalIgnoreCase), cancellationToken).ConfigureAwait(false);
 
