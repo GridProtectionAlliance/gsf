@@ -83,7 +83,7 @@ public class ProcessLauncher : FacileActionAdapterBase
     /// <summary>
     /// Default value for the <see cref="WindowStyle"/> property.
     /// </summary>
-    public const string DefaultWindowStyle = nameof(WindowStyle.Normal);
+    public const string DefaultWindowStyle = nameof(ProcessWindowStyle.Normal);
 
     /// <summary>
     /// Default value for the <see cref="ErrorDialog"/> property.
