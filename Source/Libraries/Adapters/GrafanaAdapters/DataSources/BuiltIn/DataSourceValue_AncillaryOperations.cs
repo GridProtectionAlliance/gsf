@@ -99,7 +99,6 @@ public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
 
     readonly string[] IDataSourceValue.RequiredMetadataFieldNames => new[]
     {
-        // These are fields as required by local GetIDTargetMap() method
         "ID",       // <string> Measurement key, e.g., PPA:101
         "SignalID", //  <Guid>  Signal ID
         "PointTag"  // <string> Point tag, e.g., GPA_SHELBY:FREQ

@@ -110,7 +110,6 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
 
     readonly string[] IDataSourceValue.RequiredMetadataFieldNames => new[]
     {
-        // These are fields as required by local GetIDTargetMap() and AssignToTimeValueMap() methods
         "MagnitudeID",       // <string> Measurement key representing magnitude, e.g., PPA:101
         "AngleID",           // <string> Measurement key representing angle, e.g., PPA:102
         "MagnitudeSignalID", //  <Guid>  Signal ID representing magnitude
