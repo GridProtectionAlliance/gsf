@@ -122,9 +122,13 @@ public interface IDataSourceValue
     /// </para>
     /// <para>
     /// Note that system generally assumes that the fields 'PointTag', a unique string-based alpha-numeric
-    /// identifier for a measurement, 'ID', a unique string-based measurement-key formatted identifier
-    /// (e.g., PPA:101), and 'SignalID', a unique Guid-based identifier all exist in the metadata table.
-    /// However, these field does not need to be included as required metadata field names.
+    /// identifier for a measurement, 'ID', a unique string-based measurement key formatted identifier
+    /// (e.g., PPA:101), and 'SignalID', a unique Guid-based identifier, all exist in the metadata table.
+    /// However, these fields do not have to be included as required metadata field names. The 'PointTag'
+    /// field is used to lookup records in the metadata. The 'ID' and 'SignalID' fields are used by
+    /// 'AdapterBase.ParseFilterExpression' for direct parsing of measurement key and signal ID when
+    /// expression is not a filter expression. Direct parsing always uses the primary metadata table
+    /// name for lookups, see <see cref="MetadataTableName"/> property.
     /// </para>
     /// </remarks>
     string[] RequiredMetadataFieldNames { get; }

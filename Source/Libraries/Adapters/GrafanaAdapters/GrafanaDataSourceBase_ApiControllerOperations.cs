@@ -250,18 +250,25 @@ partial class GrafanaDataSourceBase
     /// <param name="cancellationToken">Cancellation token.</param>
     public virtual Task<string[]> Search(SearchRequest request, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(request?.expression))
+        if (request is null)
             return Task.FromResult(Array.Empty<string>());
 
         return Task.Factory.StartNew(() =>
         {
+            IDataSourceValue dataSourceValue = DataSourceValueCache.GetDefaultInstance(request.dataTypeIndex);
+
+            // If an empty expression is specified, query all point tags for data source value type (up to MaximumSearchTargetsPerRequest)
+            if (string.IsNullOrWhiteSpace(request.expression))
+                request.expression = $"SELECT DISTINCT TOP {MaximumSearchTargetsPerRequest} PointTag FROM {dataSourceValue.MetadataTableName} WHERE True ORDER BY PointTag";
+
+            request.expression = request.expression.Trim();
+
             return TargetCache<string[]>.GetOrAdd($"search!{request.dataTypeIndex}:{request.expression}", () =>
             {
-                IDataSourceValue dataSourceValue = DataSourceValueCache.GetDefaultInstance(request.dataTypeIndex);
                 DataSet metadata = Metadata.GetAugmentedDataSet(dataSourceValue);
 
                 // Attempt to parse search target as a "SELECT" statement
-                if (!parseSelectExpression(request.expression.Trim(), out string tableName, out bool distinct, out string[] fieldNames, out string expression, out string sortField, out int takeCount))
+                if (!parseSelectExpression(request.expression, out string tableName, out bool distinct, out string[] fieldNames, out string expression, out string sortField, out int takeCount))
                 {
                     // Expression was not a 'SELECT' statement, execute a 'LIKE' statement against primary meta-data table for data source value type
                     // returning matching point tags - this can be a slow operation for large meta-data sets, so results are cached by expression
