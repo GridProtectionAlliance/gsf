@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using GrafanaAdapters.Annotations;
 using GrafanaAdapters.DataSources;
 using GrafanaAdapters.DataSources.BuiltIn;
 using GrafanaAdapters.Functions;

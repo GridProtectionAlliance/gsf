@@ -22,19 +22,20 @@
 //******************************************************************************************************
 // ReSharper disable CompareOfFloatsByEqualityOperator
 
-using GrafanaAdapters.DataSources.BuiltIn;
-using GrafanaAdapters.Metadata;
-using GrafanaAdapters.Model.Common;
-using GSF;
-using GSF.TimeSeries;
-using GSF.TimeSeries.Adapters;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
+using GrafanaAdapters.DataSources.BuiltIn;
+using GrafanaAdapters.Metadata;
+using GrafanaAdapters.Model.Annotations;
+using GrafanaAdapters.Model.Common;
+using GSF;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
 
-namespace GrafanaAdapters.Model.Annotations;
+namespace GrafanaAdapters.Annotations;
 
 /// <summary>
 /// Grafana <see cref="AnnotationRequest"/> extensions class.

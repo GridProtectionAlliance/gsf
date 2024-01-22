@@ -97,10 +97,10 @@
     <Compile Include="Functions\QueryParameters.cs" />
     <Compile Include="Functions\BuiltIn\Evaluate.cs" />
     <Compile Include="DataSources\IDataSourceValue.cs" />
-    <Compile Include="Model\Annotations\AnnotationExtensions.cs" />
+    <Compile Include="Annotations\AnnotationExtensions.cs" />
     <Compile Include="Model\Annotations\AnnotationRequest.cs" />
     <Compile Include="Model\Annotations\AnnotationResponse.cs" />
-    <Compile Include="Model\Annotations\AnnotationType.cs" />
+    <Compile Include="Annotations\AnnotationType.cs" />
     <Compile Include="DataSources\DataSourceValueGroup.cs" />
     <Compile Include="DeviceAlarmStateAdapter.cs" />
     <Compile Include="Model\Common\MetadataSelections.cs" />
