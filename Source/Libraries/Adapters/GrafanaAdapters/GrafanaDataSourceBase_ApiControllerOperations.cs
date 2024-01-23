@@ -65,8 +65,10 @@ partial class GrafanaDataSourceBase
     }
 
     /// <summary>
-    /// Gets the table names that, at a minimum, contain all the fields that the value type has defined as
-    /// required, see <see cref="IDataSourceValue.RequiredMetadataFieldNames"/>.
+    /// Gets the table names that, at a minimum, contain all the fields that the value type has defined as required,
+    /// see <see cref="IDataSourceValue.RequiredMetadataFieldNames"/> when <see cref="SearchRequest.dataTypeIndex"/>
+    /// is a valid index in the data source value cache. When <see cref="SearchRequest.dataTypeIndex"/> is -1, all
+    /// table names are returned.
     /// </summary>
     /// <param name="request">Search request.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -76,16 +78,24 @@ partial class GrafanaDataSourceBase
         {
             return TargetCache<IEnumerable<string>>.GetOrAdd($"{request.dataTypeIndex}", () =>
             {
-                IDataSourceValue dataSourceValue = DataSourceValueCache.GetDefaultInstance(request.dataTypeIndex);
+                int dataTypeIndex = request.dataTypeIndex;
+                IDataSourceValue dataSourceValue = DataSourceValueCache.GetDefaultInstance(dataTypeIndex == -1 ? DataSourceValue.TypeIndex : dataTypeIndex);
                 DataSet metadata = Metadata.GetAugmentedDataSet(dataSourceValue);
-                return metadata.Tables.Cast<DataTable>().Where(table => dataSourceValue.MetadataTableIsValid(metadata, table.TableName)).Select(table => table.TableName);
+
+                // Provided unrestricted metadata table names if data type index is -1
+                return dataTypeIndex > -1 ? 
+                    metadata.Tables.Cast<DataTable>().Where(table => dataSourceValue.MetadataTableIsValid(metadata, table.TableName)).Select(table => table.TableName):
+                    metadata.Tables.Cast<DataTable>().Select(table => table.TableName);
             });
         },
         cancellationToken);
     }
 
     /// <summary>
-    /// Gets the field names for a given table.
+    /// Gets the field names for a given table when <see cref="SearchRequest.dataTypeIndex"/> is a valid index in the data
+    /// source value cache and selected table name contains all the fields that the value type has defined as required, see
+    /// <see cref="IDataSourceValue.RequiredMetadataFieldNames"/> . When <see cref="SearchRequest.dataTypeIndex"/> is -1,
+    /// fields for any valid metadata table name are returned.
     /// </summary>
     /// <param name="request">Search request.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -98,11 +108,13 @@ partial class GrafanaDataSourceBase
         {
             return TargetCache<IEnumerable<FieldDescription>>.GetOrAdd($"{request.dataTypeIndex}:{request.expression}", () =>
             {
-                IDataSourceValue dataSourceValue = DataSourceValueCache.GetDefaultInstance(request.dataTypeIndex);
+                int dataTypeIndex = request.dataTypeIndex;
+                IDataSourceValue dataSourceValue = DataSourceValueCache.GetDefaultInstance(dataTypeIndex == -1 ? DataSourceValue.TypeIndex : dataTypeIndex);
                 DataSet metadata = Metadata.GetAugmentedDataSet(dataSourceValue);
                 string tableName = request.expression.Trim();
 
-                if (!dataSourceValue.MetadataTableIsValid(metadata, tableName))
+                // Provided unrestricted metadata table field names if data type index is -1
+                if (dataTypeIndex > -1 && !dataSourceValue.MetadataTableIsValid(metadata, tableName))
                     return Enumerable.Empty<FieldDescription>();
 
                 return metadata.Tables[tableName].Columns.Cast<DataColumn>().Select(column => new FieldDescription
