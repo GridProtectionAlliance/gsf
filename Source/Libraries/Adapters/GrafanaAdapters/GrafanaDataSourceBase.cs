@@ -555,7 +555,8 @@ public abstract partial class GrafanaDataSourceBase
 
     // Define a regular expression that splits on semi-colon except when semi-colon is inside of a single-quoted string. A simple
     // string.Split on semi-colon will not work properly for cases where a semi-colon is used inside of a filter expression that
-    // contains a string literal with a semi-colon, e.g., FILTER ActiveMeasurements WHERE Description LIKE '%A;B%'
+    // contains a string literal with a semi-colon, e.g., FILTER ActiveMeasurements WHERE Description LIKE '%A;B%', see Expresso
+    // 'Documentation/SemiColonSplitterRegex.xso' for development details on regex
     private static readonly Regex s_semiColonSplitter = new(@";(?=(?:[^']*'[^']*')*[^']*$)", RegexOptions.Compiled);
     
     // To ensure RegEx split ignores empty entries, define a predicate function that returns true if string is not empty

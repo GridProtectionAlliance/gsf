@@ -46,7 +46,7 @@ using static GrafanaAdapters.Functions.Common;
 
 namespace GrafanaAdapters;
 
-// ApiController specific Grafana functionality is defined here
+// ApiController specific Grafana functionality is defined here, see 'Documentation/WebAPIInterfaces.docx' for details
 partial class GrafanaDataSourceBase
 {
     /// <summary>
@@ -340,7 +340,8 @@ partial class GrafanaDataSourceBase
             if (string.IsNullOrWhiteSpace(selectExpression))
                 return false;
 
-            // RegEx instance used to parse meta-data for target search queries using a reduced SQL SELECT statement syntax
+            // RegEx instance used to parse meta-data for target search queries using a reduced SQL SELECT statement syntax,
+            // see Expresso 'Documentation/SearchSelectRegex.xso' for development details on regex
             s_selectExpression ??= new Regex(
                 @"(SELECT\s+((?<Distinct>DISTINCT)\s+)?(TOP\s+(?<MaxRows>\d+)\s+)?(\s*((?<FieldName>\*)|((?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)))?\s*FROM\s+(?<TableName>\w+)\s+WHERE\s+(?<Expression>.+)\s+ORDER\s+BY\s+(?<SortField>\w+))|(SELECT\s+((?<Distinct>DISTINCT)\s+)?(TOP\s+(?<MaxRows>\d+)\s+)?(\s*((?<FieldName>\*)|((?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)))?\s*FROM\s+(?<TableName>\w+)\s+WHERE\s+(?<Expression>.+))|(SELECT\s+((?<Distinct>DISTINCT)\s+)?(TOP\s+(?<MaxRows>\d+)\s+)?((\s*((?<FieldName>\*)|((?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)))?)?\s*FROM\s+(?<TableName>\w+))",
                 RegexOptions.Compiled | RegexOptions.IgnoreCase);
