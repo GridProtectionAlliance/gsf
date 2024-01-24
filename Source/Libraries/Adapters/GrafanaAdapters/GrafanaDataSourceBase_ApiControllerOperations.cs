@@ -302,6 +302,15 @@ partial class GrafanaDataSourceBase
                 if (dataTypeIndex > -1 && !dataSourceValue.MetadataTableIsValid(metadata, tableName))
                     return results.ToArray();
 
+                // If table name is not in meta-data for unrestricted search, we have no choice but to attempt
+                // meta-data augmentation for each default data source value instance - this is expensive, but
+                // operation will cached and is only be a one-time operation
+                if (dataTypeIndex == -1 && !metadata.Tables.Contains(tableName))
+                {
+                    foreach (IDataSourceValue defaultDataSourceValue in DataSourceValueCache.DefaultInstances)
+                        Metadata.GetAugmentedDataSet(defaultDataSourceValue);
+                }
+
                 DataTable table = metadata.Tables[tableName];
                 List<string> validFieldNames = new();
 
