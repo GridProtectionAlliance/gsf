@@ -268,7 +268,8 @@ partial class GrafanaDataSourceBase
 
         return Task.Factory.StartNew(() =>
         {
-            IDataSourceValue dataSourceValue = DataSourceValueCache.GetDefaultInstance(request.dataTypeIndex);
+            int dataTypeIndex = request.dataTypeIndex;
+            IDataSourceValue dataSourceValue = DataSourceValueCache.GetDefaultInstance(dataTypeIndex == -1 ? DataSourceValue.TypeIndex : dataTypeIndex);
 
             // If an empty expression is specified, query all point tags for data source value type (up to MaximumSearchTargetsPerRequest)
             if (string.IsNullOrWhiteSpace(request.expression))
@@ -295,9 +296,10 @@ partial class GrafanaDataSourceBase
                 // Search target is a 'SELECT' statement, this operates as a filter for in memory metadata (not a database query)
                 List<string> results = new();
 
-                // If meta-data table does not contain the field names required by the data source value type,
-                // return empty results - this is not a table supported by the data source value type
-                if (!dataSourceValue.MetadataTableIsValid(metadata, tableName))
+                // Provided unrestricted metadata table field names if data type index is -1, otherwise if
+                // meta-data table does not contain the field names required by the data source value type,
+                // return empty results as this is not a table supported by the data source value type:
+                if (dataTypeIndex > -1 && !dataSourceValue.MetadataTableIsValid(metadata, tableName))
                     return results.ToArray();
 
                 DataTable table = metadata.Tables[tableName];
