@@ -367,6 +367,9 @@ GO
 INSERT INTO Interconnection(Acronym, Name, LoadOrder) VALUES('Hawaii', 'Islands of Hawaii', 5)
 GO
 
+INSERT INTO Interconnection(Acronym, Name, LoadOrder) VALUES('Europe', 'European Interconnection', 6)
+GO
+
 INSERT INTO Protocol(Acronym, Name, Type, Category, AssemblyName, TypeName, LoadOrder) VALUES('IeeeC37_118V1', 'IEEE C37.118-2005', 'Frame', 'Phasor', 'PhasorProtocolAdapters.dll', 'PhasorProtocolAdapters.PhasorMeasurementMapper', 1)
 GO
 
