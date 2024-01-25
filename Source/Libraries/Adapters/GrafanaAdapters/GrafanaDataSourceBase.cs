@@ -549,7 +549,7 @@ public abstract partial class GrafanaDataSourceBase
     // Query command regular expressions include a semi-colon prefix to help prevent possible name matches that may occur on other expressions
     private static readonly Regex s_dropEmptySeriesCommand = new(@";\s*DropEmptySeries", RegexOptions.Compiled | RegexOptions.IgnoreCase);
     private static readonly Regex s_includePeaksCommand = new(@";\s*IncludePeaks", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-    private static readonly Regex s_fullResolutionQueryCommand = new(@";\s*FullResolutionQuery", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private static readonly Regex s_fullResolutionQueryCommand = new(@";\s*FullResolution(Query|Data)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
     private static readonly Regex s_importsCommand = new(@";\s*Imports\s*=\s*\{(?<Expression>.+)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
     private static readonly Regex s_radialDistributionCommand = new(@";\s*RadialDistribution\s*=\s*\{(?<Expression>.+)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
