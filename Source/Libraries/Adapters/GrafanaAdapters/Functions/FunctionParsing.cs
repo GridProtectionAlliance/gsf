@@ -184,33 +184,6 @@ internal static class FunctionParsing
         DataSourceValueCache.ReinitializeAll();
     }
 
-    // Execute Grafana function over a set of points from each series at the same time-slice
-    public static async IAsyncEnumerable<DataSourceValueGroup<T>> ComputeSliceAsync<T>(this IGrafanaFunction<T> function, TimeSliceScannerAsync<T> scanner, QueryParameters queryParameters, string rootTarget, DataSet metadata, string[] parsedParameters, [EnumeratorCancellation] CancellationToken cancellationToken) where T : struct, IDataSourceValue<T>
-    {
-        async IAsyncEnumerable<T> readSliceValues()
-        {
-            while (!scanner.DataReadComplete)
-            {
-                IAsyncEnumerable<T> dataSourceValues = await scanner.ReadNextTimeSliceAsync().ConfigureAwait(false);
-                Dictionary<string, string> metadataMap = metadata.GetMetadataMap<T>(rootTarget, queryParameters);
-                Parameters parameters = await function.GenerateParametersAsync(parsedParameters, dataSourceValues, rootTarget, metadata, metadataMap, cancellationToken).ConfigureAwait(false);
-
-                await foreach (T dataValue in function.ComputeSliceAsync(parameters, cancellationToken).ConfigureAwait(false))
-                    yield return dataValue;
-            }
-        }
-
-        await foreach (IAsyncGrouping<string, T> valueGroup in readSliceValues().GroupBy(dataValue => dataValue.Target).WithCancellation(cancellationToken).ConfigureAwait(false))
-        {
-            yield return new DataSourceValueGroup<T>
-            {
-                Target = valueGroup.Key,
-                RootTarget = valueGroup.Key,
-                Source = valueGroup
-            };
-        }
-    }
-
     // Handle series rename operations for Grafana functions - this is a special case for handling the Label function
     public static async IAsyncEnumerable<DataSourceValueGroup<T>> RenameSeries<T>(this IAsyncEnumerable<DataSourceValueGroup<T>> dataset, QueryParameters queryParameters, DataSet metadata, string labelExpression, [EnumeratorCancellation] CancellationToken cancellationToken) where T : struct, IDataSourceValue<T>
     {
