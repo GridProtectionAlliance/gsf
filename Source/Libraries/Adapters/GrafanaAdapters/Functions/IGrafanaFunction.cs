@@ -69,6 +69,44 @@ public enum ReturnType
 }
 
 /// <summary>
+/// Represents the number of expected results for a Grafana function.
+/// </summary>
+/// <remarks>
+/// <para>
+/// For slice operations on a function that returns <see cref="ReturnType.Series"/> and produces
+/// the same number of outputs as inputs, it has the same result matrix as a standard operation.
+/// </para>
+/// <para>
+/// Any slice operation on a function that returns a series and produces the same number of series
+/// outputs as inputs is equivalent to its non-slice operation using the <see cref="Interval{T}"/>
+/// function over the same expression, for example, the following queries are equivalent:
+/// <list type="bullet">
+///     <item>
+///        <c>SliceShift(0.02, 1, FILTER TOP 10 ActiveMeasurements WHERE SignalType='FREQ')</c> -- <i>and</i> --<br/>
+///        <c>Shift(1, Interval(0.02, FILTER TOP 10 ActiveMeasurements WHERE SignalType='FREQ'))</c>
+///     </item>
+///     <item>
+///         <c>SliceRound(0.0333, 3, ACME-STAR:FREQ; ACME-PLUS:FREQ)</c> -- <i>and</i> --<br/>
+///         <c>Round(3, Interval(0.0333, ACME-STAR:FREQ; ACME-PLUS:FREQ))</c>
+///     </item>
+/// </list>
+/// As a result, slice operations that return the same number of outputs as inputs are replaced
+/// with the equivalent non-slice operation and an <see cref="Interval{T}"/> function.
+/// </para>
+/// </remarks>
+public enum ResultsLength
+{
+    /// <summary>
+    /// Function produces the same number of outputs as inputs. This is the default behavior.
+    /// </summary>
+    Equivalent,
+    /// <summary>
+    /// Function can return less outputs than inputs.
+    /// </summary>
+    Reduced
+}
+
+/// <summary>
 /// Represents a Grafana function category.
 /// </summary>
 public enum Category
@@ -107,6 +145,11 @@ public interface IGrafanaFunction
     /// Gets the return type of the Grafana function.
     /// </summary>
     ReturnType ReturnType { get; }
+
+    /// <summary>
+    /// Gets the expected results length for the Grafana function.
+    /// </summary>
+    ResultsLength ResultsLength { get; }
 
     /// <summary>
     /// Gets the category of the Grafana function.

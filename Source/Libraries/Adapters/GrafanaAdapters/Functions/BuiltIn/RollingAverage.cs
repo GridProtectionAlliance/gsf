@@ -36,6 +36,9 @@ public abstract class RollingAverage<T> : GrafanaFunctionBase<T> where T : struc
     public override ReturnType ReturnType => ReturnType.Series;
 
     /// <inheritdoc />
+    public override ResultsLength ResultsLength => ResultsLength.Reduced;
+
+    /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>
     {
         new ParameterDefinition<int>

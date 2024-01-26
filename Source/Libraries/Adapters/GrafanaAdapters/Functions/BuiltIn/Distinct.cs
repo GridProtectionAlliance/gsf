@@ -31,6 +31,9 @@ public abstract class Distinct<T> : GrafanaFunctionBase<T> where T : struct, IDa
     public override ReturnType ReturnType => ReturnType.Series;
 
     /// <inheritdoc />
+    public override ResultsLength ResultsLength => ResultsLength.Reduced;
+
+    /// <inheritdoc />
     public override IAsyncEnumerable<T> ComputeAsync(Parameters parameters, CancellationToken cancellationToken)
     {
         // Return deferred enumeration of distinct values

@@ -29,6 +29,9 @@ public abstract class FilterNaN<T> : GrafanaFunctionBase<T> where T : struct, ID
     public override ReturnType ReturnType => ReturnType.Series;
 
     /// <inheritdoc />
+    public override ResultsLength ResultsLength => ResultsLength.Reduced;
+
+    /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>
     {
         new ParameterDefinition<bool>

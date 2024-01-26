@@ -34,6 +34,9 @@ public abstract class Difference<T> : GrafanaFunctionBase<T> where T : struct, I
     /// <inheritdoc />
     public override ReturnType ReturnType => ReturnType.Series;
 
+    /// <inheritdoc />
+    public override ResultsLength ResultsLength => ResultsLength.Reduced;
+
     /// <summary>
     /// Computes the difference between the current value and the last value.
     /// </summary>

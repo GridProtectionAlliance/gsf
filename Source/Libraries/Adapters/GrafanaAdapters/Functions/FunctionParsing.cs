@@ -47,7 +47,7 @@ internal static class FunctionParsing
     private static readonly LogPublisher s_log = Logger.CreatePublisher(typeof(FunctionParsing), MessageClass.Component);
 
     // Calls to this expensive match operation should be temporally cached by expression
-    public static ParsedGrafanaFunction<T>[] MatchFunctions<T>(string expression) where T : struct, IDataSourceValue<T>
+    public static ParsedGrafanaFunction<T>[] MatchFunctions<T>(string expression, QueryParameters queryParameters) where T : struct, IDataSourceValue<T>
     {
         Regex functionsRegex = DataSourceValueCache<T>.FunctionsRegex;
         Dictionary<string, IGrafanaFunction<T>> functionMap = DataSourceValueCache<T>.FunctionMap;
@@ -73,17 +73,47 @@ internal static class FunctionParsing
             }
 
             // Check if the function has a group operation prefix, e.g., slice or set
-            Enum.TryParse(groups["GroupOp"].Value, true, out GroupOperations operation);
+            Enum.TryParse(groups["GroupOp"].Value, true, out GroupOperations groupOperation);
 
             // Verify that the function allows the requested group operation - this will
             // throw an exception if the function does not support the requested operation
-            operation = function.CheckAllowedGroupOperation(operation);
+            groupOperation = function.CheckAllowedGroupOperation(groupOperation);
+
+            // Get the function expression from the regex representing the parameters passed to the function
+            string functionExpression = groups["Expression"].Value;
+
+            // Any slice operation on a function that returns a series and produces the same number of series
+            // outputs as inputs is equivalent to its non-slice operation using the 'Interval' function over
+            // the same expression, for example, the following queries are equivalent:
+            //
+            //     SliceShift(0.02, 1, FILTER TOP 10 ActiveMeasurements WHERE SignalType='FREQ')
+            //     Shift(1, Interval(0.02, FILTER TOP 10 ActiveMeasurements WHERE SignalType='FREQ'))
+            //
+            //     SliceRound(0.0333, 3, ACME-STAR:FREQ; ACME-PLUS:FREQ)
+            //     Round(3, Interval(0.0333, ACME-STAR:FREQ; ACME-PLUS:FREQ))
+            //
+            // As an optimization in this scenario, replace the slice operation with the equivalent interval operation
+            if (groupOperation == GroupOperations.Slice && function.ReturnType == ReturnType.Series && function.ResultsLength == ResultsLength.Equivalent)
+            {
+                // Parse the function parameters from expression
+                (string[] parsedParameters, string queryExpression) = function.ParseParameters(queryParameters, functionExpression, groupOperation);
+
+                // First parameter in a slice operation is the tolerance parameter
+                string tolerance = parsedParameters[0];
+
+                // Remaining parameters represent normal non-slice function parameters
+                string[] parameters = parsedParameters.Skip(1).ToArray();
+
+                // Since Regex only matches top-level functions, it is safe to adjust expression that has yet to be parsed
+                functionExpression = $"{string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}Interval({tolerance}, {queryExpression})";
+                groupOperation = GroupOperations.None;
+            }
 
             parsedGrafanaFunctions.Add(new ParsedGrafanaFunction<T>
             {
                 Function = function,
-                GroupOperation = operation,
-                Expression = groups["Expression"].Value,
+                GroupOperation = groupOperation,
+                Expression = functionExpression,
                 MatchedValue = match.Value
             });
         }
@@ -131,6 +161,11 @@ internal static class FunctionParsing
 
                     IGrafanaFunction function = (IGrafanaFunction)Activator.CreateInstance(functionType);
                     functionType.GetProperty(nameof(IGrafanaFunction.Category))?.SetValue(function, builtIn ? Category.BuiltIn : Category.Custom);
+
+                    // If function returns an equivalent length series, then slice operations are hidden from 'PublishedGroupOperations'
+                    // as equivalent functionality is provided by the 'Interval' function, see MatchFunctions() method above
+                    if (function.ReturnType == ReturnType.Series && function.ResultsLength == ResultsLength.Equivalent)
+                        functionType.GetProperty(nameof(IGrafanaFunction.PublishedGroupOperations))?.SetValue(function, function.PublishedGroupOperations & ~GroupOperations.Slice);
 
                     functions.Add(function);
                 }

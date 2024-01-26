@@ -39,6 +39,9 @@ public abstract class Derivative<T> : GrafanaFunctionBase<T> where T : struct, I
     public override ReturnType ReturnType => ReturnType.Series;
 
     /// <inheritdoc />
+    public override ResultsLength ResultsLength => ResultsLength.Reduced;
+
+    /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>
     {
         new ParameterDefinition<TargetTimeUnit>

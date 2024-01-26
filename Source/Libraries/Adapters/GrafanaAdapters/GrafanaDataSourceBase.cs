@@ -222,7 +222,7 @@ public abstract partial class GrafanaDataSourceBase
         (ParsedGrafanaFunction<T>[] grafanaFunctions, string reducedQueryExpression) = TargetCache<(ParsedGrafanaFunction<T>[], string)>.GetOrAdd($"{default(T).DataTypeIndex}:{queryExpression}", () =>
         {
             // Match any top-level grafana functions in target query expression
-            ParsedGrafanaFunction<T>[] matchedFunctions = FunctionParsing.MatchFunctions<T>(queryExpression);
+            ParsedGrafanaFunction<T>[] matchedFunctions = FunctionParsing.MatchFunctions<T>(queryExpression, queryParameters);
 
             if (matchedFunctions.Length == 0)
                 return (matchedFunctions, string.Empty);

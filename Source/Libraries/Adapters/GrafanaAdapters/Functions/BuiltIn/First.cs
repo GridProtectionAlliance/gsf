@@ -34,6 +34,9 @@ public abstract class First<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     public override ReturnType ReturnType => ReturnType.Series;
 
     /// <inheritdoc />
+    public override ResultsLength ResultsLength => ResultsLength.Reduced;
+
+    /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>
     {
         new ParameterDefinition<string>

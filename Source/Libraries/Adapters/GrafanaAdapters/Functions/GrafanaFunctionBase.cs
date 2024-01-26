@@ -74,6 +74,9 @@ public abstract class GrafanaFunctionBase<T> : IGrafanaFunction<T> where T : str
     }
 
     /// <inheritdoc />
+    public virtual ResultsLength ResultsLength => ResultsLength.Equivalent;
+
+    /// <inheritdoc />
     public virtual ParameterDefinitions ParameterDefinitions => new();
 
     /// <inheritdoc />

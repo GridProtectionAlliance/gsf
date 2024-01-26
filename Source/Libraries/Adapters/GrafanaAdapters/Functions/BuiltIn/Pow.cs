@@ -30,10 +30,6 @@ public abstract class Pow<T> : GrafanaFunctionBase<T> where T : struct, IDataSou
     public override ReturnType ReturnType => ReturnType.Series;
 
     /// <inheritdoc />
-    // Hiding slice operation since result matrix would be the same when tolerance matches data rate
-    public override GroupOperations PublishedGroupOperations => GroupOperations.None | GroupOperations.Set;
-
-    /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>
     {
         new ParameterDefinition<double>
