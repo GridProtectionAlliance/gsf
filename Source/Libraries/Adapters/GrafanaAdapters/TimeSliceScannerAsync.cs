@@ -57,25 +57,12 @@ public class TimeSliceScannerAsync<T> where T : struct, IDataSourceValue<T>
     /// <summary>
     /// Reads next time slice from the series set.
     /// </summary>
-    /// <param name="lastValue">
-    /// Set to <c>true</c> to only publish last value per-series in time-slice for specified <see cref="Tolerance"/>;
-    /// otherwise, <c>false</c> to publish all series values since last slice.
-    /// </param>
     /// <returns>Next time slice.</returns>
-    public async Task<IAsyncEnumerable<T>> ReadNextTimeSliceAsync(bool lastValue = true)
+    public async Task<IAsyncEnumerable<T>> ReadNextTimeSliceAsync()
     {
-        if (lastValue)
-        {
-            Dictionary<string, T> nextSlice = new(StringComparer.OrdinalIgnoreCase);
-            await ReadNextTimeSliceAsync(value => nextSlice[value.Target] = value).ConfigureAwait(false);
-            return nextSlice.Values.ToAsyncEnumerable();
-        }
-        else
-        {
-            List<T> nextSlice = new();
-            await ReadNextTimeSliceAsync(value => nextSlice.Add(value)).ConfigureAwait(false);
-            return nextSlice.ToAsyncEnumerable();
-        }
+        List<T> nextSlice = new();
+        await ReadNextTimeSliceAsync(value => nextSlice.Add(value)).ConfigureAwait(false);
+        return nextSlice.ToAsyncEnumerable();
     }
 
     private async Task ReadNextTimeSliceAsync(Action<T> addValue)
