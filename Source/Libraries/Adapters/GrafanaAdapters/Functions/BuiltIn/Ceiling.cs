@@ -28,6 +28,9 @@ public abstract class Ceiling<T> : GrafanaFunctionBase<T> where T : struct, IDat
     public override string[] Aliases => new[] { "Ceil" };
 
     /// <inheritdoc />
+    public override ReturnType ReturnType => ReturnType.Series;
+
+    /// <inheritdoc />
     // Hiding slice operation since result matrix would be the same when tolerance matches data rate
     public override GroupOperations PublishedGroupOperations => GroupOperations.None | GroupOperations.Set;
 

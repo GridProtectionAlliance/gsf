@@ -54,6 +54,36 @@ public enum GroupOperations
 }
 
 /// <summary>
+/// Represents the return type of a Grafana function.
+/// </summary>
+public enum ReturnType
+{
+    /// <summary>
+    /// The function returns a single value.
+    /// </summary>
+    Scalar,
+    /// <summary>
+    /// The function returns a series of values.
+    /// </summary>
+    Series
+}
+
+/// <summary>
+/// Represents a Grafana function category.
+/// </summary>
+public enum Category
+{
+    /// <summary>
+    /// The function is a built-in function.
+    /// </summary>
+    BuiltIn,
+    /// <summary>
+    /// The function is a custom function.
+    /// </summary>
+    Custom
+}
+
+/// <summary>
 /// Defines a common interface for Grafana functions.
 /// </summary>
 public interface IGrafanaFunction
@@ -72,6 +102,16 @@ public interface IGrafanaFunction
     /// Gets any defined aliases for the Grafana function.
     /// </summary>
     string[] Aliases { get; }
+
+    /// <summary>
+    /// Gets the return type of the Grafana function.
+    /// </summary>
+    ReturnType ReturnType { get; }
+
+    /// <summary>
+    /// Gets the category of the Grafana function.
+    /// </summary>
+    Category Category { get; init; }
 
     /// <summary>
     /// Gets set of group operations that the Grafana function allows.

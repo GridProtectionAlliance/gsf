@@ -33,6 +33,9 @@ public abstract class ExcludeRange<T> : GrafanaFunctionBase<T> where T : struct,
     public override string[] Aliases => new[] { "Exclude" };
 
     /// <inheritdoc />
+    public override ReturnType ReturnType => ReturnType.Series;
+
+    /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>
     {
         new ParameterDefinition<double>

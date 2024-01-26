@@ -31,6 +31,9 @@ public abstract class First<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     public override string Description => "Returns a series of N, or N% of total, values from the start of the source series.";
 
     /// <inheritdoc />
+    public override ReturnType ReturnType => ReturnType.Series;
+
+    /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>
     {
         new ParameterDefinition<string>

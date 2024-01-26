@@ -124,12 +124,15 @@ internal static class FunctionParsing
 
                 foreach (Type type in implementationTypes.Where(type => type.GetConstructor(Type.EmptyTypes) is not null))
                 {
-                    Type functionType = checkNestedType(type);
+                    (Type functionType, bool builtIn) = checkNestedType(type);
 
                     if (functionType is null)
                         continue;
 
-                    functions.Add((IGrafanaFunction)Activator.CreateInstance(functionType));
+                    IGrafanaFunction function = (IGrafanaFunction)Activator.CreateInstance(functionType);
+                    functionType.GetProperty(nameof(IGrafanaFunction.Category))?.SetValue(function, builtIn ? Category.BuiltIn : Category.Custom);
+
+                    functions.Add(function);
                 }
 
                 Interlocked.Exchange(ref s_grafanaFunctions, functions.ToArray());
@@ -142,18 +145,19 @@ internal static class FunctionParsing
                 s_log.Publish(MessageLevel.Error, EventName, $"Failed while loading {nameof(IGrafanaFunction)} types: {ex.Message}", exception: ex);
             }
 
-
             return s_grafanaFunctions;
         }
 
         // Check for Grafana functions nested within abstract base class definition - 'BuiltIn' pattern
-        static Type checkNestedType(Type type)
+        static (Type functionType, bool builtIn) checkNestedType(Type type)
         {
+            const string BuiltInNamespace = $"{nameof(GrafanaAdapters)}.{nameof(Functions)}.{nameof(BuiltIn)}";
+
             if (!type.ContainsGenericParameters)
-                return type;
+                return (type, false);
 
             if (!type.IsNested || !type.DeclaringType!.IsGenericType)
-                return null;
+                return (null, false);
 
             // Must contain at least one generic argument because IsGenericType is true
             Type[] constraints = type.DeclaringType.GetGenericArguments()[0].GetGenericParameterConstraints();
@@ -161,7 +165,8 @@ internal static class FunctionParsing
             // Look for any constraint based on IDataSourceValue, if found, assign a specific
             // type (any is fine) to generic parent class so nested type can be constructed
             return constraints.Any(constraint => constraint.GetInterfaces().Any(interfaceType => interfaceType == typeof(IDataSourceValue))) ?
-                type.MakeGenericType(typeof(DataSourceValue)) : null;
+                (type.MakeGenericType(typeof(DataSourceValue)), type.Namespace?.Equals(BuiltInNamespace) ?? false ) : 
+                (null, false);
         }
     }
 

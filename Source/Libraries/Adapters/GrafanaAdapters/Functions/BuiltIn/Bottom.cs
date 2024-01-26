@@ -37,6 +37,9 @@ public abstract class Bottom<T> : GrafanaFunctionBase<T> where T : struct, IData
     public override string[] Aliases => new[] { "Bot", "Smallest" };
 
     /// <inheritdoc />
+    public override ReturnType ReturnType => ReturnType.Series;
+
+    /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>
     {
         new ParameterDefinition<string>

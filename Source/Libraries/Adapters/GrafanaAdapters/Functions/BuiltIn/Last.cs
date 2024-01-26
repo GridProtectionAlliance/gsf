@@ -31,6 +31,9 @@ public abstract class Last<T> : GrafanaFunctionBase<T> where T : struct, IDataSo
     public override string Description => "Returns a series of N, or N% of total, values from the end of the source series.";
 
     /// <inheritdoc />
+    public override ReturnType ReturnType => ReturnType.Series;
+
+    /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>
     {
         new ParameterDefinition<string>

@@ -48,6 +48,12 @@ public abstract class GrafanaFunctionBase<T> : IGrafanaFunction<T> where T : str
     public virtual string[] Aliases => null;
 
     /// <inheritdoc />
+    public abstract ReturnType ReturnType { get; }
+
+    /// <inheritdoc />
+    public Category Category { get; init; }
+
+    /// <inheritdoc />
     public virtual GroupOperations AllowedGroupOperations => Common.DefaultGroupOperations;
 
     /// <inheritdoc />

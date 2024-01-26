@@ -37,6 +37,9 @@ public abstract class Random<T> : GrafanaFunctionBase<T> where T : struct, IData
     public override string[] Aliases => new[] { "Rand", "Sample" };
 
     /// <inheritdoc />
+    public override ReturnType ReturnType => ReturnType.Series;
+
+    /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>
     {
         new ParameterDefinition<string>

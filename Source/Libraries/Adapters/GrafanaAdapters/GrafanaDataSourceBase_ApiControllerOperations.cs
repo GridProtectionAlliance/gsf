@@ -223,6 +223,8 @@ partial class GrafanaDataSourceBase
                             name = formatFunctionName(),
                             description = function.Description,
                             aliases = function.Aliases,
+                            returnType = function.ReturnType.ToString(),
+                            category = function.Category.ToString(),
                             allowedGroupOperations = function.AllowedGroupOperations.ToString(),
                             publishedGroupOperations = function.PublishedGroupOperations.ToString(),
                             parameters = definitions.Where(published).Select(parameter => new ParameterDescription

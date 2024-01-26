@@ -28,6 +28,9 @@ public abstract class Truncate<T> : GrafanaFunctionBase<T> where T : struct, IDa
     public override string[] Aliases => new[] { "Trunc" };
 
     /// <inheritdoc />
+    public override ReturnType ReturnType => ReturnType.Series;
+
+    /// <inheritdoc />
     // Hiding slice operation since result matrix would be the same when tolerance matches data rate
     public override GroupOperations PublishedGroupOperations => GroupOperations.None | GroupOperations.Set;
 

@@ -58,6 +58,9 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
     public override string[] Aliases => new[] { "Eval" };
 
     /// <inheritdoc />
+    public override ReturnType ReturnType => ReturnType.Scalar;
+
+    /// <inheritdoc />
     public override GroupOperations AllowedGroupOperations => GroupOperations.Slice;
 
     /// <inheritdoc />

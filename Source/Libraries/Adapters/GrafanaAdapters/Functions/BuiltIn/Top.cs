@@ -37,6 +37,9 @@ public abstract class Top<T> : GrafanaFunctionBase<T> where T : struct, IDataSou
     public override string[] Aliases => new[] { "Largest" };
 
     /// <inheritdoc />
+    public override ReturnType ReturnType => ReturnType.Series;
+
+    /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>
     {
         new ParameterDefinition<string>

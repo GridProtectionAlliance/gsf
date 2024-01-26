@@ -36,6 +36,9 @@ public abstract class TimeIntegration<T> : GrafanaFunctionBase<T> where T : stru
     public override string[] Aliases => new[] { "TimeInt" };
 
     /// <inheritdoc />
+    public override ReturnType ReturnType => ReturnType.Scalar;
+
+    /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>
     {
         new ParameterDefinition<TargetTimeUnit>

@@ -41,6 +41,9 @@ public abstract class Label<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     public override string[] Aliases => new[] { "Name" };
 
     /// <inheritdoc />
+    public override ReturnType ReturnType => ReturnType.Series;
+
+    /// <inheritdoc />
     public override GroupOperations AllowedGroupOperations => GroupOperations.None;
 
     /// <inheritdoc />

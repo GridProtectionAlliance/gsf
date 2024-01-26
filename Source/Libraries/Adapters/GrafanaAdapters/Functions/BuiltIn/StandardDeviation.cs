@@ -33,6 +33,9 @@ public abstract class StandardDeviation<T> : GrafanaFunctionBase<T> where T : st
     public override string[] Aliases => new[] { "StdDev" };
 
     /// <inheritdoc />
+    public override ReturnType ReturnType => ReturnType.Scalar;
+
+    /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>
     {
         new ParameterDefinition<bool>

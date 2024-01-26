@@ -27,6 +27,9 @@ public abstract class Shift<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     public override string Description => "Returns a series of values that represent each of the values in the source series shifted by N.";
 
     /// <inheritdoc />
+    public override ReturnType ReturnType => ReturnType.Series;
+
+    /// <inheritdoc />
     // Hiding slice operation since result matrix would be the same when tolerance matches data rate
     public override GroupOperations PublishedGroupOperations => GroupOperations.None | GroupOperations.Set;
 

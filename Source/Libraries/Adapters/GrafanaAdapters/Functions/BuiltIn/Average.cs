@@ -30,6 +30,9 @@ public abstract class Average<T> : GrafanaFunctionBase<T> where T : struct, IDat
     public override string[] Aliases => new[] { "Avg", "Mean" };
 
     /// <inheritdoc />
+    public override ReturnType ReturnType => ReturnType.Scalar;
+
+    /// <inheritdoc />
     public class ComputeDataSourceValue : Average<DataSourceValue>
     {
         /// <inheritdoc />

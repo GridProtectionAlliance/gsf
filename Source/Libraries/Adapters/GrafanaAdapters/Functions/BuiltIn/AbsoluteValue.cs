@@ -28,6 +28,9 @@ public abstract class AbsoluteValue<T> : GrafanaFunctionBase<T> where T : struct
     public override string[] Aliases => new[] { "Abs" };
 
     /// <inheritdoc />
+    public override ReturnType ReturnType => ReturnType.Series;
+
+    /// <inheritdoc />
     // Hiding slice operation since result matrix would be the same when tolerance matches data rate
     public override GroupOperations PublishedGroupOperations => GroupOperations.None | GroupOperations.Set;
 

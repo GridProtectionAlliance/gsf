@@ -32,6 +32,9 @@ public abstract class Percentile<T> : GrafanaFunctionBase<T> where T : struct, I
     public override string[] Aliases => new[] { "Pctl" };
 
     /// <inheritdoc />
+    public override ReturnType ReturnType => ReturnType.Scalar;
+
+    /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>
     {
         new ParameterDefinition<string>
