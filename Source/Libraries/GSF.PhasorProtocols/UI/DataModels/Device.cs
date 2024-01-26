@@ -314,7 +314,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// Gets or sets <see cref="Device"/> Longitude.
         /// </summary>
         // Because of database design, no validation attributes are applied.        
-        [RegularExpression(@"^[-]?([0-9]{1,3})?([.][0-9]{1,6})?$", ErrorMessage = "Invalid value. Please provide value in decimal(9,6) format.")]
+        [RegularExpression(@"^[-]?([0-9]{1,3})?([.,][0-9]{1,6})?$", ErrorMessage = "Invalid value. Please provide value in decimal(9,6) format.")]
         public decimal? Longitude
         {
             get => m_longitude;
@@ -329,7 +329,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// Gets or sets <see cref="Device"/> Latitude.
         /// </summary>
         // Because of database design, no validation attributes are applied.        
-        [RegularExpression(@"^[-]?([0-9]{1,3})?([.][0-9]{1,6})?$", ErrorMessage = "Invalid value. Please provide value in decimal(9,6) format.")]
+        [RegularExpression(@"^[-]?([0-9]{1,3})?([.,][0-9]{1,6})?$", ErrorMessage = "Invalid value. Please provide value in decimal(9,6) format.")]
         public decimal? Latitude
         {
             get => m_latitude;
