@@ -21,7 +21,6 @@
 //
 //******************************************************************************************************
 
-using GrafanaAdapters.Functions;
 using GrafanaAdapters.Metadata;
 using GSF;
 using GSF.Collections;
@@ -33,7 +32,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
-using Common = GrafanaAdapters.Functions.Common;
 
 namespace GrafanaAdapters.DataSources.BuiltIn;
 
@@ -222,11 +220,6 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
             });
         }
     }
-
-    /// <inheritdoc />
-    public readonly ParameterDefinition<IAsyncEnumerable<PhasorValue>> DataSourceValuesParameterDefinition => s_dataSourceValuesParameterDefinition;
-
-    private static readonly ParameterDefinition<IAsyncEnumerable<PhasorValue>> s_dataSourceValuesParameterDefinition = Common.DataSourceValuesParameterDefinition<PhasorValue>();
 
     /// <summary>
     /// Gets the type index for <see cref="PhasorValue"/>.

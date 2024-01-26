@@ -62,7 +62,7 @@ public class ParameterDefinitions : IReadOnlyList<IParameter>
             Add(parameter);
 
         // Data source parameter is always the last parameter
-        Add(Common.DataSourceValuesParameterDefinition<IDataSourceValue>());
+        Add(ParameterDefinitions<IDataSourceValue>.DataSourceValues);
     }
 
     private void Add(IParameter parameter)
@@ -162,4 +162,16 @@ public class ParameterDefinitions : IReadOnlyList<IParameter>
     // Gets parameter definitions with inserted slice parameter
     internal IReadOnlyList<IParameter> WithRequiredSliceParameter =>
         new List<IParameter>(this).InsertRequiredSliceParameter();
+}
+
+internal static class ParameterDefinitions<T>
+{
+    // This generates a standard data source values parameter definition - this is always the last parameter
+    public static ParameterDefinition<IAsyncEnumerable<T>> DataSourceValues = new()
+    {
+        Name = "expression",
+        Default = AsyncEnumerable.Empty<T>(),
+        Description = "Target expression that produces a series of values representing input data for the function",
+        Required = true
+    };
 }

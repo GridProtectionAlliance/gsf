@@ -21,7 +21,6 @@
 //
 //******************************************************************************************************
 
-using GrafanaAdapters.Functions;
 using GrafanaAdapters.Metadata;
 using GSF.TimeSeries;
 using System;
@@ -146,11 +145,6 @@ public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
     {
         timeValueMap[dataValue.Time] = dataValue;
     }
-
-    /// <inheritdoc />
-    public readonly ParameterDefinition<IAsyncEnumerable<DataSourceValue>> DataSourceValuesParameterDefinition => s_dataSourceValuesParameterDefinition;
-
-    private static readonly ParameterDefinition<IAsyncEnumerable<DataSourceValue>> s_dataSourceValuesParameterDefinition = Common.DataSourceValuesParameterDefinition<DataSourceValue>();
 
     /// <summary>
     /// Gets the type index for <see cref="DataSourceValue"/>.

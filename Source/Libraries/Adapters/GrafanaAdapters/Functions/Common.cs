@@ -31,28 +31,18 @@ internal static class Common
 {
     public const GroupOperations DefaultGroupOperations = GroupOperations.None | GroupOperations.Slice | GroupOperations.Set;
 
-    // This generates a standard data source values parameter definition - this is always the last parameter
-    public static ParameterDefinition<IAsyncEnumerable<T>> DataSourceValuesParameterDefinition<T>()
+    // Default slice tolerance parameter
+    public static readonly ParameterDefinition<double> DefaultSliceTolerance = new()
     {
-        return new ParameterDefinition<IAsyncEnumerable<T>>()
-        {
-            Name = "expression",
-            Default = AsyncEnumerable.Empty<T>(),
-            Description = "Target expression that produces a series of values representing input data for the function",
-            Required = true
-        };
-    }
+        Name = "sliceTolerance",
+        Default = 1.0D,
+        Description = "A floating-point value that must be greater than or equal to zero that represents the desired time tolerance, in seconds, for the time slice",
+        Required = true
+    };
 
     public static List<IParameter> InsertRequiredSliceParameter(this List<IParameter> parameters)
     {
-        parameters.Insert(0, new ParameterDefinition<double>()
-        {
-            Name = "sliceTolerance",
-            Default = 0.0333D,
-            Description = "A floating-point value that must be greater than or equal to zero that represents the desired time tolerance, in seconds, for the time slice",
-            Required = true
-        });
-
+        parameters.Insert(0, DefaultSliceTolerance);
         return parameters;
     }
 

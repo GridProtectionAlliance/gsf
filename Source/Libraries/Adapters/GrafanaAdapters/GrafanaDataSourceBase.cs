@@ -22,6 +22,7 @@
 //******************************************************************************************************
 // ReSharper disable AccessToModifiedClosure
 // ReSharper disable StaticMemberInGenericType
+// ReSharper disable PossibleMultipleEnumeration
 
 using GrafanaAdapters.DataSources;
 using GrafanaAdapters.DataSources.BuiltIn;
@@ -390,9 +391,7 @@ public abstract partial class GrafanaDataSourceBase
             }
             case GroupOperations.Slice:
             {
-                if (!double.TryParse(parsedParameters[0], out double tolerance))
-                    throw new InvalidOperationException($"Invalid slice interval specified for {function.Name} function.");
-
+                double tolerance = await ParseSliceToleranceAsync(function.Name, parsedParameters[0], queryParameters.SourceTarget.target, dataset, metadata, cancellationToken).ConfigureAwait(false);
                 TimeSliceScannerAsync<T> scanner = await TimeSliceScannerAsync<T>.Create(dataset, tolerance / SI.Milli, cancellationToken).ConfigureAwait(false);
 
                 async IAsyncEnumerable<T> computeSliceSeriesAsync()
@@ -403,7 +402,7 @@ public abstract partial class GrafanaDataSourceBase
                     {
                         IAsyncEnumerable<T> dataSourceValues = await scanner.ReadNextTimeSliceAsync().ConfigureAwait(false);
                         Dictionary<string, string> metadataMap = metadata.GetMetadataMap<T>(queryExpression, queryParameters);
-                        Parameters parameters = await function.GenerateParametersAsync(normalizedParameters, dataSourceValues, queryExpression, metadata, metadataMap, cancellationToken).ConfigureAwait(false);
+                        Parameters parameters = await function.GenerateParametersAsync(normalizedParameters, dataSourceValues, null, metadata, metadataMap, cancellationToken).ConfigureAwait(false);
 
                         await foreach (T dataValue in function.ComputeSliceAsync(parameters, cancellationToken).ConfigureAwait(false))
                             yield return dataValue;
@@ -420,7 +419,7 @@ public abstract partial class GrafanaDataSourceBase
                     RefID = queryParameters.SourceTarget.refID,
                     MetadataMap = metadata.GetMetadataMap<T>(queryExpression, queryParameters)
                 };
-
+                  
                 break;
             }
             case GroupOperations.Set:
@@ -428,7 +427,7 @@ public abstract partial class GrafanaDataSourceBase
                 // Flatten all series into a single enumerable
                 IAsyncEnumerable<T> dataSourceValues = dataset.SelectMany(source => source.Source);
                 MetadataMap metadataMap = metadata.GetMetadataMap<T>(queryExpression, queryParameters);
-                Parameters parameters = await function.GenerateParametersAsync(parsedParameters, dataSourceValues, queryExpression, metadata, metadataMap, cancellationToken).ConfigureAwait(false);
+                Parameters parameters = await function.GenerateParametersAsync(parsedParameters, dataSourceValues, null, metadata, metadataMap, cancellationToken).ConfigureAwait(false);
 
                 DataSourceValueGroup<T> valueGroup = new()
                 {
@@ -554,6 +553,27 @@ public abstract partial class GrafanaDataSourceBase
 
             return (dropEmptySeries, includePeaks, fullResolutionQuery, imports, radialDistribution, expression);
         });
+    }
+
+    private static async ValueTask<double> ParseSliceToleranceAsync<T>(string functionName, string value, string target, IAsyncEnumerable<DataSourceValueGroup<T>> dataset, DataSet metadata, CancellationToken cancellationToken) where T : struct, IDataSourceValue<T>
+    {
+        if (double.TryParse(value, out double result))
+            return result;
+        
+        try
+        {
+            // Try standard parameter parsing if simple double parse fails
+            IMutableParameter<double> sliceToleranceParameter = Common.DefaultSliceTolerance.CreateParameter();
+            IAsyncEnumerable<T> dataSourceValues = (await dataset.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false)).Source;
+            
+            await sliceToleranceParameter.ConvertParsedValueAsync(value, target, dataSourceValues, metadata, null, cancellationToken).ConfigureAwait(false);
+            
+            return sliceToleranceParameter.Value;
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Invalid slice interval specified for {functionName} function. Exception: {ex.Message}", ex);
+        }
     }
 
     // Query command regular expressions include a semi-colon prefix to help prevent possible name matches that may occur on other expressions

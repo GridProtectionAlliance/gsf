@@ -22,7 +22,6 @@
 //******************************************************************************************************
 
 using GrafanaAdapters.DataSources.BuiltIn;
-using GrafanaAdapters.Functions;
 using GSF.TimeSeries;
 using System;
 using System.Collections.Generic;
@@ -204,11 +203,6 @@ public interface IDataSourceValue<T> : IDataSourceValue, IComparable<T>, IEquata
     /// per each field in the data source value for a given timestamp.
     /// </remarks>
     void AssignToTimeValueMap(string pointTag, DataSourceValue dataValue, SortedList<double, T> timeValueMap, DataSet metadata);
-
-    /// <summary>
-    /// Gets the parameter definition for data source values.
-    /// </summary>
-    ParameterDefinition<IAsyncEnumerable<T>> DataSourceValuesParameterDefinition { get; }
 
     /// <summary>
     /// Executes provided function for data source fields, applying the results

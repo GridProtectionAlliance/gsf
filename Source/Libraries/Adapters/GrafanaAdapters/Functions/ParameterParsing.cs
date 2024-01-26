@@ -154,6 +154,10 @@ internal static class ParameterParsing
     /// <param name="metadataMap">Metadata map.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>List of value mutable parameters from parsed parameters.</returns>
+    /// <remarks>
+    /// In case user has requested metadata as a parameter, pass in the root target
+    /// which has a higher chance of being resolved for associated metadata.
+    /// </remarks>
     public static async ValueTask<Parameters> GenerateParametersAsync<TDataSourceValue>(this IGrafanaFunction<TDataSourceValue> function, string[] parsedParameters, IAsyncEnumerable<TDataSourceValue> dataSourceValues, string rootTarget, DataSet metadata, Dictionary<string, string> metadataMap, CancellationToken cancellationToken) where TDataSourceValue : struct, IDataSourceValue<TDataSourceValue>
     {
         // Generate a list of value mutable parameters
@@ -176,7 +180,7 @@ internal static class ParameterParsing
                 Debug.Assert(parameter is IParameter<IAsyncEnumerable<IDataSourceValue>>, $"Last parameter is not a data source value of type '{typeof(IAsyncEnumerable<IDataSourceValue>).Name}'.");
 
                 // Replace last parameter with data source type specific parameter with associated values
-                parameters[i] = new Parameter<IAsyncEnumerable<TDataSourceValue>>(default(TDataSourceValue).DataSourceValuesParameterDefinition)
+                parameters[i] = new Parameter<IAsyncEnumerable<TDataSourceValue>>(ParameterDefinitions<TDataSourceValue>.DataSourceValues)
                 {
                     Value = dataSourceValues
                 };
@@ -186,7 +190,7 @@ internal static class ParameterParsing
 
             // Parameter
             if (index < parsedParameters.Length)
-                await parameter.ConvertParsedValueAsync(parsedParameters[index++], rootTarget, dataSourceValues, metadata, metadataMap, cancellationToken).ConfigureAwait(false);
+                await parameter.ConvertParsedValueAsync(parsedParameters[index++].Trim(), rootTarget, dataSourceValues, metadata, metadataMap, cancellationToken).ConfigureAwait(false);
 
         #if DEBUG
             // Required parameters were already validated in ParseParameters - this is a sanity check
@@ -235,10 +239,20 @@ internal static class ParameterParsing
         {
             value = value.Substring(1, value.Length - 2);
 
-            (string value, bool success) lookup = LookupMetadata<TDataSourceValue>(value, target, metadata, metadataMap);
+            if (target is null)
+            {
+                // When no target is specified, attempt to use the target from first data source value
+                TDataSourceValue firstValue = await dataSourceValues.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+                target = firstValue.Target;
+            }
 
-            if (lookup.success)
-                value = lookup.value;
+            if (!string.IsNullOrWhiteSpace(target))
+            {
+                (string value, bool success) lookup = LookupMetadata<TDataSourceValue>(value, target, metadata, metadataMap);
+
+                if (lookup.success)
+                    value = lookup.value;
+            }
         }
 
         object result = null;
@@ -347,20 +361,29 @@ internal static class ParameterParsing
         parameter.Value = result ?? parameter.Default;
     }
 
-    private static (string value, bool success) LookupMetadata<TDataSourceValue>(string value, string target, DataSet metadata, Dictionary<string, string> metadataMap) where TDataSourceValue : struct, IDataSourceValue
+    private static (string value, bool success) LookupMetadata<TDataSourceValue>(string value, string target, DataSet metadata, MetadataMap metadataMap) where TDataSourceValue : struct, IDataSourceValue
     {
-        // Attempt to value find in dictionary
-        if (metadataMap.TryGetValue(value, out string metadataValue))
-            return (metadataValue, true);
+        // Attempt to value find in metadata map - if metadata map has the value,
+        // this will be faster as the value will have already been looked up
+        if (metadataMap is not null)
+        {
+            if (metadataMap.TryGetValue(value, out string metadataValue))
+                return string.IsNullOrEmpty(metadataValue) ?
+                    (default, false) :
+                    (metadataValue, true);
+        }
 
+        // Otherwise, attempt manual lookup of target in metadata
         (string tableName, string fieldName) = value.ParseAsTableAndField<TDataSourceValue>();
-
-        // Attempt to lookup target in metadata
         DataRow record = default(TDataSourceValue).LookupMetadata(metadata, tableName, target);
 
         if (record is null || !record.Table.Columns.Contains(fieldName))
             return (default, false);
 
-        return (record[fieldName].ToString(), true);
+        string fieldValue = record[fieldName]?.ToString();
+
+        return string.IsNullOrEmpty(fieldValue) ? 
+            (default, false) : 
+            (fieldValue, true);
     }
 }
