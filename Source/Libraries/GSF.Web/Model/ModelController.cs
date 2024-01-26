@@ -822,7 +822,7 @@ namespace GSF.Web.Model
                 }
 
                 if (param.Count() > 0)
-                    return connection.RetrieveData(sql, param);
+                    return connection.RetrieveData(sql, param.ToArray());
                 return connection.RetrieveData(sql,"");
             }
         }
