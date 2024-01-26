@@ -72,7 +72,7 @@ public abstract class Interval<T> : GrafanaFunctionBase<T> where T : struct, IDa
         {
             if (lastTime > 0.0D)
             {
-                if (dataValue.Time - lastTime > valueN)
+                if (dataValue.Time - lastTime >= valueN)
                 {
                     lastTime = dataValue.Time;
                     yield return dataValue;
