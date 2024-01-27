@@ -63,7 +63,8 @@ public abstract class StandardDeviation<T> : GrafanaFunctionBase<T> where T : st
             });
 
             // Immediately enumerate to array to compute values
-            double stdDev = (await trackedValues.ToArrayAsync(cancellationToken).ConfigureAwait(false)).StandardDeviation(useSampleCalc);
+            double[] values = await trackedValues.ToArrayAsync(cancellationToken).ConfigureAwait(false);
+            double stdDev = values.Length > 0 ? values.StandardDeviation(useSampleCalc) : double.NaN;
 
             // Return computed results
             if (lastValue.Time > 0.0D)

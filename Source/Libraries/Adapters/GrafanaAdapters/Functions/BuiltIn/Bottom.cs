@@ -40,7 +40,7 @@ public abstract class Bottom<T> : GrafanaFunctionBase<T> where T : struct, IData
     public override ReturnType ReturnType => ReturnType.Series;
 
     /// <inheritdoc />
-    public override ResultsLength ResultsLength => ResultsLength.Reduced;
+    public override bool IsSliceSeriesEquivalent => false;
 
     /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>

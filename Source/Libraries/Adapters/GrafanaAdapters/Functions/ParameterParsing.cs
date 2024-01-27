@@ -67,7 +67,7 @@ internal static class ParameterParsing
             (List<string> parsedParameters, string updatedQueryExpression) = function.ParseParameters(queryParameters, queryExpression);
 
             if (parsedParameters is not null)
-                return (parsedParameters.ToArray(), updatedQueryExpression);
+                return (parsedParameters.Select(parameter => parameter.Trim()).ToArray(), updatedQueryExpression);
 
             parsedParameters = new List<string>();
 
@@ -133,7 +133,7 @@ internal static class ParameterParsing
                 }
             }
 
-            return (parsedParameters.ToArray(), queryExpression);
+            return (parsedParameters.Select(parameter => parameter.Trim()).ToArray(), queryExpression);
         });
 
         static bool hasSubExpression(string target)

@@ -31,7 +31,7 @@ public abstract class Distinct<T> : GrafanaFunctionBase<T> where T : struct, IDa
     public override ReturnType ReturnType => ReturnType.Series;
 
     /// <inheritdoc />
-    public override ResultsLength ResultsLength => ResultsLength.Reduced;
+    public override bool IsSliceSeriesEquivalent => false;
 
     /// <inheritdoc />
     public override IAsyncEnumerable<T> ComputeAsync(Parameters parameters, CancellationToken cancellationToken)

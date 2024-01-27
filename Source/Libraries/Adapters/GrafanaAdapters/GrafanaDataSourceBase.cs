@@ -394,7 +394,7 @@ public abstract partial class GrafanaDataSourceBase
                 double tolerance = await ParseSliceToleranceAsync(function.Name, parsedParameters[0], queryParameters.SourceTarget.target, dataset, metadata, cancellationToken).ConfigureAwait(false);
                 TimeSliceScannerAsync<T> scanner = await TimeSliceScannerAsync<T>.Create(dataset, tolerance / SI.Milli, cancellationToken).ConfigureAwait(false);
 
-                async IAsyncEnumerable<T> computeSliceSeriesAsync()
+                async IAsyncEnumerable<T> computeSliceAsync()
                 {
                     string[] normalizedParameters = parsedParameters.Skip(1).ToArray();
 
@@ -409,17 +409,53 @@ public abstract partial class GrafanaDataSourceBase
                     }
                 }
 
-                yield return new DataSourceValueGroup<T>
+                if (function.ReturnType == ReturnType.Scalar)
                 {
-                    Target = function.FormatTargetName(groupOperation, queryExpression, parsedParameters),
-                    RootTarget = queryExpression,
-                    SourceTarget = queryParameters.SourceTarget,
-                    Source = computeSliceSeriesAsync(),
-                    DropEmptySeries = queryParameters.DropEmptySeries,
-                    RefID = queryParameters.SourceTarget.refID,
-                    MetadataMap = metadata.GetMetadataMap<T>(queryExpression, queryParameters)
-                };
-                  
+                    // If function yields a scalar value, then we return a single value group with the computed value
+                    yield return new DataSourceValueGroup<T>
+                    {
+                        Target = function.FormatTargetName(groupOperation, queryExpression, parsedParameters),
+                        RootTarget = queryExpression,
+                        SourceTarget = queryParameters.SourceTarget,
+                        Source = computeSliceAsync(),
+                        DropEmptySeries = queryParameters.DropEmptySeries,
+                        RefID = queryParameters.SourceTarget.refID,
+                        MetadataMap = metadata.GetMetadataMap<T>(queryExpression, queryParameters)
+                    };
+                }
+                else
+                {
+                    // Otherwise, function returns a series, so we need to return value groups by target
+                    async IAsyncEnumerable<DataSourceValueGroup<T>> computeSliceByTargetsAsync()
+                    {
+                        await foreach (IAsyncGrouping<string, T> valueGroup in computeSliceAsync().GroupBy(dataValue => dataValue.Target).WithCancellation(cancellationToken).ConfigureAwait(false))
+                        {
+                            yield return new DataSourceValueGroup<T>
+                            {
+                                Target = valueGroup.Key,
+                                RootTarget = valueGroup.Key,
+                                Source = valueGroup
+                            };
+                        }
+                    }
+
+                    await foreach (DataSourceValueGroup<T> valueGroup in computeSliceByTargetsAsync().ConfigureAwait(false))
+                    {
+                        string rootTarget = valueGroup.RootTarget ?? valueGroup.Target;
+
+                        yield return new DataSourceValueGroup<T>
+                        {
+                            Target = function.FormatTargetName(groupOperation, rootTarget, parsedParameters),
+                            RootTarget = rootTarget,
+                            SourceTarget = queryParameters.SourceTarget,
+                            Source = valueGroup.Source,
+                            DropEmptySeries = queryParameters.DropEmptySeries,
+                            RefID = queryParameters.SourceTarget.refID,
+                            MetadataMap = metadata.GetMetadataMap<T>(rootTarget, queryParameters)
+                        };
+                    }
+                }
+
                 break;
             }
             case GroupOperations.Set:

@@ -1,7 +1,6 @@
 ﻿using GrafanaAdapters.DataSources;
 using GrafanaAdapters.DataSources.BuiltIn;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -39,19 +38,25 @@ public abstract class Average<T> : GrafanaFunctionBase<T> where T : struct, IDat
         public override async IAsyncEnumerable<DataSourceValue> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             DataSourceValue lastValue = default;
+            double total = 0.0D;
+            int count = 0;
 
-            IAsyncEnumerable<double> trackedValues = GetDataSourceValues(parameters).Select(dataValue =>
+            // Immediately enumerate to compute values enumerating data source once
+            await foreach (DataSourceValue dataValue in GetDataSourceValues(parameters).WithCancellation(cancellationToken).ConfigureAwait(false))
             {
                 lastValue = dataValue;
-                return dataValue.Value;
-            });
-
-            // Immediately enumerate to compute values
-            double average = await trackedValues.AverageAsync(cancellationToken).ConfigureAwait(false);
+                total += dataValue.Value;
+                count++;
+            }
 
             // Return computed results
             if (lastValue.Time > 0.0D)
-                yield return lastValue with { Value = average };
+            {
+                yield return lastValue with
+                {
+                    Value = total / count,
+                };
+            }
         }
     }
 

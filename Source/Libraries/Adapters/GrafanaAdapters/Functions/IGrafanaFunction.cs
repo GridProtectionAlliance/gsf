@@ -69,44 +69,6 @@ public enum ReturnType
 }
 
 /// <summary>
-/// Represents the number of expected results for a Grafana function.
-/// </summary>
-/// <remarks>
-/// <para>
-/// For slice operations on a function that returns <see cref="ReturnType.Series"/> and produces
-/// the same number of outputs as inputs, it has the same result matrix as a standard operation.
-/// </para>
-/// <para>
-/// Any slice operation on a function that returns a series and produces the same number of series
-/// outputs as inputs is equivalent to its non-slice operation using the <see cref="Interval{T}"/>
-/// function over the same expression, for example, the following queries are equivalent:
-/// <list type="bullet">
-///     <item>
-///        <c>SliceShift(0.02, 1, FILTER TOP 10 ActiveMeasurements WHERE SignalType='FREQ')</c> -- <i>and</i> --<br/>
-///        <c>Shift(1, Interval(0.02, FILTER TOP 10 ActiveMeasurements WHERE SignalType='FREQ'))</c>
-///     </item>
-///     <item>
-///         <c>SliceRound(0.0333, 3, ACME-STAR:FREQ; ACME-PLUS:FREQ)</c> -- <i>and</i> --<br/>
-///         <c>Round(3, Interval(0.0333, ACME-STAR:FREQ; ACME-PLUS:FREQ))</c>
-///     </item>
-/// </list>
-/// As a result, slice operations that return the same number of outputs as inputs are replaced
-/// with the equivalent non-slice operation and an <see cref="Interval{T}"/> function.
-/// </para>
-/// </remarks>
-public enum ResultsLength
-{
-    /// <summary>
-    /// Function produces the same number of outputs as inputs. This is the default behavior.
-    /// </summary>
-    Equivalent,
-    /// <summary>
-    /// Function can return less outputs than inputs.
-    /// </summary>
-    Reduced
-}
-
-/// <summary>
 /// Represents a Grafana function category.
 /// </summary>
 public enum Category
@@ -142,18 +104,69 @@ public interface IGrafanaFunction
     string[] Aliases { get; }
 
     /// <summary>
-    /// Gets the return type of the Grafana function.
+    /// Gets the return type of the Grafana function, i.e., scalar or series.
     /// </summary>
     ReturnType ReturnType { get; }
 
     /// <summary>
-    /// Gets the expected results length for the Grafana function.
+    /// Gets or sets a flag indicating whether the function behaves equivalently when processed as a series or as a
+    /// slice. Value defaults to <c>true</c> for functions that return a series of values, i.e., the return type is
+    /// <see cref="ReturnType.Series"/> and the <see cref="AllowedGroupOperations"/> includes the flag for
+    /// <see cref="GroupOperations.Slice"/> operations; otherwise, value defaults to <c>false</c> when the return
+    /// type is a scalar value, i.e., <see cref="ReturnType.Scalar"/>.
     /// </summary>
-    ResultsLength ResultsLength { get; }
+    /// <remarks>
+    /// <para>
+    /// When set to <c>true</c>, property indicates that the function, when dealing with time series data, produces
+    /// the same result matrix whether processed horizontally (series-by-series) or vertically (slice-by-slice).
+    /// This is typically applicable to functions that return a series of values and are designed to operate across
+    /// time-aligned data series.
+    /// </para>
+    /// <para>
+    /// Setting this property to <c>true</c> enables certain optimizations. For instance, the system can bypass
+    /// slice-mode processing and use standard series processing instead, as both approaches yield equivalent results.
+    /// This can lead to performance improvements, especially in data-intensive scenarios.
+    /// </para>
+    /// <para>
+    /// It's important for users defining custom functions to accurately set this property. If the function's output
+    /// does not depend on the specific mode of time series processing (series vs. slice), set this property to
+    /// <c>true</c>. Conversely, if the function yields different results when processed by slice-by-slice as compared
+    /// to when processed series-by-series, or it is a scalar function, this property should be set to <c>false</c>.
+    /// </para>
+    /// <para>
+    /// Incorrectly setting this property may lead to unexpected behavior or suboptimal performance, as the system
+    /// relies on this flag to determine the most efficient processing approach.
+    /// </para>
+    /// <para>
+    /// Internally this function descriptor provides a hint to the Grafana data source adapter on how to handle series
+    /// results for a function. For functions that return a scalar value this property is ignored, but is automatically
+    /// set to <c>false</c> to preserve meaning. For slice operations on functions that return a series of values and
+    /// produce the same result matrix whether processed horizontally or vertically, the slice operation is equivalent
+    /// to its non-slice operation using the <see cref="Interval{T}"/> function over the same expression, for example,
+    /// the following queries are equivalent:
+    /// <list type="bullet">
+    ///     <item>
+    ///        <c>SliceShift(0.02, 1, FILTER TOP 10 ActiveMeasurements WHERE SignalType='FREQ')</c> -- <i>and</i> --<br/>
+    ///        <c>Shift(1, Interval(0.02, FILTER TOP 10 ActiveMeasurements WHERE SignalType='FREQ'))</c>
+    ///     </item>
+    ///     <item>
+    ///         <c>SliceRound(0.0333, 3, ACME-STAR:FREQ; ACME-PLUS:FREQ)</c> -- <i>and</i> --<br/>
+    ///         <c>Round(3, Interval(0.0333, ACME-STAR:FREQ; ACME-PLUS:FREQ))</c>
+    ///     </item>
+    /// </list>
+    /// As a result, slice operations that return a series of values and produce the same result matrix whether processed
+    /// horizontally or vertically, i.e., is slice-series equivalent, are automatically are replaced with the equivalent
+    /// non-slice operation and an <see cref="Interval{T}"/> function as an operational optimization.
+    /// </para>
+    /// </remarks>
+    bool IsSliceSeriesEquivalent { get; }
 
     /// <summary>
-    /// Gets the category of the Grafana function.
+    /// Gets the category of the Grafana function, i.e., built-in or custom.
     /// </summary>
+    /// <remarks>
+    /// This property is automatically assigned by the system.
+    /// </remarks>
     Category Category { get; init; }
 
     /// <summary>
@@ -162,12 +175,11 @@ public interface IGrafanaFunction
     /// <remarks>
     /// Operations that are not allowed should be taken to mean that the use of the group operation for a function is an
     /// error. Implementors should carefully consider which group operations that a function exposes as not allowed since
-    /// when a user selects an group operation that is not allowed, this results in an exception. If the result of a group
-    /// operation results in the same matrix of values as a standard operation, the group operation should continue to be
-    /// supported, but can be hidden from the user by overriding the <see cref="PublishedGroupOperations"/>. Another option
-    /// is to simply ignore a group operation that is not supported by forcing supported operations. This is handled by
-    /// overriding the <see cref="CheckAllowedGroupOperation"/> method. See the <see cref="Label{T}"/> function for an
-    /// example of this.
+    /// when a user selects an group operation that is not allowed, this results in an exception. Groups operations can
+    /// be hidden from the user by overriding the <see cref="PublishedGroupOperations"/>. Additionally, a group operation
+    /// that is not supported can be ignored, instead of throwing an exception, by forcing supported operations. This is
+    /// handled by overriding the <see cref="CheckAllowedGroupOperation"/> method. See <see cref="Label{T}"/> function
+    /// for an example of this.
     /// </remarks>
     GroupOperations AllowedGroupOperations { get; }
 

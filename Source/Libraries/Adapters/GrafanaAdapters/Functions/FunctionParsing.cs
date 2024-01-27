@@ -32,6 +32,7 @@ using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -82,9 +83,9 @@ internal static class FunctionParsing
             // Get the function expression from the regex representing the parameters passed to the function
             string functionExpression = groups["Expression"].Value;
 
-            // Any slice operation on a function that returns a series and produces the same number of series
-            // outputs as inputs is equivalent to its non-slice operation using the 'Interval' function over
-            // the same expression, for example, the following queries are equivalent:
+            // Any slice operation on a function that returns the same result matrix whether processed horizontally, i.e.,
+            // series-by-series, or vertically, i.e., slice-by-slice, is equivalent to its non-slice operation when using
+            // the 'Interval' function over the same expression. For example, the following queries are equivalent:
             //
             //     SliceShift(0.02, 1, FILTER TOP 10 ActiveMeasurements WHERE SignalType='FREQ')
             //     Shift(1, Interval(0.02, FILTER TOP 10 ActiveMeasurements WHERE SignalType='FREQ'))
@@ -92,8 +93,10 @@ internal static class FunctionParsing
             //     SliceRound(0.0333, 3, ACME-STAR:FREQ; ACME-PLUS:FREQ)
             //     Round(3, Interval(0.0333, ACME-STAR:FREQ; ACME-PLUS:FREQ))
             //
-            // As an optimization in this scenario, replace the slice operation with the equivalent interval operation
-            if (groupOperation == GroupOperations.Slice && function.ReturnType == ReturnType.Series && function.ResultsLength == ResultsLength.Equivalent)
+            // As an optimization in this scenario, replace the slice operation with the equivalent interval operation.
+            // Because of this automatic optimization, slice operations meeting this criteria are also hidden from the
+            // 'PublishedGroupOperations' function property, see 'GetGrafanaFunctions' method below.
+            if (groupOperation == GroupOperations.Slice && function.IsSliceSeriesEquivalent)
             {
                 // Parse the function parameters from expression
                 (string[] parsedParameters, string queryExpression) = function.ParseParameters(queryParameters, functionExpression, groupOperation);
@@ -104,7 +107,9 @@ internal static class FunctionParsing
                 // Remaining parameters represent normal non-slice function parameters
                 string[] parameters = parsedParameters.Skip(1).ToArray();
 
-                // Since Regex only matches top-level functions, it is safe to adjust expression that has yet to be parsed
+                // Rearrange expression such that parameters are passed to non-slice version of function and tolerance is
+                // passed to 'Interval' function. Since functions regex only matches top-level functions, it is safe to adjust
+                // the expression in this manner as it has yet to be parsed
                 functionExpression = $"{string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}Interval({tolerance}, {queryExpression})";
                 groupOperation = GroupOperations.None;
             }
@@ -149,25 +154,39 @@ internal static class FunctionParsing
 
                 string grafanaFunctionsPath = FilePath.GetAbsolutePath("").EnsureEnd(Path.DirectorySeparatorChar);
                 List<Type> implementationTypes = typeof(IGrafanaFunction).LoadImplementations(grafanaFunctionsPath, true, false);
-
                 List<IGrafanaFunction> functions = new();
 
                 foreach (Type type in implementationTypes.Where(type => type.GetConstructor(Type.EmptyTypes) is not null))
                 {
-                    (Type functionType, bool builtIn) = checkNestedType(type);
+                    try
+                    {
+                        (Type functionType, bool builtIn) = checkNestedType(type);
 
-                    if (functionType is null)
-                        continue;
+                        if (functionType is null)
+                            continue;
 
-                    IGrafanaFunction function = (IGrafanaFunction)Activator.CreateInstance(functionType);
-                    functionType.GetProperty(nameof(IGrafanaFunction.Category))?.SetValue(function, builtIn ? Category.BuiltIn : Category.Custom);
+                        IGrafanaFunction function = (IGrafanaFunction)Activator.CreateInstance(functionType);
+                        
+                        // Set function category to built-in when function is in the BuiltIn namespace
+                        functionType.GetProperty(nameof(IGrafanaFunction.Category))?.SetValue(function, builtIn ? Category.BuiltIn : Category.Custom);
 
-                    // If function returns an equivalent length series, then slice operations are hidden from 'PublishedGroupOperations'
-                    // as equivalent functionality is provided by the 'Interval' function, see MatchFunctions() method above
-                    if (function.ReturnType == ReturnType.Series && function.ResultsLength == ResultsLength.Equivalent)
-                        functionType.GetProperty(nameof(IGrafanaFunction.PublishedGroupOperations))?.SetValue(function, function.PublishedGroupOperations & ~GroupOperations.Slice);
+                        // If function returns slice-series equivalent results, remove slice from published group operations
+                        if (function.IsSliceSeriesEquivalent)
+                        {
+                            PropertyInfo publishedGroupOperations = functionType.GetProperty(nameof(IGrafanaFunction.PublishedGroupOperations));
 
-                    functions.Add(function);
+                            // Attempt to update GrafanaFunctionBase<T>.PublishedGroupOperations' internal set property to hide 'Slice',
+                            // note that derived classes may have overridden this property with no available set property
+                            if (publishedGroupOperations?.GetSetMethod(true) is not null)
+                                publishedGroupOperations.SetValue(function, function.PublishedGroupOperations & ~GroupOperations.Slice);
+                        }
+
+                        functions.Add(function);
+                    }
+                    catch (Exception ex)
+                    {
+                        s_log.Publish(MessageLevel.Error, EventName, $"Failed while loading {nameof(IGrafanaFunction)} type '{type.FullName}': {ex.Message}", exception: ex);
+                    }
                 }
 
                 Interlocked.Exchange(ref s_grafanaFunctions, functions.ToArray());
@@ -192,7 +211,7 @@ internal static class FunctionParsing
                 return (type, false);
 
             if (!type.IsNested || !type.DeclaringType!.IsGenericType)
-                return (null, false);
+                return (type, false);
 
             // Must contain at least one generic argument because IsGenericType is true
             Type[] constraints = type.DeclaringType.GetGenericArguments()[0].GetGenericParameterConstraints();

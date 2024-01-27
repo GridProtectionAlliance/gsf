@@ -54,10 +54,10 @@ public abstract class GrafanaFunctionBase<T> : IGrafanaFunction<T> where T : str
     public Category Category { get; init; }
 
     /// <inheritdoc />
-    public virtual GroupOperations AllowedGroupOperations => Common.DefaultGroupOperations;
+    public virtual GroupOperations AllowedGroupOperations { get; internal set; } = Common.DefaultGroupOperations;
 
     /// <inheritdoc />
-    public virtual GroupOperations PublishedGroupOperations => Common.DefaultGroupOperations;
+    public virtual GroupOperations PublishedGroupOperations { get; internal set; } = Common.DefaultGroupOperations;
 
     /// <inheritdoc />
     public virtual GroupOperations CheckAllowedGroupOperation(GroupOperations requestedOperation)
@@ -74,7 +74,7 @@ public abstract class GrafanaFunctionBase<T> : IGrafanaFunction<T> where T : str
     }
 
     /// <inheritdoc />
-    public virtual ResultsLength ResultsLength => ResultsLength.Equivalent;
+    public virtual bool IsSliceSeriesEquivalent => ReturnType == ReturnType.Series && AllowedGroupOperations.HasFlag(GroupOperations.Slice);
 
     /// <inheritdoc />
     public virtual ParameterDefinitions ParameterDefinitions => new();

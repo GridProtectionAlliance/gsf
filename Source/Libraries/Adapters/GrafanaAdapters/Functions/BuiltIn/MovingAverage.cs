@@ -36,7 +36,7 @@ public abstract class MovingAverage<T> : GrafanaFunctionBase<T> where T : struct
     public override ReturnType ReturnType => ReturnType.Series;
 
     /// <inheritdoc />
-    public override ResultsLength ResultsLength => ResultsLength.Reduced;
+    public override bool IsSliceSeriesEquivalent => false;
 
     /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>

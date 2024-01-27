@@ -238,6 +238,8 @@ internal static class MetadataExtensions
         if (metadataSelections is null || metadataSelections.Count == 0)
             return metadataMap;
 
+        // TODO: In cases where rootTarget may be the entire query expression (like in a slice) may need to make an assumption, like use first
+
         // Iterate through selections
         foreach ((string tableName, string[] fieldNames) in metadataSelections!)
         {

@@ -187,6 +187,7 @@
   <ItemGroup>
     <None Include="DataSources\BuiltIn\README.md" />
     <None Include="Documentation\GrafanaFunctionsRegex.xso" />
+    <None Include="Documentation\README.md" />
     <None Include="Documentation\SearchSelectRegex.xso" />
     <None Include="Documentation\SemiColonSplitterRegex.xso" />
     <None Include="Documentation\WebAPIInterfaces.docx" />

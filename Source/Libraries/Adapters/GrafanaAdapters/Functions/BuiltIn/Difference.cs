@@ -35,7 +35,7 @@ public abstract class Difference<T> : GrafanaFunctionBase<T> where T : struct, I
     public override ReturnType ReturnType => ReturnType.Series;
 
     /// <inheritdoc />
-    public override ResultsLength ResultsLength => ResultsLength.Reduced;
+    public override bool IsSliceSeriesEquivalent => false;
 
     /// <summary>
     /// Computes the difference between the current value and the last value.
@@ -51,12 +51,15 @@ public abstract class Difference<T> : GrafanaFunctionBase<T> where T : struct, I
         T lastValue = new();
 
         // Return deferred enumeration of computed values
-        await foreach (T dataValue in GetDataSourceValues(parameters).Select(dataValue => TransposeCompute(dataValue, lastValue)).WithCancellation(cancellationToken).ConfigureAwait(false))
+        await foreach (T dataValue in GetDataSourceValues(parameters).WithCancellation(cancellationToken).ConfigureAwait(false))
         {
-            if (lastValue.Time > 0.0D)
-                yield return dataValue;
+            // ReSharper disable once InlineTemporaryVariable
+            T currentValue = dataValue;
 
-            lastValue = dataValue;
+            if (lastValue.Time > 0.0D)
+                yield return TransposeCompute(dataValue, lastValue);
+
+            lastValue = currentValue;
         }
     }
 
