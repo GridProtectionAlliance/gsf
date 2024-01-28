@@ -111,9 +111,10 @@ public interface IGrafanaFunction
     /// <summary>
     /// Gets or sets a flag indicating whether the function behaves equivalently when processed as a series or as a
     /// slice. Value defaults to <c>true</c> for functions that return a series of values, i.e., the return type is
-    /// <see cref="ReturnType.Series"/> and the <see cref="AllowedGroupOperations"/> includes the flag for
+    /// <see cref="ReturnType.Series"/>, and the <see cref="AllowedGroupOperations"/> includes the flag for
     /// <see cref="GroupOperations.Slice"/> operations; otherwise, value defaults to <c>false</c> when the return
-    /// type is a scalar value, i.e., <see cref="ReturnType.Scalar"/>.
+    /// type is a scalar value, i.e., <see cref="ReturnType.Scalar"/>, or the <see cref="AllowedGroupOperations"/>
+    /// does not include the flag for <see cref="GroupOperations.Slice"/> operations.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -128,7 +129,7 @@ public interface IGrafanaFunction
     /// This can lead to performance improvements, especially in data-intensive scenarios.
     /// </para>
     /// <para>
-    /// It's important for users defining custom functions to accurately set this property. If the function's output
+    /// It is important for users defining custom functions to accurately set this property. If the function's output
     /// does not depend on the specific mode of time series processing (series vs. slice), set this property to
     /// <c>true</c>. Conversely, if the function yields different results when processed by slice-by-slice as compared
     /// to when processed series-by-series, or it is a scalar function, this property should be set to <c>false</c>.

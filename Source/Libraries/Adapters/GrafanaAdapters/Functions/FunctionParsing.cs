@@ -23,8 +23,10 @@
 
 using GrafanaAdapters.DataSources;
 using GrafanaAdapters.DataSources.BuiltIn;
+using GrafanaAdapters.Functions.BuiltIn;
 using GrafanaAdapters.Metadata;
 using GSF;
+using GSF.Diagnostics;
 using GSF.IO;
 using System;
 using System.Collections.Generic;
@@ -37,7 +39,6 @@ using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using GSF.Diagnostics;
 
 namespace GrafanaAdapters.Functions;
 
@@ -96,7 +97,7 @@ internal static class FunctionParsing
             // As an optimization in this scenario, replace the slice operation with the equivalent interval operation.
             // Because of this automatic optimization, slice operations meeting this criteria are also hidden from the
             // 'PublishedGroupOperations' function property, see 'GetGrafanaFunctions' method below.
-            if (groupOperation == GroupOperations.Slice && function.IsSliceSeriesEquivalent)
+            if (groupOperation == GroupOperations.Slice && function.ReturnType == ReturnType.Series && function.IsSliceSeriesEquivalent)
             {
                 // Parse the function parameters from expression
                 (string[] parsedParameters, string queryExpression) = function.ParseParameters(queryParameters, functionExpression, groupOperation);
@@ -109,8 +110,8 @@ internal static class FunctionParsing
 
                 // Rearrange expression such that parameters are passed to non-slice version of function and tolerance is
                 // passed to 'Interval' function. Since functions regex only matches top-level functions, it is safe to adjust
-                // the expression in this manner as it has yet to be parsed
-                functionExpression = $"{string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}Interval({tolerance}, {queryExpression})";
+                // the expression in this manner as it is just now being parsed and query expression will be parsed later
+                functionExpression = $"{string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{nameof(Interval<T>)}({tolerance}, {queryExpression})";
                 groupOperation = GroupOperations.None;
             }
 
@@ -171,12 +172,12 @@ internal static class FunctionParsing
                         functionType.GetProperty(nameof(IGrafanaFunction.Category))?.SetValue(function, builtIn ? Category.BuiltIn : Category.Custom);
 
                         // If function returns slice-series equivalent results, remove slice from published group operations
-                        if (function.IsSliceSeriesEquivalent)
+                        if (function.ReturnType == ReturnType.Series && function.IsSliceSeriesEquivalent)
                         {
                             PropertyInfo publishedGroupOperations = functionType.GetProperty(nameof(IGrafanaFunction.PublishedGroupOperations));
 
-                            // Attempt to update GrafanaFunctionBase<T>.PublishedGroupOperations' internal set property to hide 'Slice',
-                            // note that derived classes may have overridden this property with no available set property
+                            // Attempt to update 'GrafanaFunctionBase<T>.PublishedGroupOperations' internal set property to hide 'Slice',
+                            // note that derived classes may have overridden this property with no available set property, so check this:
                             if (publishedGroupOperations?.GetSetMethod(true) is not null)
                                 publishedGroupOperations.SetValue(function, function.PublishedGroupOperations & ~GroupOperations.Slice);
                         }
