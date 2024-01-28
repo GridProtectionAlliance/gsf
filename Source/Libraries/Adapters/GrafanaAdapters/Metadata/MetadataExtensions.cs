@@ -78,9 +78,9 @@ internal static class MetadataExtensions
     public static string TagFromKey(this MeasurementKey key, DataSet metadata, string table = DataSourceValue.MetadataTableName, string pointTagField = "PointTag", string idField = "ID")
     {
         string keyName = key.ToString();
-        
+
         DataRow record = keyName.RecordFromKey(metadata, table, idField);
-        
+
         return record?[pointTagField]?.ToString() ?? keyName;
     }
 
@@ -193,7 +193,7 @@ internal static class MetadataExtensions
         {
             1 => (default(T).MetadataTableName, parts[0]),
             2 => (parts[0], parts[1]),
-            _ => throw new InvalidOperationException($"Invalid target \"{target}\" encountered, expected format as \"FieldName\" or \"TableName.FieldName\".")
+            _ => throw new SyntaxErrorException($"Invalid target \"{target}\" encountered, expected format as \"FieldName\" or \"TableName.FieldName\".")
         };
     }
 
@@ -276,23 +276,33 @@ internal static class MetadataExtensions
         TargetIDSet[] targetIDSets;
         string aliasTarget = target.SplitAlias(out string alias);
 
-        // Attempt to parse expression as a filter expression first so that we can use the target table
-        if (AdapterBase.ParseFilterExpression(aliasTarget, out string tableName, out string expression, out string sortField, out int takeCount))
+        try
         {
-            targetIDSets = metadata.Tables[tableName]
-                .Select(expression, sortField)
-                .Take(takeCount)
-                .Select(default(T).GetTargetIDSet)
-                .ToArray();
+            // Attempt to parse expression as a filter expression first so that we can use the target table
+            if (AdapterBase.ParseFilterExpression(aliasTarget, out string tableName, out string expression, out string sortField, out int takeCount))
+            {
+                if (!metadata.Tables.Contains(tableName))
+                    throw new InvalidOperationException($"Metadata table \"{tableName}\" was not found in the data source.");
+
+                targetIDSets = metadata.Tables[tableName]
+                    .Select(expression, sortField)
+                    .Take(takeCount)
+                    .Select(default(T).GetTargetIDSet)
+                    .ToArray();
+            }
+            else
+            {
+                // Fall back on standard tag expression parsing which will attempt to parse target as measurement keys
+                // or signal IDs -- this will always use default metadata table for the data source value type
+                targetIDSets = AdapterBase.ParseInputMeasurementKeys(metadata, false, aliasTarget, default(T).MetadataTableName)
+                    .Select(key => default(T).RecordFromKey(key, metadata))
+                    .Select(default(T).GetTargetIDSet)
+                    .ToArray();
+            }
         }
-        else
+        catch (Exception ex)
         {
-            // Fall back on standard tag expression parsing which will attempt to parse target as measurement keys
-            // or signal IDs -- this will always use default metadata table for the data source value type
-            targetIDSets = AdapterBase.ParseInputMeasurementKeys(metadata, false, aliasTarget, default(T).MetadataTableName)
-                .Select(key => default(T).RecordFromKey(key, metadata))
-                .Select(default(T).GetTargetIDSet)
-                .ToArray();
+            throw new SyntaxErrorException(ex.Message, ex);
         }
 
         return (targetIDSets, !string.IsNullOrWhiteSpace(alias) && targetIDSets.Length == 1 ? alias : null);

@@ -25,6 +25,7 @@
 using GrafanaAdapters.DataSources.BuiltIn;
 using GrafanaAdapters.Functions;
 using GSF;
+using GSF.Diagnostics;
 using GSF.IO;
 using System;
 using System.Collections.Generic;
@@ -33,7 +34,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
-using GSF.Diagnostics;
 
 namespace GrafanaAdapters.DataSources;
 

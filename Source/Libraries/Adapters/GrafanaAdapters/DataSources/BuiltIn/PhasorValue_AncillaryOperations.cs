@@ -122,7 +122,7 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
     /// <inheritdoc />
     public readonly DataRow LookupMetadata(DataSet metadata, string tableName, string target)
     {
-        (DataRow, int) getRecordAndHashCode() => 
+        (DataRow, int) getRecordAndHashCode() =>
             (target.RecordFromTag(metadata, tableName), metadata.GetHashCode());
 
         string cacheKey = $"{TypeIndex}:{target}";

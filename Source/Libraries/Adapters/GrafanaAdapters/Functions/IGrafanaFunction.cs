@@ -25,6 +25,7 @@ using GrafanaAdapters.DataSources;
 using GrafanaAdapters.Functions.BuiltIn;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Threading;
 
 namespace GrafanaAdapters.Functions;
@@ -197,7 +198,7 @@ public interface IGrafanaFunction
     /// </summary>
     /// <param name="requestedOperation">Requested operation.</param>
     /// <returns>Supported operation.</returns>
-    /// <exception cref="InvalidOperationException">Function does not support the requested operation.</exception>
+    /// <exception cref="SyntaxErrorException">Function does not support the requested operation.</exception>
     GroupOperations CheckAllowedGroupOperation(GroupOperations requestedOperation);
 
     /// <summary>

@@ -24,6 +24,7 @@
 using GrafanaAdapters.DataSources;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading;
 
@@ -68,7 +69,7 @@ public abstract class GrafanaFunctionBase<T> : IGrafanaFunction<T> where T : str
 
         // Verify that the function supports the requested operation
         if (!AllowedGroupOperations.HasFlag(requestedOperation))
-            throw new InvalidOperationException($"Function '{Name}' does not support '{requestedOperation}' function operations.");
+            throw new SyntaxErrorException($"Function '{Name}' does not support '{requestedOperation}' function operations.");
 
         return requestedOperation;
     }

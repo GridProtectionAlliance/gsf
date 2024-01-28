@@ -67,11 +67,11 @@ internal static class FunctionParsing
             // Lookup function by user provided name or alias
             if (!functionMap.TryGetValue(groups["Function"].Value, out IGrafanaFunction<T> function))
             {
-            #if DEBUG
+#if DEBUG
                 Debug.Fail($"Unexpected failure to find function '{groups["Function"].Value}'.");
-            #else
+#else
                 continue;
-            #endif
+#endif
             }
 
             // Check if the function has a group operation prefix, e.g., slice or set
@@ -167,8 +167,8 @@ internal static class FunctionParsing
                             continue;
 
                         IGrafanaFunction function = (IGrafanaFunction)Activator.CreateInstance(functionType);
-                        
-                        // Set function category to built-in when function is in the BuiltIn namespace
+
+                        // Set function category to built-in when function is in the BuiltIn namespace (this is a non-overridable property)
                         functionType.GetProperty(nameof(IGrafanaFunction.Category))?.SetValue(function, builtIn ? Category.BuiltIn : Category.Custom);
 
                         // If function returns slice-series equivalent results, remove slice from published group operations
@@ -220,7 +220,7 @@ internal static class FunctionParsing
             // Look for any constraint based on IDataSourceValue, if found, assign a specific
             // type (any is fine) to generic parent class so nested type can be constructed
             return constraints.Any(constraint => constraint.GetInterfaces().Any(interfaceType => interfaceType == typeof(IDataSourceValue))) ?
-                (type.MakeGenericType(typeof(DataSourceValue)), type.Namespace?.Equals(BuiltInNamespace) ?? false ) : 
+                (type.MakeGenericType(typeof(DataSourceValue)), type.Namespace?.Equals(BuiltInNamespace) ?? false) :
                 (null, false);
         }
     }

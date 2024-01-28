@@ -58,7 +58,7 @@ internal static class ParameterParsing
     /// A tuple of parsed parameters and any remaining query expression.
     /// Remaining query expression is typically the filter expression.
     /// </returns>
-    /// <exception cref="FormatException">Expected parameters did not match those received.</exception>
+    /// <exception cref="SyntaxErrorException">Expected parameters did not match those received.</exception>
     public static (string[] parsedParameters, string queryExpression) ParseParameters(this IGrafanaFunction function, QueryParameters queryParameters, string queryExpression, GroupOperations groupOperation)
     {
         return TargetCache<(string[], string)>.GetOrAdd($"{function.Name}:{queryExpression}", () =>
@@ -97,7 +97,7 @@ internal static class ParameterParsing
                 else
                 {
                     // Offset counts for filter expression in error message not included in required parameters for better user feedback
-                    throw new FormatException($"Expected {requiredParameters + 1} parameters, received {parsedParameters.Count + 1} in: {function.Name}({queryExpression})");
+                    throw new SyntaxErrorException($"Expected {requiredParameters + 1} parameters, received {parsedParameters.Count + 1} in: {function.Name}({queryExpression})");
                 }
             }
 
@@ -136,10 +136,8 @@ internal static class ParameterParsing
             return (parsedParameters.Select(parameter => parameter.Trim()).ToArray(), queryExpression);
         });
 
-        static bool hasSubExpression(string target)
-        {
-            return target.StartsWith("FILTER", StringComparison.OrdinalIgnoreCase) || target.Contains("(");
-        }
+        static bool hasSubExpression(string target) =>
+            target.StartsWith("FILTER", StringComparison.OrdinalIgnoreCase) || target.Contains("(");
     }
 
     /// <summary>
@@ -192,11 +190,11 @@ internal static class ParameterParsing
             if (index < parsedParameters.Length)
                 await parameter.ConvertParsedValueAsync(parsedParameters[index++].Trim(), rootTarget, dataSourceValues, metadata, metadataMap, cancellationToken).ConfigureAwait(false);
 
-        #if DEBUG
+#if DEBUG
             // Required parameters were already validated in ParseParameters - this is a sanity check
             else if (parameter.Required)
                 Debug.Fail($"Expected {function.RequiredParameterCount} parameters, received {index} in: {function.Name}({string.Join(",", parsedParameters)})");
-        #endif
+#endif
         }
 
         return parameters;
@@ -227,7 +225,7 @@ internal static class ParameterParsing
         {
             // Required -> error
             if (parameter.Required)
-                throw new ArgumentException($"Required '{parameter.Name}' parameter of type '{parameter.Type.Name}' is missing.");
+                throw new SyntaxErrorException($"Required '{parameter.Name}' parameter of type '{parameter.Type.Name}' is missing.");
 
             // Not required -> default
             parameter.Value = parameter.Default;
@@ -337,7 +335,7 @@ internal static class ParameterParsing
                 // (when there is one) will be used as the function parameter value for every 'Shift' function call over each series
                 // value in both the T1 and T2 targets. This may be OK in some scenarios, but for others it is recommended that the
                 // user consider using slice operations when possible.
-                TDataSourceValue sourceResult = await dataSourceValues.FirstOrDefaultAsync(dataSourceValue => 
+                TDataSourceValue sourceResult = await dataSourceValues.FirstOrDefaultAsync(dataSourceValue =>
                     dataSourceValue.Target.Equals(targetName, StringComparison.OrdinalIgnoreCase), cancellationToken).ConfigureAwait(false);
 
                 // Data source values are structs and cannot be null so an empty target means lookup failed
@@ -382,8 +380,8 @@ internal static class ParameterParsing
 
         string fieldValue = record[fieldName]?.ToString();
 
-        return string.IsNullOrEmpty(fieldValue) ? 
-            (default, false) : 
+        return string.IsNullOrEmpty(fieldValue) ?
+            (default, false) :
             (fieldValue, true);
     }
 }

@@ -83,8 +83,8 @@ partial class GrafanaDataSourceBase
                 DataSet metadata = Metadata.GetAugmentedDataSet(dataSourceValue);
 
                 // Provided unrestricted metadata table names if data type index is -1
-                return dataTypeIndex > -1 ? 
-                    metadata.Tables.Cast<DataTable>().Where(table => dataSourceValue.MetadataTableIsValid(metadata, table.TableName)).Select(table => table.TableName):
+                return dataTypeIndex > -1 ?
+                    metadata.Tables.Cast<DataTable>().Where(table => dataSourceValue.MetadataTableIsValid(metadata, table.TableName)).Select(table => table.TableName) :
                     metadata.Tables.Cast<DataTable>().Select(table => table.TableName);
             });
         },
@@ -137,7 +137,7 @@ partial class GrafanaDataSourceBase
     {
         return Task.Run(() =>
         {
-            return TargetCache<IEnumerable<FunctionDescription>>.GetOrAdd( $"{request.dataTypeIndex}:{request.expression}", () =>
+            return TargetCache<IEnumerable<FunctionDescription>>.GetOrAdd($"{request.dataTypeIndex}:{request.expression}", () =>
             {
                 // Parse out any requested group operation filter from search expression
                 GroupOperations filteredGroupOperations = Enum.TryParse(request.expression.Trim(), out GroupOperations groupOperations) ?
@@ -325,8 +325,8 @@ partial class GrafanaDataSourceBase
                 }
 
                 // If no specific fields names were selected, assume "*" and select all fields
-                fieldNames = validFieldNames.Count == 0 ? 
-                    table.Columns.Cast<DataColumn>().Select(column => column.ColumnName).ToArray() : 
+                fieldNames = validFieldNames.Count == 0 ?
+                    table.Columns.Cast<DataColumn>().Select(column => column.ColumnName).ToArray() :
                     validFieldNames.ToArray();
 
                 // If no filter expression or take count was specified, limit search target results - user can
@@ -345,8 +345,8 @@ partial class GrafanaDataSourceBase
                 else
                     executeSelect(table.Select(expression, sortField));
 
-                return distinct ? 
-                    results.Distinct(StringComparer.OrdinalIgnoreCase).ToArray() : 
+                return distinct ?
+                    results.Distinct(StringComparer.OrdinalIgnoreCase).ToArray() :
                     results.ToArray();
             });
         },
