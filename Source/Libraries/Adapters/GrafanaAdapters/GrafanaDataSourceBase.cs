@@ -363,12 +363,12 @@ public abstract partial class GrafanaDataSourceBase
 
         // Reenter query function with remaining query expression to get data - at the bottom of the recursion,
         // this will return time-series data queried from the derived class using 'QueryDataSourceValues':
-        IAsyncEnumerable<DataSourceValueGroup<T>> dataset = QueryTargetAsync<T>(instance, queryParameters, metadata, queryExpression, cancellationToken);
+        IAsyncEnumerable<DataSourceValueGroup<T>> valueGroups = QueryTargetAsync<T>(instance, queryParameters, metadata, queryExpression, cancellationToken);
 
         // Handle series renaming operations as a special case
         if (function is Label<T>)
         {
-            await foreach (DataSourceValueGroup<T> valueGroup in dataset.RenameSeries(queryParameters, metadata, parsedParameters[0], cancellationToken).ConfigureAwait(false))
+            await foreach (DataSourceValueGroup<T> valueGroup in valueGroups.RenameSeries(queryParameters, metadata, parsedParameters[0], cancellationToken).ConfigureAwait(false))
                 yield return valueGroup;
 
             yield break;
@@ -379,7 +379,7 @@ public abstract partial class GrafanaDataSourceBase
         {
             case <= GroupOperations.None:
             {
-                await foreach (DataSourceValueGroup<T> valueGroup in dataset.ConfigureAwait(false))
+                await foreach (DataSourceValueGroup<T> valueGroup in valueGroups.ConfigureAwait(false))
                 {
                     string rootTarget = valueGroup.RootTarget ?? valueGroup.Target;
                     MetadataMap metadataMap = metadata.GetMetadataMap<T>(rootTarget, queryParameters);
@@ -401,8 +401,8 @@ public abstract partial class GrafanaDataSourceBase
             }
             case GroupOperations.Slice:
             {
-                double tolerance = await ParseSliceToleranceAsync(function.Name, parsedParameters[0], queryParameters.SourceTarget.target, dataset, metadata, cancellationToken).ConfigureAwait(false);
-                TimeSliceScannerAsync<T> scanner = await TimeSliceScannerAsync<T>.Create(dataset, tolerance / SI.Milli, cancellationToken).ConfigureAwait(false);
+                double tolerance = await ParseSliceToleranceAsync(function.Name, parsedParameters[0], queryParameters.SourceTarget.target, valueGroups, metadata, cancellationToken).ConfigureAwait(false);
+                TimeSliceScannerAsync<T> scanner = await TimeSliceScannerAsync<T>.Create(valueGroups, tolerance / SI.Milli, cancellationToken).ConfigureAwait(false);
 
                 async IAsyncEnumerable<T> computeSliceAsync()
                 {
@@ -444,7 +444,8 @@ public abstract partial class GrafanaDataSourceBase
                             {
                                 Target = valueGroup.Key,
                                 RootTarget = valueGroup.Key,
-                                Source = valueGroup
+                                Source = valueGroup,
+                                //MetadataMap = 
                             };
                         }
                     }
@@ -471,7 +472,7 @@ public abstract partial class GrafanaDataSourceBase
             case GroupOperations.Set:
             {
                 // Flatten all series into a single enumerable
-                IAsyncEnumerable<T> dataSourceValues = dataset.SelectMany(source => source.Source);
+                IAsyncEnumerable<T> dataSourceValues = valueGroups.SelectMany(source => source.Source);
                 MetadataMap metadataMap = metadata.GetMetadataMap<T>(queryExpression, queryParameters);
                 Parameters parameters = await function.GenerateParametersAsync(parsedParameters, dataSourceValues, null, metadata, metadataMap, cancellationToken).ConfigureAwait(false);
 
@@ -515,7 +516,7 @@ public abstract partial class GrafanaDataSourceBase
         {
             try
             {
-                DataRow record = default(T).LookupMetadata(metadata, default(T).MetadataTableName, target);
+                DataRow record = metadata.Lookup<T>(default(T).MetadataTableName, target);
 
                 if (record is null)
                     return true;

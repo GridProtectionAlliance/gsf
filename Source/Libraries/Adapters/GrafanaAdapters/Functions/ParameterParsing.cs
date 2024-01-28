@@ -373,7 +373,7 @@ internal static class ParameterParsing
 
         // Otherwise, attempt manual lookup of target in metadata
         (string tableName, string fieldName) = value.ParseAsTableAndField<TDataSourceValue>();
-        DataRow record = default(TDataSourceValue).LookupMetadata(metadata, tableName, target);
+        DataRow record = metadata.Lookup<TDataSourceValue>(tableName, target);
 
         if (record is null || !record.Table.Columns.Contains(fieldName))
             return (default, false);

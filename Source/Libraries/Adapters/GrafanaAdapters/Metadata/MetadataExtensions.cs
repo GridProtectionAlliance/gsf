@@ -222,6 +222,23 @@ internal static class MetadataExtensions
         return metadata.GetMetadataMap<T>(rootTarget, queryParameters.MetadataSelections);
     }
 
+
+    /// <summary>
+    /// Looks up metadata record for the specified target.
+    /// </summary>
+    /// <param name="metadata">Metadata data set.</param>
+    /// <param name="tableName">Table name to search.</param>
+    /// <param name="target">Target to lookup.</param>
+    /// <returns>Filtered metadata row for the specified target.</returns>
+    /// <remarks>
+    /// Implementations should cache metadata lookups for performance.
+    /// </remarks>
+    public static DataRow Lookup<T>(this DataSet metadata, string tableName, string target) where T : struct, IDataSourceValue
+    {
+        // Only get first target for metadata lookup if target represents multiple targets
+        return default(T).LookupMetadata(metadata, tableName, target.Split(';', ' ')[0].Trim().SplitAlias(out _));
+    }
+
     /// <summary>
     /// Gets metadata map for the specified target and selections.
     /// </summary>
@@ -238,12 +255,10 @@ internal static class MetadataExtensions
         if (metadataSelections is null || metadataSelections.Count == 0)
             return metadataMap;
 
-        // TODO: In cases where rootTarget may be the entire query expression (like in a slice) may need to make an assumption, like use first
-
         // Iterate through selections
         foreach ((string tableName, string[] fieldNames) in metadataSelections!)
         {
-            DataRow record = default(T).LookupMetadata(metadata, tableName, rootTarget);
+            DataRow record = metadata.Lookup<T>(tableName, rootTarget);
 
             if (record is null)
                 continue;

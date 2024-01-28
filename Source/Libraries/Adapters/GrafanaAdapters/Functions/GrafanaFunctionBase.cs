@@ -78,6 +78,9 @@ public abstract class GrafanaFunctionBase<T> : IGrafanaFunction<T> where T : str
     public virtual bool IsSliceSeriesEquivalent => ReturnType == ReturnType.Series && AllowedGroupOperations.HasFlag(GroupOperations.Slice);
 
     /// <inheritdoc />
+    public virtual bool ResultIsSetTargetSeries => false;
+
+    /// <inheritdoc />
     public virtual ParameterDefinitions ParameterDefinitions => new();
 
     /// <inheritdoc />
@@ -88,9 +91,6 @@ public abstract class GrafanaFunctionBase<T> : IGrafanaFunction<T> where T : str
 
     /// <inheritdoc />
     public virtual int InternalParameterCount => m_internalParameterCount ??= ParameterDefinitions.Count(parameter => parameter.Internal);
-
-    /// <inheritdoc />
-    public virtual bool ResultIsSetTargetSeries => false;
 
     /// <inheritdoc />
     public virtual (List<string> parsedParameters, string updatedQueryExpression) ParseParameters(QueryParameters queryParameters, string queryExpression)

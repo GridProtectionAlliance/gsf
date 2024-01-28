@@ -164,6 +164,15 @@ public interface IGrafanaFunction
     bool IsSliceSeriesEquivalent { get; }
 
     /// <summary>
+    /// Gets flag that determines if function result is target series for set-based group operations.
+    /// </summary>
+    /// <remarks>
+    /// For set-based group operations, there can also be data in which target series is selected,
+    /// e.g., with <see cref="Minimum{T}"/> or <see cref="Maximum{T}"/> functions.
+    /// </remarks>
+    bool ResultIsSetTargetSeries { get; }
+
+    /// <summary>
     /// Gets the category of the Grafana function, i.e., built-in or custom.
     /// </summary>
     /// <remarks>
@@ -230,15 +239,6 @@ public interface IGrafanaFunction
     /// Gets the number of internal parameters of the Grafana function.
     /// </summary>
     int InternalParameterCount { get; }
-
-    /// <summary>
-    /// Gets flag that determines if function result is target series for set-based group operations.
-    /// </summary>
-    /// <remarks>
-    /// For set-based group operations, there can also be data in which target series is selected,
-    /// e.g., with <see cref="Minimum{T}"/> or <see cref="Maximum{T}"/> functions.
-    /// </remarks>
-    bool ResultIsSetTargetSeries { get; }
 
     /// <summary>
     /// Executes custom parameter parsing for the Grafana function.
