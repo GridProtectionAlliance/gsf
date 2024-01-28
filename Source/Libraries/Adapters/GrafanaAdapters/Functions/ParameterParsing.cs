@@ -190,11 +190,11 @@ internal static class ParameterParsing
             if (index < parsedParameters.Length)
                 await parameter.ConvertParsedValueAsync(parsedParameters[index++].Trim(), rootTarget, dataSourceValues, metadata, metadataMap, cancellationToken).ConfigureAwait(false);
 
-#if DEBUG
+        #if DEBUG
             // Required parameters were already validated in ParseParameters - this is a sanity check
             else if (parameter.Required)
                 Debug.Fail($"Expected {function.RequiredParameterCount} parameters, received {index} in: {function.Name}({string.Join(",", parsedParameters)})");
-#endif
+        #endif
         }
 
         return parameters;

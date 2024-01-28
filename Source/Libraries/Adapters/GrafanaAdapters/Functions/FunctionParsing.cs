@@ -67,11 +67,11 @@ internal static class FunctionParsing
             // Lookup function by user provided name or alias
             if (!functionMap.TryGetValue(groups["Function"].Value, out IGrafanaFunction<T> function))
             {
-#if DEBUG
+            #if DEBUG
                 Debug.Fail($"Unexpected failure to find function '{groups["Function"].Value}'.");
-#else
+            #else
                 continue;
-#endif
+            #endif
             }
 
             // Check if the function has a group operation prefix, e.g., slice or set
