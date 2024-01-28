@@ -39,6 +39,9 @@ public abstract class RollingAverage<T> : GrafanaFunctionBase<T> where T : struc
     public override bool IsSliceSeriesEquivalent => false;
 
     /// <inheritdoc />
+    public override GroupOperations PublishedGroupOperations => GroupOperations.None | GroupOperations.Set;
+
+    /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>
     {
         new ParameterDefinition<int>

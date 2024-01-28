@@ -43,6 +43,9 @@ public abstract class Top<T> : GrafanaFunctionBase<T> where T : struct, IDataSou
     public override bool IsSliceSeriesEquivalent => false;
 
     /// <inheritdoc />
+    public override GroupOperations PublishedGroupOperations => GroupOperations.None | GroupOperations.Set;
+
+    /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>
     {
         new ParameterDefinition<string>
