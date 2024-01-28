@@ -88,6 +88,5 @@ public abstract class First<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     /// <inheritdoc />
     public class ComputePhasorValue : First<PhasorValue>
     {
-        // Operating on magnitude only
     }
 }

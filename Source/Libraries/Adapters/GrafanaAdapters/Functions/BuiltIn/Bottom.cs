@@ -99,5 +99,6 @@ public abstract class Bottom<T> : GrafanaFunctionBase<T> where T : struct, IData
     /// <inheritdoc />
     public class ComputePhasorValue : Bottom<PhasorValue>
     {
+        // Operating on magnitude only
     }
 }

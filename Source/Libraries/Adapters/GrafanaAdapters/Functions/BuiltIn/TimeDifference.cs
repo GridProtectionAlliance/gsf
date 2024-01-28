@@ -92,6 +92,5 @@ public abstract class TimeDifference<T> : GrafanaFunctionBase<T> where T : struc
     /// <inheritdoc />
     public class ComputePhasorValue : TimeDifference<PhasorValue>
     {
-        // Operating on magnitude only
     }
 }

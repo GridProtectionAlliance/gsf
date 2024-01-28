@@ -75,6 +75,5 @@ public abstract class Last<T> : GrafanaFunctionBase<T> where T : struct, IDataSo
     /// <inheritdoc />
     public class ComputePhasorValue : Last<PhasorValue>
     {
-        // Operating on magnitude only
     }
 }

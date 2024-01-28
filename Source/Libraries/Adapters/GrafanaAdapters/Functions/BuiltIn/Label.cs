@@ -71,8 +71,8 @@ public abstract class Label<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     /// <inheritdoc />
     public override IAsyncEnumerable<T> ComputeAsync(Parameters parameters, CancellationToken cancellationToken)
     {
-        // Label function performs no computation, it only renames series,
-        // operation is handled as a special case by the base class:
+        // Label function performs no computation, it only renames series, so inputs are returned as-is,
+        // actual rename operation is handled as a special case by the base class
         return GetDataSourceValues(parameters);
     }
 

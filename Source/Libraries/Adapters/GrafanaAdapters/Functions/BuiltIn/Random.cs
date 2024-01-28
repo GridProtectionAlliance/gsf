@@ -105,7 +105,7 @@ public abstract class Random<T> : GrafanaFunctionBase<T> where T : struct, IData
     public class ComputeDataSourceValue : Random<DataSourceValue>
     {
         /// <inheritdoc />
-        protected override DataSourceValue TransposeCompute(DataSourceValue currentValue, DataSourceValue[] values, int index) => new()
+        protected override DataSourceValue TransposeCompute(DataSourceValue currentValue, DataSourceValue[] values, int index) => currentValue with
         {
             Value = values[index].Value,
             Target = values[index].Target,
@@ -117,7 +117,7 @@ public abstract class Random<T> : GrafanaFunctionBase<T> where T : struct, IData
     public class ComputePhasorValue : Random<PhasorValue>
     {
         /// <inheritdoc />
-        protected override PhasorValue TransposeCompute(PhasorValue currentValue, PhasorValue[] values, int index) => new()
+        protected override PhasorValue TransposeCompute(PhasorValue currentValue, PhasorValue[] values, int index) => currentValue with
         {
             Magnitude = values[index].Magnitude,
             Angle = values[index].Angle,

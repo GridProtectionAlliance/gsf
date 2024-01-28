@@ -58,6 +58,5 @@ public abstract class Count<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     /// <inheritdoc />
     public class ComputePhasorValue : Count<PhasorValue>
     {
-        // Operating on magnitude only
     }
 }
