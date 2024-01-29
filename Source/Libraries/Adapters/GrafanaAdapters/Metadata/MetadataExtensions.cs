@@ -222,6 +222,15 @@ internal static class MetadataExtensions
         return metadata.GetMetadataMap<T>(rootTarget, queryParameters.MetadataSelections);
     }
 
+    /// <summary>
+    /// Gets first target from a target expression.
+    /// </summary>
+    /// <param name="target">Source target expression.</param>
+    /// <returns>Fist target from target expression.</returns>
+    public static string FirstTarget(this string target)
+    {
+        return target.Split(';', ' ')[0].Trim().SplitAlias(out _);
+    }
 
     /// <summary>
     /// Looks up metadata record for the specified target.
@@ -236,7 +245,7 @@ internal static class MetadataExtensions
     public static DataRow Lookup<T>(this DataSet metadata, string tableName, string target) where T : struct, IDataSourceValue
     {
         // Only get first target for metadata lookup if target represents multiple targets
-        return default(T).LookupMetadata(metadata, tableName, target.Split(';', ' ')[0].Trim().SplitAlias(out _));
+        return default(T).LookupMetadata(metadata, tableName, target.FirstTarget());
     }
 
     /// <summary>

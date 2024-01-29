@@ -69,7 +69,7 @@ public class DataSourceValueGroup<T> where T : struct, IDataSourceValue
     /// <summary>
     /// Gets user selected metadata associated with the query.
     /// </summary>
-    public MetadataMap MetadataMap { get; init; }
+    public MetadataMap MetadataMap { get; set; }
 
     /// <summary>
     /// Gets or sets a an error message that indicates a syntax error in the query request.

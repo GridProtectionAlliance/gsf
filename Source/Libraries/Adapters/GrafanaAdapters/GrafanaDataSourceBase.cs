@@ -169,7 +169,9 @@ public abstract partial class GrafanaDataSourceBase
             }
             catch (SyntaxErrorException ex)
             {
-                // Each RefID is a separate query, so report syntax errors on a per-query basis
+                // Each RefID is a separate query, so report syntax errors on a per-query basis, any successfully processed
+                // trends will still be returned to Grafana, up to the point of the syntax error - this way user can handle
+                // syntax errors one at a time as they occur in the expression
                 queryValueGroups.Add(DataSourceValueGroup<T>.FromException(queryParameters, ex.Message));
             }
 
@@ -190,7 +192,7 @@ public abstract partial class GrafanaDataSourceBase
             {
                 target = valueGroup.Target,
                 rootTarget = valueGroup.RootTarget,
-                metadata = valueGroup.MetadataMap,
+                metadata = valueGroup.MetadataMap ?? new MetadataMap(),
                 dropEmptySeries = valueGroup.DropEmptySeries,
                 refID = valueGroup.RefID,
                 syntaxError = valueGroup.SyntaxError
@@ -216,8 +218,10 @@ public abstract partial class GrafanaDataSourceBase
 
         // Apply any encountered ad-hoc filters
         if (request.adhocFilters?.Length > 0)
+        {
             foreach (AdHocFilter filter in request.adhocFilters)
                 filteredResults = filteredResults.Where(values => IsFilterMatch<T>(values.rootTarget, filter, metadata));
+        }
 
         return filteredResults;
     }
@@ -382,8 +386,7 @@ public abstract partial class GrafanaDataSourceBase
                 await foreach (DataSourceValueGroup<T> valueGroup in valueGroups.ConfigureAwait(false))
                 {
                     string rootTarget = valueGroup.RootTarget ?? valueGroup.Target;
-                    MetadataMap metadataMap = metadata.GetMetadataMap<T>(rootTarget, queryParameters);
-                    Parameters parameters = await function.GenerateParametersAsync(parsedParameters, valueGroup.Source, rootTarget, metadata, metadataMap, cancellationToken).ConfigureAwait(false);
+                    Parameters parameters = await function.GenerateParametersAsync(parsedParameters, valueGroup.Source, rootTarget, metadata, cancellationToken).ConfigureAwait(false);
 
                     yield return new DataSourceValueGroup<T>
                     {
@@ -393,7 +396,7 @@ public abstract partial class GrafanaDataSourceBase
                         Source = function.ComputeAsync(parameters, cancellationToken),
                         DropEmptySeries = queryParameters.DropEmptySeries,
                         RefID = queryParameters.SourceTarget.refID,
-                        MetadataMap = metadataMap
+                        MetadataMap = valueGroup.MetadataMap
                     };
                 }
 
@@ -402,7 +405,8 @@ public abstract partial class GrafanaDataSourceBase
             case GroupOperations.Slice:
             {
                 double tolerance = await ParseSliceToleranceAsync(function.Name, parsedParameters[0], queryParameters.SourceTarget.target, valueGroups, metadata, cancellationToken).ConfigureAwait(false);
-                TimeSliceScannerAsync<T> scanner = await TimeSliceScannerAsync<T>.Create(valueGroups, tolerance / SI.Milli, cancellationToken).ConfigureAwait(false);
+                DataSourceValueGroup<T>[] dataSources = await valueGroups.ToArrayAsync(cancellationToken).ConfigureAwait(false);
+                TimeSliceScannerAsync<T> scanner = await TimeSliceScannerAsync<T>.Create(dataSources, tolerance / SI.Milli, cancellationToken).ConfigureAwait(false);
 
                 async IAsyncEnumerable<T> computeSliceAsync()
                 {
@@ -411,8 +415,7 @@ public abstract partial class GrafanaDataSourceBase
                     while (!scanner.DataReadComplete)
                     {
                         IAsyncEnumerable<T> dataSourceValues = await scanner.ReadNextTimeSliceAsync().ConfigureAwait(false);
-                        Dictionary<string, string> metadataMap = metadata.GetMetadataMap<T>(queryExpression, queryParameters);
-                        Parameters parameters = await function.GenerateParametersAsync(normalizedParameters, dataSourceValues, null, metadata, metadataMap, cancellationToken).ConfigureAwait(false);
+                        Parameters parameters = await function.GenerateParametersAsync(normalizedParameters, dataSourceValues, null, metadata, cancellationToken).ConfigureAwait(false);
 
                         await foreach (T dataValue in function.ComputeSliceAsync(parameters, cancellationToken).ConfigureAwait(false))
                             yield return dataValue;
@@ -430,7 +433,7 @@ public abstract partial class GrafanaDataSourceBase
                         Source = computeSliceAsync(),
                         DropEmptySeries = queryParameters.DropEmptySeries,
                         RefID = queryParameters.SourceTarget.refID,
-                        MetadataMap = metadata.GetMetadataMap<T>(queryExpression, queryParameters)
+                        MetadataMap = dataSources.FirstOrDefault()?.MetadataMap
                     };
                 }
                 else
@@ -445,7 +448,7 @@ public abstract partial class GrafanaDataSourceBase
                                 Target = valueGroup.Key,
                                 RootTarget = valueGroup.Key,
                                 Source = valueGroup,
-                                //MetadataMap = 
+                                MetadataMap = dataSources.FirstOrDefault(dataSource => dataSource.RootTarget.Equals(valueGroup.Key.FirstTarget()))?.MetadataMap
                             };
                         }
                     }
@@ -462,7 +465,7 @@ public abstract partial class GrafanaDataSourceBase
                             Source = valueGroup.Source,
                             DropEmptySeries = queryParameters.DropEmptySeries,
                             RefID = queryParameters.SourceTarget.refID,
-                            MetadataMap = metadata.GetMetadataMap<T>(rootTarget, queryParameters)
+                            MetadataMap = valueGroup.MetadataMap
                         };
                     }
                 }
@@ -473,8 +476,7 @@ public abstract partial class GrafanaDataSourceBase
             {
                 // Flatten all series into a single enumerable
                 IAsyncEnumerable<T> dataSourceValues = valueGroups.SelectMany(source => source.Source);
-                MetadataMap metadataMap = metadata.GetMetadataMap<T>(queryExpression, queryParameters);
-                Parameters parameters = await function.GenerateParametersAsync(parsedParameters, dataSourceValues, null, metadata, metadataMap, cancellationToken).ConfigureAwait(false);
+                Parameters parameters = await function.GenerateParametersAsync(parsedParameters, dataSourceValues, null, metadata, cancellationToken).ConfigureAwait(false);
 
                 DataSourceValueGroup<T> valueGroup = new()
                 {
@@ -483,16 +485,25 @@ public abstract partial class GrafanaDataSourceBase
                     SourceTarget = queryParameters.SourceTarget,
                     Source = function.ComputeSetAsync(parameters, cancellationToken),
                     DropEmptySeries = queryParameters.DropEmptySeries,
-                    RefID = queryParameters.SourceTarget.refID,
-                    MetadataMap = metadataMap
+                    RefID = queryParameters.SourceTarget.refID
                 };
 
                 // Handle set operations for functions where there is data in the target series as well, e.g., Min or Max
                 if (function.ResultIsSetTargetSeries)
                 {
                     T dataValue = await valueGroup.Source.FirstAsync(cancellationToken).ConfigureAwait(false);
+                    
                     valueGroup.Target = $"Set{function.Name} = {dataValue.Target}";
                     valueGroup.RootTarget = dataValue.Target;
+
+                    // Set metadata map for matching result set target
+                    valueGroup.MetadataMap = (await valueGroups.FirstOrDefaultAsync(dataSource => 
+                        dataSource.RootTarget.Equals(dataValue.Target.FirstTarget()), cancellationToken).ConfigureAwait(false))?.MetadataMap;
+                }
+                else
+                {
+                    // Otherwise, just select first metadata map for the first value group
+                    valueGroup.MetadataMap = (await valueGroups.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false))?.MetadataMap;
                 }
 
                 yield return valueGroup;
@@ -613,13 +624,13 @@ public abstract partial class GrafanaDataSourceBase
             IMutableParameter<double> sliceToleranceParameter = Common.DefaultSliceTolerance.CreateParameter();
             IAsyncEnumerable<T> dataSourceValues = (await dataset.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false)).Source;
 
-            await sliceToleranceParameter.ConvertParsedValueAsync(value, target, dataSourceValues, metadata, null, cancellationToken).ConfigureAwait(false);
+            await sliceToleranceParameter.ConvertParsedValueAsync(value, target, dataSourceValues, metadata, cancellationToken).ConfigureAwait(false);
 
             return sliceToleranceParameter.Value;
         }
         catch (Exception ex)
         {
-            throw new SyntaxErrorException($"Invalid slice interval specified for {functionName} function. Exception: {ex.Message}", ex);
+            throw new SyntaxErrorException($"Invalid slice interval specified for '{functionName}' function. Exception: {ex.Message}", ex);
         }
     }
 

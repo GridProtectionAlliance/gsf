@@ -150,11 +150,11 @@ public class TimeSliceScannerAsync<T> where T : struct, IDataSourceValue<T>
     /// <param name="dataSources">Set of <see cref="DataSourceValueGroup{T}"/> series to scan.</param>
     /// <param name="tolerance">Time tolerance for data slices in Unix epoch milliseconds.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    public static async ValueTask<TimeSliceScannerAsync<T>> Create(IAsyncEnumerable<DataSourceValueGroup<T>> dataSources, double tolerance, CancellationToken cancellationToken)
+    public static async ValueTask<TimeSliceScannerAsync<T>> Create(DataSourceValueGroup<T>[] dataSources, double tolerance, CancellationToken cancellationToken)
     {
         List<IAsyncEnumerator<T>> enumerators = new();
-
-        await foreach (DataSourceValueGroup<T> group in dataSources.WithCancellation(cancellationToken).ConfigureAwait(false))
+    
+        foreach (DataSourceValueGroup<T> group in dataSources)
         {
             IAsyncEnumerator<T> enumerator = group.Source.GetAsyncEnumerator(cancellationToken);
 
