@@ -24,11 +24,14 @@
 //******************************************************************************************************
 
 using System;
+using System.Globalization;
 using System.Security.Principal;
 using System.Windows;
-using GSF.Windows.ErrorManagement;
+using System.Windows.Markup;
+using GSF.Diagnostics;
 using GSF.Reflection;
 using GSF.TimeSeries.UI;
+using GSF.Windows.ErrorManagement;
 
 namespace TsfManager
 {
@@ -54,6 +57,7 @@ namespace TsfManager
         public App()
         {
             AppDomain.CurrentDomain.SetPrincipalPolicy(PrincipalPolicy.WindowsPrincipal);
+            Current.Startup += Application_Startup;
 
             m_errorLogger = new ErrorLogger
             {
@@ -97,6 +101,19 @@ namespace TsfManager
         #endregion
 
         #region [ Methods ]
+
+        private void Application_Startup(object sender, StartupEventArgs e)
+        {
+            try
+            {
+                XmlLanguage xmlLanguage = XmlLanguage.GetLanguage(CultureInfo.CurrentCulture.Name);
+                FrameworkElement.LanguageProperty.OverrideMetadata(typeof(FrameworkElement), new FrameworkPropertyMetadata(xmlLanguage));
+            }
+            catch (Exception ex)
+            {
+                Logger.SwallowException(ex);
+            }
+        }
 
         private string ErrorText()
         {
