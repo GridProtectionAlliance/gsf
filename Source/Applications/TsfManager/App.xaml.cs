@@ -28,6 +28,7 @@ using System.Globalization;
 using System.Security.Principal;
 using System.Windows;
 using System.Windows.Markup;
+using GSF.Diagnostics;
 using GSF.Reflection;
 using GSF.TimeSeries.UI;
 using GSF.Windows.ErrorManagement;
@@ -103,8 +104,15 @@ namespace TsfManager
 
         private void Application_Startup(object sender, StartupEventArgs e)
         {
-            XmlLanguage xmlLanguage = XmlLanguage.GetLanguage(CultureInfo.CurrentCulture.IetfLanguageTag);
-            FrameworkElement.LanguageProperty.OverrideMetadata(typeof(FrameworkElement), new FrameworkPropertyMetadata(xmlLanguage));
+            try
+            {
+                XmlLanguage xmlLanguage = XmlLanguage.GetLanguage(CultureInfo.CurrentCulture.Name);
+                FrameworkElement.LanguageProperty.OverrideMetadata(typeof(FrameworkElement), new FrameworkPropertyMetadata(xmlLanguage));
+            }
+            catch (Exception ex)
+            {
+                Logger.SwallowException(ex);
+            }
         }
 
         private string ErrorText()
