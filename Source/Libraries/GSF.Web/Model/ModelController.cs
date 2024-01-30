@@ -897,8 +897,9 @@ namespace GSF.Web.Model
                 sql = $"SELECT COUNT(*) FROM {tblSelect} {whereClause}";
             }
 
-            if (param.Any())
-                return connection.ExecuteScalar<int>(sql, param);
+            object[] paramArray = param.ToArray();
+            if (paramArray.Any())
+                return connection.ExecuteScalar<int>(sql, paramArray);
             return connection.ExecuteScalar<int>(sql, "");
         }
 
