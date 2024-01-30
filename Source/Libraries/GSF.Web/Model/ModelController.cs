@@ -821,8 +821,9 @@ namespace GSF.Web.Model
                     sql += $" OFFSET {page * recordsPerPage} ROWS FETCH NEXT {recordsPerPage} ROWS ONLY";
                 }
 
+                object[] paramArray = param.ToArray();
                 if (param.Count() > 0)
-                    return connection.RetrieveData(sql, param.ToArray());
+                    return connection.RetrieveData(sql, paramArray);
                 return connection.RetrieveData(sql,"");
             }
         }
