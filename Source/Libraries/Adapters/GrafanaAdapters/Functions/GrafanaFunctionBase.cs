@@ -69,7 +69,7 @@ public abstract class GrafanaFunctionBase<T> : IGrafanaFunction<T> where T : str
 
         // Verify that the function supports the requested operation
         if (!AllowedGroupOperations.HasFlag(requestedOperation))
-            throw new SyntaxErrorException($"Function '{Name}' does not support '{requestedOperation}' function operations.");
+            throw new SyntaxErrorException($"Function '{Name}' does not support a '{requestedOperation}' group operation.");
 
         return requestedOperation;
     }
