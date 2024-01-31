@@ -45,6 +45,16 @@ public class FunctionDescription
     public string[] aliases { get; set; }
 
     /// <summary>
+    /// Gets or sets the return type of the function, either "Scalar" or "Series".
+    /// </summary>
+    public string returnType { get; set; }
+
+    /// <summary>
+    /// Gets or sets the category of the function, either "BuiltIn" or "Custom".
+    /// </summary>
+    public string category { get; set; }
+
+    /// <summary>
     /// Gets or sets allowed group operations for the function.
     /// </summary>
     public string allowedGroupOperations { get; set; }

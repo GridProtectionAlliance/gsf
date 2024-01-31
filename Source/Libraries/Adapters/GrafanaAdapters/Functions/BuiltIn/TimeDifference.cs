@@ -33,6 +33,9 @@ public abstract class TimeDifference<T> : GrafanaFunctionBase<T> where T : struc
     public override string Description => "Returns a series of values that represent the time difference, in time units, between consecutive values in the source series.";
 
     /// <inheritdoc />
+    public override ReturnType ReturnType => ReturnType.Series;
+
+    /// <inheritdoc />
     // Slice operation has no meaning for this time-focused function and Set operation will have an aberration between series,
     // so we override the exposed behaviors, i.e., use of Slice will produce an error and use of Set will be hidden:
     public override GroupOperations AllowedGroupOperations => GroupOperations.None | GroupOperations.Set;
@@ -89,6 +92,5 @@ public abstract class TimeDifference<T> : GrafanaFunctionBase<T> where T : struc
     /// <inheritdoc />
     public class ComputePhasorValue : TimeDifference<PhasorValue>
     {
-        // Operating on magnitude only
     }
 }

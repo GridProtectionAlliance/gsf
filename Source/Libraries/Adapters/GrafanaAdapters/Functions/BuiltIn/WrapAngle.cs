@@ -34,6 +34,9 @@ public abstract class WrapAngle<T> : GrafanaFunctionBase<T> where T : struct, ID
     public override string[] Aliases => new[] { "Wrap" };
 
     /// <inheritdoc />
+    public override ReturnType ReturnType => ReturnType.Series;
+
+    /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>
     {
         new ParameterDefinition<AngleUnit>

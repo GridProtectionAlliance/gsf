@@ -26,6 +26,9 @@ public abstract class Range<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     public override string Description => "Returns a single value that represents the range, i.e., <c>maximum - minimum</c>, of the values in the source series.";
 
     /// <inheritdoc />
+    public override ReturnType ReturnType => ReturnType.Scalar;
+
+    /// <inheritdoc />
     public override bool ResultIsSetTargetSeries => true;
 
     /// <inheritdoc />

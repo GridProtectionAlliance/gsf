@@ -21,8 +21,10 @@
 //
 //******************************************************************************************************
 
+using GrafanaAdapters.Functions;
 using GrafanaAdapters.Model.Common;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace GrafanaAdapters.DataSources;
 
@@ -67,7 +69,12 @@ public class DataSourceValueGroup<T> where T : struct, IDataSourceValue
     /// <summary>
     /// Gets user selected metadata associated with the query.
     /// </summary>
-    public MetadataMap MetadataMap { get; init; }
+    public MetadataMap MetadataMap { get; set; }
+
+    /// <summary>
+    /// Gets or sets a an error message that indicates a syntax error in the query request.
+    /// </summary>
+    public string SyntaxError { get; set; }
 
     /// <summary>
     /// Creates a new <see cref="DataSourceValueGroup{T}"/> from this instance.
@@ -83,7 +90,29 @@ public class DataSourceValueGroup<T> where T : struct, IDataSourceValue
             Source = Source,
             DropEmptySeries = DropEmptySeries,
             RefID = RefID,
-            MetadataMap = MetadataMap
+            MetadataMap = MetadataMap,
+            SyntaxError = SyntaxError
+        };
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="DataSourceValueGroup{T}"/> for an exception.
+    /// </summary>
+    /// <param name="queryParameters">Source query parameters.</param>
+    /// <param name="syntaxError">Exception message.</param>
+    /// <returns>New <see cref="DataSourceValueGroup{T}"/> for an exception.</returns>
+    public static DataSourceValueGroup<T> FromException(QueryParameters queryParameters, string syntaxError)
+    {
+        return new DataSourceValueGroup<T>
+        {
+            Target = queryParameters.SourceTarget.target,
+            RootTarget = queryParameters.SourceTarget.target,
+            SourceTarget = queryParameters.SourceTarget,
+            Source = AsyncEnumerable.Empty<T>(),
+            DropEmptySeries = queryParameters.DropEmptySeries,
+            RefID = queryParameters.SourceTarget.refID,
+            MetadataMap = new MetadataMap(),
+            SyntaxError = syntaxError
         };
     }
 }

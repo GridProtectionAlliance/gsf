@@ -22,6 +22,7 @@
 //******************************************************************************************************
 // ReSharper disable AccessToModifiedClosure
 // ReSharper disable StaticMemberInGenericType
+// ReSharper disable PossibleMultipleEnumeration
 
 using GrafanaAdapters.DataSources;
 using GrafanaAdapters.DataSources.BuiltIn;
@@ -134,6 +135,10 @@ public abstract partial class GrafanaDataSourceBase
                 Imports = imports,
                 RadialDistribution = radialDistribution,
                 MetadataSelections = target.metadataSelections?
+                     .Where(selection =>
+                         !string.IsNullOrWhiteSpace(selection.tableName) &&
+                         selection.fieldNames.Length > 0 &&
+                         selection.fieldNames.All(fieldName => !string.IsNullOrWhiteSpace(fieldName)))
                     .Select(selection => (selection.tableName, selection.fieldNames))
                     .ToArray()
                     ?? Array.Empty<(string, string[])>()
@@ -152,12 +157,23 @@ public abstract partial class GrafanaDataSourceBase
             // Organize value groups by given Grafana target data source query, i.e., all results with the same RefID
             List<DataSourceValueGroup<T>> queryValueGroups = new();
 
-            await foreach (DataSourceValueGroup<T> valueGroup in QueryTargetAsync<T>(instance, queryParameters, metadata, queryParameters.SourceTarget.target, cancellationToken).ConfigureAwait(false))
-                queryValueGroups.Add(valueGroup);
+            try
+            {
+                // Query target data source for values
+                await foreach (DataSourceValueGroup<T> valueGroup in QueryTargetAsync<T>(instance, queryParameters, metadata, queryParameters.SourceTarget.target, cancellationToken).ConfigureAwait(false))
+                    queryValueGroups.Add(valueGroup);
 
-            // Check if metadata selections are defined and radial distribution is requested for this data source query
-            if (queryParameters.MetadataSelections.Length > 0 && queryParameters.RadialDistribution.Length > 0)
-                await ProcessRadialDistributionAsync(queryValueGroups, queryParameters, cancellationToken).ConfigureAwait(false);
+                // Check if metadata selections are defined and radial distribution is requested for this data source query
+                if (queryParameters.MetadataSelections.Length > 0 && queryParameters.RadialDistribution.Length > 0)
+                    await ProcessRadialDistributionAsync(queryValueGroups, queryParameters, cancellationToken).ConfigureAwait(false);
+            }
+            catch (SyntaxErrorException ex)
+            {
+                // Each RefID is a separate query, so report syntax errors on a per-query basis, any successfully processed
+                // trends will still be returned to Grafana, up to the point of the syntax error - this way user can handle
+                // syntax errors one at a time as they occur in the expression
+                queryValueGroups.Add(DataSourceValueGroup<T>.FromException(queryParameters, ex.Message));
+            }
 
             valueGroups.AddRange(queryValueGroups);
         }
@@ -176,9 +192,10 @@ public abstract partial class GrafanaDataSourceBase
             {
                 target = valueGroup.Target,
                 rootTarget = valueGroup.RootTarget,
-                metadata = valueGroup.MetadataMap,
+                metadata = valueGroup.MetadataMap ?? new MetadataMap(),
                 dropEmptySeries = valueGroup.DropEmptySeries,
-                refID = valueGroup.RefID
+                refID = valueGroup.RefID,
+                syntaxError = valueGroup.SyntaxError
             };
 
             IAsyncEnumerable<T> values = valueGroup.Source;
@@ -201,8 +218,10 @@ public abstract partial class GrafanaDataSourceBase
 
         // Apply any encountered ad-hoc filters
         if (request.adhocFilters?.Length > 0)
+        {
             foreach (AdHocFilter filter in request.adhocFilters)
                 filteredResults = filteredResults.Where(values => IsFilterMatch<T>(values.rootTarget, filter, metadata));
+        }
 
         return filteredResults;
     }
@@ -217,7 +236,7 @@ public abstract partial class GrafanaDataSourceBase
         (ParsedGrafanaFunction<T>[] grafanaFunctions, string reducedQueryExpression) = TargetCache<(ParsedGrafanaFunction<T>[], string)>.GetOrAdd($"{default(T).DataTypeIndex}:{queryExpression}", () =>
         {
             // Match any top-level grafana functions in target query expression
-            ParsedGrafanaFunction<T>[] matchedFunctions = FunctionParsing.MatchFunctions<T>(queryExpression);
+            ParsedGrafanaFunction<T>[] matchedFunctions = FunctionParsing.MatchFunctions<T>(queryExpression, queryParameters);
 
             if (matchedFunctions.Length == 0)
                 return (matchedFunctions, string.Empty);
@@ -294,7 +313,7 @@ public abstract partial class GrafanaDataSourceBase
     private static Dictionary<ulong, string> CreateTargetMap<T>(DataSet metadata, string queryExpression) where T : struct, IDataSourceValue<T>
     {
         // Caching map by data source value type index and queryExpression for improved performance
-        return TargetCache<Dictionary<ulong, string>>.GetOrAdd($"{default(T).DataTypeIndex}:{queryExpression}", () => 
+        return TargetCache<Dictionary<ulong, string>>.GetOrAdd($"{default(T).DataTypeIndex}:{queryExpression}", () =>
         {
             Dictionary<ulong, string> targetMap = new();
 
@@ -348,12 +367,12 @@ public abstract partial class GrafanaDataSourceBase
 
         // Reenter query function with remaining query expression to get data - at the bottom of the recursion,
         // this will return time-series data queried from the derived class using 'QueryDataSourceValues':
-        IAsyncEnumerable<DataSourceValueGroup<T>> dataset = QueryTargetAsync<T>(instance, queryParameters, metadata, queryExpression, cancellationToken);
+        IAsyncEnumerable<DataSourceValueGroup<T>> valueGroups = QueryTargetAsync<T>(instance, queryParameters, metadata, queryExpression, cancellationToken);
 
         // Handle series renaming operations as a special case
         if (function is Label<T>)
         {
-            await foreach (DataSourceValueGroup<T> valueGroup in dataset.RenameSeries(queryParameters, metadata, parsedParameters[0], cancellationToken).ConfigureAwait(false))
+            await foreach (DataSourceValueGroup<T> valueGroup in valueGroups.RenameSeries(queryParameters, metadata, parsedParameters[0], cancellationToken).ConfigureAwait(false))
                 yield return valueGroup;
 
             yield break;
@@ -364,11 +383,10 @@ public abstract partial class GrafanaDataSourceBase
         {
             case <= GroupOperations.None:
             {
-                await foreach (DataSourceValueGroup<T> valueGroup in dataset.ConfigureAwait(false))
+                await foreach (DataSourceValueGroup<T> valueGroup in valueGroups.ConfigureAwait(false))
                 {
                     string rootTarget = valueGroup.RootTarget ?? valueGroup.Target;
-                    MetadataMap metadataMap = metadata.GetMetadataMap<T>(rootTarget, queryParameters);
-                    Parameters parameters = await function.GenerateParametersAsync(parsedParameters, valueGroup.Source, rootTarget, metadata, metadataMap, cancellationToken).ConfigureAwait(false);
+                    Parameters parameters = await function.GenerateParametersAsync(parsedParameters, valueGroup.Source, rootTarget, metadata, cancellationToken).ConfigureAwait(false);
 
                     yield return new DataSourceValueGroup<T>
                     {
@@ -378,7 +396,7 @@ public abstract partial class GrafanaDataSourceBase
                         Source = function.ComputeAsync(parameters, cancellationToken),
                         DropEmptySeries = queryParameters.DropEmptySeries,
                         RefID = queryParameters.SourceTarget.refID,
-                        MetadataMap = metadataMap
+                        MetadataMap = valueGroup.MetadataMap
                     };
                 }
 
@@ -386,25 +404,70 @@ public abstract partial class GrafanaDataSourceBase
             }
             case GroupOperations.Slice:
             {
-                if (!double.TryParse(parsedParameters[0], out double tolerance))
-                    throw new InvalidOperationException($"Invalid slice interval specified for {function.Name} function.");
+                double tolerance = await ParseSliceToleranceAsync(function.Name, parsedParameters[0], queryParameters.SourceTarget.target, valueGroups, metadata, cancellationToken).ConfigureAwait(false);
+                DataSourceValueGroup<T>[] dataSources = await valueGroups.ToArrayAsync(cancellationToken).ConfigureAwait(false);
+                TimeSliceScannerAsync<T> scanner = await TimeSliceScannerAsync<T>.Create(dataSources, tolerance / SI.Milli, cancellationToken).ConfigureAwait(false);
 
-                TimeSliceScannerAsync<T> scanner = await TimeSliceScannerAsync<T>.Create(dataset, tolerance / SI.Milli, cancellationToken).ConfigureAwait(false);
-
-                await foreach (DataSourceValueGroup<T> valueGroup in function.ComputeSliceAsync(scanner, queryParameters, queryExpression, metadata, parsedParameters.Skip(1).ToArray(), cancellationToken).ConfigureAwait(false))
+                async IAsyncEnumerable<T> computeSliceAsync()
                 {
-                    string rootTarget = valueGroup.RootTarget ?? valueGroup.Target;
+                    string[] normalizedParameters = parsedParameters.Skip(1).ToArray();
 
+                    while (!scanner.DataReadComplete)
+                    {
+                        IAsyncEnumerable<T> dataSourceValues = await scanner.ReadNextTimeSliceAsync().ConfigureAwait(false);
+                        Parameters parameters = await function.GenerateParametersAsync(normalizedParameters, dataSourceValues, null, metadata, cancellationToken).ConfigureAwait(false);
+
+                        await foreach (T dataValue in function.ComputeSliceAsync(parameters, cancellationToken).ConfigureAwait(false))
+                            yield return dataValue;
+                    }
+                }
+
+                if (function.ReturnType == ReturnType.Scalar)
+                {
+                    // If function yields a scalar value, then we return a single value group with the computed value
                     yield return new DataSourceValueGroup<T>
                     {
-                        Target = function.FormatTargetName(groupOperation, rootTarget, parsedParameters),
-                        RootTarget = rootTarget,
+                        Target = function.FormatTargetName(groupOperation, queryExpression, parsedParameters),
+                        RootTarget = queryExpression,
                         SourceTarget = queryParameters.SourceTarget,
-                        Source = valueGroup.Source,
+                        Source = computeSliceAsync(),
                         DropEmptySeries = queryParameters.DropEmptySeries,
                         RefID = queryParameters.SourceTarget.refID,
-                        MetadataMap = metadata.GetMetadataMap<T>(rootTarget, queryParameters)
+                        MetadataMap = dataSources.FirstOrDefault()?.MetadataMap
                     };
+                }
+                else
+                {
+                    // Otherwise, function returns a series, so we need to return value groups by target
+                    async IAsyncEnumerable<DataSourceValueGroup<T>> computeSliceByTargetsAsync()
+                    {
+                        await foreach (IAsyncGrouping<string, T> valueGroup in computeSliceAsync().GroupBy(dataValue => dataValue.Target).WithCancellation(cancellationToken).ConfigureAwait(false))
+                        {
+                            yield return new DataSourceValueGroup<T>
+                            {
+                                Target = valueGroup.Key,
+                                RootTarget = valueGroup.Key,
+                                Source = valueGroup,
+                                MetadataMap = dataSources.FirstOrDefault(dataSource => dataSource.RootTarget.Equals(valueGroup.Key.FirstTarget()))?.MetadataMap
+                            };
+                        }
+                    }
+
+                    await foreach (DataSourceValueGroup<T> valueGroup in computeSliceByTargetsAsync().ConfigureAwait(false))
+                    {
+                        string rootTarget = valueGroup.RootTarget ?? valueGroup.Target;
+
+                        yield return new DataSourceValueGroup<T>
+                        {
+                            Target = function.FormatTargetName(groupOperation, rootTarget, parsedParameters),
+                            RootTarget = rootTarget,
+                            SourceTarget = queryParameters.SourceTarget,
+                            Source = valueGroup.Source,
+                            DropEmptySeries = queryParameters.DropEmptySeries,
+                            RefID = queryParameters.SourceTarget.refID,
+                            MetadataMap = valueGroup.MetadataMap
+                        };
+                    }
                 }
 
                 break;
@@ -412,9 +475,8 @@ public abstract partial class GrafanaDataSourceBase
             case GroupOperations.Set:
             {
                 // Flatten all series into a single enumerable
-                IAsyncEnumerable<T> dataSourceValues = dataset.SelectMany(source => source.Source);
-                MetadataMap metadataMap = metadata.GetMetadataMap<T>(queryExpression, queryParameters);
-                Parameters parameters = await function.GenerateParametersAsync(parsedParameters, dataSourceValues, queryExpression, metadata, metadataMap, cancellationToken).ConfigureAwait(false);
+                IAsyncEnumerable<T> dataSourceValues = valueGroups.SelectMany(source => source.Source);
+                Parameters parameters = await function.GenerateParametersAsync(parsedParameters, dataSourceValues, null, metadata, cancellationToken).ConfigureAwait(false);
 
                 DataSourceValueGroup<T> valueGroup = new()
                 {
@@ -423,16 +485,25 @@ public abstract partial class GrafanaDataSourceBase
                     SourceTarget = queryParameters.SourceTarget,
                     Source = function.ComputeSetAsync(parameters, cancellationToken),
                     DropEmptySeries = queryParameters.DropEmptySeries,
-                    RefID = queryParameters.SourceTarget.refID,
-                    MetadataMap = metadataMap
+                    RefID = queryParameters.SourceTarget.refID
                 };
 
                 // Handle set operations for functions where there is data in the target series as well, e.g., Min or Max
                 if (function.ResultIsSetTargetSeries)
                 {
                     T dataValue = await valueGroup.Source.FirstAsync(cancellationToken).ConfigureAwait(false);
+                    
                     valueGroup.Target = $"Set{function.Name} = {dataValue.Target}";
                     valueGroup.RootTarget = dataValue.Target;
+
+                    // Set metadata map for matching result set target
+                    valueGroup.MetadataMap = (await valueGroups.FirstOrDefaultAsync(dataSource => 
+                        dataSource.RootTarget.Equals(dataValue.Target.FirstTarget()), cancellationToken).ConfigureAwait(false))?.MetadataMap;
+                }
+                else
+                {
+                    // Otherwise, just select first metadata map for the first value group
+                    valueGroup.MetadataMap = (await valueGroups.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false))?.MetadataMap;
                 }
 
                 yield return valueGroup;
@@ -456,7 +527,7 @@ public abstract partial class GrafanaDataSourceBase
         {
             try
             {
-                DataRow record = default(T).LookupMetadata(metadata, default(T).MetadataTableName, target);
+                DataRow record = metadata.Lookup<T>(default(T).MetadataTableName, target);
 
                 if (record is null)
                     return true;
@@ -542,18 +613,40 @@ public abstract partial class GrafanaDataSourceBase
         });
     }
 
+    private static async ValueTask<double> ParseSliceToleranceAsync<T>(string functionName, string value, string target, IAsyncEnumerable<DataSourceValueGroup<T>> dataset, DataSet metadata, CancellationToken cancellationToken) where T : struct, IDataSourceValue<T>
+    {
+        if (double.TryParse(value, out double result))
+            return result;
+
+        try
+        {
+            // Try standard parameter parsing if simple double parse fails
+            IMutableParameter<double> sliceToleranceParameter = Common.DefaultSliceTolerance.CreateParameter();
+            IAsyncEnumerable<T> dataSourceValues = (await dataset.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false)).Source;
+
+            await sliceToleranceParameter.ConvertParsedValueAsync(value, target, dataSourceValues, metadata, cancellationToken).ConfigureAwait(false);
+
+            return sliceToleranceParameter.Value;
+        }
+        catch (Exception ex)
+        {
+            throw new SyntaxErrorException($"Invalid slice interval specified for '{functionName}' function. Exception: {ex.Message}", ex);
+        }
+    }
+
     // Query command regular expressions include a semi-colon prefix to help prevent possible name matches that may occur on other expressions
     private static readonly Regex s_dropEmptySeriesCommand = new(@";\s*DropEmptySeries", RegexOptions.Compiled | RegexOptions.IgnoreCase);
     private static readonly Regex s_includePeaksCommand = new(@";\s*IncludePeaks", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-    private static readonly Regex s_fullResolutionQueryCommand = new(@";\s*FullResolutionQuery", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private static readonly Regex s_fullResolutionQueryCommand = new(@";\s*FullResolution(Query|Data)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
     private static readonly Regex s_importsCommand = new(@";\s*Imports\s*=\s*\{(?<Expression>.+)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
     private static readonly Regex s_radialDistributionCommand = new(@";\s*RadialDistribution\s*=\s*\{(?<Expression>.+)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     // Define a regular expression that splits on semi-colon except when semi-colon is inside of a single-quoted string. A simple
     // string.Split on semi-colon will not work properly for cases where a semi-colon is used inside of a filter expression that
-    // contains a string literal with a semi-colon, e.g., FILTER ActiveMeasurements WHERE Description LIKE '%A;B%'
+    // contains a string literal with a semi-colon, e.g., FILTER ActiveMeasurements WHERE Description LIKE '%A;B%', see Expresso
+    // 'Documentation/SemiColonSplitterRegex.xso' for development details on regex
     private static readonly Regex s_semiColonSplitter = new(@";(?=(?:[^']*'[^']*')*[^']*$)", RegexOptions.Compiled);
-    
+
     // To ensure RegEx split ignores empty entries, define a predicate function that returns true if string is not empty
     private static bool NotEmpty(string value)
     {

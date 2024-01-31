@@ -25,8 +25,7 @@ public abstract class Sqrt<T> : GrafanaFunctionBase<T> where T : struct, IDataSo
     public override string Description => "Returns a series of values that represent the square root each of the values in the source series.";
 
     /// <inheritdoc />
-    // Hiding slice operation since result matrix would be the same when tolerance matches data rate
-    public override GroupOperations PublishedGroupOperations => GroupOperations.None | GroupOperations.Set;
+    public override ReturnType ReturnType => ReturnType.Series;
 
     /// <inheritdoc />
     public override IAsyncEnumerable<T> ComputeAsync(Parameters parameters, CancellationToken cancellationToken)

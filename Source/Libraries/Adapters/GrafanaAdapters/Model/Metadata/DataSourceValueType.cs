@@ -45,7 +45,7 @@ public class DataSourceValueType
     public string timeSeriesDefinition { get; set; }
 
     /// <summary>
-    /// Gets or sets the meta-data table name for the data source value type.
+    /// Gets or sets the default meta-data table name for the data source value type.
     /// </summary>
     public string metadataTableName { get; set; }
 }

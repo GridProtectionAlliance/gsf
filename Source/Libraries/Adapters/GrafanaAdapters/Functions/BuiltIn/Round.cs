@@ -26,8 +26,7 @@ public abstract class Round<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     public override string Description => "Returns a series of values that represent the rounded value, with N fractional digits, of each of the values in the source series.";
 
     /// <inheritdoc />
-    // Hiding slice operation since result matrix would be the same when tolerance matches data rate
-    public override GroupOperations PublishedGroupOperations => GroupOperations.None | GroupOperations.Set;
+    public override ReturnType ReturnType => ReturnType.Series;
 
     /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>

@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using GrafanaAdapters.Annotations;
 using GrafanaAdapters.DataSources;
 using GrafanaAdapters.DataSources.BuiltIn;
 using GrafanaAdapters.Functions;
@@ -45,7 +46,7 @@ using static GrafanaAdapters.Functions.Common;
 
 namespace GrafanaAdapters;
 
-// ApiController specific Grafana functionality is defined here
+// ApiController specific Grafana functionality is defined here, see 'Documentation/WebAPIInterfaces.docx' for details
 partial class GrafanaDataSourceBase
 {
     /// <summary>
@@ -64,8 +65,10 @@ partial class GrafanaDataSourceBase
     }
 
     /// <summary>
-    /// Gets the table names that, at a minimum, contain all the fields that the value type has defined as
-    /// required, see <see cref="IDataSourceValue.RequiredMetadataFieldNames"/>.
+    /// Gets the table names that, at a minimum, contain all the fields that the value type has defined as required,
+    /// see <see cref="IDataSourceValue.RequiredMetadataFieldNames"/> when <see cref="SearchRequest.dataTypeIndex"/>
+    /// is a valid index in the data source value cache. When <see cref="SearchRequest.dataTypeIndex"/> is -1, all
+    /// table names are returned.
     /// </summary>
     /// <param name="request">Search request.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -75,16 +78,24 @@ partial class GrafanaDataSourceBase
         {
             return TargetCache<IEnumerable<string>>.GetOrAdd($"{request.dataTypeIndex}", () =>
             {
-                IDataSourceValue dataSourceValue = DataSourceValueCache.GetDefaultInstance(request.dataTypeIndex);
+                int dataTypeIndex = request.dataTypeIndex;
+                IDataSourceValue dataSourceValue = DataSourceValueCache.GetDefaultInstance(dataTypeIndex == -1 ? DataSourceValue.TypeIndex : dataTypeIndex);
                 DataSet metadata = Metadata.GetAugmentedDataSet(dataSourceValue);
-                return metadata.Tables.Cast<DataTable>().Where(table => dataSourceValue.MetadataTableIsValid(metadata, table.TableName)).Select(table => table.TableName);
+
+                // Provided unrestricted metadata table names if data type index is -1
+                return dataTypeIndex > -1 ?
+                    metadata.Tables.Cast<DataTable>().Where(table => dataSourceValue.MetadataTableIsValid(metadata, table.TableName)).Select(table => table.TableName) :
+                    metadata.Tables.Cast<DataTable>().Select(table => table.TableName);
             });
         },
         cancellationToken);
     }
 
     /// <summary>
-    /// Gets the field names for a given table.
+    /// Gets the field names for a given table when <see cref="SearchRequest.dataTypeIndex"/> is a valid index in the data
+    /// source value cache and selected table name contains all the fields that the value type has defined as required, see
+    /// <see cref="IDataSourceValue.RequiredMetadataFieldNames"/> . When <see cref="SearchRequest.dataTypeIndex"/> is -1,
+    /// fields for any valid metadata table name are returned.
     /// </summary>
     /// <param name="request">Search request.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -97,11 +108,13 @@ partial class GrafanaDataSourceBase
         {
             return TargetCache<IEnumerable<FieldDescription>>.GetOrAdd($"{request.dataTypeIndex}:{request.expression}", () =>
             {
-                IDataSourceValue dataSourceValue = DataSourceValueCache.GetDefaultInstance(request.dataTypeIndex);
+                int dataTypeIndex = request.dataTypeIndex;
+                IDataSourceValue dataSourceValue = DataSourceValueCache.GetDefaultInstance(dataTypeIndex == -1 ? DataSourceValue.TypeIndex : dataTypeIndex);
                 DataSet metadata = Metadata.GetAugmentedDataSet(dataSourceValue);
                 string tableName = request.expression.Trim();
 
-                if (!dataSourceValue.MetadataTableIsValid(metadata, tableName))
+                // Provided unrestricted metadata table field names if data type index is -1
+                if (dataTypeIndex > -1 && !dataSourceValue.MetadataTableIsValid(metadata, tableName))
                     return Enumerable.Empty<FieldDescription>();
 
                 return metadata.Tables[tableName].Columns.Cast<DataColumn>().Select(column => new FieldDescription
@@ -124,7 +137,7 @@ partial class GrafanaDataSourceBase
     {
         return Task.Run(() =>
         {
-            return TargetCache<IEnumerable<FunctionDescription>>.GetOrAdd( $"{request.dataTypeIndex}:{request.expression}", () =>
+            return TargetCache<IEnumerable<FunctionDescription>>.GetOrAdd($"{request.dataTypeIndex}:{request.expression}", () =>
             {
                 // Parse out any requested group operation filter from search expression
                 GroupOperations filteredGroupOperations = Enum.TryParse(request.expression.Trim(), out GroupOperations groupOperations) ?
@@ -210,6 +223,8 @@ partial class GrafanaDataSourceBase
                             name = formatFunctionName(),
                             description = function.Description,
                             aliases = function.Aliases,
+                            returnType = function.ReturnType.ToString(),
+                            category = function.Category.ToString(),
                             allowedGroupOperations = function.AllowedGroupOperations.ToString(),
                             publishedGroupOperations = function.PublishedGroupOperations.ToString(),
                             parameters = definitions.Where(published).Select(parameter => new ParameterDescription
@@ -250,18 +265,26 @@ partial class GrafanaDataSourceBase
     /// <param name="cancellationToken">Cancellation token.</param>
     public virtual Task<string[]> Search(SearchRequest request, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(request?.expression))
+        if (request is null)
             return Task.FromResult(Array.Empty<string>());
 
         return Task.Factory.StartNew(() =>
         {
+            int dataTypeIndex = request.dataTypeIndex;
+            IDataSourceValue dataSourceValue = DataSourceValueCache.GetDefaultInstance(dataTypeIndex == -1 ? DataSourceValue.TypeIndex : dataTypeIndex);
+
+            // If an empty expression is specified, query all point tags for data source value type (up to MaximumSearchTargetsPerRequest)
+            if (string.IsNullOrWhiteSpace(request.expression))
+                request.expression = $"SELECT DISTINCT TOP {MaximumSearchTargetsPerRequest} PointTag FROM {dataSourceValue.MetadataTableName} WHERE True ORDER BY PointTag";
+
+            request.expression = request.expression.Trim();
+
             return TargetCache<string[]>.GetOrAdd($"search!{request.dataTypeIndex}:{request.expression}", () =>
             {
-                IDataSourceValue dataSourceValue = DataSourceValueCache.GetDefaultInstance(request.dataTypeIndex);
                 DataSet metadata = Metadata.GetAugmentedDataSet(dataSourceValue);
 
                 // Attempt to parse search target as a "SELECT" statement
-                if (!parseSelectExpression(request.expression.Trim(), out string tableName, out bool distinct, out string[] fieldNames, out string expression, out string sortField, out int takeCount))
+                if (!parseSelectExpression(request.expression, out string tableName, out bool distinct, out string[] fieldNames, out string expression, out string sortField, out int takeCount))
                 {
                     // Expression was not a 'SELECT' statement, execute a 'LIKE' statement against primary meta-data table for data source value type
                     // returning matching point tags - this can be a slow operation for large meta-data sets, so results are cached by expression
@@ -275,10 +298,20 @@ partial class GrafanaDataSourceBase
                 // Search target is a 'SELECT' statement, this operates as a filter for in memory metadata (not a database query)
                 List<string> results = new();
 
-                // If meta-data table does not contain the field names required by the data source value type,
-                // return empty results - this is not a table supported by the data source value type
-                if (!dataSourceValue.MetadataTableIsValid(metadata, tableName))
+                // Provided unrestricted metadata table field names if data type index is -1, otherwise if
+                // meta-data table does not contain the field names required by the data source value type,
+                // return empty results as this is not a table supported by the data source value type:
+                if (dataTypeIndex > -1 && !dataSourceValue.MetadataTableIsValid(metadata, tableName))
                     return results.ToArray();
+
+                // If table name is not in meta-data for unrestricted search, we have no choice but to attempt
+                // meta-data augmentation for each default data source value instance - this is expensive, but
+                // operation will cached and is only be a one-time operation
+                if (dataTypeIndex == -1 && !metadata.Tables.Contains(tableName))
+                {
+                    foreach (IDataSourceValue defaultDataSourceValue in DataSourceValueCache.DefaultInstances)
+                        Metadata.GetAugmentedDataSet(defaultDataSourceValue);
+                }
 
                 DataTable table = metadata.Tables[tableName];
                 List<string> validFieldNames = new();
@@ -292,8 +325,8 @@ partial class GrafanaDataSourceBase
                 }
 
                 // If no specific fields names were selected, assume "*" and select all fields
-                fieldNames = validFieldNames.Count == 0 ? 
-                    table.Columns.Cast<DataColumn>().Select(column => column.ColumnName).ToArray() : 
+                fieldNames = validFieldNames.Count == 0 ?
+                    table.Columns.Cast<DataColumn>().Select(column => column.ColumnName).ToArray() :
                     validFieldNames.ToArray();
 
                 // If no filter expression or take count was specified, limit search target results - user can
@@ -312,8 +345,8 @@ partial class GrafanaDataSourceBase
                 else
                     executeSelect(table.Select(expression, sortField));
 
-                return distinct ? 
-                    results.Distinct(StringComparer.OrdinalIgnoreCase).ToArray() : 
+                return distinct ?
+                    results.Distinct(StringComparer.OrdinalIgnoreCase).ToArray() :
                     results.ToArray();
             });
         },
@@ -332,7 +365,8 @@ partial class GrafanaDataSourceBase
             if (string.IsNullOrWhiteSpace(selectExpression))
                 return false;
 
-            // RegEx instance used to parse meta-data for target search queries using a reduced SQL SELECT statement syntax
+            // RegEx instance used to parse meta-data for target search queries using a reduced SQL SELECT statement syntax,
+            // see Expresso 'Documentation/SearchSelectRegex.xso' for development details on regex
             s_selectExpression ??= new Regex(
                 @"(SELECT\s+((?<Distinct>DISTINCT)\s+)?(TOP\s+(?<MaxRows>\d+)\s+)?(\s*((?<FieldName>\*)|((?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)))?\s*FROM\s+(?<TableName>\w+)\s+WHERE\s+(?<Expression>.+)\s+ORDER\s+BY\s+(?<SortField>\w+))|(SELECT\s+((?<Distinct>DISTINCT)\s+)?(TOP\s+(?<MaxRows>\d+)\s+)?(\s*((?<FieldName>\*)|((?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)))?\s*FROM\s+(?<TableName>\w+)\s+WHERE\s+(?<Expression>.+))|(SELECT\s+((?<Distinct>DISTINCT)\s+)?(TOP\s+(?<MaxRows>\d+)\s+)?((\s*((?<FieldName>\*)|((?<FieldName>\w+)(\s*,\s*(?<FieldName>\w+))*)))?)?\s*FROM\s+(?<TableName>\w+))",
                 RegexOptions.Compiled | RegexOptions.IgnoreCase);

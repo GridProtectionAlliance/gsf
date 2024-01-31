@@ -36,6 +36,17 @@ public abstract class TimeIntegration<T> : GrafanaFunctionBase<T> where T : stru
     public override string[] Aliases => new[] { "TimeInt" };
 
     /// <inheritdoc />
+    public override ReturnType ReturnType => ReturnType.Scalar;
+
+    /// <inheritdoc />
+    // Slice operation has no meaning for this time-focused function and Set operation will have an aberration between series,
+    // so we override the exposed behaviors, i.e., use of Slice will produce an error and use of Set will be hidden:
+    public override GroupOperations AllowedGroupOperations => GroupOperations.None | GroupOperations.Set;
+
+    /// <inheritdoc />
+    public override GroupOperations PublishedGroupOperations => GroupOperations.None;
+
+    /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>
     {
         new ParameterDefinition<TargetTimeUnit>

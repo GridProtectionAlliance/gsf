@@ -27,8 +27,7 @@ public abstract class Pow<T> : GrafanaFunctionBase<T> where T : struct, IDataSou
     public override string Description => "Returns a series of values that represent each of the values in the source series raised to the power of N.";
 
     /// <inheritdoc />
-    // Hiding slice operation since result matrix would be the same when tolerance matches data rate
-    public override GroupOperations PublishedGroupOperations => GroupOperations.None | GroupOperations.Set;
+    public override ReturnType ReturnType => ReturnType.Series;
 
     /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>

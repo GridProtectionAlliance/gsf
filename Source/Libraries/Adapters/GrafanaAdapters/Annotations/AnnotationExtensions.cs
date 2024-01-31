@@ -24,6 +24,7 @@
 
 using GrafanaAdapters.DataSources.BuiltIn;
 using GrafanaAdapters.Metadata;
+using GrafanaAdapters.Model.Annotations;
 using GrafanaAdapters.Model.Common;
 using GSF;
 using GSF.TimeSeries;
@@ -34,7 +35,7 @@ using System.Data;
 using System.Linq;
 using System.Text;
 
-namespace GrafanaAdapters.Model.Annotations;
+namespace GrafanaAdapters.Annotations;
 
 /// <summary>
 /// Grafana <see cref="AnnotationRequest"/> extensions class.

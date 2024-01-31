@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 
 namespace GrafanaAdapters.Functions;
@@ -31,28 +32,18 @@ internal static class Common
 {
     public const GroupOperations DefaultGroupOperations = GroupOperations.None | GroupOperations.Slice | GroupOperations.Set;
 
-    // This generates a standard data source values parameter definition - this is always the last parameter
-    public static ParameterDefinition<IAsyncEnumerable<T>> DataSourceValuesParameterDefinition<T>()
+    // Default slice tolerance parameter
+    public static readonly ParameterDefinition<double> DefaultSliceTolerance = new()
     {
-        return new ParameterDefinition<IAsyncEnumerable<T>>()
-        {
-            Name = "expression",
-            Default = AsyncEnumerable.Empty<T>(),
-            Description = "Target expression that produces a series of values representing input data for the function",
-            Required = true
-        };
-    }
+        Name = "sliceTolerance",
+        Default = 1.0D,
+        Description = "A floating-point value that must be greater than or equal to zero that represents the desired time tolerance, in seconds, for the time slice",
+        Required = true
+    };
 
     public static List<IParameter> InsertRequiredSliceParameter(this List<IParameter> parameters)
     {
-        parameters.Insert(0, new ParameterDefinition<double>()
-        {
-            Name = "sliceTolerance",
-            Default = 0.0333D,
-            Description = "A floating-point value that must be greater than or equal to zero that represents the desired time tolerance, in seconds, for the time slice",
-            Required = true
-        });
-
+        parameters.Insert(0, DefaultSliceTolerance);
         return parameters;
     }
 
@@ -90,7 +81,7 @@ internal static class Common
             }
             catch
             {
-                throw new ArgumentOutOfRangeException($"Could not parse '{parameter}' as a floating-point value or percentage is outside range of greater than 0 and less than or equal to 100.");
+                throw new SyntaxErrorException($"Could not parse '{parameter}' as a floating-point value or percentage is outside range of greater than 0 and less than or equal to 100.");
             }
         }
         else
@@ -110,7 +101,7 @@ internal static class Common
         }
 
         if (count < 1)
-            throw new ArgumentOutOfRangeException($"Count '{count}' is less than one.");
+            throw new SyntaxErrorException($"Count '{count}' is less than one.");
 
         return count;
     }
@@ -123,17 +114,17 @@ internal static class Common
             parameter = parameter.Substring(0, parameter.Length - 1);
 
         if (!double.TryParse(parameter, out double percent))
-            throw new FormatException($"Could not parse '{parameter}' as a floating-point value.");
+            throw new SyntaxErrorException($"Could not parse '{parameter}' as a floating-point value.");
 
         if (includeZero)
         {
             if (percent is < 0.0D or > 100.0D)
-                throw new ArgumentOutOfRangeException($"Percentage '{parameter}' is outside range of 0 to 100, inclusive.");
+                throw new SyntaxErrorException($"Percentage '{parameter}' is outside range of 0 to 100, inclusive.");
         }
         else
         {
             if (percent is <= 0.0D or > 100.0D)
-                throw new ArgumentOutOfRangeException($"Percentage '{parameter}' is outside range of greater than 0 and less than or equal to 100.");
+                throw new SyntaxErrorException($"Percentage '{parameter}' is outside range of greater than 0 and less than or equal to 100.");
         }
 
         return percent;

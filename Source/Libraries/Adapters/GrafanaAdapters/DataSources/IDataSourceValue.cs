@@ -22,7 +22,6 @@
 //******************************************************************************************************
 
 using GrafanaAdapters.DataSources.BuiltIn;
-using GrafanaAdapters.Functions;
 using GSF.TimeSeries;
 using System;
 using System.Collections.Generic;
@@ -84,6 +83,14 @@ public interface IDataSourceValue
     string[] TimeSeriesValueDefinition { get; }
 
     /// <summary>
+    /// Gets the index of the value within the <see cref="TimeSeriesValue"/> array.
+    /// </summary>
+    /// <remarks>
+    /// If data source value has multiple targets, this should be the value index of the primary target.
+    /// </remarks>
+    int ValueIndex { get; }
+
+    /// <summary>
     /// Gets the desired load order for the data source value type.
     /// </summary>
     /// <remarks>
@@ -114,9 +121,13 @@ public interface IDataSourceValue
     /// </para>
     /// <para>
     /// Note that system generally assumes that the fields 'PointTag', a unique string-based alpha-numeric
-    /// identifier for a measurement, 'ID', a unique string-based measurement-key formatted identifier
-    /// (e.g., PPA:101), and 'SignalID', a unique Guid-based identifier all exist in the metadata table.
-    /// However, these field does not need to be included as required metadata field names.
+    /// identifier for a measurement, 'ID', a unique string-based measurement key formatted identifier
+    /// (e.g., PPA:101), and 'SignalID', a unique Guid-based identifier, all exist in the metadata table.
+    /// However, these fields do not have to be included as required metadata field names. The 'PointTag'
+    /// field is used to lookup records in the metadata. The 'ID' and 'SignalID' fields are used by
+    /// 'AdapterBase.ParseFilterExpression' for direct parsing of measurement key and signal ID when
+    /// expression is not a filter expression. Direct parsing always uses the primary metadata table
+    /// name for lookups, see <see cref="MetadataTableName"/> property.
     /// </para>
     /// </remarks>
     string[] RequiredMetadataFieldNames { get; }
@@ -192,11 +203,6 @@ public interface IDataSourceValue<T> : IDataSourceValue, IComparable<T>, IEquata
     /// per each field in the data source value for a given timestamp.
     /// </remarks>
     void AssignToTimeValueMap(string pointTag, DataSourceValue dataValue, SortedList<double, T> timeValueMap, DataSet metadata);
-
-    /// <summary>
-    /// Gets the parameter definition for data source values.
-    /// </summary>
-    ParameterDefinition<IAsyncEnumerable<T>> DataSourceValuesParameterDefinition { get; }
 
     /// <summary>
     /// Executes provided function for data source fields, applying the results

@@ -5,6 +5,7 @@ using GrafanaAdapters.Metadata;
 using GSF;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
@@ -56,6 +57,9 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
 
     /// <inheritdoc />
     public override string[] Aliases => new[] { "Eval" };
+
+    /// <inheritdoc />
+    public override ReturnType ReturnType => ReturnType.Scalar;
 
     /// <inheritdoc />
     public override GroupOperations AllowedGroupOperations => GroupOperations.Slice;
@@ -129,7 +133,7 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
                 }
                 catch (Exception ex)
                 {
-                    throw new TypeLoadException($"Unable to load import type from assembly for \"{typeDef}\": {ex.Message}", ex);
+                    throw new SyntaxErrorException($"Unable to load import type from assembly for \"{typeDef}\": {ex.Message}", ex);
                 }
             }
 
@@ -226,7 +230,7 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
                 lastIndex = queryExpression.IndexOf(',', endBrace);
 
                 if (lastIndex < 0) // No filter expression provided
-                    throw new FormatException($"Expected 3 parameters, received 2 in: Evaluate({queryExpression})");
+                    throw new SyntaxErrorException($"Expected 3 parameters, received 2 in: Evaluate({queryExpression})");
 
                 lastIndex++;
             }
@@ -251,7 +255,7 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
         else
         {
             // Offset counts for expected filter expression in error message for better user feedback
-            throw new FormatException($"Expected 3 parameters, received {parsedParameters.Count + 1} in: Evaluate({queryExpression})");
+            throw new SyntaxErrorException($"Expected 3 parameters, received {parsedParameters.Count + 1} in: Evaluate({queryExpression})");
         }
 
         // Add command-level type imports to parsed parameters, this becomes an internal parameter

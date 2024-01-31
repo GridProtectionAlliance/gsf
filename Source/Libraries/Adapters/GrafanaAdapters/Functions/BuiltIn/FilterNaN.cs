@@ -26,6 +26,9 @@ public abstract class FilterNaN<T> : GrafanaFunctionBase<T> where T : struct, ID
     public override string Description => "Returns a series of values that represent a filtered set of the values in the source series where each value is a real number, i.e., value is not NaN.";
 
     /// <inheritdoc />
+    public override ReturnType ReturnType => ReturnType.Series;
+
+    /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>
     {
         new ParameterDefinition<bool>

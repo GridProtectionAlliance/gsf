@@ -29,6 +29,9 @@ public abstract class Maximum<T> : GrafanaFunctionBase<T> where T : struct, IDat
     public override string[] Aliases => new[] { "Max" };
 
     /// <inheritdoc />
+    public override ReturnType ReturnType => ReturnType.Scalar;
+
+    /// <inheritdoc />
     public override bool ResultIsSetTargetSeries => true;
 
     /// <inheritdoc />

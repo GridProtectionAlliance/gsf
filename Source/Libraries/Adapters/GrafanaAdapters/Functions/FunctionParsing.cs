@@ -23,8 +23,10 @@
 
 using GrafanaAdapters.DataSources;
 using GrafanaAdapters.DataSources.BuiltIn;
+using GrafanaAdapters.Functions.BuiltIn;
 using GrafanaAdapters.Metadata;
 using GSF;
+using GSF.Diagnostics;
 using GSF.IO;
 using System;
 using System.Collections.Generic;
@@ -32,11 +34,11 @@ using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using GSF.Diagnostics;
 
 namespace GrafanaAdapters.Functions;
 
@@ -47,7 +49,7 @@ internal static class FunctionParsing
     private static readonly LogPublisher s_log = Logger.CreatePublisher(typeof(FunctionParsing), MessageClass.Component);
 
     // Calls to this expensive match operation should be temporally cached by expression
-    public static ParsedGrafanaFunction<T>[] MatchFunctions<T>(string expression) where T : struct, IDataSourceValue<T>
+    public static ParsedGrafanaFunction<T>[] MatchFunctions<T>(string expression, QueryParameters queryParameters) where T : struct, IDataSourceValue<T>
     {
         Regex functionsRegex = DataSourceValueCache<T>.FunctionsRegex;
         Dictionary<string, IGrafanaFunction<T>> functionMap = DataSourceValueCache<T>.FunctionMap;
@@ -73,17 +75,51 @@ internal static class FunctionParsing
             }
 
             // Check if the function has a group operation prefix, e.g., slice or set
-            Enum.TryParse(groups["GroupOp"].Value, true, out GroupOperations operation);
+            Enum.TryParse(groups["GroupOp"].Value, true, out GroupOperations groupOperation);
 
             // Verify that the function allows the requested group operation - this will
             // throw an exception if the function does not support the requested operation
-            operation = function.CheckAllowedGroupOperation(operation);
+            groupOperation = function.CheckAllowedGroupOperation(groupOperation);
+
+            // Get the function expression from the regex representing the parameters passed to the function
+            string functionExpression = groups["Expression"].Value;
+
+            // Any slice operation on a function that returns the same result matrix whether processed horizontally, i.e.,
+            // series-by-series, or vertically, i.e., slice-by-slice, is equivalent to its non-slice operation when using
+            // the 'Interval' function over the same expression. For example, the following queries are equivalent:
+            //
+            //     SliceShift(0.02, 1, FILTER TOP 10 ActiveMeasurements WHERE SignalType='FREQ')
+            //     Shift(1, Interval(0.02, FILTER TOP 10 ActiveMeasurements WHERE SignalType='FREQ'))
+            //
+            //     SliceRound(0.0333, 3, ACME-STAR:FREQ; ACME-PLUS:FREQ)
+            //     Round(3, Interval(0.0333, ACME-STAR:FREQ; ACME-PLUS:FREQ))
+            //
+            // As an optimization in this scenario, replace the slice operation with the equivalent interval operation.
+            // Because of this automatic optimization, slice operations meeting this criteria are also hidden from the
+            // 'PublishedGroupOperations' function property, see 'GetGrafanaFunctions' method below.
+            if (groupOperation == GroupOperations.Slice && function.ReturnType == ReturnType.Series && function.IsSliceSeriesEquivalent)
+            {
+                // Parse the function parameters from expression
+                (string[] parsedParameters, string queryExpression) = function.ParseParameters(queryParameters, functionExpression, groupOperation);
+
+                // First parameter in a slice operation is the tolerance parameter
+                string tolerance = parsedParameters[0];
+
+                // Remaining parameters represent normal non-slice function parameters
+                string[] parameters = parsedParameters.Skip(1).ToArray();
+
+                // Rearrange expression such that parameters are passed to non-slice version of function and tolerance is
+                // passed to 'Interval' function. Since functions regex only matches top-level functions, it is safe to adjust
+                // the expression in this manner as it is just now being parsed and query expression will be parsed later
+                functionExpression = $"{string.Join(", ", parameters)}{(parameters.Length > 0 ? ", " : "")}{nameof(Interval<T>)}({tolerance}, {queryExpression})";
+                groupOperation = GroupOperations.None;
+            }
 
             parsedGrafanaFunctions.Add(new ParsedGrafanaFunction<T>
             {
                 Function = function,
-                GroupOperation = operation,
-                Expression = groups["Expression"].Value,
+                GroupOperation = groupOperation,
+                Expression = functionExpression,
                 MatchedValue = match.Value
             });
         }
@@ -119,17 +155,39 @@ internal static class FunctionParsing
 
                 string grafanaFunctionsPath = FilePath.GetAbsolutePath("").EnsureEnd(Path.DirectorySeparatorChar);
                 List<Type> implementationTypes = typeof(IGrafanaFunction).LoadImplementations(grafanaFunctionsPath, true, false);
-
                 List<IGrafanaFunction> functions = new();
 
                 foreach (Type type in implementationTypes.Where(type => type.GetConstructor(Type.EmptyTypes) is not null))
                 {
-                    Type functionType = checkNestedType(type);
+                    try
+                    {
+                        (Type functionType, bool builtIn) = checkNestedType(type);
 
-                    if (functionType is null)
-                        continue;
+                        if (functionType is null)
+                            continue;
 
-                    functions.Add((IGrafanaFunction)Activator.CreateInstance(functionType));
+                        IGrafanaFunction function = (IGrafanaFunction)Activator.CreateInstance(functionType);
+
+                        // Set function category to built-in when function is in the BuiltIn namespace (this is a non-overridable property)
+                        functionType.GetProperty(nameof(IGrafanaFunction.Category))?.SetValue(function, builtIn ? Category.BuiltIn : Category.Custom);
+
+                        // If function returns slice-series equivalent results, remove slice from published group operations
+                        if (function.ReturnType == ReturnType.Series && function.IsSliceSeriesEquivalent)
+                        {
+                            PropertyInfo publishedGroupOperations = functionType.GetProperty(nameof(IGrafanaFunction.PublishedGroupOperations));
+
+                            // Attempt to update 'GrafanaFunctionBase<T>.PublishedGroupOperations' internal set property to hide 'Slice',
+                            // note that derived classes may have overridden this property with no available set property, so check this:
+                            if (publishedGroupOperations?.GetSetMethod(true) is not null)
+                                publishedGroupOperations.SetValue(function, function.PublishedGroupOperations & ~GroupOperations.Slice);
+                        }
+
+                        functions.Add(function);
+                    }
+                    catch (Exception ex)
+                    {
+                        s_log.Publish(MessageLevel.Error, EventName, $"Failed while loading {nameof(IGrafanaFunction)} type '{type.FullName}': {ex.Message}", exception: ex);
+                    }
                 }
 
                 Interlocked.Exchange(ref s_grafanaFunctions, functions.ToArray());
@@ -142,18 +200,19 @@ internal static class FunctionParsing
                 s_log.Publish(MessageLevel.Error, EventName, $"Failed while loading {nameof(IGrafanaFunction)} types: {ex.Message}", exception: ex);
             }
 
-
             return s_grafanaFunctions;
         }
 
         // Check for Grafana functions nested within abstract base class definition - 'BuiltIn' pattern
-        static Type checkNestedType(Type type)
+        static (Type functionType, bool builtIn) checkNestedType(Type type)
         {
+            const string BuiltInNamespace = $"{nameof(GrafanaAdapters)}.{nameof(Functions)}.{nameof(BuiltIn)}";
+
             if (!type.ContainsGenericParameters)
-                return type;
+                return (type, false);
 
             if (!type.IsNested || !type.DeclaringType!.IsGenericType)
-                return null;
+                return (type, false);
 
             // Must contain at least one generic argument because IsGenericType is true
             Type[] constraints = type.DeclaringType.GetGenericArguments()[0].GetGenericParameterConstraints();
@@ -161,7 +220,8 @@ internal static class FunctionParsing
             // Look for any constraint based on IDataSourceValue, if found, assign a specific
             // type (any is fine) to generic parent class so nested type can be constructed
             return constraints.Any(constraint => constraint.GetInterfaces().Any(interfaceType => interfaceType == typeof(IDataSourceValue))) ?
-                type.MakeGenericType(typeof(DataSourceValue)) : null;
+                (type.MakeGenericType(typeof(DataSourceValue)), type.Namespace?.Equals(BuiltInNamespace) ?? false) :
+                (null, false);
         }
     }
 
@@ -182,33 +242,6 @@ internal static class FunctionParsing
 
         // Reinitializing data source caches will reload all grafana functions per data source value type
         DataSourceValueCache.ReinitializeAll();
-    }
-
-    // Execute Grafana function over a set of points from each series at the same time-slice
-    public static async IAsyncEnumerable<DataSourceValueGroup<T>> ComputeSliceAsync<T>(this IGrafanaFunction<T> function, TimeSliceScannerAsync<T> scanner, QueryParameters queryParameters, string rootTarget, DataSet metadata, string[] parsedParameters, [EnumeratorCancellation] CancellationToken cancellationToken) where T : struct, IDataSourceValue<T>
-    {
-        async IAsyncEnumerable<T> readSliceValues()
-        {
-            while (!scanner.DataReadComplete)
-            {
-                IAsyncEnumerable<T> dataSourceValues = await scanner.ReadNextTimeSliceAsync().ConfigureAwait(false);
-                Dictionary<string, string> metadataMap = metadata.GetMetadataMap<T>(rootTarget, queryParameters);
-                Parameters parameters = await function.GenerateParametersAsync(parsedParameters, dataSourceValues, rootTarget, metadata, metadataMap, cancellationToken).ConfigureAwait(false);
-
-                await foreach (T dataValue in function.ComputeSliceAsync(parameters, cancellationToken).ConfigureAwait(false))
-                    yield return dataValue;
-            }
-        }
-
-        await foreach (IAsyncGrouping<string, T> valueGroup in readSliceValues().GroupBy(dataValue => dataValue.Target).WithCancellation(cancellationToken).ConfigureAwait(false))
-        {
-            yield return new DataSourceValueGroup<T>
-            {
-                Target = valueGroup.Key,
-                RootTarget = valueGroup.Key,
-                Source = valueGroup
-            };
-        }
     }
 
     // Handle series rename operations for Grafana functions - this is a special case for handling the Label function
