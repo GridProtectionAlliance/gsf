@@ -95,7 +95,7 @@ namespace GSF.Data.Model
         public string Type
         {
             get => m_type;
-            set //
+            set
             {
                 if (s_validTypes.Contains(value, StringComparer.OrdinalIgnoreCase))
                     m_type = value;
