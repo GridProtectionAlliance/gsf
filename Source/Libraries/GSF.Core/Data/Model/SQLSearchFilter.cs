@@ -128,43 +128,45 @@ namespace GSF.Data.Model
 
             // For legacy support. In the future, remove the query type.
             if (Type == "query")
-                query = $"{(IsPivotColumn ? "AFV_" : "") + FieldName} {Operator} ";
+                query = $"{(IsPivotColumn ? "AFV_" : "") + FieldName} {Operator} {SearchText}";
             else
+            {
                 query = $"[{(IsPivotColumn ? "AFV_" : "") + FieldName.RemoveCharacter('[').RemoveCharacter(']')}] {Operator} ";
 
-            /* This requires switch to the new search format
+                /* This requires switch to the new search format
+                    if (Operator == "IN" || Operator == "NOT IN")
+                    {
+                        IEnumerable<string> valueList = searchText
+                            .Replace("(", "")
+                            .Replace(")", "")
+                            .Split(',');
+
+                        searchText = $"({string.Join(",", valueList.Select((s, i) => $"{{{i + parameters.Count}}}"))})";
+                        parameters.AddRange(valueList);
+                    }
+                */
+
+                /* We update to remove the following once we move to new SQL injection logic,
+                 * but it is needed in here for now since I had to leave the logic out
+                 * of the above to avoid legacy issues
+                 */
+
                 if (Operator == "IN" || Operator == "NOT IN")
                 {
                     IEnumerable<string> valueList = searchText
                         .Replace("(", "")
                         .Replace(")", "")
-                        .Split(',');
+                        .Split(',')
+                        .Select(t => $"'{t}'");
 
-                    searchText = $"({string.Join(",", valueList.Select((s, i) => $"{{{i + parameters.Count}}}"))})";
-                    parameters.AddRange(valueList);
+                    searchText = $"({string.Join(",", valueList)})";
+                    query += $" {searchText}";
                 }
-            */
-
-            /* We update to remove the following once we move to new SQL injection logic,
-             * but it is needed in here for now since I had to leave the logic out
-             * of the above to avoid legacy issues
-             */
-
-            if (Type != "query" && (Operator == "IN" || Operator == "NOT IN"))
-            {
-                IEnumerable<string> valueList = searchText
-                    .Replace("(", "")
-                    .Replace(")", "")
-                    .Split(',')
-                    .Select(t => $"'{t}'");
-
-                searchText = $"({string.Join(",", valueList)})";
-                query += $" {searchText}";
-            }
-            else
-            {
-                query += $" {{{parameters.Count}}} {escape}";
-                parameters.Add(searchText);
+                else
+                {
+                    query += $" {{{parameters.Count}}} {escape}";
+                    parameters.Add(searchText);
+                }
             }
 
             return query;
