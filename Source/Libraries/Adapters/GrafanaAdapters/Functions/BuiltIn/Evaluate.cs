@@ -180,7 +180,17 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
             }
 
             // Compile and cache the expression (only compiled once per expression)
-            IDynamicExpression dynamicExpression = TargetCache<IDynamicExpression>.GetOrAdd(expression, () => context.CompileDynamic(expression));
+            IDynamicExpression dynamicExpression = TargetCache<IDynamicExpression>.GetOrAdd(expression, () =>
+            {
+                try
+                {
+                    return context.CompileDynamic(expression);
+                }
+                catch (Exception ex)
+                {
+                    throw new SyntaxErrorException($"Failed to compile expression \"{expression}\" for evaluation: {ex.Message}", ex);
+                }
+            });
 
             // Return evaluated expression
             yield return lastValue with

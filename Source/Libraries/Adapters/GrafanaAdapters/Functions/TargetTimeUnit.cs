@@ -45,6 +45,22 @@ public class TargetTimeUnit
     /// </summary>
     public double Factor = double.NaN;
 
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        if (Unit != TimeUnit.Seconds)
+            return $"{Unit}";
+
+        return Factor switch
+        {
+            double.NaN => "Seconds",
+            SI.Milli => "Milliseconds",
+            SI.Micro => "Microseconds",
+            SI.Nano => "Nanoseconds",
+            _ => $"{Unit}"
+        };
+    }
+
     /// <summary>
     /// Tries to parse a string representation of a time unit to a <see cref="TargetTimeUnit"/>.
     /// </summary>

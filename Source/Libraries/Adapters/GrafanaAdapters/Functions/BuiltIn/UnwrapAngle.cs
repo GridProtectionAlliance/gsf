@@ -42,7 +42,7 @@ public abstract class UnwrapAngle<T> : GrafanaFunctionBase<T> where T : struct, 
         {
             Name = "units",
             Default = AngleUnit.Degrees,
-            Description = "Specifies the type of angle units and must be one of the following: Degrees, Radians, Grads, ArcMinutes, ArcSeconds or AngularMil",
+            Description = "Specifies the type of angle units and must be one of the following: Degrees, Radians, Grads, ArcMinutes, ArcSeconds or AngularMil.",
             Required = false
         }
     };

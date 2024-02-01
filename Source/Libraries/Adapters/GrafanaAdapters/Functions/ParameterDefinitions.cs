@@ -171,7 +171,7 @@ internal static class ParameterDefinitions<T>
     {
         Name = "expression",
         Default = AsyncEnumerable.Empty<T>(),
-        Description = "Target expression that produces a series of values representing input data for the function",
+        Description = "Target expression that produces a series of values representing input data for the function.",
         Required = true
     };
 }
