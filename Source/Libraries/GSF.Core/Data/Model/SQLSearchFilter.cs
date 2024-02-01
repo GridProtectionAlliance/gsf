@@ -70,7 +70,7 @@ namespace GSF.Data.Model
             get => m_operator;
             set
             {
-                if (s_validOperators.Contains(value))
+                if (s_validOperators.Contains(value, StringComparer.OrdinalIgnoreCase))
                     m_operator = value;
                 else
                     throw new NotSupportedException($"{value} is not a valid operator");
@@ -97,9 +97,10 @@ namespace GSF.Data.Model
             get => m_type;
             set
             {
-                if (s_validTypes.Contains(value))
+                if (s_validTypes.Contains(value, StringComparer.OrdinalIgnoreCase))
                     m_type = value;
-                else if (value == "query") // This is needed for legacy support so we do not break anything it can be removed in the future.
+                // This is needed for legacy support so we do not break anything it can be removed in the future.
+                else if (string.Equals(value, "query", StringComparison.OrdinalIgnoreCase))
                     m_type = value;
                 else
                     throw new NotSupportedException($"{value} is not a valid type");
@@ -120,14 +121,14 @@ namespace GSF.Data.Model
         public string GenerateConditional(List<object> parameters)
         {
             string escape = "";
-            if (Operator == "LIKE" || Operator == "NOT LIKE")
+            if (string.Equals(Operator, "LIKE", StringComparison.OrdinalIgnoreCase) || string.Equals(Operator, "NOT LIKE", StringComparison.OrdinalIgnoreCase))
                 escape = "ESCAPE '$'";
 
             string query = "";
             string searchText = SearchText;
 
             // For legacy support. In the future, remove the query type.
-            if (Type == "query")
+            if (string.Equals(Type, "query", StringComparison.OrdinalIgnoreCase))
                 query = $"{(IsPivotColumn ? "AFV_" : "") + FieldName} {Operator} {SearchText}";
             else
             {
@@ -151,7 +152,7 @@ namespace GSF.Data.Model
                  * of the above to avoid legacy issues
                  */
 
-                if (Operator == "IN" || Operator == "NOT IN")
+                if (string.Equals(Operator, "IN", StringComparison.OrdinalIgnoreCase) || string.Equals(Operator, "NOT IN", StringComparison.OrdinalIgnoreCase))
                 {
                     IEnumerable<string> valueList = searchText
                         .Replace("(", "")
