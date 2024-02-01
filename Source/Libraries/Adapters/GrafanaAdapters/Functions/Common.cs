@@ -37,7 +37,7 @@ internal static class Common
     {
         Name = "sliceTolerance",
         Default = 1.0D,
-        Description = "A floating-point value that must be greater than or equal to zero that represents the desired time tolerance, in seconds, for the time slice",
+        Description = "A floating-point value that must be greater than or equal to zero that represents the desired time tolerance, in seconds, for the time slice.",
         Required = true
     };
 
