@@ -211,6 +211,7 @@ partial class GrafanaDataSourceBase
                             {
                                 string strVal => strVal,
                                 DateTime dateTime => dateTime.ToString("yyyy-MM-dd HH:mm:ss.fff"),
+                                TargetTimeUnit timeUnit => timeUnit.ToString(),
                                 null => "null",
                                 _ => parameter.Default.ToString()
                             };

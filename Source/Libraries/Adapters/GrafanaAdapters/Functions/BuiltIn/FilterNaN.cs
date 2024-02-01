@@ -35,7 +35,7 @@ public abstract class FilterNaN<T> : GrafanaFunctionBase<T> where T : struct, ID
         {
             Name = "alsoFilterInfinity",
             Default = true,
-            Description = "A boolean flag that determines if infinite values should also be excluded - defaults to true",
+            Description = "A boolean flag that determines if infinite values should also be excluded.",
             Required = false
         }
     };
