@@ -207,8 +207,18 @@ public abstract partial class GrafanaDataSourceBase
             if (request.excludedFlags > 0)
                 values = values.Where(value => ((uint)value.Flags & request.excludedFlags) == 0);
 
-            // For deferred enumerations, function operations are executed here by ToArrayAsync() at the last moment
-            series.datapoints = await values.Select(dataValue => dataValue.TimeSeriesValue).ToArrayAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                // For deferred enumerations, function operations are executed here by ToArrayAsync() at the last moment
+                series.datapoints = await values.Select(dataValue => dataValue.TimeSeriesValue).ToArrayAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch (SyntaxErrorException ex)
+            {
+                // In cases where a deferred function enumeration specifically reports a
+                // syntax error exception, e.g., 'Evaluate', expose the details here
+                series.datapoints = Array.Empty<double[]>();
+                series.syntaxError = ex.Message;
+            }
         });
 
         await Task.WhenAll(processValueGroups).ConfigureAwait(false);
