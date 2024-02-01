@@ -415,6 +415,10 @@ public abstract partial class GrafanaDataSourceBase
             case GroupOperations.Slice:
             {
                 double tolerance = await ParseSliceToleranceAsync(function.Name, parsedParameters[0], queryParameters.SourceTarget.target, valueGroups, metadata, cancellationToken).ConfigureAwait(false);
+
+                if (tolerance < SI.Milli)
+                    throw new SyntaxErrorException($"Invalid slice tolerance value '{tolerance}' specified for function '{function.Name}', value must be greater than or equal to {SI.Milli:N3}.");
+
                 DataSourceValueGroup<T>[] dataSources = await valueGroups.ToArrayAsync(cancellationToken).ConfigureAwait(false);
                 TimeSliceScannerAsync<T> scanner = await TimeSliceScannerAsync<T>.Create(dataSources, tolerance / SI.Milli, cancellationToken).ConfigureAwait(false);
 
