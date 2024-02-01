@@ -821,8 +821,9 @@ namespace GSF.Web.Model
                     sql += $" OFFSET {page * recordsPerPage} ROWS FETCH NEXT {recordsPerPage} ROWS ONLY";
                 }
 
+                object[] paramArray = param.ToArray();
                 if (param.Count() > 0)
-                    return connection.RetrieveData(sql, param);
+                    return connection.RetrieveData(sql, paramArray);
                 return connection.RetrieveData(sql,"");
             }
         }
@@ -896,8 +897,9 @@ namespace GSF.Web.Model
                 sql = $"SELECT COUNT(*) FROM {tblSelect} {whereClause}";
             }
 
-            if (param.Any())
-                return connection.ExecuteScalar<int>(sql, param);
+            object[] paramArray = param.ToArray();
+            if (paramArray.Any())
+                return connection.ExecuteScalar<int>(sql, paramArray);
             return connection.ExecuteScalar<int>(sql, "");
         }
 
