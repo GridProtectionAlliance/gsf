@@ -51,11 +51,6 @@ public class TimeSeriesValues
     public string refID;
 
     /// <summary>
-    /// Gets or sets a an error message that indicates a syntax error in the query request.
-    /// </summary>
-    public string syntaxError;
-
-    /// <summary>
     /// Gets or sets metadata attached to the <see cref="TimeSeriesValues"/>.
     /// </summary>
     public Dictionary<string, string> metadata;
@@ -65,6 +60,11 @@ public class TimeSeriesValues
     /// </summary>
     [JsonIgnore] // Used internally for filtering empty series, not serialized
     public bool dropEmptySeries;
+
+    /// <summary>
+    /// Gets or sets a an error message that indicates a syntax error in the query request.
+    /// </summary>
+    public string syntaxError;
 
     /// <summary>
     /// Gets or sets a Grafana time-series value data.

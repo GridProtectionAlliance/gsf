@@ -31,6 +31,9 @@ public abstract class Median<T> : GrafanaFunctionBase<T> where T : struct, IData
     public override string[] Aliases => new[] { "Med", "Mid" };
 
     /// <inheritdoc />
+    public override ReturnType ReturnType => ReturnType.Scalar;
+
+    /// <inheritdoc />
     public override bool ResultIsSetTargetSeries => true;
 
     /// <inheritdoc />

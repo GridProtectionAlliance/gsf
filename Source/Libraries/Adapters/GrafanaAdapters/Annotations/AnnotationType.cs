@@ -21,7 +21,7 @@
 //
 //******************************************************************************************************
 
-namespace GrafanaAdapters.Model.Annotations;
+namespace GrafanaAdapters.Annotations;
 
 /// <summary>
 /// Supported annotation types for GSF Time-series Framework.

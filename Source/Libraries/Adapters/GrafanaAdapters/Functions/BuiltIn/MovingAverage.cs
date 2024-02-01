@@ -33,6 +33,15 @@ public abstract class MovingAverage<T> : GrafanaFunctionBase<T> where T : struct
     public override string[] Aliases => new[] { "MovingAvg", "MovingMean", "SimpleMovingAverage", "SMA" };
 
     /// <inheritdoc />
+    public override ReturnType ReturnType => ReturnType.Series;
+
+    /// <inheritdoc />
+    public override bool IsSliceSeriesEquivalent => false;
+
+    /// <inheritdoc />
+    public override GroupOperations PublishedGroupOperations => GroupOperations.None | GroupOperations.Set;
+
+    /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>
     {
         new ParameterDefinition<int>

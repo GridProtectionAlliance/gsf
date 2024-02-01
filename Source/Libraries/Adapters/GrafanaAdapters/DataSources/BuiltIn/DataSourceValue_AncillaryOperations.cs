@@ -21,7 +21,6 @@
 //
 //******************************************************************************************************
 
-using GrafanaAdapters.Functions;
 using GrafanaAdapters.Metadata;
 using GSF.TimeSeries;
 using System;
@@ -71,6 +70,8 @@ public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
 
     readonly string[] IDataSourceValue.TimeSeriesValueDefinition => new[] { nameof(Value), nameof(Time) };
 
+    readonly int IDataSourceValue.ValueIndex => ValueIndex;
+
     /// <inheritdoc />
     public readonly int CompareTo(DataSourceValue other)
     {
@@ -97,7 +98,6 @@ public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
 
     readonly string[] IDataSourceValue.RequiredMetadataFieldNames => new[]
     {
-        // These are fields as required by local GetIDTargetMap() method
         "ID",       // <string> Measurement key, e.g., PPA:101
         "SignalID", //  <Guid>  Signal ID
         "PointTag"  // <string> Point tag, e.g., GPA_SHELBY:FREQ
@@ -145,11 +145,6 @@ public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
     {
         timeValueMap[dataValue.Time] = dataValue;
     }
-
-    /// <inheritdoc />
-    public readonly ParameterDefinition<IAsyncEnumerable<DataSourceValue>> DataSourceValuesParameterDefinition => s_dataSourceValuesParameterDefinition;
-
-    private static readonly ParameterDefinition<IAsyncEnumerable<DataSourceValue>> s_dataSourceValuesParameterDefinition = Common.DataSourceValuesParameterDefinition<DataSourceValue>();
 
     /// <summary>
     /// Gets the type index for <see cref="DataSourceValue"/>.

@@ -30,6 +30,9 @@ public abstract class Total<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     public override string[] Aliases => new[] { "Add", "Sum" };
 
     /// <inheritdoc />
+    public override ReturnType ReturnType => ReturnType.Scalar;
+
+    /// <inheritdoc />
     public class ComputeDataSourceValue : Total<DataSourceValue>
     {
         /// <inheritdoc />

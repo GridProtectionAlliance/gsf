@@ -33,13 +33,16 @@ public abstract class UnwrapAngle<T> : GrafanaFunctionBase<T> where T : struct, 
     public override string[] Aliases => new[] { "Unwrap" };
 
     /// <inheritdoc />
+    public override ReturnType ReturnType => ReturnType.Series;
+
+    /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>
     {
         new ParameterDefinition<AngleUnit>
         {
             Name = "units",
             Default = AngleUnit.Degrees,
-            Description = "Specifies the type of angle units and must be one of the following: Degrees, Radians, Grads, ArcMinutes, ArcSeconds or AngularMil",
+            Description = "Specifies the type of angle units and must be one of the following: Degrees, Radians, Grads, ArcMinutes, ArcSeconds or AngularMil.",
             Required = false
         }
     };
@@ -54,10 +57,8 @@ public abstract class UnwrapAngle<T> : GrafanaFunctionBase<T> where T : struct, 
         Angle anglesFromValues(T dataValue) =>
             Angle.ConvertFrom(dataValue.Value, units);
 
-        T valuesFromAngles(Angle angle, int index) => values[index] with
-        {
-            Value = angle.ConvertTo(units)
-        };
+        T valuesFromAngles(Angle angle, int index) =>
+            values[index] with { Value = angle.ConvertTo(units) };
 
         foreach (T dataValue in Angle.Unwrap(values.Select(anglesFromValues)).Select(valuesFromAngles))
             yield return dataValue;

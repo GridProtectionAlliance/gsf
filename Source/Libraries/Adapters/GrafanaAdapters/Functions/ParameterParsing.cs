@@ -58,7 +58,7 @@ internal static class ParameterParsing
     /// A tuple of parsed parameters and any remaining query expression.
     /// Remaining query expression is typically the filter expression.
     /// </returns>
-    /// <exception cref="FormatException">Expected parameters did not match those received.</exception>
+    /// <exception cref="SyntaxErrorException">Expected parameters did not match those received.</exception>
     public static (string[] parsedParameters, string queryExpression) ParseParameters(this IGrafanaFunction function, QueryParameters queryParameters, string queryExpression, GroupOperations groupOperation)
     {
         return TargetCache<(string[], string)>.GetOrAdd($"{function.Name}:{queryExpression}", () =>
@@ -67,7 +67,7 @@ internal static class ParameterParsing
             (List<string> parsedParameters, string updatedQueryExpression) = function.ParseParameters(queryParameters, queryExpression);
 
             if (parsedParameters is not null)
-                return (parsedParameters.ToArray(), updatedQueryExpression);
+                return (parsedParameters.Select(parameter => parameter.Trim()).ToArray(), updatedQueryExpression);
 
             parsedParameters = new List<string>();
 
@@ -97,7 +97,7 @@ internal static class ParameterParsing
                 else
                 {
                     // Offset counts for filter expression in error message not included in required parameters for better user feedback
-                    throw new FormatException($"Expected {requiredParameters + 1} parameters, received {parsedParameters.Count + 1} in: {function.Name}({queryExpression})");
+                    throw new SyntaxErrorException($"Expected {requiredParameters + 1} parameters, received {parsedParameters.Count + 1} in: {function.Name}({queryExpression})");
                 }
             }
 
@@ -133,13 +133,11 @@ internal static class ParameterParsing
                 }
             }
 
-            return (parsedParameters.ToArray(), queryExpression);
+            return (parsedParameters.Select(parameter => parameter.Trim()).ToArray(), queryExpression);
         });
 
-        static bool hasSubExpression(string target)
-        {
-            return target.StartsWith("FILTER", StringComparison.OrdinalIgnoreCase) || target.Contains("(");
-        }
+        static bool hasSubExpression(string target) =>
+            target.StartsWith("FILTER", StringComparison.OrdinalIgnoreCase) || target.Contains("(");
     }
 
     /// <summary>
@@ -151,10 +149,13 @@ internal static class ParameterParsing
     /// <param name="dataSourceValues">Data source values.</param>
     /// <param name="rootTarget">Root target.</param>
     /// <param name="metadata">Metadata.</param>
-    /// <param name="metadataMap">Metadata map.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>List of value mutable parameters from parsed parameters.</returns>
-    public static async ValueTask<Parameters> GenerateParametersAsync<TDataSourceValue>(this IGrafanaFunction<TDataSourceValue> function, string[] parsedParameters, IAsyncEnumerable<TDataSourceValue> dataSourceValues, string rootTarget, DataSet metadata, Dictionary<string, string> metadataMap, CancellationToken cancellationToken) where TDataSourceValue : struct, IDataSourceValue<TDataSourceValue>
+    /// <remarks>
+    /// In case user has requested metadata as a parameter, pass in the root target
+    /// which has a higher chance of being resolved for associated metadata.
+    /// </remarks>
+    public static async ValueTask<Parameters> GenerateParametersAsync<TDataSourceValue>(this IGrafanaFunction<TDataSourceValue> function, string[] parsedParameters, IAsyncEnumerable<TDataSourceValue> dataSourceValues, string rootTarget, DataSet metadata, CancellationToken cancellationToken) where TDataSourceValue : struct, IDataSourceValue<TDataSourceValue>
     {
         // Generate a list of value mutable parameters
         Parameters parameters = function.ParameterDefinitions.CreateParameters();
@@ -176,7 +177,7 @@ internal static class ParameterParsing
                 Debug.Assert(parameter is IParameter<IAsyncEnumerable<IDataSourceValue>>, $"Last parameter is not a data source value of type '{typeof(IAsyncEnumerable<IDataSourceValue>).Name}'.");
 
                 // Replace last parameter with data source type specific parameter with associated values
-                parameters[i] = new Parameter<IAsyncEnumerable<TDataSourceValue>>(default(TDataSourceValue).DataSourceValuesParameterDefinition)
+                parameters[i] = new Parameter<IAsyncEnumerable<TDataSourceValue>>(ParameterDefinitions<TDataSourceValue>.DataSourceValues)
                 {
                     Value = dataSourceValues
                 };
@@ -186,7 +187,7 @@ internal static class ParameterParsing
 
             // Parameter
             if (index < parsedParameters.Length)
-                await parameter.ConvertParsedValueAsync(parsedParameters[index++], rootTarget, dataSourceValues, metadata, metadataMap, cancellationToken).ConfigureAwait(false);
+                await parameter.ConvertParsedValueAsync(parsedParameters[index++].Trim(), rootTarget, dataSourceValues, metadata, cancellationToken).ConfigureAwait(false);
 
         #if DEBUG
             // Required parameters were already validated in ParseParameters - this is a sanity check
@@ -207,7 +208,6 @@ internal static class ParameterParsing
     /// <param name="target">Associated target.</param>
     /// <param name="dataSourceValues">Data source values.</param>
     /// <param name="metadata">Source metadata.</param>
-    /// <param name="metadataMap">Metadata map associated with the target.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <remarks>
     /// This function is used to convert the parsed value to the parameter type.
@@ -216,14 +216,14 @@ internal static class ParameterParsing
     /// If nothing is found, it looks through ActiveMeasurements for it.
     /// Finally, if none of the above work it throws an error.
     /// </remarks>
-    public static async ValueTask ConvertParsedValueAsync<TDataSourceValue>(this IMutableParameter parameter, string value, string target, IAsyncEnumerable<TDataSourceValue> dataSourceValues, DataSet metadata, Dictionary<string, string> metadataMap, CancellationToken cancellationToken) where TDataSourceValue : struct, IDataSourceValue<TDataSourceValue>
+    public static async ValueTask ConvertParsedValueAsync<TDataSourceValue>(this IMutableParameter parameter, string value, string target, IAsyncEnumerable<TDataSourceValue> dataSourceValues, DataSet metadata, CancellationToken cancellationToken) where TDataSourceValue : struct, IDataSourceValue<TDataSourceValue>
     {
         // No value specified
         if (string.IsNullOrWhiteSpace(value))
         {
             // Required -> error
             if (parameter.Required)
-                throw new ArgumentException($"Required '{parameter.Name}' parameter of type '{parameter.Type.Name}' is missing.");
+                throw new SyntaxErrorException($"Required '{parameter.Name}' parameter of type '{parameter.Type.Name}' is missing.");
 
             // Not required -> default
             parameter.Value = parameter.Default;
@@ -235,20 +235,30 @@ internal static class ParameterParsing
         {
             value = value.Substring(1, value.Length - 2);
 
-            (string value, bool success) lookup = LookupMetadata<TDataSourceValue>(value, target, metadata, metadataMap);
+            if (target is null)
+            {
+                // When no target is specified, attempt to use the target from first data source value
+                TDataSourceValue firstValue = await dataSourceValues.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+                target = firstValue.Target;
+            }
 
-            if (lookup.success)
-                value = lookup.value;
+            if (!string.IsNullOrWhiteSpace(target))
+            {
+                (string value, bool success) lookup = LookupMetadata<TDataSourceValue>(value, target, metadata);
+
+                if (lookup.success)
+                    value = lookup.value;
+            }
         }
 
-        object result;
+        object result = null;
 
         // Check if parameter has a custom parse operation
         if (parameter.Parse is not null)
         {
             (result, bool success) = parameter.Parse(value);
 
-            // If custom parsing fails, continue with default parsing
+            // If custom parsing succeeds, return result; otherwise, continue with default parsing
             if (success)
             {
                 parameter.Value = result;
@@ -283,12 +293,10 @@ internal static class ParameterParsing
                 result = null;
             }
         }
-        else
-        {
-            // ConvertToType uses a TypeConverter which works for most types, including enums,
-            // note that this function returns null if conversion fails
-            result = value.ConvertToType(parameter.Type);
-        }
+
+        // ConvertToType uses a TypeConverter which works for most types, including enums,
+        // note that this function returns null if conversion fails
+        result ??= value.ConvertToType(parameter.Type);
 
         // If conversion fails, check if value is a named target
         if (result is null && char.IsLetter(value[0]))
@@ -317,16 +325,23 @@ internal static class ParameterParsing
 
             foreach (string targetName in targets)
             {
-                // TODO: JRC - adjust for multiple data source values, in sequence of processing, return a function?
-
-                // Attempt to find named target in data source values
-                TDataSourceValue sourceResult = await dataSourceValues.FirstOrDefaultAsync(dataSourceValue => dataSourceValue.Target.Equals(targetName, StringComparison.OrdinalIgnoreCase), cancellationToken).ConfigureAwait(false);
+                // Attempt to find named target parameter values in data source values. In this implementation, where parameters are
+                // pre-parsed for function calls, the named target parameters only return the first value in the series. This will be
+                // more useful in slice operations where the first value is the only one in the slice. In non-slice operations, the
+                // first value in the series for the named parameter will be used for each function call over all series operations.
+                // For example, for the function 'Shift(T1;0, T1;T2)', the first parameter, 'T1;0', means the first T1 series value
+                // (when there is one) will be used as the function parameter value for every 'Shift' function call over each series
+                // value in both the T1 and T2 targets. This may be OK in some scenarios, but for others it is recommended that the
+                // user consider using slice operations when possible.
+                TDataSourceValue sourceResult = await dataSourceValues.FirstOrDefaultAsync(dataSourceValue =>
+                    dataSourceValue.Target.Equals(targetName, StringComparison.OrdinalIgnoreCase), cancellationToken).ConfigureAwait(false);
 
                 // Data source values are structs and cannot be null so an empty target means lookup failed
                 if (string.IsNullOrEmpty(sourceResult.Target))
                     continue;
 
-                double seriesValue = sourceResult.TimeSeriesValue[0];
+                // Get target value from time-series value array
+                double seriesValue = sourceResult.TimeSeriesValue[default(TDataSourceValue).ValueIndex];
 
                 result = parameter.Type.IsNumeric() ?
                     Convert.ChangeType(seriesValue, parameter.Type) :
@@ -342,20 +357,19 @@ internal static class ParameterParsing
         parameter.Value = result ?? parameter.Default;
     }
 
-    private static (string value, bool success) LookupMetadata<TDataSourceValue>(string value, string target, DataSet metadata, Dictionary<string, string> metadataMap) where TDataSourceValue : struct, IDataSourceValue
+    private static (string value, bool success) LookupMetadata<TDataSourceValue>(string value, string target, DataSet metadata) where TDataSourceValue : struct, IDataSourceValue
     {
-        // Attempt to value find in dictionary
-        if (metadataMap.TryGetValue(value, out string metadataValue))
-            return (metadataValue, true);
-
+        // Lookup target in metadata
         (string tableName, string fieldName) = value.ParseAsTableAndField<TDataSourceValue>();
-
-        // Attempt to lookup target in metadata
-        DataRow record = default(TDataSourceValue).LookupMetadata(metadata, tableName, target);
+        DataRow record = metadata.Lookup<TDataSourceValue>(tableName, target);
 
         if (record is null || !record.Table.Columns.Contains(fieldName))
             return (default, false);
 
-        return (record[fieldName].ToString(), true);
+        string fieldValue = record[fieldName]?.ToString();
+
+        return string.IsNullOrEmpty(fieldValue) ?
+            (default, false) :
+            (fieldValue, true);
     }
 }

@@ -25,6 +25,7 @@
 using GrafanaAdapters.DataSources.BuiltIn;
 using GrafanaAdapters.Functions;
 using GSF;
+using GSF.Diagnostics;
 using GSF.IO;
 using System;
 using System.Collections.Generic;
@@ -33,7 +34,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
-using GSF.Diagnostics;
 
 namespace GrafanaAdapters.DataSources;
 
@@ -220,7 +220,8 @@ internal static class DataSourceValueCache<T> where T : struct, IDataSourceValue
 
     internal static void Initialize()
     {
-        // This regex matches all functions and their parameters, critically, at top-level only - sub functions are part of parameter data expression
+        // This regex matches all functions and their parameters, critically, at top-level only - sub functions are part of parameter data expression,
+        // see Expresso 'Documentation/GrafanaFunctionsRegex.xso' for development details on regex
         const string GrafanaFunctionsExpression = @"(?<GroupOp>Slice|Set)?(?<Function>{0})\s*\((?<Expression>([^\(\)]|(?<counter>\()|(?<-counter>\)))*(?(counter)(?!)))\)";
 
         Functions = FunctionParsing.GetGrafanaFunctions().OfType<IGrafanaFunction<T>>().ToArray();

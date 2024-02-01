@@ -21,7 +21,6 @@
 //
 //******************************************************************************************************
 
-using GrafanaAdapters.Functions;
 using GrafanaAdapters.Metadata;
 using GSF;
 using GSF.Collections;
@@ -33,7 +32,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
-using Common = GrafanaAdapters.Functions.Common;
 
 namespace GrafanaAdapters.DataSources.BuiltIn;
 
@@ -74,6 +72,8 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
 
     readonly string[] IDataSourceValue.TimeSeriesValueDefinition => new[] { nameof(Magnitude), nameof(Angle), nameof(Time) };
 
+    readonly int IDataSourceValue.ValueIndex => (int)PrimaryValueTarget;
+
     /// <inheritdoc />
     public readonly int CompareTo(PhasorValue other)
     {
@@ -108,7 +108,6 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
 
     readonly string[] IDataSourceValue.RequiredMetadataFieldNames => new[]
     {
-        // These are fields as required by local GetIDTargetMap() and AssignToTimeValueMap() methods
         "MagnitudeID",       // <string> Measurement key representing magnitude, e.g., PPA:101
         "AngleID",           // <string> Measurement key representing angle, e.g., PPA:102
         "MagnitudeSignalID", //  <Guid>  Signal ID representing magnitude
@@ -123,7 +122,7 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
     /// <inheritdoc />
     public readonly DataRow LookupMetadata(DataSet metadata, string tableName, string target)
     {
-        (DataRow, int) getRecordAndHashCode() => 
+        (DataRow, int) getRecordAndHashCode() =>
             (target.RecordFromTag(metadata, tableName), metadata.GetHashCode());
 
         string cacheKey = $"{TypeIndex}:{target}";
@@ -221,11 +220,6 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
             });
         }
     }
-
-    /// <inheritdoc />
-    public readonly ParameterDefinition<IAsyncEnumerable<PhasorValue>> DataSourceValuesParameterDefinition => s_dataSourceValuesParameterDefinition;
-
-    private static readonly ParameterDefinition<IAsyncEnumerable<PhasorValue>> s_dataSourceValuesParameterDefinition = Common.DataSourceValuesParameterDefinition<PhasorValue>();
 
     /// <summary>
     /// Gets the type index for <see cref="PhasorValue"/>.

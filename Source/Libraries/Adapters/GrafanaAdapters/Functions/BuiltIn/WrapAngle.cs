@@ -34,13 +34,16 @@ public abstract class WrapAngle<T> : GrafanaFunctionBase<T> where T : struct, ID
     public override string[] Aliases => new[] { "Wrap" };
 
     /// <inheritdoc />
+    public override ReturnType ReturnType => ReturnType.Series;
+
+    /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>
     {
         new ParameterDefinition<AngleUnit>
         {
             Name = "units",
             Default = AngleUnit.Degrees,
-            Description = "Specifies the type of angle units and must be one of the following: Degrees, Radians, Grads, ArcMinutes, ArcSeconds or AngularMil",
+            Description = "Specifies the type of angle units and must be one of the following: Degrees, Radians, Grads, ArcMinutes, ArcSeconds or AngularMil.",
             Required = false
         }
     };

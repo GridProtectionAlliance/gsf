@@ -66,9 +66,6 @@
       <HintPath>..\..\..\Dependencies\NuGet\System.Linq.Async.6.0.1\lib\net48\System.Linq.Async.dll</HintPath>
     </Reference>
     <Reference Include="System.Runtime.Caching" />
-    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\..\..\Dependencies\NuGet\System.Runtime.CompilerServices.Unsafe.6.0.0\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
-    </Reference>
     <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\..\..\Dependencies\NuGet\System.Threading.Tasks.Extensions.4.5.4\lib\net461\System.Threading.Tasks.Extensions.dll</HintPath>
     </Reference>
@@ -100,10 +97,10 @@
     <Compile Include="Functions\QueryParameters.cs" />
     <Compile Include="Functions\BuiltIn\Evaluate.cs" />
     <Compile Include="DataSources\IDataSourceValue.cs" />
-    <Compile Include="Model\Annotations\AnnotationExtensions.cs" />
+    <Compile Include="Annotations\AnnotationExtensions.cs" />
     <Compile Include="Model\Annotations\AnnotationRequest.cs" />
     <Compile Include="Model\Annotations\AnnotationResponse.cs" />
-    <Compile Include="Model\Annotations\AnnotationType.cs" />
+    <Compile Include="Annotations\AnnotationType.cs" />
     <Compile Include="DataSources\DataSourceValueGroup.cs" />
     <Compile Include="DeviceAlarmStateAdapter.cs" />
     <Compile Include="Model\Common\MetadataSelections.cs" />
@@ -189,6 +186,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="DataSources\BuiltIn\README.md" />
+    <None Include="Documentation\GrafanaFunctionsRegex.xso" />
+    <None Include="Documentation\README.md" />
+    <None Include="Documentation\SearchSelectRegex.xso" />
+    <None Include="Documentation\SemiColonSplitterRegex.xso" />
+    <None Include="Documentation\WebAPIInterfaces.docx" />
     <None Include="Functions\BuiltIn\README.md" />
     <None Include="packages.config" />
   </ItemGroup>

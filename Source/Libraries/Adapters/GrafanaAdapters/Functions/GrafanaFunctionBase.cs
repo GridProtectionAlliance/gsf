@@ -24,6 +24,7 @@
 using GrafanaAdapters.DataSources;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading;
 
@@ -48,10 +49,16 @@ public abstract class GrafanaFunctionBase<T> : IGrafanaFunction<T> where T : str
     public virtual string[] Aliases => null;
 
     /// <inheritdoc />
-    public virtual GroupOperations AllowedGroupOperations => Common.DefaultGroupOperations;
+    public abstract ReturnType ReturnType { get; }
 
     /// <inheritdoc />
-    public virtual GroupOperations PublishedGroupOperations => Common.DefaultGroupOperations;
+    public Category Category { get; init; }
+
+    /// <inheritdoc />
+    public virtual GroupOperations AllowedGroupOperations { get; internal set; } = Common.DefaultGroupOperations;
+
+    /// <inheritdoc />
+    public virtual GroupOperations PublishedGroupOperations { get; internal set; } = Common.DefaultGroupOperations;
 
     /// <inheritdoc />
     public virtual GroupOperations CheckAllowedGroupOperation(GroupOperations requestedOperation)
@@ -62,10 +69,16 @@ public abstract class GrafanaFunctionBase<T> : IGrafanaFunction<T> where T : str
 
         // Verify that the function supports the requested operation
         if (!AllowedGroupOperations.HasFlag(requestedOperation))
-            throw new InvalidOperationException($"Function '{Name}' does not support '{requestedOperation}' function operations.");
+            throw new SyntaxErrorException($"Function '{Name}' does not support a '{requestedOperation}' group operation.");
 
         return requestedOperation;
     }
+
+    /// <inheritdoc />
+    public virtual bool IsSliceSeriesEquivalent => ReturnType == ReturnType.Series && AllowedGroupOperations.HasFlag(GroupOperations.Slice);
+
+    /// <inheritdoc />
+    public virtual bool ResultIsSetTargetSeries => false;
 
     /// <inheritdoc />
     public virtual ParameterDefinitions ParameterDefinitions => new();
@@ -78,9 +91,6 @@ public abstract class GrafanaFunctionBase<T> : IGrafanaFunction<T> where T : str
 
     /// <inheritdoc />
     public virtual int InternalParameterCount => m_internalParameterCount ??= ParameterDefinitions.Count(parameter => parameter.Internal);
-
-    /// <inheritdoc />
-    public virtual bool ResultIsSetTargetSeries => false;
 
     /// <inheritdoc />
     public virtual (List<string> parsedParameters, string updatedQueryExpression) ParseParameters(QueryParameters queryParameters, string queryExpression)

@@ -28,9 +28,16 @@ public abstract class Distinct<T> : GrafanaFunctionBase<T> where T : struct, IDa
     public override string[] Aliases => new[] { "Unique" };
 
     /// <inheritdoc />
+    public override ReturnType ReturnType => ReturnType.Series;
+
+    /// <inheritdoc />
+    public override bool IsSliceSeriesEquivalent => false;
+
+    /// <inheritdoc />
     public override IAsyncEnumerable<T> ComputeAsync(Parameters parameters, CancellationToken cancellationToken)
     {
-        // Return deferred enumeration of distinct values
+        // Return deferred enumeration of distinct -- this operates using IEqualityComparer<T> defined for T meaning
+        // the IEquatable<T>.Equals(T) method as implemented by IDataSourceValue<T> is used to determine equality
         return GetDataSourceValues(parameters).Distinct();
     }
 

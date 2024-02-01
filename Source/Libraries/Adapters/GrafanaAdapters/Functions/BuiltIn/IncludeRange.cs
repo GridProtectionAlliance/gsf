@@ -33,6 +33,9 @@ public abstract class IncludeRange<T> : GrafanaFunctionBase<T> where T : struct,
     public override string[] Aliases => new[] { "Include" };
 
     /// <inheritdoc />
+    public override ReturnType ReturnType => ReturnType.Series;
+
+    /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>
     {
         new ParameterDefinition<double>

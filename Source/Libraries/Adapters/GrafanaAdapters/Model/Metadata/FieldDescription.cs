@@ -38,7 +38,7 @@ public class FieldDescription
     /// Gets or sets the data type of the field.
     /// </summary>
     public string type { get; set; }
-    
+
     /// <summary>
     /// Gets or sets flag indicating if field is required.
     /// </summary>

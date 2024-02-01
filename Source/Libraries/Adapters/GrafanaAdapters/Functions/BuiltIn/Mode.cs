@@ -23,7 +23,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Example 1: <c>Mode(FILTER TOP 50 ActiveMeasurements WHERE SignalType='DIGI')</c><br/>
 /// Example 2: <c>Mode(20, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
 /// Example 3: <c>Mode(Round(FILTER ActiveMeasurements WHERE SignalType='FREQ'))</c><br/>
-/// Example 4: <c>Divide(100, Mode(0, Floor(Multiply(100, FILTER TOP 20 ActiveMeasurements WHERE SignalType='FREQ'))))</c><br/>
+/// Example 4: <c>Scale(100, true, Mode(0, Floor(Scale(100, FILTER TOP 20 ActiveMeasurements WHERE SignalType='FREQ'))))</c><br/>
 /// Variants: Mode<br/>
 /// Execution: Immediate in-memory array load.
 /// </remarks>
@@ -34,6 +34,9 @@ public abstract class Mode<T> : GrafanaFunctionBase<T> where T : struct, IDataSo
 
     /// <inheritdoc />
     public override string Description => "Returns a single value that represents the mode of the values in the source series.";
+
+    /// <inheritdoc />
+    public override ReturnType ReturnType => ReturnType.Scalar;
 
     /// <inheritdoc />
     public override bool ResultIsSetTargetSeries => true;

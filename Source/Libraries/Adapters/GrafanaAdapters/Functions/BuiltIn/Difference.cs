@@ -1,7 +1,6 @@
 ﻿using GrafanaAdapters.DataSources;
 using GrafanaAdapters.DataSources.BuiltIn;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,6 +30,12 @@ public abstract class Difference<T> : GrafanaFunctionBase<T> where T : struct, I
     /// <inheritdoc />
     public override string[] Aliases => new[] { "Diff" };
 
+    /// <inheritdoc />
+    public override ReturnType ReturnType => ReturnType.Series;
+
+    /// <inheritdoc />
+    public override bool IsSliceSeriesEquivalent => false;
+
     /// <summary>
     /// Computes the difference between the current value and the last value.
     /// </summary>
@@ -45,12 +50,15 @@ public abstract class Difference<T> : GrafanaFunctionBase<T> where T : struct, I
         T lastValue = new();
 
         // Return deferred enumeration of computed values
-        await foreach (T dataValue in GetDataSourceValues(parameters).Select(dataValue => TransposeCompute(dataValue, lastValue)).WithCancellation(cancellationToken).ConfigureAwait(false))
+        await foreach (T dataValue in GetDataSourceValues(parameters).WithCancellation(cancellationToken).ConfigureAwait(false))
         {
-            if (lastValue.Time > 0.0D)
-                yield return dataValue;
+            // ReSharper disable once InlineTemporaryVariable
+            T currentValue = dataValue;
 
-            lastValue = dataValue;
+            if (lastValue.Time > 0.0D)
+                yield return TransposeCompute(dataValue, lastValue);
+
+            lastValue = currentValue;
         }
     }
 
@@ -60,6 +68,9 @@ public abstract class Difference<T> : GrafanaFunctionBase<T> where T : struct, I
         /// <inheritdoc />
         protected override DataSourceValue TransposeCompute(DataSourceValue currentValue, DataSourceValue lastValue) => currentValue with
         {
+            // To ensure current value is the source for metadata lookup on
+            // this custom target, the spacing around the dash is important:
+            Target = $"{currentValue.Target} - {lastValue.Target}",
             Value = currentValue.Value - lastValue.Value
         };
     }
@@ -70,6 +81,9 @@ public abstract class Difference<T> : GrafanaFunctionBase<T> where T : struct, I
         /// <inheritdoc />
         protected override PhasorValue TransposeCompute(PhasorValue currentValue, PhasorValue lastValue) => currentValue with
         {
+            // To ensure current value is the source for metadata lookup on
+            // this custom target, the spacing around the dash is important:
+            Target = $"{currentValue.Target} - {lastValue.Target}",
             Magnitude = currentValue.Magnitude - lastValue.Magnitude,
             Angle = (currentValue.Angle + 180 - (lastValue.Angle + 180)) % 360 - 180
         };

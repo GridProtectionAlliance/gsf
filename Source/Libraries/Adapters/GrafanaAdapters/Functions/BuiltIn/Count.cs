@@ -29,6 +29,9 @@ public abstract class Count<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     public override string[] Aliases => new[] { "Length" };
 
     /// <inheritdoc />
+    public override ReturnType ReturnType => ReturnType.Scalar;
+
+    /// <inheritdoc />
     public override async IAsyncEnumerable<T> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         T lastValue = default;
@@ -55,6 +58,5 @@ public abstract class Count<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     /// <inheritdoc />
     public class ComputePhasorValue : Count<PhasorValue>
     {
-        // Operating on magnitude only
     }
 }

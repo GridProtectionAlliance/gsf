@@ -29,6 +29,9 @@ public abstract class Minimum<T> : GrafanaFunctionBase<T> where T : struct, IDat
     public override string[] Aliases => new[] { "Min" };
 
     /// <inheritdoc />
+    public override ReturnType ReturnType => ReturnType.Scalar;
+
+    /// <inheritdoc />
     public override bool ResultIsSetTargetSeries => true;
 
     /// <inheritdoc />

@@ -29,6 +29,7 @@ using GSF.Drawing;
 using GSF.Geo;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
@@ -168,17 +169,17 @@ partial class GrafanaDataSourceBase
 
         // Gets radius of overlapping coordinate distribution
         if (!settings.TryGetValue("radius", out string setting))
-            throw new InvalidOperationException("Radial distribution \"radius\" setting is missing.");
+            throw new SyntaxErrorException("Radial distribution \"radius\" setting is missing.");
 
         if (!double.TryParse(setting, out double radius) || radius <= 0.0D)
-            throw new InvalidOperationException("Radial distribution \"radius\" setting is negative, zero or not a valid number.");
+            throw new SyntaxErrorException("Radial distribution \"radius\" setting is negative, zero or not a valid number.");
 
         // Get zoom level
         if (!settings.TryGetValue("zoom", out setting))
-            throw new InvalidOperationException("Radial distribution \"zoom\" setting is missing.");
+            throw new SyntaxErrorException("Radial distribution \"zoom\" setting is missing.");
 
         if (!double.TryParse(setting, out double zoom) || zoom <= 0.0D)
-            throw new InvalidOperationException("Radial distribution \"zoom\" setting is negative, zero or not a valid number.");
+            throw new SyntaxErrorException("Radial distribution \"zoom\" setting is negative, zero or not a valid number.");
 
         // For this use case, we consider coordinates to be the "same" if they are within 100 feet.
         //

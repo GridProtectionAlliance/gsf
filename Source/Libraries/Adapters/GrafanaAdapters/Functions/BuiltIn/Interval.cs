@@ -31,6 +31,9 @@ public abstract class Interval<T> : GrafanaFunctionBase<T> where T : struct, IDa
     public override string Description => "Returns a series of values that represent a decimated set of the values in the source series based on the specified interval N, in time units.";
 
     /// <inheritdoc />
+    public override ReturnType ReturnType => ReturnType.Series;
+
+    /// <inheritdoc />
     // Slice operation has no meaning for this time-focused function and Set operation will have an aberration between series,
     // so we override the exposed behaviors, i.e., use of Slice will produce an error and use of Set will be hidden:
     public override GroupOperations AllowedGroupOperations => GroupOperations.None | GroupOperations.Set;
@@ -45,7 +48,7 @@ public abstract class Interval<T> : GrafanaFunctionBase<T> where T : struct, IDa
         {
             Name = "N",
             Default = 1.0D,
-            Description = "A floating-point value that must be greater than or equal to zero that represents the desired time interval",
+            Description = "A floating-point value that must be greater than or equal to zero that represents the desired time interval.",
             Required = true
         },
         new ParameterDefinition<TargetTimeUnit>
@@ -56,7 +59,7 @@ public abstract class Interval<T> : GrafanaFunctionBase<T> where T : struct, IDa
             Description =
                 "Specifies the type of time units and must be one of the following: Seconds, Nanoseconds, Microseconds, Milliseconds, " +
                 "Minutes, Hours, Days, Weeks, Ke (i.e., traditional Chinese unit of decimal time), Ticks (i.e., 100-nanosecond intervals), PlanckTime or " +
-                "AtomicUnitsOfTime - defaults to Seconds.",
+                "AtomicUnitsOfTime.",
             Required = false
         }
     };
@@ -72,7 +75,7 @@ public abstract class Interval<T> : GrafanaFunctionBase<T> where T : struct, IDa
         {
             if (lastTime > 0.0D)
             {
-                if (dataValue.Time - lastTime > valueN)
+                if (dataValue.Time - lastTime >= valueN)
                 {
                     lastTime = dataValue.Time;
                     yield return dataValue;

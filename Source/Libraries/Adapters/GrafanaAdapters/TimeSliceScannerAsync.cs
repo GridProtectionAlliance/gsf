@@ -36,6 +36,7 @@ namespace GrafanaAdapters;
 public class TimeSliceScannerAsync<T> where T : struct, IDataSourceValue<T>
 {
     private readonly List<IAsyncEnumerator<T>> m_enumerators;
+    private double m_lastPublishTime = double.NaN;
 
     private TimeSliceScannerAsync(List<IAsyncEnumerator<T>> enumerators, double tolerance)
     {
@@ -56,42 +57,44 @@ public class TimeSliceScannerAsync<T> where T : struct, IDataSourceValue<T>
     /// <summary>
     /// Reads next time slice from the series set.
     /// </summary>
-    /// <param name="lastValue">
-    /// Set to <c>true</c> to only publish last value per-series in time-slice for specified <see cref="Tolerance"/>;
-    /// otherwise, <c>false</c> to publish all series values since last slice.
-    /// </param>
     /// <returns>Next time slice.</returns>
-    public async Task<IAsyncEnumerable<T>> ReadNextTimeSliceAsync(bool lastValue = true)
+    public async Task<IAsyncEnumerable<T>> ReadNextTimeSliceAsync()
     {
-        if (lastValue)
-        {
-            Dictionary<string, T> nextSlice = new(StringComparer.OrdinalIgnoreCase);
-            await ReadNextTimeSliceAsync(value => nextSlice[value.Target] = value).ConfigureAwait(false);
-            return nextSlice.Values.ToAsyncEnumerable();
-        }
-        else
-        {
-            List<T> nextSlice = new();
-            await ReadNextTimeSliceAsync(value => nextSlice.Add(value)).ConfigureAwait(false);
-            return nextSlice.ToAsyncEnumerable();
-        }
+        List<T> nextSlice = new();
+        await ReadNextTimeSliceAsync(value => nextSlice.Add(value)).ConfigureAwait(false);
+        return nextSlice.ToAsyncEnumerable();
     }
 
     private async Task ReadNextTimeSliceAsync(Action<T> addValue)
     {
         T dataPoint;
-        double publishTime = double.MaxValue;
 
-        // Find minimum publication time for current values
-        foreach (IAsyncEnumerator<T> enumerator in m_enumerators)
+        // Handle initial read
+        if (double.IsNaN(m_lastPublishTime))
         {
-            dataPoint = enumerator.Current;
+            m_lastPublishTime = double.MaxValue;
 
-            if (dataPoint.Time < publishTime)
-                publishTime = dataPoint.Time;
+            // Find initial minimum publication time for current values
+            foreach (IAsyncEnumerator<T> enumerator in m_enumerators)
+            {
+                dataPoint = enumerator.Current;
+
+                if (dataPoint.Time < m_lastPublishTime)
+                    m_lastPublishTime = dataPoint.Time;
+            }
+
+            // Add initial values at the minimum publication time
+            foreach (IAsyncEnumerator<T> enumerator in m_enumerators)
+            {
+                dataPoint = enumerator.Current;
+
+                if (Math.Abs(dataPoint.Time - m_lastPublishTime) < Tolerance)
+                    addValue(dataPoint);
+            }
+
+            m_lastPublishTime += Tolerance;
+            return;
         }
-
-        publishTime += Tolerance;
 
         List<int> completed = new();
         int index = 0;
@@ -102,35 +105,27 @@ public class TimeSliceScannerAsync<T> where T : struct, IDataSourceValue<T>
             bool enumerationComplete = false;
             dataPoint = enumerator.Current;
 
-            if (dataPoint.Time <= publishTime)
+            while (dataPoint.Time - m_lastPublishTime < Tolerance && !enumerationComplete)
             {
-                // Attempt to advance to next data point, tracking completed enumerators
-                if (!await enumerator.MoveNextAsync().ConfigureAwait(false))
+                // Attempt to advance to next data point
+                if (await enumerator.MoveNextAsync().ConfigureAwait(false))
                 {
-                    enumerationComplete = true;
-                    completed.Add(index);
+                    dataPoint = enumerator.Current;
+                    continue;
                 }
 
-                addValue(dataPoint);
-
-                // Make sure any point IDs with duplicated times directly follow
-                if (!enumerationComplete)
-                {
-                    while (enumerator.Current.Time <= publishTime)
-                    {
-                        addValue(enumerator.Current);
-
-                        if (!await enumerator.MoveNextAsync().ConfigureAwait(false))
-                        {
-                            completed.Add(index);
-                            break;
-                        }
-                    }
-                }
+                // Track completed enumerators
+                enumerationComplete = true;
+                completed.Add(index);
             }
+
+            if (dataPoint.Time - m_lastPublishTime >= Tolerance)
+                addValue(dataPoint);
 
             index++;
         }
+
+        m_lastPublishTime += Tolerance;
 
         // Remove completed enumerators
         if (completed.Count == 0)
@@ -155,11 +150,11 @@ public class TimeSliceScannerAsync<T> where T : struct, IDataSourceValue<T>
     /// <param name="dataSources">Set of <see cref="DataSourceValueGroup{T}"/> series to scan.</param>
     /// <param name="tolerance">Time tolerance for data slices in Unix epoch milliseconds.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    public static async ValueTask<TimeSliceScannerAsync<T>> Create(IAsyncEnumerable<DataSourceValueGroup<T>> dataSources, double tolerance, CancellationToken cancellationToken)
+    public static async ValueTask<TimeSliceScannerAsync<T>> Create(DataSourceValueGroup<T>[] dataSources, double tolerance, CancellationToken cancellationToken)
     {
         List<IAsyncEnumerator<T>> enumerators = new();
-
-        await foreach (DataSourceValueGroup<T> group in dataSources.WithCancellation(cancellationToken).ConfigureAwait(false))
+    
+        foreach (DataSourceValueGroup<T> group in dataSources)
         {
             IAsyncEnumerator<T> enumerator = group.Source.GetAsyncEnumerator(cancellationToken);
 
