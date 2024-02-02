@@ -77,7 +77,7 @@ public abstract class ExcludeRange<T> : GrafanaFunctionBase<T> where T : struct,
         bool highInclusive = parameters.ParsedCount > 3 ? parameters.Value<bool>(3) : lowInclusive;
 
         bool filterRange(T dataValue) =>
-            (lowInclusive ? dataValue.Value <= low : dataValue.Value < low) &&
+            (lowInclusive ? dataValue.Value <= low : dataValue.Value < low) ||
             (highInclusive ? dataValue.Value >= high : dataValue.Value > high);
 
         return GetDataSourceValues(parameters).Where(filterRange);
