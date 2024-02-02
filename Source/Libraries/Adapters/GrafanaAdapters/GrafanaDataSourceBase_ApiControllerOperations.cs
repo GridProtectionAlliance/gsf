@@ -253,7 +253,11 @@ partial class GrafanaDataSourceBase
                         addFunctionDescription(GroupOperations.Set, function.ParameterDefinitions);
 
                     return descriptions;
-                });
+                })
+                .OrderBy(function => // Order functions grouped with their "Slice" and "Set" functions
+                    function.name.StartsWith("Slice") ? $"{function.name.Substring(5)}1" : 
+                    function.name.StartsWith("Set") ? $"{function.name.Substring(3)}2" : 
+                    $"{function.name}0");
             });
         },
         cancellationToken);
