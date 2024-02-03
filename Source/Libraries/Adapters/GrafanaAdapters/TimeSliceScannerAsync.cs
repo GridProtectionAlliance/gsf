@@ -61,12 +61,6 @@ public class TimeSliceScannerAsync<T> where T : struct, IDataSourceValue<T>
     public async Task<IAsyncEnumerable<T>> ReadNextTimeSliceAsync()
     {
         List<T> nextSlice = new();
-        await ReadNextTimeSliceAsync(value => nextSlice.Add(value)).ConfigureAwait(false);
-        return nextSlice.ToAsyncEnumerable();
-    }
-
-    private async Task ReadNextTimeSliceAsync(Action<T> addValue)
-    {
         T dataPoint;
 
         // Handle initial read
@@ -89,11 +83,11 @@ public class TimeSliceScannerAsync<T> where T : struct, IDataSourceValue<T>
                 dataPoint = enumerator.Current;
 
                 if (Math.Abs(dataPoint.Time - m_lastPublishTime) < Tolerance)
-                    addValue(dataPoint);
+                    nextSlice.Add(dataPoint);
             }
 
             m_lastPublishTime += Tolerance;
-            return;
+            return nextSlice.ToAsyncEnumerable();
         }
 
         List<int> completed = new();
@@ -120,7 +114,7 @@ public class TimeSliceScannerAsync<T> where T : struct, IDataSourceValue<T>
             }
 
             if (dataPoint.Time - m_lastPublishTime >= Tolerance)
-                addValue(dataPoint);
+                nextSlice.Add(dataPoint);
 
             index++;
         }
@@ -128,20 +122,22 @@ public class TimeSliceScannerAsync<T> where T : struct, IDataSourceValue<T>
         m_lastPublishTime += Tolerance;
 
         // Remove completed enumerators
-        if (completed.Count == 0)
-            return;
-
-        completed.Sort();
-
-        // Remove highest numeric indexes first to retain source index integrity
-        for (int i = completed.Count - 1; i >= 0; i--)
+        if (completed.Count > 0)
         {
-            int indexToRemove = completed[i];
-            await m_enumerators[indexToRemove].DisposeAsync().ConfigureAwait(false);
-            m_enumerators.RemoveAt(indexToRemove);
+            completed.Sort();
+
+            // Remove highest numeric indexes first to retain source index integrity
+            for (int i = completed.Count - 1; i >= 0; i--)
+            {
+                int indexToRemove = completed[i];
+                await m_enumerators[indexToRemove].DisposeAsync().ConfigureAwait(false);
+                m_enumerators.RemoveAt(indexToRemove);
+            }
+
+            completed.Clear();
         }
 
-        completed.Clear();
+        return nextSlice.ToAsyncEnumerable();
     }
 
     /// <summary>
