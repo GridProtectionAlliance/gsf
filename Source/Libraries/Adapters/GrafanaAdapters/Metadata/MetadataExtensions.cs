@@ -316,12 +316,27 @@ internal static class MetadataExtensions
             }
             else
             {
-                // Fall back on standard tag expression parsing which will attempt to parse target as measurement keys
-                // or signal IDs -- this will always use default metadata table for the data source value type
-                targetIDSets = AdapterBase.ParseInputMeasurementKeys(metadata, false, aliasTarget, default(T).MetadataTableName)
-                    .Select(key => default(T).RecordFromKey(key, metadata))
-                    .Select(default(T).GetTargetIDSet)
-                    .ToArray();
+                try
+                {
+                    // Fall back on standard tag expression parsing which will attempt to parse target as measurement keys
+                    // or signal IDs -- this will always use default metadata table for the data source value type
+                    targetIDSets = AdapterBase.ParseInputMeasurementKeys(metadata, false, aliasTarget, default(T).MetadataTableName)
+                        .Select(key => default(T).RecordFromKey(key, metadata))
+                        .Select(default(T).GetTargetIDSet)
+                        .ToArray();
+                }
+                catch (InvalidOperationException)
+                {
+                    string testTarget = aliasTarget.Trim().ToLowerInvariant();
+
+                    if (!testTarget.Contains("filter "))
+                        throw;
+                    
+                    if (testTarget.Contains("where"))
+                        throw new InvalidOperationException("Invalid filter expression encountered -- expected format as \"FILTER TableName WHERE Expression\".");
+                        
+                    throw new InvalidOperationException("Invalid filter expression encountered, missing \"WHERE\" clause -- expected format as \"FILTER TableName WHERE Expression\".");
+                }
             }
         }
         catch (Exception ex)
