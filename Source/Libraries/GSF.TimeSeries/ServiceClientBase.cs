@@ -190,7 +190,7 @@ namespace GSF.TimeSeries
             Arguments arguments = new(string.Join(" ", Arguments.ToArgs(Environment.CommandLine).Where(arg => !arg.StartsWith("--filter=", StringComparison.OrdinalIgnoreCase)).Skip(1)));
 
             // Handle external service restart requests
-            if (arguments.Exists("OrderedArg1") && (arguments.Exists("restart") || arguments.Exists("restartDelay"))
+            if (arguments.Exists("OrderedArg1") && (arguments.Exists("restart") || arguments.Exists("restartDelay")))
             {
                 string serviceName = arguments["OrderedArg1"];
                 
