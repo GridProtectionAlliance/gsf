@@ -196,7 +196,7 @@ namespace GSF.TimeSeries
                 
                 if (arguments.Exists("restartWithDelay"))
                 {
-                    int delay = int.Parguments["restartWithDelay"];
+                    int delay = int.Parse(arguments["restartWithDelay"]);
                     Thread.Sleep(delay*1000);
                 }
 
