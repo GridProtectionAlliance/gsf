@@ -47,18 +47,6 @@ internal static class Common
         return parameters;
     }
 
-    // Gets type for specified data source type name, assuming local namespace if needed.
-    public static Type GetLocalType(string typeName)
-    {
-        if (typeName is null)
-            throw new ArgumentNullException(nameof(typeName));
-
-        if (!typeName.Contains('.'))
-            typeName = $"{nameof(GrafanaAdapters)}.{typeName}";
-
-        return Type.GetType(typeName);
-    }
-
     // Parses a sting as positive (> 0) integer or a percentage value of total
     public static int ParseTotal(string parameter, int total)
     {
