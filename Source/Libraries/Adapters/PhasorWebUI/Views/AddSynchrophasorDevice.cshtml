@@ -2555,8 +2555,8 @@
                 if (lineCurrentExists(lines, current))
                     continue;
 
-                // Strategy for finding matching line phases is to remove any A, B or C phase designations from label
-                const match = current.Label().trim().toUpperCase().replace(/[ABC]/gi, "");
+                // Strategy for finding matching line phases is to remove any (A/B/C or R/Y/B) phase designations from label
+                const match = current.Label().trim().toUpperCase().replace(/[ABCRYB]/gi, "");
 
                 if (isEmpty(match))
                     continue;
@@ -2587,7 +2587,7 @@
                         continue;
 
                     // See if this next current is for matching line based on label minus phase designations
-                    if (match === nextCurrent.Label().trim().toUpperCase().replace(/[ABC]/gi, "")) {
+                    if (match === nextCurrent.Label().trim().toUpperCase().replace(/[ABCRYB]/gi, "")) {
                         line[nextPhase] = {
                             current: nextCurrent,
                             voltage: nextVoltage
