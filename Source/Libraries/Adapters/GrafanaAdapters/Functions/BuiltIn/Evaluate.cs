@@ -17,7 +17,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 
 /// <summary>
 /// Returns a single value that represents the evaluation of an expression over a slice of the values in the source series.
-/// The <c>sliceTolerance</c> parameter is a floating-point value that must be greater than or equal to zero that represents
+/// The <c>sliceTolerance</c> parameter is a floating-point value that must be greater than or equal to 0.001 that represents
 /// the desired time tolerance, in seconds, for the time slice. The <c>evalExpression</c> parameter must always be expressed
 /// in braces, e.g., <c>{ expression }</c>; expression is strongly typed, but not case sensitive; expression is expected to
 /// return a value that can be evaluated as a floating-point number. Aliases of target tag names are used as variable names

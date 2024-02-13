@@ -10,7 +10,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 
 /// <summary>
 /// Returns a single value selected using the first series of a slice of values as the zero-based index from the remaining series.
-/// The <c>sliceTolerance</c> parameter is a floating-point value that must be greater than or equal to zero that represents the
+/// The <c>sliceTolerance</c> parameter is a floating-point value that must be greater than or equal to 0.001 that represents the
 /// desired time tolerance, in seconds, for the time slice.
 /// </summary>
 /// <remarks>
