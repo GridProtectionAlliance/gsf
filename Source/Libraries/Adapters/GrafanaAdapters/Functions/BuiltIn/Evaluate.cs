@@ -95,8 +95,8 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
     /// <inheritdoc />
     public override GroupOperations CheckAllowedGroupOperation(GroupOperations requestedOperation)
     {
-        // Force group operation to be Slice as eval only supports slice operations. This ignores
-        // any requested group operation instead of throwing an exception:
+        // Force group operation to be Slice as Evaluate only supports slice operations. This ignores
+        // any requested group operation instead of throwing an exception based on what is allowed.
         return GroupOperations.Slice;
     }
 

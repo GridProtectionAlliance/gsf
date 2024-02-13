@@ -1,22 +1,23 @@
-﻿using GrafanaAdapters.DataSources;
+﻿using System;
+using GrafanaAdapters.DataSources;
 using GrafanaAdapters.DataSources.BuiltIn;
-using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Data;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
 
 /// <summary>
-/// Returns a single value that is selected based on the first series provided used as a 0 based index.
+/// Returns a single value selected using the first series of a slice of values as the zero-based index from the remaining series.
+/// The <c>sliceTolerance</c> parameter is a floating-point value that must be greater than or equal to zero that represents the
+/// desired time tolerance, in seconds, for the time slice.
 /// </summary>
 /// <remarks>
-/// Signature: <c>Switch(expression)</c><br/>
+/// Signature: <c>Switch(sliceTolerance, expression)</c><br/>
 /// Returns: Single value.<br/>
-/// Example: <c>Switch(FILTER ActiveMeasurements WHERE SignalType='IPHM')</c><br/>
-/// Variants: SELECT<T><br/>
+/// Example: <c>Switch(IndexSeriesTag; FILTER ActiveMeasurements WHERE SignalType='IPHM')</c><br/>
+/// Variants: Switch, Select<br/>
 /// Execution: Immediate enumeration.
 /// </remarks>
 public abstract class Switch<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
@@ -25,7 +26,7 @@ public abstract class Switch<T> : GrafanaFunctionBase<T> where T : struct, IData
     public override string Name => nameof(Switch<T>);
 
     /// <inheritdoc />
-    public override string Description => "Returns a single value selected based on the first series provided as a 0-based index.";
+    public override string Description => "Returns a single value selected using the first series of a slice of values as the zero-based index from the remaining series.";
 
     /// <inheritdoc />
     public override string[] Aliases => new[] { "Select" };
@@ -34,56 +35,64 @@ public abstract class Switch<T> : GrafanaFunctionBase<T> where T : struct, IData
     public override ReturnType ReturnType => ReturnType.Scalar;
 
     /// <inheritdoc />
+    // Function only operates on slices. Other group operations are ignored, see CheckAllowedGroupOperation.
+    public override GroupOperations AllowedGroupOperations => GroupOperations.Slice;
+
+    /// <inheritdoc />
+    // Only non-group operation "Switch" is published instead of requiring "SliceSwitch".
+    public override GroupOperations PublishedGroupOperations => GroupOperations.None;
+
+    // No parameters other than slice tolerance are required for this function. Note that
+    // required slice tolerance parameter added automatically by Grafana function handling.
+
+    /// <inheritdoc />
+    public override GroupOperations CheckAllowedGroupOperation(GroupOperations requestedOperation)
+    {
+        // Force group operation to be Slice as Switch only supports slice operations. This ignores
+        // any requested group operation instead of throwing an exception based on what is allowed.
+        return GroupOperations.Slice;
+    }
+
+    /// <inheritdoc />
+    public override async IAsyncEnumerable<T> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        // Immediately enumerate to get desired values
+        await using IAsyncEnumerator<T> enumerator = GetDataSourceValues(parameters).GetAsyncEnumerator(cancellationToken);
+
+        // Get index from first series
+        if (!await enumerator.MoveNextAsync().ConfigureAwait(false))
+            yield break;
+
+        int index;
+
+        try
+        {
+            index = (int)enumerator.Current.Value;
+        }
+        catch (OverflowException ex)
+        {
+            throw new SyntaxErrorException($"Series \"{enumerator.Current.Target ?? "undefined"}\" value \"{enumerator.Current.Value}\" cannot be interpreted as an integer index: {ex.Message}", ex);
+        }
+
+        // Skip to desired index
+        for (int i = 0; i < index; i++)
+        {
+            if (!await enumerator.MoveNextAsync().ConfigureAwait(false))
+                yield break;
+        }
+
+        yield return enumerator.Current;
+    }
+
+
+    /// <inheritdoc />
     public class ComputeDataSourceValue : Switch<DataSourceValue>
     {
-        /// <inheritdoc />
-        public override async IAsyncEnumerable<DataSourceValue> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
-        {
-            DataSourceValue lastValue = default;
-
-            IAsyncEnumerable<double> trackedValues = GetDataSourceValues(parameters).Select(dataValue =>
-            {
-                lastValue = dataValue;
-                return dataValue.Value;
-            });
-
-            // Immediately enumerate to compute values
-            double index = await trackedValues.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
-            double selection = await trackedValues.Skip((int)Math.Floor(index)).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
-
-            // Return computed results
-            if (lastValue.Time > 0.0D)
-                yield return lastValue with { Value = selection };
-        }
     }
 
     /// <inheritdoc />
     public class ComputePhasorValue : Switch<PhasorValue>
     {
-        /// <inheritdoc />
-        public override async IAsyncEnumerable<PhasorValue> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
-        {
-            PhasorValue lastValue = default;
-
-
-            IAsyncEnumerable<PhasorValue> trackedValues = GetDataSourceValues(parameters).Select(dataValue =>
-            {
-                lastValue = dataValue;
-                return dataValue;
-            });
-
-            double index = (await trackedValues.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false)).Magnitude;
-            PhasorValue selection = await trackedValues.Skip((int)Math.Floor(index)).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
-
-            // Return computed results
-            if (lastValue.Time > 0.0D)
-            {
-                yield return lastValue with
-                {
-                    Magnitude = selection.Magnitude,
-                    Angle = selection.Angle
-                };
-            }
-        }
+        // Index from first series comes from magnitude only (IDataSourceValue.Value defaults to Magnitude for PhasorValue)
     }
 }
