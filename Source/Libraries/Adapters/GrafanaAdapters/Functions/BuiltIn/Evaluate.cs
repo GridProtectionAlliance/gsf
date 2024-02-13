@@ -17,7 +17,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 
 /// <summary>
 /// Returns a single value that represents the evaluation of an expression over a slice of the values in the source series.
-/// The <c>sliceTolerance</c> parameter is a floating-point value that must be greater than or equal to zero that represents
+/// The <c>sliceTolerance</c> parameter is a floating-point value that must be greater than or equal to 0.001 that represents
 /// the desired time tolerance, in seconds, for the time slice. The <c>evalExpression</c> parameter must always be expressed
 /// in braces, e.g., <c>{ expression }</c>; expression is strongly typed, but not case sensitive; expression is expected to
 /// return a value that can be evaluated as a floating-point number. Aliases of target tag names are used as variable names
@@ -95,8 +95,8 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
     /// <inheritdoc />
     public override GroupOperations CheckAllowedGroupOperation(GroupOperations requestedOperation)
     {
-        // Force group operation to be Slice as eval only supports slice operations. This ignores
-        // any requested group operation instead of throwing an exception:
+        // Force group operation to be Slice as Evaluate only supports slice operations. This ignores
+        // any requested group operation instead of throwing an exception based on what is allowed.
         return GroupOperations.Slice;
     }
 
