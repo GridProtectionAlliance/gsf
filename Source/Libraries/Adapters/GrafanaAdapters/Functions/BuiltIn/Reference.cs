@@ -9,7 +9,7 @@ using System.Threading;
 namespace GrafanaAdapters.Functions.BuiltIn;
 
 /// <summary>
-/// Returns a phasor refferenced to the first series of a slice of values.
+/// Returns a phasor referenced to the first series of a slice of values.
 /// The <c>sliceTolerance</c> parameter is a floating-point value that must be greater than or equal to 0.001 that represents the
 /// desired time tolerance, in seconds, for the time slice.
 /// </summary>
@@ -17,7 +17,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Signature: <c>Reference(sliceTolerance, expression)</c><br/>
 /// Returns: Single value.<br/>
 /// Example: <c>Reference(ReferencePhasor; FILTER PhasorValues WHERE SignalType='IPHM')</c><br/>
-/// Variants: Ref<br/>
+/// Variants: Reference, Ref<br/>
 /// Execution: Immediate enumeration.
 /// </remarks>
 public abstract class Reference<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
