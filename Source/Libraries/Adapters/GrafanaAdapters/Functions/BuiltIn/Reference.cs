@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using GSF.Units;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
 
@@ -53,7 +54,6 @@ public abstract class Reference<T> : GrafanaFunctionBase<T> where T : struct, ID
         return GroupOperations.Slice;
     }
 
-   
     /// <inheritdoc />
     public class ComputePhasorValue : Reference<PhasorValue>
     {
@@ -69,19 +69,18 @@ public abstract class Reference<T> : GrafanaFunctionBase<T> where T : struct, ID
             double reference = enumerator.Current.Angle;
 
             // Return First Series
-            PhasorValue current = enumerator.Current;
-            current.Angle = current.Angle - reference;
-
-            yield return current;
+            yield return enumerator.Current with
+            {
+                Angle = enumerator.Current.Angle - reference
+            };
 
             while (await enumerator.MoveNextAsync().ConfigureAwait(false))
             {
-                current = enumerator.Current;
-                current.Angle = current.Angle - reference;
-
-                yield return current;
-            }        
+                yield return enumerator.Current with
+                {
+                    Angle = enumerator.Current.Angle - reference
+                };
+            }
         }
-
     }
 }
