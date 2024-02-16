@@ -76,6 +76,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataSources\DataSourceValueCache.cs" />
+    <Compile Include="Functions\BuiltIn\Reference.cs" />
     <Compile Include="Functions\BuiltIn\Switch.cs" />
     <Compile Include="Metadata\DataSetAdapter.cs" />
     <Compile Include="Metadata\MetadataExtensions.cs" />
