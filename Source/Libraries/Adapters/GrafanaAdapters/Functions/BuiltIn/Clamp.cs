@@ -81,12 +81,12 @@ public abstract class Clamp<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     }
 
     /// <inheritdoc />
-    public class ComputeDataSourceValue : Pow<DataSourceValue>
+    public class ComputeDataSourceValue : Clamp<DataSourceValue>
     {
     }
 
     /// <inheritdoc />
-    public class ComputePhasorValue : Pow<PhasorValue>
+    public class ComputePhasorValue : Clamp<PhasorValue>
     {
         // Operating on magnitude only
     }
