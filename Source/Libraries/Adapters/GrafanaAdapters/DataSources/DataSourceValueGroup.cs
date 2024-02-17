@@ -72,7 +72,7 @@ public class DataSourceValueGroup<T> where T : struct, IDataSourceValue
     public MetadataMap MetadataMap { get; set; }
 
     /// <summary>
-    /// Gets or sets a an error message that indicates a syntax error in the query request.
+    /// Gets or sets an error message that indicates a syntax error in the query request.
     /// </summary>
     public string SyntaxError { get; set; }
 

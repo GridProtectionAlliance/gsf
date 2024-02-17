@@ -327,7 +327,7 @@ public abstract partial class GrafanaDataSourceBase
         {
             Dictionary<ulong, string> targetMap = new();
 
-            // Split remaining targets on semi-colon which will include possible filter expressions being used
+            // Split remaining targets on semicolon which will include possible filter expressions being used
             // as inputs to functions, also since expression includes user provided input, casing is ignored.
             HashSet<string> targetSet = new(s_semiColonSplitter.Split(queryExpression).Where(NotEmpty), StringComparer.OrdinalIgnoreCase);
 
@@ -655,10 +655,10 @@ public abstract partial class GrafanaDataSourceBase
     private static readonly Regex s_importsCommand = new(@";\s*Imports\s*=\s*\{(?<Expression>.+)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
     private static readonly Regex s_radialDistributionCommand = new(@";\s*RadialDistribution\s*=\s*\{(?<Expression>.+)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-    // Define a regular expression that splits on semi-colon except when semi-colon is inside of a single-quoted string. A simple
-    // string.Split on semi-colon will not work properly for cases where a semi-colon is used inside of a filter expression that
-    // contains a string literal with a semi-colon, e.g., FILTER ActiveMeasurements WHERE Description LIKE '%A;B%', see Expresso
-    // 'Documentation/SemiColonSplitterRegex.xso' for development details on regex
+    // Define a regular expression that splits on semicolon except when semicolon is inside a single-quoted string. A simple
+    // string.Split on semicolon will not work properly for cases where a semicolon is used inside a filter expression that
+    // contains a string literal with a semicolon, e.g., FILTER ActiveMeasurements WHERE Description LIKE '%A;B%', see
+    // Expresso 'Documentation/SemiColonSplitterRegex.xso' for development details on regex
     private static readonly Regex s_semiColonSplitter = new(@";(?=(?:[^']*'[^']*')*[^']*$)", RegexOptions.Compiled);
 
     // To ensure RegEx split ignores empty entries, define a predicate function that returns true if string is not empty
