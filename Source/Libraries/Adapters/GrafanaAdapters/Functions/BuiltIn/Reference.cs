@@ -35,6 +35,9 @@ public abstract class Reference<T> : GrafanaFunctionBase<T> where T : struct, ID
     public override ReturnType ReturnType => ReturnType.Series;
 
     /// <inheritdoc />
+    public override bool IsSliceSeriesEquivalent => false;
+
+    /// <inheritdoc />
     // Function only operates on slices. Other group operations are ignored, see CheckAllowedGroupOperation.
     public override GroupOperations AllowedGroupOperations => GroupOperations.Slice;
 

@@ -37,6 +37,9 @@ public abstract class Clamp<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     public override ReturnType ReturnType => ReturnType.Series;
 
     /// <inheritdoc />
+    public override bool IsSliceSeriesEquivalent => false;
+
+    /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>
     {
         new ParameterDefinition<double>
