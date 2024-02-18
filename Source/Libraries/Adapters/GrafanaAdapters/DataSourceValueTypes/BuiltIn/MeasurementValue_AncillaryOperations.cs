@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  DataSourceValue_AncillaryOperations.cs - Gbtc
+//  MeasurementValue_AncillaryOperations.cs - Gbtc
 //
 //  Copyright © 2023, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -22,15 +22,16 @@
 //******************************************************************************************************
 
 using GrafanaAdapters.Metadata;
+using GrafanaAdapters.Model.Common;
 using GSF.TimeSeries;
 using System;
 using System.Collections.Generic;
 using System.Data;
 
-namespace GrafanaAdapters.DataSources.BuiltIn;
+namespace GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 
-// IDataSourceValue implementation for DataSourceValue
-public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
+// IDataSourceValueType implementation for MeasurementValue
+public partial struct MeasurementValue : IDataSourceValueType<MeasurementValue>
 {
     /// <summary>
     /// Data point index for value.
@@ -42,38 +43,38 @@ public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
     /// </summary>
     public const int TimeIndex = 1;
 
-    string IDataSourceValue.Target
+    string IDataSourceValueType.Target
     {
         readonly get => Target;
         init => Target = value;
     }
 
-    double IDataSourceValue.Value
+    double IDataSourceValueType.Value
     {
         readonly get => Value;
         init => Value = value;
     }
 
-    double IDataSourceValue.Time
+    double IDataSourceValueType.Time
     {
         readonly get => Time;
         init => Time = value;
     }
 
-    MeasurementStateFlags IDataSourceValue.Flags
+    MeasurementStateFlags IDataSourceValueType.Flags
     {
         readonly get => Flags;
         init => Flags = value;
     }
 
-    readonly double[] IDataSourceValue.TimeSeriesValue => new[] { Value, Time };
+    readonly double[] IDataSourceValueType.TimeSeriesValue => new[] { Value, Time };
 
-    readonly string[] IDataSourceValue.TimeSeriesValueDefinition => new[] { nameof(Value), nameof(Time) };
+    readonly string[] IDataSourceValueType.TimeSeriesValueDefinition => new[] { nameof(Value), nameof(Time) };
 
-    readonly int IDataSourceValue.ValueIndex => ValueIndex;
+    readonly int IDataSourceValueType.ValueIndex => ValueIndex;
 
     /// <inheritdoc />
-    public readonly int CompareTo(DataSourceValue other)
+    public readonly int CompareTo(MeasurementValue other)
     {
         int result = Value.CompareTo(other.Value);
 
@@ -81,29 +82,29 @@ public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
     }
 
     /// <inheritdoc />
-    public readonly bool Equals(DataSourceValue other)
+    public readonly bool Equals(MeasurementValue other)
     {
         return CompareTo(other) == 0;
     }
 
     /// <inheritdoc />
-    public readonly DataSourceValue TransposeCompute(Func<double, double> function)
+    public readonly MeasurementValue TransposeCompute(Func<double, double> function)
     {
         return this with { Value = function(Value) };
     }
 
-    readonly int IDataSourceValue.LoadOrder => 0;
+    readonly int IDataSourceValueType.LoadOrder => 0;
 
-    readonly string IDataSourceValue.MetadataTableName => MetadataTableName;
+    readonly string IDataSourceValueType.MetadataTableName => MetadataTableName;
 
-    readonly string[] IDataSourceValue.RequiredMetadataFieldNames => new[]
+    readonly string[] IDataSourceValueType.RequiredMetadataFieldNames => new[]
     {
         "ID",       // <string> Measurement key, e.g., PPA:101
         "SignalID", //  <Guid>  Signal ID
         "PointTag"  // <string> Point tag, e.g., GPA_SHELBY:FREQ
     };
 
-    readonly Action<DataSet> IDataSourceValue.AugmentMetadata => null; // No augmentation needed
+    readonly Action<DataSet> IDataSourceValueType.AugmentMetadata => null; // No augmentation needed
 
     /// <inheritdoc />
     public readonly DataRow LookupMetadata(DataSet metadata, string tableName, string target)
@@ -126,28 +127,34 @@ public partial struct DataSourceValue : IDataSourceValue<DataSourceValue>
         return record;
     }
 
-    readonly TargetIDSet IDataSourceValue.GetTargetIDSet(DataRow record)
+    readonly TargetIDSet IDataSourceValueType.GetTargetIDSet(DataRow record)
     {
         // A target ID set is: (target, (measurementKey, pointTag)[])
-        // For the simple DataSourceValue functionality the target is the point tag
+        // For the simple MeasurementValue functionality the target is the point tag
         string pointTag = record["PointTag"].ToString();
         return (pointTag, new[] { (record.KeyFromRecord(), pointTag) });
     }
 
-    readonly DataRow IDataSourceValue.RecordFromKey(MeasurementKey key, DataSet metadata)
+    readonly DataRow IDataSourceValueType.RecordFromKey(MeasurementKey key, DataSet metadata)
     {
         return key.ToString().RecordFromKey(metadata);
     }
 
-    readonly int IDataSourceValue.DataTypeIndex => TypeIndex;
+    readonly int IDataSourceValueType.DataTypeIndex => TypeIndex;
 
-    readonly void IDataSourceValue<DataSourceValue>.AssignToTimeValueMap(string pointTag, DataSourceValue dataValue, SortedList<double, DataSourceValue> timeValueMap, DataSet metadata)
+    readonly void IDataSourceValueType<MeasurementValue>.AssignToTimeValueMap(DataSourceValue dataSourceValue, SortedList<double, MeasurementValue> timeValueMap, DataSet metadata)
     {
-        timeValueMap[dataValue.Time] = dataValue;
+        timeValueMap[dataSourceValue.Time] = new MeasurementValue
+        {
+            Target = dataSourceValue.ID.target,
+            Value = dataSourceValue.Value,
+            Time = dataSourceValue.Time,
+            Flags = dataSourceValue.Flags
+        };
     }
 
     /// <summary>
-    /// Gets the type index for <see cref="DataSourceValue"/>.
+    /// Gets the type index for <see cref="MeasurementValue"/>.
     /// </summary>
-    public static readonly int TypeIndex = DataSourceValueCache.GetTypeIndex(nameof(DataSourceValue));
+    public static readonly int TypeIndex = DataSourceValueTypeCache.GetTypeIndex(nameof(MeasurementValue));
 }

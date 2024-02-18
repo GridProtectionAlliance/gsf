@@ -1,5 +1,5 @@
-﻿using GrafanaAdapters.DataSources;
-using GrafanaAdapters.DataSources.BuiltIn;
+﻿using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -22,7 +22,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Variants: Last<br/>
 /// Execution: Immediate in-memory array load.
 /// </remarks>
-public abstract class Last<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
+public abstract class Last<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {
     /// <inheritdoc />
     public override string Name => nameof(Last<T>);
@@ -68,7 +68,7 @@ public abstract class Last<T> : GrafanaFunctionBase<T> where T : struct, IDataSo
     }
 
     /// <inheritdoc />
-    public class ComputeDataSourceValue : Last<DataSourceValue>
+    public class ComputeMeasurementValue : Last<MeasurementValue>
     {
     }
 

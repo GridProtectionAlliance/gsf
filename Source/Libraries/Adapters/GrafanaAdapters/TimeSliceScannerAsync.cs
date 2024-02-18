@@ -21,7 +21,8 @@
 //
 //******************************************************************************************************
 
-using GrafanaAdapters.DataSources;
+using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.Model.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,9 +32,9 @@ using System.Threading.Tasks;
 namespace GrafanaAdapters;
 
 /// <summary>
-/// Reads series of <see cref="IDataSourceValue{T}"/> instances for the same time interval.
+/// Reads series of <see cref="IDataSourceValueType{T}"/> instances for the same time interval.
 /// </summary>
-public class TimeSliceScannerAsync<T> where T : struct, IDataSourceValue<T>
+public class TimeSliceScannerAsync<T> where T : struct, IDataSourceValueType<T>
 {
     private readonly List<IAsyncEnumerator<T>> m_enumerators;
     private double m_lastPublishTime = double.NaN;

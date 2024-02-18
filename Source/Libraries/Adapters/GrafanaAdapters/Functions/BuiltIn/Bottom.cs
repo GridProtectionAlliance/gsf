@@ -1,11 +1,11 @@
-﻿using GrafanaAdapters.DataSources;
-using GrafanaAdapters.DataSources.BuiltIn;
-using GSF;
+﻿using GSF;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 using static GrafanaAdapters.Functions.Common;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
@@ -25,7 +25,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Variants: Bottom, Bot, Smallest<br/>
 /// Execution: Immediate in-memory array load.
 /// </remarks>
-public abstract class Bottom<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
+public abstract class Bottom<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {
     /// <inheritdoc />
     public override string Name => nameof(Bottom<T>);
@@ -95,7 +95,7 @@ public abstract class Bottom<T> : GrafanaFunctionBase<T> where T : struct, IData
     }
 
     /// <inheritdoc />
-    public class ComputeDataSourceValue : Bottom<DataSourceValue>
+    public class ComputeMeasurementValue : Bottom<MeasurementValue>
     {
     }
 

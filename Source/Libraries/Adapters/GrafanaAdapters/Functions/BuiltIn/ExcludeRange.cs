@@ -1,5 +1,5 @@
-﻿using GrafanaAdapters.DataSources;
-using GrafanaAdapters.DataSources.BuiltIn;
+﻿using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -21,7 +21,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Variants: ExcludeRange, Exclude<br/>
 /// Execution: Deferred enumeration.
 /// </remarks>
-public abstract class ExcludeRange<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
+public abstract class ExcludeRange<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {
     /// <inheritdoc />
     public override string Name => nameof(ExcludeRange<T>);
@@ -84,7 +84,7 @@ public abstract class ExcludeRange<T> : GrafanaFunctionBase<T> where T : struct,
     }
 
     /// <inheritdoc />
-    public class ComputeDataSourceValue : ExcludeRange<DataSourceValue>
+    public class ComputeMeasurementValue : ExcludeRange<MeasurementValue>
     {
     }
 

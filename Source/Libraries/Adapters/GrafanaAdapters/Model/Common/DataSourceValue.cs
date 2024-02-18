@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  ParsedGrafanaFunction.cs - Gbtc
+//  DataSourceValue.cs - Gbtc
 //
-//  Copyright © 2023, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2024, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,38 +16,42 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  12/30/2023 - J. Ritchie Carroll
+//  02/18/2024 - J. Ritchie Carroll
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-using GrafanaAdapters.DataSourceValueTypes;
+using GSF.TimeSeries;
 
-namespace GrafanaAdapters.Functions;
+namespace GrafanaAdapters.Model.Common;
 
 /// <summary>
-/// Represents a parsed Grafana function.
+/// Represents an individual time-series value as queried from a data source.
 /// </summary>
-/// <typeparam name="T">Data source value type.</typeparam>
-public class ParsedGrafanaFunction<T> where T : struct, IDataSourceValueType<T>
+public struct DataSourceValue
 {
     /// <summary>
-    /// Parsed Grafana function.
+    /// Point-tag and target ID for the query.
     /// </summary>
-    public IGrafanaFunction<T> Function;
+    /// <remarks>
+    /// <c>pointTag</c> is a specific name for a data point to be queried
+    /// from the data source. <c>target</c> is a more general name that
+    /// can represent multiple point-tags, e.g., a tuple of point-tags.
+    /// </remarks>
+    public (string pointTag, string target) ID;
 
     /// <summary>
-    /// Defined group operation for parsed function.
+    /// Queried data source value.
     /// </summary>
-    public GroupOperations GroupOperation;
+    public double Value;
 
     /// <summary>
-    /// Parsed function expression, e.g., parameters.
+    /// Timestamp, in Unix epoch milliseconds, of queried value.
     /// </summary>
-    public string Expression;
+    public double Time;
 
     /// <summary>
-    /// Defines the match from the RegEx for the function.
+    /// Flags for queried value.
     /// </summary>
-    public string MatchedValue;
+    public MeasurementStateFlags Flags;
 }

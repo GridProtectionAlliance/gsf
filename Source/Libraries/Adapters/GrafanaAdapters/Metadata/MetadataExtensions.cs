@@ -21,8 +21,8 @@
 //
 //******************************************************************************************************
 
-using GrafanaAdapters.DataSources;
-using GrafanaAdapters.DataSources.BuiltIn;
+using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 using GrafanaAdapters.Functions;
 using GSF;
 using GSF.Diagnostics;
@@ -75,7 +75,7 @@ internal static class MetadataExtensions
     /// search algorithm that can be slow for large data sets, it is recommended that any results
     /// for calls to this function be cached to improve performance.
     /// </remarks>
-    public static string TagFromKey(this MeasurementKey key, DataSet metadata, string table = DataSourceValue.MetadataTableName, string pointTagField = "PointTag", string idField = "ID")
+    public static string TagFromKey(this MeasurementKey key, DataSet metadata, string table = MeasurementValue.MetadataTableName, string pointTagField = "PointTag", string idField = "ID")
     {
         string keyName = key.ToString();
 
@@ -102,7 +102,7 @@ internal static class MetadataExtensions
     /// for calls to this function be cached to improve performance.
     /// </para>
     /// </remarks>
-    public static DataRow RecordFromTag(this string pointTag, DataSet metadata, string table = DataSourceValue.MetadataTableName, string pointTagField = "PointTag")
+    public static DataRow RecordFromTag(this string pointTag, DataSet metadata, string table = MeasurementValue.MetadataTableName, string pointTagField = "PointTag")
     {
         return metadata.GetMetadata(table, $"{pointTagField} = '{SplitAlias(pointTag, out string _)}'");
     }
@@ -115,7 +115,7 @@ internal static class MetadataExtensions
     /// <param name="table">Table to search.</param>
     /// <param name="idField">Measurement key-based ID field name.</param>
     /// <returns>Metadata record from source metadata for provided measurement key.</returns>
-    public static DataRow RecordFromKey(this string keyName, DataSet metadata, string table = DataSourceValue.MetadataTableName, string idField = "ID")
+    public static DataRow RecordFromKey(this string keyName, DataSet metadata, string table = MeasurementValue.MetadataTableName, string idField = "ID")
     {
         return metadata.GetMetadata(table, $"{idField} = '{keyName}'");
     }
@@ -185,7 +185,7 @@ internal static class MetadataExtensions
     /// </summary>
     /// <param name="target">Target to parse.</param>
     /// <returns>Target parsed as table and field name.</returns>
-    public static (string tableName, string fieldName) ParseAsTableAndField<T>(this string target) where T : struct, IDataSourceValue
+    public static (string tableName, string fieldName) ParseAsTableAndField<T>(this string target) where T : struct, IDataSourceValueType
     {
         string[] parts = target.Split('.');
 
@@ -204,7 +204,7 @@ internal static class MetadataExtensions
     /// <param name="metadata">Source metadata.</param>
     /// <param name="tableName">Target table name.</param>
     /// <returns><c>true</c> if metadata table is valid for the specified data source value type instance; otherwise, <c>false</c>.</returns>
-    public static bool MetadataTableIsValid(this IDataSourceValue instance, DataSet metadata, string tableName)
+    public static bool MetadataTableIsValid(this IDataSourceValueType instance, DataSet metadata, string tableName)
     {
         string[] requiredFields = instance.RequiredMetadataFieldNames;
         return metadata.Tables.Contains(tableName) && requiredFields.All(field => metadata.Tables[tableName].Columns.Contains(field));
@@ -217,7 +217,7 @@ internal static class MetadataExtensions
     /// <param name="rootTarget">Root target to use for metadata lookup.</param>
     /// <param name="queryParameters">Query parameters.</param>
     /// <returns>Mapped metadata for the specified target and selections.</returns>
-    public static MetadataMap GetMetadataMap<T>(this DataSet metadata, string rootTarget, QueryParameters queryParameters) where T : struct, IDataSourceValue
+    public static MetadataMap GetMetadataMap<T>(this DataSet metadata, string rootTarget, QueryParameters queryParameters) where T : struct, IDataSourceValueType
     {
         return metadata.GetMetadataMap<T>(rootTarget, queryParameters.MetadataSelections);
     }
@@ -242,7 +242,7 @@ internal static class MetadataExtensions
     /// <remarks>
     /// Implementations should cache metadata lookups for performance.
     /// </remarks>
-    public static DataRow Lookup<T>(this DataSet metadata, string tableName, string target) where T : struct, IDataSourceValue
+    public static DataRow Lookup<T>(this DataSet metadata, string tableName, string target) where T : struct, IDataSourceValueType
     {
         // Only get first target for metadata lookup if target represents multiple targets
         return default(T).LookupMetadata(metadata, tableName, target.FirstTarget());
@@ -255,7 +255,7 @@ internal static class MetadataExtensions
     /// <param name="rootTarget">Root target to use for metadata lookup.</param>
     /// <param name="metadataSelections">Metadata selections.</param>
     /// <returns>Mapped metadata for the specified target and selections.</returns>
-    public static MetadataMap GetMetadataMap<T>(this DataSet metadata, string rootTarget, IList<(string tableName, string[] fieldNames)> metadataSelections) where T : struct, IDataSourceValue
+    public static MetadataMap GetMetadataMap<T>(this DataSet metadata, string rootTarget, IList<(string tableName, string[] fieldNames)> metadataSelections) where T : struct, IDataSourceValueType
     {
         // Create a new dictionary to hold the metadata values
         MetadataMap metadataMap = new();
@@ -295,7 +295,7 @@ internal static class MetadataExtensions
     /// <param name="target">Target expression to parse.</param>
     /// <param name="metadata">Source metadata.</param>
     /// <returns>Tuple representing set of target and associated IDs, as parsed from expression, and any defined alias.</returns>
-    public static (TargetIDSet[] targetIDSets, string alias) Parse<T>(this string target, DataSet metadata) where T : struct, IDataSourceValue
+    public static (TargetIDSet[] targetIDSets, string alias) Parse<T>(this string target, DataSet metadata) where T : struct, IDataSourceValueType
     {
         TargetIDSet[] targetIDSets;
         string aliasTarget = target.SplitAlias(out string alias);
@@ -345,22 +345,6 @@ internal static class MetadataExtensions
         }
 
         return (targetIDSets, !string.IsNullOrWhiteSpace(alias) && targetIDSets.Length == 1 ? alias : null);
-    }
-
-    /// <summary>
-    /// Splits a combined target into a point tag and target.
-    /// </summary>
-    /// <param name="target">Combined target of point tag and target.</param>
-    /// <returns>Tuple of point tag and target.</returns>
-    /// <exception cref="InvalidOperationException">Invalid combined target encountered.</exception>
-    public static (string pointTag, string target) SplitComponents(this string target)
-    {
-        int index = target.IndexOf('/');
-
-        if (index <= 0)
-            throw new InvalidOperationException($"Invalid combined target encountered: \"{target}\" -- expected format as \"PointTag/Target\". Verify derived data source implementation does not change provided target map value.");
-
-        return (target.Substring(0, index), target.Substring(index + 1));
     }
 
     #region [ Old Code ]

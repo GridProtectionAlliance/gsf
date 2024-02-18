@@ -104,6 +104,11 @@
     <Compile Include="Collections\FileBackedDictionary.cs" />
     <Compile Include="Collections\FileBackedHashSet.cs" />
     <Compile Include="Collections\FileBackedLookupTable.cs" />
+    <Compile Include="Collections\HashHelpers.cs" />
+    <Compile Include="Collections\DictionaryDebugView.cs" />
+    <Compile Include="Collections\OrderedDictionary.cs" />
+    <Compile Include="Collections\OrderedDictionary.KeyCollection.cs" />
+    <Compile Include="Collections\OrderedDictionary.ValueCollection.cs" />
     <Compile Include="Collections\RollingWindow.cs" />
     <Compile Include="Common.cs" />
     <Compile Include="ComponentModel\DataAnnotations\EmailValidationAttribute.cs" />

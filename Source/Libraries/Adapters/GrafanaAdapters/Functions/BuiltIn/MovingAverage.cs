@@ -1,5 +1,5 @@
-﻿using GrafanaAdapters.DataSources;
-using GrafanaAdapters.DataSources.BuiltIn;
+﻿using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,7 +21,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Variants: MovingAverage, MovingAvg, MovingMean, SimpleMovingAverage, SMA<br/>
 /// Execution: Immediate in-memory array load.
 /// </remarks>
-public abstract class MovingAverage<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
+public abstract class MovingAverage<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {
     /// <inheritdoc />
     public override string Name => nameof(MovingAverage<T>);
@@ -90,7 +90,7 @@ public abstract class MovingAverage<T> : GrafanaFunctionBase<T> where T : struct
     }
 
     /// <inheritdoc />
-    public class ComputeDataSourceValue : MovingAverage<DataSourceValue>
+    public class ComputeMeasurementValue : MovingAverage<MeasurementValue>
     {
     }
 

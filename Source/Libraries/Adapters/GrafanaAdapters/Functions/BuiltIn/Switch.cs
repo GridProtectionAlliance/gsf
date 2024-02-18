@@ -1,6 +1,6 @@
-﻿using System;
-using GrafanaAdapters.DataSources;
-using GrafanaAdapters.DataSources.BuiltIn;
+﻿using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Runtime.CompilerServices;
@@ -20,7 +20,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Variants: Switch, Select<br/>
 /// Execution: Immediate enumeration.
 /// </remarks>
-public abstract class Switch<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
+public abstract class Switch<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {
     /// <inheritdoc />
     public override string Name => nameof(Switch<T>);
@@ -86,13 +86,13 @@ public abstract class Switch<T> : GrafanaFunctionBase<T> where T : struct, IData
 
 
     /// <inheritdoc />
-    public class ComputeDataSourceValue : Switch<DataSourceValue>
+    public class ComputeMeasurementValue : Switch<MeasurementValue>
     {
     }
 
     /// <inheritdoc />
     public class ComputePhasorValue : Switch<PhasorValue>
     {
-        // Index from first series comes from magnitude only (IDataSourceValue.Value defaults to Magnitude for PhasorValue)
+        // Index from first series comes from magnitude only (IDataSourceValueType.Value defaults to Magnitude for PhasorValue)
     }
 }

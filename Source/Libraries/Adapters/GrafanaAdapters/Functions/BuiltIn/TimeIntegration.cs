@@ -1,5 +1,5 @@
-﻿using GrafanaAdapters.DataSources;
-using GrafanaAdapters.DataSources.BuiltIn;
+﻿using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 using GSF.Units;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +24,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Variants: TimeIntegration, TimeInt<br/>
 /// Execution: Immediate enumeration.
 /// </remarks>
-public abstract class TimeIntegration<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
+public abstract class TimeIntegration<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {
     /// <inheritdoc />
     public override string Name => nameof(TimeIntegration<T>);
@@ -90,7 +90,7 @@ public abstract class TimeIntegration<T> : GrafanaFunctionBase<T> where T : stru
     }
 
     /// <inheritdoc />
-    public class ComputeDataSourceValue : TimeIntegration<DataSourceValue>
+    public class ComputeMeasurementValue : TimeIntegration<MeasurementValue>
     {
     }
 

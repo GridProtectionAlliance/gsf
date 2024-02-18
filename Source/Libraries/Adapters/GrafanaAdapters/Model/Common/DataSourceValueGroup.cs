@@ -21,12 +21,12 @@
 //
 //******************************************************************************************************
 
+using GrafanaAdapters.DataSourceValueTypes;
 using GrafanaAdapters.Functions;
-using GrafanaAdapters.Model.Common;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace GrafanaAdapters.DataSources;
+namespace GrafanaAdapters.Model.Common;
 
 /// <summary>
 /// Defines a class that represents an enumeration of T for a given target.
@@ -34,7 +34,7 @@ namespace GrafanaAdapters.DataSources;
 /// <remarks>
 /// This is a group construct keyed on <see cref="Target"/> for data source value enumerations.
 /// </remarks>
-public class DataSourceValueGroup<T> where T : struct, IDataSourceValue
+public class DataSourceValueGroup<T> where T : struct, IDataSourceValueType
 {
     /// <summary>
     /// Gets or sets target, e.g., a point-tag, representative of all <see cref="Source"/> values.

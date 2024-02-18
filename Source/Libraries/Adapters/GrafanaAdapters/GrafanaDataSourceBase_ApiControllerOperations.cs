@@ -22,8 +22,8 @@
 //******************************************************************************************************
 
 using GrafanaAdapters.Annotations;
-using GrafanaAdapters.DataSources;
-using GrafanaAdapters.DataSources.BuiltIn;
+using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 using GrafanaAdapters.Functions;
 using GrafanaAdapters.Metadata;
 using GrafanaAdapters.Model.Annotations;
@@ -50,12 +50,12 @@ namespace GrafanaAdapters;
 partial class GrafanaDataSourceBase
 {
     /// <summary>
-    /// Gets the data source value types, i.e., any type that has implemented <see cref="IDataSourceValue"/>,
+    /// Gets the data source value types, i.e., any type that has implemented <see cref="IDataSourceValueType"/>,
     /// that have been loaded into the application domain.
     /// </summary>
     public virtual IEnumerable<DataSourceValueType> GetValueTypes()
     {
-        return DataSourceValueCache.DefaultInstances.Select((value, index) => new DataSourceValueType
+        return DataSourceValueTypeCache.DefaultInstances.Select((value, index) => new DataSourceValueType
         {
             name = value.GetType().Name,
             index = index,
@@ -66,7 +66,7 @@ partial class GrafanaDataSourceBase
 
     /// <summary>
     /// Gets the table names that, at a minimum, contain all the fields that the value type has defined as required,
-    /// see <see cref="IDataSourceValue.RequiredMetadataFieldNames"/> when <see cref="SearchRequest.dataTypeIndex"/>
+    /// see <see cref="IDataSourceValueType.RequiredMetadataFieldNames"/> when <see cref="SearchRequest.dataTypeIndex"/>
     /// is a valid index in the data source value cache. When <see cref="SearchRequest.dataTypeIndex"/> is -1, all
     /// table names are returned.
     /// </summary>
@@ -79,12 +79,12 @@ partial class GrafanaDataSourceBase
             return TargetCache<IEnumerable<string>>.GetOrAdd($"{request.dataTypeIndex}", () =>
             {
                 int dataTypeIndex = request.dataTypeIndex;
-                IDataSourceValue dataSourceValue = DataSourceValueCache.GetDefaultInstance(dataTypeIndex == -1 ? DataSourceValue.TypeIndex : dataTypeIndex);
-                DataSet metadata = Metadata.GetAugmentedDataSet(dataSourceValue);
+                IDataSourceValueType dataSourceValueType = DataSourceValueTypeCache.GetDefaultInstance(dataTypeIndex == -1 ? MeasurementValue.TypeIndex : dataTypeIndex);
+                DataSet metadata = Metadata.GetAugmentedDataSet(dataSourceValueType);
 
                 // Provided unrestricted metadata table names if data type index is -1
                 return dataTypeIndex > -1 ?
-                    metadata.Tables.Cast<DataTable>().Where(table => dataSourceValue.MetadataTableIsValid(metadata, table.TableName)).Select(table => table.TableName) :
+                    metadata.Tables.Cast<DataTable>().Where(table => dataSourceValueType.MetadataTableIsValid(metadata, table.TableName)).Select(table => table.TableName) :
                     metadata.Tables.Cast<DataTable>().Select(table => table.TableName);
             });
         },
@@ -94,7 +94,7 @@ partial class GrafanaDataSourceBase
     /// <summary>
     /// Gets the field names for a given table when <see cref="SearchRequest.dataTypeIndex"/> is a valid index in the data
     /// source value cache and selected table name contains all the fields that the value type has defined as required, see
-    /// <see cref="IDataSourceValue.RequiredMetadataFieldNames"/> . When <see cref="SearchRequest.dataTypeIndex"/> is -1,
+    /// <see cref="IDataSourceValueType.RequiredMetadataFieldNames"/> . When <see cref="SearchRequest.dataTypeIndex"/> is -1,
     /// fields for any valid metadata table name are returned.
     /// </summary>
     /// <param name="request">Search request.</param>
@@ -109,19 +109,19 @@ partial class GrafanaDataSourceBase
             return TargetCache<IEnumerable<FieldDescription>>.GetOrAdd($"{request.dataTypeIndex}:{request.expression}", () =>
             {
                 int dataTypeIndex = request.dataTypeIndex;
-                IDataSourceValue dataSourceValue = DataSourceValueCache.GetDefaultInstance(dataTypeIndex == -1 ? DataSourceValue.TypeIndex : dataTypeIndex);
-                DataSet metadata = Metadata.GetAugmentedDataSet(dataSourceValue);
+                IDataSourceValueType dataSourceValueType = DataSourceValueTypeCache.GetDefaultInstance(dataTypeIndex == -1 ? MeasurementValue.TypeIndex : dataTypeIndex);
+                DataSet metadata = Metadata.GetAugmentedDataSet(dataSourceValueType);
                 string tableName = request.expression.Trim();
 
                 // Provided unrestricted metadata table field names if data type index is -1
-                if (dataTypeIndex > -1 && !dataSourceValue.MetadataTableIsValid(metadata, tableName))
+                if (dataTypeIndex > -1 && !dataSourceValueType.MetadataTableIsValid(metadata, tableName))
                     return Enumerable.Empty<FieldDescription>();
 
                 return metadata.Tables[tableName].Columns.Cast<DataColumn>().Select(column => new FieldDescription
                 {
                     name = column.ColumnName,
                     type = column.DataType.GetReflectedTypeName(false),
-                    required = dataSourceValue.RequiredMetadataFieldNames.Contains(column.ColumnName, StringComparer.OrdinalIgnoreCase)
+                    required = dataSourceValueType.RequiredMetadataFieldNames.Contains(column.ColumnName, StringComparer.OrdinalIgnoreCase)
                 });
             });
         },
@@ -276,24 +276,24 @@ partial class GrafanaDataSourceBase
         return Task.Factory.StartNew(() =>
         {
             int dataTypeIndex = request.dataTypeIndex;
-            IDataSourceValue dataSourceValue = DataSourceValueCache.GetDefaultInstance(dataTypeIndex == -1 ? DataSourceValue.TypeIndex : dataTypeIndex);
+            IDataSourceValueType dataSourceValueType = DataSourceValueTypeCache.GetDefaultInstance(dataTypeIndex == -1 ? MeasurementValue.TypeIndex : dataTypeIndex);
 
             // If an empty expression is specified, query all point tags for data source value type (up to MaximumSearchTargetsPerRequest)
             if (string.IsNullOrWhiteSpace(request.expression))
-                request.expression = $"SELECT DISTINCT TOP {MaximumSearchTargetsPerRequest} PointTag FROM {dataSourceValue.MetadataTableName} WHERE True ORDER BY PointTag";
+                request.expression = $"SELECT DISTINCT TOP {MaximumSearchTargetsPerRequest} PointTag FROM {dataSourceValueType.MetadataTableName} WHERE True ORDER BY PointTag";
 
             request.expression = request.expression.Trim();
 
             return TargetCache<string[]>.GetOrAdd($"search!{request.dataTypeIndex}:{request.expression}", () =>
             {
-                DataSet metadata = Metadata.GetAugmentedDataSet(dataSourceValue);
+                DataSet metadata = Metadata.GetAugmentedDataSet(dataSourceValueType);
 
                 // Attempt to parse search target as a "SELECT" statement
                 if (!parseSelectExpression(request.expression, out string tableName, out bool distinct, out string[] fieldNames, out string expression, out string sortField, out int takeCount))
                 {
                     // Expression was not a 'SELECT' statement, execute a 'LIKE' statement against primary meta-data table for data source value type
                     // returning matching point tags - this can be a slow operation for large meta-data sets, so results are cached by expression
-                    return metadata.Tables[dataSourceValue.MetadataTableName]
+                    return metadata.Tables[dataSourceValueType.MetadataTableName]
                         .Select($"ID LIKE '{InstanceName}:%' AND PointTag LIKE '%{request.expression}%'")
                         .Take(MaximumSearchTargetsPerRequest)
                         .Select(row => $"{row["PointTag"]}")
@@ -306,7 +306,7 @@ partial class GrafanaDataSourceBase
                 // Provided unrestricted metadata table field names if data type index is -1, otherwise if
                 // meta-data table does not contain the field names required by the data source value type,
                 // return empty results as this is not a table supported by the data source value type:
-                if (dataTypeIndex > -1 && !dataSourceValue.MetadataTableIsValid(metadata, tableName))
+                if (dataTypeIndex > -1 && !dataSourceValueType.MetadataTableIsValid(metadata, tableName))
                     return results.ToArray();
 
                 // If table name is not in meta-data for unrestricted search, we have no choice but to attempt
@@ -314,7 +314,7 @@ partial class GrafanaDataSourceBase
                 // operation will cached and is only be a one-time operation
                 if (dataTypeIndex == -1 && !metadata.Tables.Contains(tableName))
                 {
-                    foreach (IDataSourceValue defaultDataSourceValue in DataSourceValueCache.DefaultInstances)
+                    foreach (IDataSourceValueType defaultDataSourceValue in DataSourceValueTypeCache.DefaultInstances)
                         Metadata.GetAugmentedDataSet(defaultDataSourceValue);
                 }
 
@@ -405,7 +405,7 @@ partial class GrafanaDataSourceBase
     public virtual async Task<List<AnnotationResponse>> Annotations(AnnotationRequest request, CancellationToken cancellationToken)
     {
         AnnotationType type = request.ParseQueryType(out bool useFilterExpression);
-        DataSet metadata = Metadata.GetAugmentedDataSet<DataSourceValue>();
+        DataSet metadata = Metadata.GetAugmentedDataSet<MeasurementValue>();
         Dictionary<string, DataRow> definitions = request.ParseSourceDefinitions(type, metadata, useFilterExpression);
         IEnumerable<TimeSeriesValues> annotationData = await Query(request.ExtractQueryRequest(definitions.Keys, MaximumAnnotationsPerRequest), cancellationToken).ConfigureAwait(false);
         List<AnnotationResponse> responses = new();
@@ -433,16 +433,16 @@ partial class GrafanaDataSourceBase
                 {
                     response = new AnnotationResponse
                     {
-                        time = datapoint[DataSourceValue.TimeIndex],
-                        endTime = datapoint[DataSourceValue.TimeIndex]
+                        time = datapoint[MeasurementValue.TimeIndex],
+                        endTime = datapoint[MeasurementValue.TimeIndex]
                     };
                 }
                 else
                 {
                     response = new AnnotationResponse
                     {
-                        time = datapoint[DataSourceValue.TimeIndex],
-                        endTime = values.datapoints[index + 1][DataSourceValue.TimeIndex]
+                        time = datapoint[MeasurementValue.TimeIndex],
+                        endTime = values.datapoints[index + 1][MeasurementValue.TimeIndex]
                     };
                 }
 

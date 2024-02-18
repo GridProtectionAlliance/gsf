@@ -1,5 +1,5 @@
-﻿using GrafanaAdapters.DataSources;
-using GrafanaAdapters.DataSources.BuiltIn;
+﻿using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -17,7 +17,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Variants: Modulo, Modulus, Mod<br/>
 /// Execution: Deferred enumeration.
 /// </remarks>
-public abstract class Modulo<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
+public abstract class Modulo<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {
     /// <inheritdoc />
     public override string Name => nameof(Modulo<T>);
@@ -51,7 +51,7 @@ public abstract class Modulo<T> : GrafanaFunctionBase<T> where T : struct, IData
     }
 
     /// <inheritdoc />
-    public class ComputeDataSourceValue : Modulo<DataSourceValue>
+    public class ComputeMeasurementValue : Modulo<MeasurementValue>
     {
     }
 

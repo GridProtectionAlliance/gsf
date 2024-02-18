@@ -24,8 +24,7 @@
 // ReSharper disable StaticMemberInGenericType
 // ReSharper disable PossibleMultipleEnumeration
 
-using GrafanaAdapters.DataSources;
-using GrafanaAdapters.DataSources.BuiltIn;
+using GrafanaAdapters.DataSourceValueTypes;
 using GrafanaAdapters.Functions;
 using GrafanaAdapters.Functions.BuiltIn;
 using GrafanaAdapters.Metadata;
@@ -91,7 +90,7 @@ public abstract partial class GrafanaDataSourceBase
     /// <param name="targetMap">Set of IDs with associated targets to query.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Queried data source data in terms of value and time.</returns>
-    protected abstract IAsyncEnumerable<DataSourceValue> QueryDataSourceValues(QueryParameters queryParameters, Dictionary<ulong, string> targetMap, CancellationToken cancellationToken);
+    protected abstract IAsyncEnumerable<DataSourceValue> QueryDataSourceValues(QueryParameters queryParameters, OrderedDictionary<ulong, (string pointTag, string target)> targetMap, CancellationToken cancellationToken);
 
     /// <summary>
     /// Queries data source returning data as Grafana time-series data set.
@@ -100,7 +99,7 @@ public abstract partial class GrafanaDataSourceBase
     /// <param name="cancellationToken">Cancellation token.</param>
     public Task<IEnumerable<TimeSeriesValues>> Query(QueryRequest request, CancellationToken cancellationToken)
     {
-        if (request.dataTypeIndex < 0 || request.dataTypeIndex >= DataSourceValueCache.LoadedTypes.Count)
+        if (request.dataTypeIndex < 0 || request.dataTypeIndex >= DataSourceValueTypeCache.LoadedTypes.Count)
             throw new IndexOutOfRangeException("Query request must specify a valid data type index.");
 
         // Execute specific process query request handler function for the requested data type
@@ -108,7 +107,7 @@ public abstract partial class GrafanaDataSourceBase
     }
 
     // This function is called by ProcessQueryRequestFunctions delegate array
-    private static async Task<IEnumerable<TimeSeriesValues>> ProcessQueryRequestAsync<T>(GrafanaDataSourceBase instance, QueryRequest request, CancellationToken cancellationToken) where T : struct, IDataSourceValue<T>
+    private static async Task<IEnumerable<TimeSeriesValues>> ProcessQueryRequestAsync<T>(GrafanaDataSourceBase instance, QueryRequest request, CancellationToken cancellationToken) where T : struct, IDataSourceValueType<T>
     {
         DateTime startTime = request.range.from.ParseJsonTimestamp();
         DateTime stopTime = request.range.to.ParseJsonTimestamp();
@@ -237,7 +236,7 @@ public abstract partial class GrafanaDataSourceBase
     }
 
     // This function is re-entrant so that it operates with functions as a depth-first recursive expression parser
-    private static async IAsyncEnumerable<DataSourceValueGroup<T>> QueryTargetAsync<T>(GrafanaDataSourceBase instance, QueryParameters queryParameters, DataSet metadata, string queryExpression, [EnumeratorCancellation] CancellationToken cancellationToken) where T : struct, IDataSourceValue<T>
+    private static async IAsyncEnumerable<DataSourceValueGroup<T>> QueryTargetAsync<T>(GrafanaDataSourceBase instance, QueryParameters queryParameters, DataSet metadata, string queryExpression, [EnumeratorCancellation] CancellationToken cancellationToken) where T : struct, IDataSourceValueType<T>
     {
         // A single target might look like the following - nested functions with multiple targets are supported:
         // PPA:15; STAT:20; SETSUM(COUNT(PPA:8; PPA:9; PPA:10)); FILTER ActiveMeasurements WHERE SignalType IN ('IPHA', 'VPHA'); RANGE(PPA:99; SUM(FILTER ActiveMeasurements WHERE SignalType = 'FREQ'; STAT:12))
@@ -288,20 +287,26 @@ public abstract partial class GrafanaDataSourceBase
             yield break;
 
         // Create a map of the queryable data source point IDs to point tags - this will be used to query the data source
-        // for the needed data points in the derived class 'QueryDataSourceValues' implementation
-        Dictionary<ulong, string> targetMap = CreateTargetMap<T>(metadata, queryExpression);
+        // for the needed data points in the derived class 'QueryDataSourceValues' implementation. Using an 'OrderedDictionary'
+        // here to maintain the order of the targets as they were specified in the user query expression.
+        OrderedDictionary<ulong, (string pointTag, string target)> targetMap = CreateTargetMap<T>(metadata, queryExpression);
 
-        // Create a map of each target to its own time-value map which will group target values that are sorted by time
-        Dictionary<string, SortedList<double, T>> targetValues = new(StringComparer.OrdinalIgnoreCase);
+        // Create a map of each target with its own time-value map which will group target values that are sorted by time,
+        // this allows for point-tag tuples to be associated with a given target ordered by time
+        OrderedDictionary<string, SortedList<double, T>> targetValues = new(StringComparer.OrdinalIgnoreCase);
+
+        // Preload keys of target time-value map using an 'OrderedDictionary' so that original order of targets is maintained
+        foreach ((string _, string target) in targetMap.Values)
+        {
+            if (!targetValues.ContainsKey(target))
+                targetValues[target] = new SortedList<double, T>();
+        }
 
         // Query underlying data source, assigning each value to its own data source target time-value map
-        await foreach (DataSourceValue dataValue in instance.QueryDataSourceValues(queryParameters, targetMap, cancellationToken).ConfigureAwait(false))
+        await foreach (DataSourceValue dataSourceValue in instance.QueryDataSourceValues(queryParameters, targetMap, cancellationToken).ConfigureAwait(false))
         {
-            // Split combined target into point tag and target
-            (string pointTag, string target) = dataValue.Target.SplitComponents();
-
             // Assign data value, identified by pointTag, to its own time-value map based on its target
-            default(T).AssignToTimeValueMap(pointTag, dataValue with { Target = target }, targetValues.GetOrAdd(target, _ => new SortedList<double, T>()), metadata);
+            default(T).AssignToTimeValueMap(dataSourceValue, targetValues[dataSourceValue.ID.target], metadata);
         }
 
         // Transpose each target into a data source value group along with its associated queried values
@@ -320,12 +325,12 @@ public abstract partial class GrafanaDataSourceBase
         }
     }
 
-    private static Dictionary<ulong, string> CreateTargetMap<T>(DataSet metadata, string queryExpression) where T : struct, IDataSourceValue<T>
+    private static OrderedDictionary<ulong, (string pointTag, string target)> CreateTargetMap<T>(DataSet metadata, string queryExpression) where T : struct, IDataSourceValueType<T>
     {
         // Caching map by data source value type index and queryExpression for improved performance
-        return TargetCache<Dictionary<ulong, string>>.GetOrAdd($"{default(T).DataTypeIndex}:{queryExpression}", () =>
+        return TargetCache<OrderedDictionary<ulong, (string pointTag, string target)>>.GetOrAdd($"{default(T).DataTypeIndex}:{queryExpression}", () =>
         {
-            Dictionary<ulong, string> targetMap = new();
+            OrderedDictionary<ulong, (string pointTag, string target)> targetMap = new();
 
             // Split remaining targets on semicolon which will include possible filter expressions being used
             // as inputs to functions, also since expression includes user provided input, casing is ignored.
@@ -343,7 +348,7 @@ public abstract partial class GrafanaDataSourceBase
                     (string target, (MeasurementKey key, string pointTag)[] idSet) targetIDSet = targetIDSets[0];
 
                     foreach ((MeasurementKey key, string pointTag) in targetIDSet.idSet)
-                        targetMap[key.ID] = $"{pointTag}/{alias} = {targetIDSet.target}";
+                        targetMap[key.ID] = (pointTag, $"{alias} = {targetIDSet.target}");
                 }
                 else
                 {
@@ -356,7 +361,7 @@ public abstract partial class GrafanaDataSourceBase
 
                             // Target may represent multiple point tags based on data value type composition,
                             // so we track point tag and target as a combined value in the target map:
-                            targetMap[key.ID] = $"{pointTag}/{targetIDSet.target}";
+                            targetMap[key.ID] = (pointTag, targetIDSet.target);
                         }
                     }
                 }
@@ -366,7 +371,7 @@ public abstract partial class GrafanaDataSourceBase
         });
     }
 
-    private static async IAsyncEnumerable<DataSourceValueGroup<T>> ExecuteGrafanaFunctionAsync<T>(GrafanaDataSourceBase instance, ParsedGrafanaFunction<T> parsedFunction, QueryParameters queryParameters, DataSet metadata, [EnumeratorCancellation] CancellationToken cancellationToken) where T : struct, IDataSourceValue<T>
+    private static async IAsyncEnumerable<DataSourceValueGroup<T>> ExecuteGrafanaFunctionAsync<T>(GrafanaDataSourceBase instance, ParsedGrafanaFunction<T> parsedFunction, QueryParameters queryParameters, DataSet metadata, [EnumeratorCancellation] CancellationToken cancellationToken) where T : struct, IDataSourceValueType<T>
     {
         IGrafanaFunction<T> function = parsedFunction.Function;
         GroupOperations groupOperation = parsedFunction.GroupOperation;
@@ -534,7 +539,7 @@ public abstract partial class GrafanaDataSourceBase
         }
     }
 
-    private static bool IsFilterMatch<T>(string target, AdHocFilter filter, DataSet metadata) where T : struct, IDataSourceValue<T>
+    private static bool IsFilterMatch<T>(string target, AdHocFilter filter, DataSet metadata) where T : struct, IDataSourceValueType<T>
     {
         // Default to positive match on failures
         return TargetCache<bool>.GetOrAdd($"filter!{filter.key}{filter.@operator}{filter.value}", () =>
@@ -627,7 +632,7 @@ public abstract partial class GrafanaDataSourceBase
         });
     }
 
-    private static async ValueTask<double> ParseSliceToleranceAsync<T>(string functionName, string value, string target, IAsyncEnumerable<DataSourceValueGroup<T>> dataset, DataSet metadata, CancellationToken cancellationToken) where T : struct, IDataSourceValue<T>
+    private static async ValueTask<double> ParseSliceToleranceAsync<T>(string functionName, string value, string target, IAsyncEnumerable<DataSourceValueGroup<T>> dataset, DataSet metadata, CancellationToken cancellationToken) where T : struct, IDataSourceValueType<T>
     {
         if (double.TryParse(value, out double result))
             return result;
@@ -648,7 +653,7 @@ public abstract partial class GrafanaDataSourceBase
         }
     }
 
-    // Query command regular expressions include a semi-colon prefix to help prevent possible name matches that may occur on other expressions
+    // Query command regular expressions include a semicolon prefix to help prevent possible name matches that may occur on other expressions
     private static readonly Regex s_dropEmptySeriesCommand = new(@";\s*DropEmptySeries", RegexOptions.Compiled | RegexOptions.IgnoreCase);
     private static readonly Regex s_includePeaksCommand = new(@";\s*IncludePeaks", RegexOptions.Compiled | RegexOptions.IgnoreCase);
     private static readonly Regex s_fullResolutionQueryCommand = new(@";\s*FullResolution(Query|Data)", RegexOptions.Compiled | RegexOptions.IgnoreCase);

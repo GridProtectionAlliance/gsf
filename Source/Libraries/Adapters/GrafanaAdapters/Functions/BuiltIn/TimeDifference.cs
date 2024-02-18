@@ -1,5 +1,5 @@
-﻿using GrafanaAdapters.DataSources;
-using GrafanaAdapters.DataSources.BuiltIn;
+﻿using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 using GSF.Units;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +24,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Variants: TimeDifference, TimeDiff, Elapsed<br/>
 /// Execution: Deferred enumeration.
 /// </remarks>
-public abstract class TimeDifference<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
+public abstract class TimeDifference<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {
     /// <inheritdoc />
     public override string Name => nameof(TimeDifference<T>);
@@ -85,7 +85,7 @@ public abstract class TimeDifference<T> : GrafanaFunctionBase<T> where T : struc
     }
 
     /// <inheritdoc />
-    public class ComputeDataSourceValue : TimeDifference<DataSourceValue>
+    public class ComputeMeasurementValue : TimeDifference<MeasurementValue>
     {
     }
 

@@ -1,5 +1,5 @@
-﻿using GrafanaAdapters.DataSources;
-using GrafanaAdapters.DataSources.BuiltIn;
+﻿using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -18,7 +18,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Variants: Pow<br/>
 /// Execution: Deferred enumeration.
 /// </remarks>
-public abstract class Pow<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
+public abstract class Pow<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {
     /// <inheritdoc />
     public override string Name => nameof(Pow<T>);
@@ -49,7 +49,7 @@ public abstract class Pow<T> : GrafanaFunctionBase<T> where T : struct, IDataSou
     }
 
     /// <inheritdoc />
-    public class ComputeDataSourceValue : Pow<DataSourceValue>
+    public class ComputeMeasurementValue : Pow<MeasurementValue>
     {
     }
 

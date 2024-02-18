@@ -1,5 +1,5 @@
-﻿using GrafanaAdapters.DataSources;
-using GrafanaAdapters.DataSources.BuiltIn;
+﻿using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 using GSF.Units;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -22,7 +22,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Variants: Interval<br/>
 /// Execution: Deferred enumeration.
 /// </remarks>
-public abstract class Interval<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
+public abstract class Interval<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {
     /// <inheritdoc />
     public override string Name => nameof(Interval<T>);
@@ -90,7 +90,7 @@ public abstract class Interval<T> : GrafanaFunctionBase<T> where T : struct, IDa
     }
 
     /// <inheritdoc />
-    public class ComputeDataSourceValue : Interval<DataSourceValue>
+    public class ComputeMeasurementValue : Interval<MeasurementValue>
     {
     }
 
@@ -98,5 +98,4 @@ public abstract class Interval<T> : GrafanaFunctionBase<T> where T : struct, IDa
     public class ComputePhasorValue : Interval<PhasorValue>
     {
     }
-
 }

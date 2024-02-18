@@ -1,5 +1,5 @@
-﻿using GrafanaAdapters.DataSources;
-using GrafanaAdapters.DataSources.BuiltIn;
+﻿using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 using GSF;
 using GSF.Collections;
 using System.Collections.Generic;
@@ -25,7 +25,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Variants: Random, Rand, Sample<br/>
 /// Execution: Immediate in-memory array load.
 /// </remarks>
-public abstract class Random<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
+public abstract class Random<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {
     /// <inheritdoc />
     public override string Name => nameof(Random<T>);
@@ -105,10 +105,10 @@ public abstract class Random<T> : GrafanaFunctionBase<T> where T : struct, IData
     }
 
     /// <inheritdoc />
-    public class ComputeDataSourceValue : Random<DataSourceValue>
+    public class ComputeMeasurementValue : Random<MeasurementValue>
     {
         /// <inheritdoc />
-        protected override DataSourceValue TransposeCompute(DataSourceValue currentValue, DataSourceValue[] values, int index) => currentValue with
+        protected override MeasurementValue TransposeCompute(MeasurementValue currentValue, MeasurementValue[] values, int index) => currentValue with
         {
             Value = values[index].Value,
             Target = values[index].Target,

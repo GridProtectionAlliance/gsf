@@ -1,5 +1,5 @@
-﻿using GrafanaAdapters.DataSources;
-using GrafanaAdapters.DataSources.BuiltIn;
+﻿using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -22,7 +22,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Variants: Clamp, Limit<br/>
 /// Execution: Deferred enumeration.
 /// </remarks>
-public abstract class Clamp<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
+public abstract class Clamp<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {
     /// <inheritdoc />
     public override string Name => nameof(Clamp<T>);
@@ -78,7 +78,7 @@ public abstract class Clamp<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     }
 
     /// <inheritdoc />
-    public class ComputeDataSourceValue : Clamp<DataSourceValue>
+    public class ComputeMeasurementValue : Clamp<MeasurementValue>
     {
     }
 
