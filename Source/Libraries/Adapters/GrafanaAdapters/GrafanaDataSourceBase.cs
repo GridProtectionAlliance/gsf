@@ -290,8 +290,15 @@ public abstract partial class GrafanaDataSourceBase
         // for the needed data points in the derived class 'QueryDataSourceValues' implementation
         OrderedDictionary<ulong, (string pointTag, string target)> targetMap = CreateTargetMap<T>(metadata, queryExpression);
 
-        // Create a map of each target, in original order, with its own time-value map which will group target values that are sorted by time
-        OrderedDictionary<string, SortedList<double, T>> targetValues = new(targetMap.Keys.ToDictionary(key => targetMap[key].target, _ => new SortedList<double, T>()), StringComparer.OrdinalIgnoreCase);
+        // Create a map of each target with its own time-value map which will group target values that are sorted by time
+        OrderedDictionary<string, SortedList<double, T>> targetValues = new(StringComparer.OrdinalIgnoreCase);
+
+        // Preload keys of target values map so order of targets is maintained
+        foreach ((string _, string target) in targetMap.Values)
+        {
+            if (!targetValues.ContainsKey(target))
+                targetValues[target] = new SortedList<double, T>();
+        }
 
         // Query underlying data source, assigning each value to its own data source target time-value map
         await foreach (DataSourceValue dataSourceValue in instance.QueryDataSourceValues(queryParameters, targetMap, cancellationToken).ConfigureAwait(false))

@@ -31,9 +31,9 @@ namespace GrafanaAdapters.Model.Common;
 public struct DataSourceValue
 {
     /// <summary>
-    /// Target and point-tag ID for the query.
+    /// Point-tag and traget ID for the query.
     /// </summary>
-    public (string target, string pointTag) ID;
+    public (string pointTag, string target) ID;
 
     /// <summary>
     /// Queried data source value.
