@@ -146,6 +146,9 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
         // Data values in this array will be for current slice, one value for each target series
         T[] dataValues = await GetDataSourceValues(parameters).ToArrayAsync(cancellationToken).ConfigureAwait(false);
 
+        if (dataValues.Length == 0)
+            yield break;
+
         lock (context)
         {
             // Clear existing variables - missing values will be exposed as NaN
@@ -153,13 +156,15 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
                 context.Variables[target] = double.NaN;
 
             List<string> targets = new();
-            T lastValue = default;
+            T sourceValue = default;
             int index = 0;
 
             // Load each target as variable name with its current slice value
             foreach (T dataValue in dataValues)
             {
-                lastValue = dataValue;
+                // First non-zero time value will be used as time for the slice
+                if (sourceValue.Time == 0.0D && dataValue.Time > 0.0D)
+                    sourceValue = dataValue;
 
                 // Get alias or clean target name for use as expression variable name
                 string target = dataValue.Target.SplitAlias(out string alias);
@@ -179,6 +184,9 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
                 context.Variables[$"_v{index++}"] = dataValue.Value;
             }
 
+            if (sourceValue.Time == 0.0D)
+                yield break;
+
             // Compile and cache the expression (only compiled once per expression)
             IDynamicExpression dynamicExpression = TargetCache<IDynamicExpression>.GetOrAdd(expression, () =>
             {
@@ -193,7 +201,7 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
             });
 
             // Return evaluated expression
-            yield return lastValue with
+            yield return sourceValue with
             {
                 Value = Convert.ToDouble(dynamicExpression.Evaluate()),
                 Target = $"{string.Join("; ", targets.Take(4))}{(targets.Count > 4 ? "; ..." : "")}"
