@@ -287,13 +287,15 @@ public abstract partial class GrafanaDataSourceBase
             yield break;
 
         // Create a map of the queryable data source point IDs to point tags - this will be used to query the data source
-        // for the needed data points in the derived class 'QueryDataSourceValues' implementation
+        // for the needed data points in the derived class 'QueryDataSourceValues' implementation. Using an 'OrderedDictionary'
+        // here to maintain the order of the targets as they were specified in the user query expression.
         OrderedDictionary<ulong, (string pointTag, string target)> targetMap = CreateTargetMap<T>(metadata, queryExpression);
 
-        // Create a map of each target with its own time-value map which will group target values that are sorted by time
+        // Create a map of each target with its own time-value map which will group target values that are sorted by time,
+        // this allows for point-tag tuples to be associated with a given target ordered by time
         OrderedDictionary<string, SortedList<double, T>> targetValues = new(StringComparer.OrdinalIgnoreCase);
 
-        // Preload keys of target values map so order of targets is maintained
+        // Preload keys of target time-value map using an 'OrderedDictionary' so that original order of targets is maintained
         foreach ((string _, string target) in targetMap.Values)
         {
             if (!targetValues.ContainsKey(target))

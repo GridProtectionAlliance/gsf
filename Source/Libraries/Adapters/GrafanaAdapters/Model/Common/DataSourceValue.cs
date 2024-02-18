@@ -26,13 +26,18 @@ using GSF.TimeSeries;
 namespace GrafanaAdapters.Model.Common;
 
 /// <summary>
-/// Represents an individual time-series value from a data source.
+/// Represents an individual time-series value as queried from a data source.
 /// </summary>
 public struct DataSourceValue
 {
     /// <summary>
-    /// Point-tag and traget ID for the query.
+    /// Point-tag and target ID for the query.
     /// </summary>
+    /// <remarks>
+    /// <c>pointTag</c> is a specific name for a data point to be queried
+    /// from the data source. <c>target</c> is a more general name that
+    /// can represent multiple point-tags, e.g., a tuple of point-tags.
+    /// </remarks>
     public (string pointTag, string target) ID;
 
     /// <summary>
