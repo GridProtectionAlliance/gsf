@@ -1,5 +1,5 @@
-﻿using GrafanaAdapters.DataSources;
-using GrafanaAdapters.DataSources.BuiltIn;
+﻿using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 using GSF.Collections;
 using System;
 using System.Collections.Generic;
@@ -27,7 +27,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Variants: Mode<br/>
 /// Execution: Immediate in-memory array load.
 /// </remarks>
-public abstract class Mode<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
+public abstract class Mode<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {
     /// <inheritdoc />
     public override string Name => nameof(Mode<T>);
@@ -115,7 +115,7 @@ public abstract class Mode<T> : GrafanaFunctionBase<T> where T : struct, IDataSo
     }
 
     /// <inheritdoc />
-    public class ComputeDataSourceValue : Mode<DataSourceValue>
+    public class ComputeMeasurementValue : Mode<MeasurementValue>
     {
     }
 

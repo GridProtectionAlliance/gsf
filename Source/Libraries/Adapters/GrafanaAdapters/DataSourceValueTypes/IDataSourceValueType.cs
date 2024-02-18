@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  IDataSourceValue.cs - Gbtc
+//  IDataSourceValueType.cs - Gbtc
 //
 //  Copyright © 2023, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -21,32 +21,32 @@
 //
 //******************************************************************************************************
 
-using GrafanaAdapters.DataSources.BuiltIn;
+using GrafanaAdapters.Model.Common;
 using GSF.TimeSeries;
 using System;
 using System.Collections.Generic;
 using System.Data;
 
-namespace GrafanaAdapters.DataSources;
+namespace GrafanaAdapters.DataSourceValueTypes;
 
 /// <summary>
-/// Defines an interface for a data source value.
+/// Defines an interface for a data source value type.
 /// </summary>
 /// <remarks>
 /// Implementations of this interface must be structs.
 /// </remarks>
-public interface IDataSourceValue
+public interface IDataSourceValueType
 {
     /// <summary>
     /// Gets the query target, e.g., a point-tag.
     /// </summary>
     /// <remarks>
-    /// If data source value has multiple targets, this should be the primary target.
+    /// If data source value type has multiple targets, this should be the primary target.
     /// </remarks>
     string Target { get; init; }
 
     /// <summary>
-    /// Gets the value of data source value.
+    /// Gets the value of data source value type.
     /// </summary>
     /// <remarks>
     /// If data source has more than one value, this should be the primary value.
@@ -54,17 +54,17 @@ public interface IDataSourceValue
     double Value { get; init; }
 
     /// <summary>
-    /// Gets timestamp, in Unix epoch milliseconds, of data source value.
+    /// Gets timestamp, in Unix epoch milliseconds, of data source value type.
     /// </summary>
     double Time { get; init; }
 
     /// <summary>
-    /// Gets measurement state and quality flags of data source value.
+    /// Gets measurement state and quality flags of data source value type.
     /// </summary>
     MeasurementStateFlags Flags { get; init; }
 
     /// <summary>
-    /// Gets time-series array values of data source value, e.g., [Value, Time].
+    /// Gets time-series array values of the data source value type, e.g., [Value, Time].
     /// </summary>
     /// <remarks>
     /// To ensure data will work with Grafana data source, all values should
@@ -86,7 +86,7 @@ public interface IDataSourceValue
     /// Gets the index of the value within the <see cref="TimeSeriesValue"/> array.
     /// </summary>
     /// <remarks>
-    /// If data source value has multiple targets, this should be the value index of the primary target.
+    /// If data source value type has multiple targets, this should be the value index of the primary target.
     /// </remarks>
     int ValueIndex { get; }
 
@@ -115,12 +115,12 @@ public interface IDataSourceValue
     /// This defines a list of the required metadata fields for a table in the data source. If any of
     /// these are missing, the data source table will not be available for use. This list should at
     /// least include key field names for the <see cref="MetadataTableName"/> that may be needed by
-    /// the <see cref="GetTargetIDSet"/> or <see cref="IDataSourceValue{T}.AssignToTimeValueMap"/>
+    /// the <see cref="GetTargetIDSet"/> or <see cref="IDataSourceValueType{T}.AssignToTimeValueMap"/>
     /// functions. For example, in order to use a table named 'ActiveMeasurements', the required
     /// metadata field names might be: 'ID', 'SignalID', and 'PointTag'.
     /// </para>
     /// <para>
-    /// Note that system generally assumes that the fields 'PointTag', a unique string-based alpha-numeric
+    /// Note that system generally assumes that the fields 'PointTag', a unique string-based alphanumeric
     /// identifier for a measurement, 'ID', a unique string-based measurement key formatted identifier
     /// (e.g., PPA:101), and 'SignalID', a unique Guid-based identifier, all exist in the metadata table.
     /// However, these fields do not have to be included as required metadata field names. The 'PointTag'
@@ -164,8 +164,8 @@ public interface IDataSourceValue
     /// <returns>set of measurement key and point tag identifiers associated with a target.</returns>
     /// <remarks>
     /// A single target will be associated with a measurement key and point tag for each value
-    /// in the data source value. The target will be a common name for the group of values in
-    /// the data source value structure.
+    /// in the data source value type. The target will be a common name for the group of values in
+    /// the data source value type structure.
     /// </remarks>
     TargetIDSet GetTargetIDSet(DataRow record);
 
@@ -186,32 +186,31 @@ public interface IDataSourceValue
 /// <summary>
 /// Defines an interface for a typed data source value.
 /// </summary>
-/// <typeparam name="T">Target <see cref="IDataSourceValue"/> type.</typeparam>
-public interface IDataSourceValue<T> : IDataSourceValue, IComparable<T>, IEquatable<T> where T : struct, IDataSourceValue
+/// <typeparam name="T">Target <see cref="IDataSourceValueType"/> type.</typeparam>
+public interface IDataSourceValueType<T> : IDataSourceValueType, IComparable<T>, IEquatable<T> where T : struct, IDataSourceValueType
 {
     /// <summary>
     /// Assign queried data source value to time-value map.
     /// </summary>
-    /// <param name="pointTag">Measurement point tag.</param>
-    /// <param name="dataValue">Queried data source value.</param>
-    /// <param name="timeValueMap">Time-value map for specified <paramref name="dataValue"/>.</param>
+    /// <param name="dataSourceValue">Queried data source value type.</param>
+    /// <param name="timeValueMap">Time-value map for specified <paramref name="dataSourceValue"/>.</param>
     /// <param name="metadata">Source metadata.</param>
     /// <remarks>
-    /// Provided time-value map is specific to the queried data source value, by target, and is keyed by Unix
-    /// epoch milliseconds timestamp. This function is used to assign the queried data source value to the
+    /// Provided time-value map is specific to the queried data source value type, by target, and is keyed by Unix
+    /// epoch milliseconds timestamp. This function is used to assign the queried data source value type to the
     /// time-value map. If the data source value type has multiple fields, this function will be called once
-    /// per each field in the data source value for a given timestamp.
+    /// per each field in the data source value type for a given timestamp.
     /// </remarks>
-    void AssignToTimeValueMap(string pointTag, DataSourceValue dataValue, SortedList<double, T> timeValueMap, DataSet metadata);
+    void AssignToTimeValueMap(DataSourceValue dataSourceValue, SortedList<double, T> timeValueMap, DataSet metadata);
 
     /// <summary>
     /// Executes provided function for data source fields, applying the results
-    /// to a copy of the data source value and returns the new result.
+    /// to a copy of the data source value type and returns the new result.
     /// </summary>
     /// <param name="function">Function to compute.</param>
     /// <returns>Computed result.</returns>
     /// <remarks>
-    /// This function is used to compute a new data source value, applying the
+    /// This function is used to compute a new data source value type, applying the
     /// specified function operation to all value fields in the data source.
     /// </remarks>
     T TransposeCompute(Func<double, double> function);

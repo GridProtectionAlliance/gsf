@@ -22,7 +22,7 @@
 //******************************************************************************************************
 // ReSharper disable CompareOfFloatsByEqualityOperator
 
-using GrafanaAdapters.DataSources.BuiltIn;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 using GrafanaAdapters.Metadata;
 using GrafanaAdapters.Model.Annotations;
 using GrafanaAdapters.Model.Common;
@@ -100,7 +100,7 @@ public static class AnnotationRequestExtensions
         if (datapoint is null)
             throw new ArgumentNullException(nameof(datapoint));
 
-        double value = datapoint[DataSourceValue.ValueIndex];
+        double value = datapoint[MeasurementValue.ValueIndex];
 
         return type switch
         {
@@ -174,7 +174,7 @@ public static class AnnotationRequestExtensions
         // function so that any encountered alarms not will not be down-sampled
         return new QueryRequest
         {
-            dataTypeIndex = DataSourceValue.TypeIndex,
+            dataTypeIndex = MeasurementValue.TypeIndex,
             range = request.range,
             interval = "*",
             targets = targets.Select((target, index) => new Target { refID = $"ID{index}", target = $"{target}; fullResolutionQuery" }).ToArray(),
@@ -348,6 +348,6 @@ public static class AnnotationRequestExtensions
     internal static DataRow GetTargetMetaData(DataSet source, object signalIDFieldValue)
     {
         string signalID = signalIDFieldValue.ToNonNullNorWhiteSpace(Guid.Empty.ToString());
-        return TargetCache<DataRow>.GetOrAdd(signalID, () => source.GetMetadata(DataSourceValue.MetadataTableName, $"ID = '{signalID.KeyFromSignalID()}'"));
+        return TargetCache<DataRow>.GetOrAdd(signalID, () => source.GetMetadata(MeasurementValue.MetadataTableName, $"ID = '{signalID.KeyFromSignalID()}'"));
     }
 }

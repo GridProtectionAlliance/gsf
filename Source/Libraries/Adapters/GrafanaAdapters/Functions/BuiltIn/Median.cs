@@ -1,5 +1,5 @@
-﻿using GrafanaAdapters.DataSources;
-using GrafanaAdapters.DataSources.BuiltIn;
+﻿using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 using GSF.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,7 +19,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Variants: Median, Med, Mid<br/>
 /// Execution: Immediate in-memory array load.
 /// </remarks>
-public abstract class Median<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
+public abstract class Median<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {
     /// <inheritdoc />
     public override string Name => nameof(Median<T>);
@@ -37,20 +37,20 @@ public abstract class Median<T> : GrafanaFunctionBase<T> where T : struct, IData
     public override bool ResultIsSetTargetSeries => true;
 
     /// <inheritdoc />
-    public class ComputeDataSourceValue : Median<DataSourceValue>
+    public class ComputeMeasurementValue : Median<MeasurementValue>
     {
         /// <inheritdoc />
-        public override async IAsyncEnumerable<DataSourceValue> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
+        public override async IAsyncEnumerable<MeasurementValue> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             // Median uses immediate in-memory array load
-            DataSourceValue[] values = (await GetDataSourceValues(parameters).OrderBy(dataValue => dataValue.Value).ToArrayAsync(cancellationToken).ConfigureAwait(false)).Median();
+            MeasurementValue[] values = (await GetDataSourceValues(parameters).OrderBy(dataValue => dataValue.Value).ToArrayAsync(cancellationToken).ConfigureAwait(false)).Median();
             int length = values.Length;
 
             if (length == 0)
                 yield break;
 
             // Median can return two values if there is an even number of values
-            DataSourceValue result = values.Last();
+            MeasurementValue result = values.Last();
 
             if (length > 1)
                 result.Value = values[0].Value + (values[1].Value - values[0].Value) / 2.0D;

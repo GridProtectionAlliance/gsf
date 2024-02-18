@@ -1,5 +1,5 @@
-﻿using GrafanaAdapters.DataSources;
-using GrafanaAdapters.DataSources.BuiltIn;
+﻿using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -18,7 +18,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Variants: Total, Add, Sum<br/>
 /// Execution: Immediate enumeration.
 /// </remarks>
-public abstract class Total<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
+public abstract class Total<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {
     /// <inheritdoc />
     public override string Name => nameof(Total<T>);
@@ -33,12 +33,12 @@ public abstract class Total<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     public override ReturnType ReturnType => ReturnType.Scalar;
 
     /// <inheritdoc />
-    public class ComputeDataSourceValue : Total<DataSourceValue>
+    public class ComputeMeasurementValue : Total<MeasurementValue>
     {
         /// <inheritdoc />
-        public override async IAsyncEnumerable<DataSourceValue> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
+        public override async IAsyncEnumerable<MeasurementValue> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            DataSourceValue lastValue = default;
+            MeasurementValue lastValue = default;
 
             IAsyncEnumerable<double> trackedValues = GetDataSourceValues(parameters).Select(dataValue =>
             {

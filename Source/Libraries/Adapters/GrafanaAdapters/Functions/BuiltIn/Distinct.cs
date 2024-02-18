@@ -1,5 +1,5 @@
-﻿using GrafanaAdapters.DataSources;
-using GrafanaAdapters.DataSources.BuiltIn;
+﻿using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -16,7 +16,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Variants: Distinct, Unique<br/>
 /// Execution: Deferred enumeration.
 /// </remarks>
-public abstract class Distinct<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
+public abstract class Distinct<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {
     /// <inheritdoc />
     public override string Name => nameof(Distinct<T>);
@@ -37,12 +37,12 @@ public abstract class Distinct<T> : GrafanaFunctionBase<T> where T : struct, IDa
     public override IAsyncEnumerable<T> ComputeAsync(Parameters parameters, CancellationToken cancellationToken)
     {
         // Return deferred enumeration of distinct -- this operates using IEqualityComparer<T> defined for T meaning
-        // the IEquatable<T>.Equals(T) method as implemented by IDataSourceValue<T> is used to determine equality
+        // the IEquatable<T>.Equals(T) method as implemented by IDataSourceValueType<T> is used to determine equality
         return GetDataSourceValues(parameters).Distinct();
     }
 
     /// <inheritdoc />
-    public class ComputeDataSourceValue : Distinct<DataSourceValue>
+    public class ComputeMeasurementValue : Distinct<MeasurementValue>
     {
     }
 

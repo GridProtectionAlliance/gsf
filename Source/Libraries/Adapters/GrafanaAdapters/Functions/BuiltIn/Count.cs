@@ -1,5 +1,5 @@
-﻿using GrafanaAdapters.DataSources;
-using GrafanaAdapters.DataSources.BuiltIn;
+﻿using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -17,7 +17,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Variants: Count<br/>
 /// Execution: Immediate enumeration.
 /// </remarks>
-public abstract class Count<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
+public abstract class Count<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {
     /// <inheritdoc />
     public override string Name => nameof(Count<T>);
@@ -51,7 +51,7 @@ public abstract class Count<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     }
 
     /// <inheritdoc />
-    public class ComputeDataSourceValue : Count<DataSourceValue>
+    public class ComputeMeasurementValue : Count<MeasurementValue>
     {
     }
 

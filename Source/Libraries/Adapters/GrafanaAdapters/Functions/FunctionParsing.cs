@@ -21,10 +21,11 @@
 //
 //******************************************************************************************************
 
-using GrafanaAdapters.DataSources;
-using GrafanaAdapters.DataSources.BuiltIn;
+using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 using GrafanaAdapters.Functions.BuiltIn;
 using GrafanaAdapters.Metadata;
+using GrafanaAdapters.Model.Common;
 using GSF;
 using GSF.Diagnostics;
 using GSF.IO;
@@ -49,10 +50,10 @@ internal static class FunctionParsing
     private static readonly LogPublisher s_log = Logger.CreatePublisher(typeof(FunctionParsing), MessageClass.Component);
 
     // Calls to this expensive match operation should be temporally cached by expression
-    public static ParsedGrafanaFunction<T>[] MatchFunctions<T>(string expression, QueryParameters queryParameters) where T : struct, IDataSourceValue<T>
+    public static ParsedGrafanaFunction<T>[] MatchFunctions<T>(string expression, QueryParameters queryParameters) where T : struct, IDataSourceValueType<T>
     {
-        Regex functionsRegex = DataSourceValueCache<T>.FunctionsRegex;
-        Dictionary<string, IGrafanaFunction<T>> functionMap = DataSourceValueCache<T>.FunctionMap;
+        Regex functionsRegex = DataSourceValueTypeCache<T>.FunctionsRegex;
+        Dictionary<string, IGrafanaFunction<T>> functionMap = DataSourceValueTypeCache<T>.FunctionMap;
 
         // Match all top-level functions in expression
         MatchCollection matches = functionsRegex.Matches(expression);
@@ -219,8 +220,8 @@ internal static class FunctionParsing
 
             // Look for any constraint based on IDataSourceValue, if found, assign a specific
             // type (any is fine) to generic parent class so nested type can be constructed
-            return constraints.Any(constraint => constraint.GetInterfaces().Any(interfaceType => interfaceType == typeof(IDataSourceValue))) ?
-                (type.MakeGenericType(typeof(DataSourceValue)), type.Namespace?.Equals(BuiltInNamespace) ?? false) :
+            return constraints.Any(constraint => constraint.GetInterfaces().Any(interfaceType => interfaceType == typeof(IDataSourceValueType))) ?
+                (type.MakeGenericType(typeof(MeasurementValue)), type.Namespace?.Equals(BuiltInNamespace) ?? false) :
                 (null, false);
         }
     }
@@ -241,11 +242,11 @@ internal static class FunctionParsing
         }
 
         // Reinitializing data source caches will reload all grafana functions per data source value type
-        DataSourceValueCache.ReinitializeAll();
+        DataSourceValueTypeCache.ReinitializeAll();
     }
 
     // Handle series rename operations for Grafana functions - this is a special case for handling the Label function
-    public static async IAsyncEnumerable<DataSourceValueGroup<T>> RenameSeries<T>(this IAsyncEnumerable<DataSourceValueGroup<T>> dataset, QueryParameters queryParameters, DataSet metadata, string labelExpression, [EnumeratorCancellation] CancellationToken cancellationToken) where T : struct, IDataSourceValue<T>
+    public static async IAsyncEnumerable<DataSourceValueGroup<T>> RenameSeries<T>(this IAsyncEnumerable<DataSourceValueGroup<T>> dataset, QueryParameters queryParameters, DataSet metadata, string labelExpression, [EnumeratorCancellation] CancellationToken cancellationToken) where T : struct, IDataSourceValueType<T>
     {
         if (labelExpression.StartsWith("\"") || labelExpression.StartsWith("'"))
             labelExpression = labelExpression.Substring(1, labelExpression.Length - 2);
@@ -287,7 +288,7 @@ internal static class FunctionParsing
                     }
 
                     // Check all substitution fields for table name specifications (ActiveMeasurements assumed)
-                    HashSet<string> tableNames = new(new[] { DataSourceValue.MetadataTableName }, StringComparer.OrdinalIgnoreCase);
+                    HashSet<string> tableNames = new(new[] { MeasurementValue.MetadataTableName }, StringComparer.OrdinalIgnoreCase);
                     MatchCollection fields = fieldExpression.Matches(labelExpression);
 
                     foreach (Match match in fields)
@@ -305,7 +306,7 @@ internal static class FunctionParsing
                     foreach (string tableName in tableNames)
                     {
                         // ActiveMeasurements view fields are added as non-prefixed field name substitutions
-                        if (tableName.Equals(DataSourceValue.MetadataTableName, StringComparison.OrdinalIgnoreCase))
+                        if (tableName.Equals(MeasurementValue.MetadataTableName, StringComparison.OrdinalIgnoreCase))
                             LoadFieldSubstitutions(metadata, substitutions, target, tableName, false);
 
                         // All other table fields are added with table name as the prefix {table.field}

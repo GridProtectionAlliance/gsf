@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  DataSourceValue.cs - Gbtc
+//  MeasurementValue.cs - Gbtc
 //
 //  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -23,19 +23,19 @@
 
 using GSF.TimeSeries;
 
-namespace GrafanaAdapters.DataSources.BuiltIn;
+namespace GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 
 /// <summary>
-/// Represents an individual time-series value from a data source.
+/// Represents a default target for a standard time-series value.
 /// </summary>
 /// <remarks>
 /// This is the standard data source value structure for common time-series
 /// values used by Grafana.
 /// </remarks>
-public partial struct DataSourceValue
+public partial struct MeasurementValue
 {
     /// <summary>
-    /// Defines the primary metadata table name for a <see cref="DataSourceValue"/>.
+    /// Defines the primary metadata table name for a <see cref="MeasurementValue"/>.
     /// </summary>
     public const string MetadataTableName = "ActiveMeasurements";
 
@@ -45,7 +45,7 @@ public partial struct DataSourceValue
     public string Target;
 
     /// <summary>
-    /// Queried value.
+    /// Queried measurement value.
     /// </summary>
     public double Value;
 

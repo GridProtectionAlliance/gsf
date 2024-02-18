@@ -1,5 +1,5 @@
-﻿using GrafanaAdapters.DataSources;
-using GrafanaAdapters.DataSources.BuiltIn;
+﻿using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -19,7 +19,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Variants: Difference, Diff<br/>
 /// Execution: Deferred enumeration.
 /// </remarks>
-public abstract class Difference<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
+public abstract class Difference<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {
     /// <inheritdoc />
     public override string Name => nameof(Difference<T>);
@@ -63,10 +63,10 @@ public abstract class Difference<T> : GrafanaFunctionBase<T> where T : struct, I
     }
 
     /// <inheritdoc />
-    public class ComputeDataSourceValue : Difference<DataSourceValue>
+    public class ComputeMeasurementValue : Difference<MeasurementValue>
     {
         /// <inheritdoc />
-        protected override DataSourceValue TransposeCompute(DataSourceValue currentValue, DataSourceValue lastValue) => currentValue with
+        protected override MeasurementValue TransposeCompute(MeasurementValue currentValue, MeasurementValue lastValue) => currentValue with
         {
             // To ensure current value is the source for metadata lookup on
             // this custom target, the spacing around the dash is important:

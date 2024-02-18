@@ -21,7 +21,7 @@
 //
 //******************************************************************************************************
 
-using GrafanaAdapters.DataSources;
+using GrafanaAdapters.DataSourceValueTypes;
 using GrafanaAdapters.Functions;
 using GrafanaAdapters.Model.Common;
 using GSF;
@@ -92,7 +92,7 @@ partial class GrafanaDataSourceBase
     /// </remarks>
     public void ReloadDataSourceValueTypes()
     {
-        DataSourceValueCache.ReloadDataSourceValueTypes();
+        DataSourceValueTypeCache.ReloadDataSourceValueTypes();
 
         lock (s_processQueryRequestFunctionsLock)
             Interlocked.Exchange(ref s_processQueryRequestFunctions, null);
@@ -119,9 +119,9 @@ partial class GrafanaDataSourceBase
     private static ProcessQueryRequestDelegate[] CreateProcessQueryRequestFunctions()
     {
         // One process query request function will be defined per data source value type
-        ProcessQueryRequestDelegate[] processQueryRequestFunctions = new ProcessQueryRequestDelegate[DataSourceValueCache.LoadedTypes.Count];
+        ProcessQueryRequestDelegate[] processQueryRequestFunctions = new ProcessQueryRequestDelegate[DataSourceValueTypeCache.LoadedTypes.Count];
 
-        foreach (Type type in DataSourceValueCache.LoadedTypes)
+        foreach (Type type in DataSourceValueTypeCache.LoadedTypes)
         {
             string typeName = type.Name;
 
@@ -153,7 +153,7 @@ partial class GrafanaDataSourceBase
             ProcessQueryRequestDelegate function = (ProcessQueryRequestDelegate)dynamicMethod.CreateDelegate(typeof(ProcessQueryRequestDelegate), null);
 
             // Make sure function index matches data source value type index
-            int index = DataSourceValueCache.GetTypeIndex(typeName);
+            int index = DataSourceValueTypeCache.GetTypeIndex(typeName);
 
             Debug.Assert(index > -1, $"Failed to find data source value type index for \"{typeName}\"");
 
@@ -163,7 +163,7 @@ partial class GrafanaDataSourceBase
         return processQueryRequestFunctions;
     }
 
-    private static Task ProcessRadialDistributionAsync<T>(List<DataSourceValueGroup<T>> queryValueGroups, QueryParameters queryParameters, CancellationToken cancellationToken) where T : struct, IDataSourceValue<T>
+    private static Task ProcessRadialDistributionAsync<T>(List<DataSourceValueGroup<T>> queryValueGroups, QueryParameters queryParameters, CancellationToken cancellationToken) where T : struct, IDataSourceValueType<T>
     {
         Dictionary<string, string> settings = queryParameters.RadialDistribution.ParseKeyValuePairs();
 

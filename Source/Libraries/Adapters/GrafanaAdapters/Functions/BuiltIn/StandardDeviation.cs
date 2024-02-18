@@ -1,5 +1,5 @@
-﻿using GrafanaAdapters.DataSources;
-using GrafanaAdapters.DataSources.BuiltIn;
+﻿using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 using GSF.NumericalAnalysis;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,7 +21,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Variants: StandardDeviation, StdDev<br/>
 /// Execution: Immediate in-memory array load.
 /// </remarks>
-public abstract class StandardDeviation<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
+public abstract class StandardDeviation<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {
     /// <inheritdoc />
     public override string Name => nameof(StandardDeviation<T>);
@@ -48,13 +48,13 @@ public abstract class StandardDeviation<T> : GrafanaFunctionBase<T> where T : st
     };
 
     /// <inheritdoc />
-    public class ComputeDataSourceValue : StandardDeviation<DataSourceValue>
+    public class ComputeMeasurementValue : StandardDeviation<MeasurementValue>
     {
         /// <inheritdoc />
-        public override async IAsyncEnumerable<DataSourceValue> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
+        public override async IAsyncEnumerable<MeasurementValue> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             bool useSampleCalc = parameters.Value<bool>(0);
-            DataSourceValue lastValue = default;
+            MeasurementValue lastValue = default;
 
             IAsyncEnumerable<double> trackedValues = GetDataSourceValues(parameters).Select(dataValue =>
             {

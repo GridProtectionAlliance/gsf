@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using GrafanaAdapters.Metadata;
+using GrafanaAdapters.Model.Common;
 using GSF;
 using GSF.Collections;
 using GSF.Data;
@@ -33,18 +34,18 @@ using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 
-namespace GrafanaAdapters.DataSources.BuiltIn;
+namespace GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 
-// IDataSourceValue implementation for PhasorValue
-public partial struct PhasorValue : IDataSourceValue<PhasorValue>
+// IDataSourceValueType implementation for PhasorValue
+public partial struct PhasorValue : IDataSourceValueType<PhasorValue>
 {
-    string IDataSourceValue.Target
+    string IDataSourceValueType.Target
     {
         readonly get => Target;
         init => Target = value;
     }
 
-    double IDataSourceValue.Value
+    double IDataSourceValueType.Value
     {
         readonly get => PrimaryValueTarget == PhasorValueTarget.Magnitude ? Magnitude : Angle;
         init
@@ -56,23 +57,23 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
         }
     }
 
-    double IDataSourceValue.Time
+    double IDataSourceValueType.Time
     {
         readonly get => Time;
         init => Time = value;
     }
 
-    MeasurementStateFlags IDataSourceValue.Flags
+    MeasurementStateFlags IDataSourceValueType.Flags
     {
         readonly get => Flags;
         init => Flags = value;
     }
 
-    readonly double[] IDataSourceValue.TimeSeriesValue => new[] { Magnitude, Angle, Time };
+    readonly double[] IDataSourceValueType.TimeSeriesValue => new[] { Magnitude, Angle, Time };
 
-    readonly string[] IDataSourceValue.TimeSeriesValueDefinition => new[] { nameof(Magnitude), nameof(Angle), nameof(Time) };
+    readonly string[] IDataSourceValueType.TimeSeriesValueDefinition => new[] { nameof(Magnitude), nameof(Angle), nameof(Time) };
 
-    readonly int IDataSourceValue.ValueIndex => (int)PrimaryValueTarget;
+    readonly int IDataSourceValueType.ValueIndex => (int)PrimaryValueTarget;
 
     /// <inheritdoc />
     public readonly int CompareTo(PhasorValue other)
@@ -102,11 +103,11 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
         };
     }
 
-    readonly int IDataSourceValue.LoadOrder => 1;
+    readonly int IDataSourceValueType.LoadOrder => 1;
 
-    readonly string IDataSourceValue.MetadataTableName => MetadataTableName;
+    readonly string IDataSourceValueType.MetadataTableName => MetadataTableName;
 
-    readonly string[] IDataSourceValue.RequiredMetadataFieldNames => new[]
+    readonly string[] IDataSourceValueType.RequiredMetadataFieldNames => new[]
     {
         "MagnitudeID",       // <string> Measurement key representing magnitude, e.g., PPA:101
         "AngleID",           // <string> Measurement key representing angle, e.g., PPA:102
@@ -117,7 +118,7 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
         "PointTag"           // <string> Point tag representing phasor, e.g, GPA_SHELBY:BUS1
     };
 
-    readonly Action<DataSet> IDataSourceValue.AugmentMetadata => AugmentMetadata;
+    readonly Action<DataSet> IDataSourceValueType.AugmentMetadata => AugmentMetadata;
 
     /// <inheritdoc />
     public readonly DataRow LookupMetadata(DataSet metadata, string tableName, string target)
@@ -140,7 +141,7 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
         return record;
     }
 
-    readonly TargetIDSet IDataSourceValue.GetTargetIDSet(DataRow record)
+    readonly TargetIDSet IDataSourceValueType.GetTargetIDSet(DataRow record)
     {
         // A target ID set is: (target, (measurementKey, pointTag)[])
         return
@@ -153,7 +154,7 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
         );
     }
 
-    readonly DataRow IDataSourceValue.RecordFromKey(MeasurementKey key, DataSet metadata)
+    readonly DataRow IDataSourceValueType.RecordFromKey(MeasurementKey key, DataSet metadata)
     {
         string keyName = key.ToString();
 
@@ -161,11 +162,12 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
                keyName.RecordFromKey(metadata, MetadataTableName, "AngleID");
     }
 
-    readonly int IDataSourceValue.DataTypeIndex => TypeIndex;
+    readonly int IDataSourceValueType.DataTypeIndex => TypeIndex;
 
-    readonly void IDataSourceValue<PhasorValue>.AssignToTimeValueMap(string pointTag, DataSourceValue dataValue, SortedList<double, PhasorValue> timeValueMap, DataSet metadata)
+    readonly void IDataSourceValueType<PhasorValue>.AssignToTimeValueMap(DataSourceValue dataSourceValue, SortedList<double, PhasorValue> timeValueMap, DataSet metadata)
     {
-        string target = dataValue.Target;
+        string pointTag = dataSourceValue.ID.pointTag;
+        string target = dataSourceValue.ID.target;
 
         // Lookup queried data source value target in 'PhasorValues' metadata
         (string phasorTarget, string magnitudeTarget, string angleTarget, bool isMagnitudeValue) = TargetCache<(string, string, string, bool)>.GetOrAdd(pointTag, () =>
@@ -192,29 +194,29 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
         Debug.Assert(angleTarget is not null, $"Unexpected null angle target for '{target}'");
 
         // See if phasor value already exists in time-value map
-        if (timeValueMap.TryGetValue(dataValue.Time, out PhasorValue phasorValue))
+        if (timeValueMap.TryGetValue(dataSourceValue.Time, out PhasorValue phasorValue))
         {
             // Update phasor field values from queried data source value
-            timeValueMap[dataValue.Time] = phasorValue with
+            timeValueMap[dataSourceValue.Time] = phasorValue with
             {
-                Magnitude = isMagnitudeValue ? dataValue.Value : phasorValue.Magnitude,
-                Angle = !isMagnitudeValue ? dataValue.Value : phasorValue.Angle,
+                Magnitude = isMagnitudeValue ? dataSourceValue.Value : phasorValue.Magnitude,
+                Angle = !isMagnitudeValue ? dataSourceValue.Value : phasorValue.Angle,
                 // Assign actual measurement flags only when both values have been received
                 Flags = isMagnitudeValue && double.IsNaN(phasorValue.Angle) || !isMagnitudeValue && double.IsNaN(phasorValue.Magnitude) ?
-                    phasorValue.Flags : dataValue.Flags
+                    phasorValue.Flags : dataSourceValue.Flags
             };
         }
         else
         {
             // Create new phasor value from queried data source value
-            timeValueMap.Add(dataValue.Time, new PhasorValue
+            timeValueMap.Add(dataSourceValue.Time, new PhasorValue
             {
                 Target = phasorTarget,
                 MagnitudeTarget = magnitudeTarget,
                 AngleTarget = angleTarget,
-                Magnitude = isMagnitudeValue ? dataValue.Value : double.NaN,
-                Angle = !isMagnitudeValue ? dataValue.Value : double.NaN,
-                Time = dataValue.Time,
+                Magnitude = isMagnitudeValue ? dataSourceValue.Value : double.NaN,
+                Angle = !isMagnitudeValue ? dataSourceValue.Value : double.NaN,
+                Time = dataSourceValue.Time,
                 // Until both values are received, set flags to suspect data
                 Flags = MeasurementStateFlags.SuspectData
             });
@@ -224,7 +226,7 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
     /// <summary>
     /// Gets the type index for <see cref="PhasorValue"/>.
     /// </summary>
-    public static readonly int TypeIndex = DataSourceValueCache.GetTypeIndex(nameof(PhasorValue));
+    public static readonly int TypeIndex = DataSourceValueTypeCache.GetTypeIndex(nameof(PhasorValue));
 
     /// <summary>
     /// Update phasor value primary target to operate on angle values.
@@ -257,7 +259,7 @@ public partial struct PhasorValue : IDataSourceValue<PhasorValue>
                 long startTime = DateTime.UtcNow.Ticks;
 
                 // Extract phasor rows from active measurements table in current metadata
-                DataTable activeMeasurements = metadata.Tables[DataSourceValue.MetadataTableName];
+                DataTable activeMeasurements = metadata.Tables[MeasurementValue.MetadataTableName];
                 DataRow[] phasorRows = activeMeasurements.Select("PhasorID IS NOT NULL", "PhasorID ASC");
 
                 // Group phase angle and magnitudes together by phasor ID

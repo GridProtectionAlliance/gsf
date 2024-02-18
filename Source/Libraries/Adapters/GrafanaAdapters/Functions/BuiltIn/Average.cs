@@ -1,5 +1,5 @@
-﻿using GrafanaAdapters.DataSources;
-using GrafanaAdapters.DataSources.BuiltIn;
+﻿using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -17,7 +17,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Variants: Average, Avg, Mean<br/>
 /// Execution: Immediate enumeration.
 /// </remarks>
-public abstract class Average<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
+public abstract class Average<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {
     /// <inheritdoc />
     public override string Name => nameof(Average<T>);
@@ -32,17 +32,17 @@ public abstract class Average<T> : GrafanaFunctionBase<T> where T : struct, IDat
     public override ReturnType ReturnType => ReturnType.Scalar;
 
     /// <inheritdoc />
-    public class ComputeDataSourceValue : Average<DataSourceValue>
+    public class ComputeMeasurementValue : Average<MeasurementValue>
     {
         /// <inheritdoc />
-        public override async IAsyncEnumerable<DataSourceValue> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
+        public override async IAsyncEnumerable<MeasurementValue> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            DataSourceValue lastValue = default;
+            MeasurementValue lastValue = default;
             double total = 0.0D;
             int count = 0;
 
             // Immediately enumerate to compute values enumerating data source once
-            await foreach (DataSourceValue dataValue in GetDataSourceValues(parameters).WithCancellation(cancellationToken).ConfigureAwait(false))
+            await foreach (MeasurementValue dataValue in GetDataSourceValues(parameters).WithCancellation(cancellationToken).ConfigureAwait(false))
             {
                 lastValue = dataValue;
                 total += dataValue.Value;

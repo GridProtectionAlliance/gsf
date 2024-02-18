@@ -1,5 +1,5 @@
-﻿using GrafanaAdapters.DataSources;
-using GrafanaAdapters.DataSources.BuiltIn;
+﻿using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -22,7 +22,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Variants: First<br/>
 /// Execution: Immediate in-memory array load, when <c>N</c> is defined; otherwise, immediate enumeration of one, i.e., first value.
 /// </remarks>
-public abstract class First<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
+public abstract class First<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {
     /// <inheritdoc />
     public override string Name => nameof(First<T>);
@@ -81,7 +81,7 @@ public abstract class First<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     }
 
     /// <inheritdoc />
-    public class ComputeDataSourceValue : First<DataSourceValue>
+    public class ComputeMeasurementValue : First<MeasurementValue>
     {
     }
 

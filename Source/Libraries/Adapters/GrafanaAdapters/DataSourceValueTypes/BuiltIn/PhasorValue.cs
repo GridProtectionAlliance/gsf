@@ -24,10 +24,10 @@
 using GrafanaAdapters.Functions.BuiltIn;
 using GSF.TimeSeries;
 
-namespace GrafanaAdapters.DataSources.BuiltIn;
+namespace GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 
 /// <summary>
-/// Defines a default target for a phasor value.
+/// Represents a default target for a phasor value.
 /// </summary>
 public enum PhasorValueTarget
 {
@@ -94,7 +94,7 @@ public partial struct PhasorValue
     /// </summary>
     /// <remarks>
     /// This property is used to determine which value field of the phasor value to use when using the data
-    /// source as an <see cref="IDataSourceValue{T}"/>. This is useful in default function computations that
+    /// source as an <see cref="IDataSourceValueType{T}"/>. This is useful in default function computations that
     /// do not need to operate on both the magnitude and angle values of the phasor value struct. For example,
     /// see <see cref="Minimum{T}"/> and <see cref="Maximum{T}"/> functions that only operate on magnitudes.
     /// Primary target value defaults to <see cref="PhasorValueTarget.Magnitude"/> but can be overridden to
