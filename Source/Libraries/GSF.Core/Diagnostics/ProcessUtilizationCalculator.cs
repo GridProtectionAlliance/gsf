@@ -22,17 +22,30 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Timers;
 
 namespace GSF.Diagnostics
 {
     /// <summary>
-    /// Represents a utilization calculator for a <see cref="Process"/>.
+    /// Represents a utilization calculator for a related <see cref="Process"/> set.
     /// </summary>
     public sealed class ProcessUtilizationCalculator : IDisposable
     {
         #region [ Members ]
+
+        // Nested Types
+        private class ProcessReference
+        {
+            public WeakReference<Process> Reference { private get; set; }
+
+            public Process Process => Reference.TryGetTarget(out Process process) ? process : null;
+
+            public TimeSpan LastTotalProcessorTime;
+            public DateTime LastCalculationTime;
+        }
 
         // Constants
 
@@ -41,13 +54,20 @@ namespace GSF.Diagnostics
         /// </summary>
         public const int DefaultUpdateInterval = 5000;
 
+        // Events
+
+        /// <summary>
+        /// Provides status messages to consumer.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is new status message.
+        /// </remarks>
+        public event EventHandler<EventArgs<string>> StatusMessage;
+
         // Fields
         private readonly Timer m_updateUtilizationTimer;
-        private WeakReference<Process> m_processReference;
+        private readonly List<ProcessReference> m_processReferences;
         private int m_updateInterval;
-        private TimeSpan m_startTime;
-        private TimeSpan m_lastProcessorTime;
-        private DateTime m_lastMonitorTime;
         private bool m_disposed;
 
         #endregion
@@ -59,8 +79,8 @@ namespace GSF.Diagnostics
         /// </summary>
         public ProcessUtilizationCalculator()
         {
+            m_processReferences = new List<ProcessReference>();
             m_updateInterval = DefaultUpdateInterval;
-            m_lastProcessorTime = new TimeSpan(0L);
 
             m_updateUtilizationTimer = new Timer(m_updateInterval)
             {
@@ -76,7 +96,7 @@ namespace GSF.Diagnostics
         #region [ Properties ]
 
         /// <summary>
-        /// Gets the current processor utilization of the associated <see cref="Process"/>.
+        /// Gets the current processor utilization, percent between 0.0 and 1.0, of the associated <see cref="Process"/> set.
         /// </summary>
         public double Utilization { get; private set; }
 
@@ -85,10 +105,7 @@ namespace GSF.Diagnostics
         /// </summary>
         public int UpdateInterval
         {
-            get
-            {
-                return m_updateInterval;
-            }
+            get => m_updateInterval;
             set
             {
                 m_updateInterval = value;
@@ -99,21 +116,13 @@ namespace GSF.Diagnostics
         }
 
         /// <summary>
-        /// Gets associated process for this <see cref="ProcessUtilizationCalculator"/>.
+        /// Gets associated processes for this <see cref="ProcessUtilizationCalculator"/>.
         /// </summary>
         /// <remarks>
         /// The <see cref="ProcessUtilizationCalculator"/> maintains a <see cref="WeakReference{T}"/> to the associated
         /// <see cref="Process"/> so this property can be <c>null</c> if the process is no longer available.
         /// </remarks>
-        public Process AssociatedProcess
-        {
-            get
-            {
-                Process process = null;
-                m_processReference?.TryGetTarget(out process);
-                return process;
-            }
-        }
+        public Process[] AssociatedProcesses => m_processReferences.Select(reference => reference.Process).ToArray();
 
         #endregion
 
@@ -140,45 +149,127 @@ namespace GSF.Diagnostics
         }
 
         /// <summary>
-        /// Starts calculating the processor utilization of the specified <paramref name="process"/>.
+        /// Starts calculating the total processor utilization of the specified <paramref name="processes"/>.
         /// </summary>
-        /// <param name="process">The <see cref="Process"/> to monitor for processor utilization.</param>
-        public void Initialize(Process process)
+        /// <param name="processes">The <see cref="Process"/> set, e.g., parent and child processes, to monitor for total processor utilization.</param>
+        public void Initialize(params Process[] processes)
         {
-            m_processReference = new WeakReference<Process>(process);
-            m_startTime = process.TotalProcessorTime;
-            m_lastMonitorTime = DateTime.UtcNow;
+            Initialize((IEnumerable<Process>)processes);
+        }
 
-            if (m_updateInterval > 0)
-                m_updateUtilizationTimer.Start();
+        /// <summary>
+        /// Starts calculating the total processor utilization of the specified <paramref name="processes"/>.
+        /// </summary>
+        /// <param name="processes">The <see cref="Process"/> set, e.g., parent and child processes, to monitor for total processor utilization.</param>
+        public void Initialize(IEnumerable<Process> processes)
+        {
+            m_processReferences.AddRange(processes
+                .Where(process => process is not null)
+                .Select(process => new ProcessReference
+                {
+                    Reference = new WeakReference<Process>(process),
+                    LastTotalProcessorTime = process.TotalProcessorTime,
+                    LastCalculationTime = DateTime.UtcNow
+                })
+            );
+
+            if (m_processReferences.Count == 0)
+            {
+                OnStatusMessage(MessageLevel.Warning, "No processes to monitor, utilization timer canceled");
+            }
+            else
+            {
+                if (m_updateInterval > 0)
+                    m_updateUtilizationTimer.Start();
+                else
+                    OnStatusMessage(MessageLevel.Warning, "Update interval is zero, utilization timer disabled. Updates to utilization will occur after refresh call.");
+            }
+        }
+
+        /// <summary>
+        /// Refreshes the processor utilization of the associated <see cref="Process"/> set.
+        /// </summary>
+        public void Refresh()
+        {
+            List<int> itemsToRemove = new();
+            double totalUtilization = 0.0D;
+
+            for (int i = 0; i < m_processReferences.Count; i++)
+            {
+                ProcessReference reference = m_processReferences[i];
+                Process process = reference.Process;
+
+                try
+                {
+                    if (process is not null && !process.HasExited)
+                    {
+                        process.Refresh();
+
+                        DateTime currentTime = DateTime.UtcNow;
+                        TimeSpan totalProcessorTime = process.TotalProcessorTime;
+
+                        totalUtilization += (totalProcessorTime - reference.LastTotalProcessorTime).TotalMilliseconds / (Environment.ProcessorCount * currentTime.Subtract(reference.LastCalculationTime).TotalMilliseconds);
+
+                        reference.LastTotalProcessorTime = totalProcessorTime;
+                        reference.LastCalculationTime = currentTime;
+                    }
+                    else
+                    {
+                        itemsToRemove.Add(i);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    OnStatusMessage(MessageLevel.Error, $"Failed to refresh process utilization due to an exception, process removed from monitor list: {ex.Message}");
+                    itemsToRemove.Add(i);
+                }
+            }
+
+            Utilization = totalUtilization;
+
+            if (itemsToRemove.Count == 0)
+                return;
+
+            // Process items to remove in reverse order to avoid index shifting
+            itemsToRemove.Reverse();
+
+            foreach (int index in itemsToRemove)
+                m_processReferences.RemoveAt(index);
         }
 
         private void UpdateUtilizationTimerElapsed(object sender, ElapsedEventArgs e)
         {
             try
             {
-                Process process;
+                Refresh();
 
-                if ((object)m_processReference != null && m_processReference.TryGetTarget(out process) && !process.HasExited)
-                {
-                    DateTime currentTime = DateTime.UtcNow;
-                    TimeSpan processorTime = process.TotalProcessorTime - m_startTime;
+                if (m_processReferences.Count > 0)
+                    return;
 
-                    Utilization = (processorTime - m_lastProcessorTime).TotalSeconds / (Environment.ProcessorCount * currentTime.Subtract(m_lastMonitorTime).TotalSeconds);
-
-                    m_lastMonitorTime = currentTime;
-                    m_lastProcessorTime = processorTime;
-                }
-                else
-                {
-                    Utilization = 0.0D;
-                    m_updateUtilizationTimer.Enabled = false;
-                }
-            }
-            catch
-            {
+                OnStatusMessage(MessageLevel.Warning, "No processes to left monitor, utilization timer canceled");
+                
                 Utilization = 0.0D;
                 m_updateUtilizationTimer.Enabled = false;
+            }
+            catch (Exception ex)
+            {
+                OnStatusMessage(MessageLevel.Warning, $"Failed to update processor utilization due to an exception, utilization timer canceled: {ex.Message}");
+                
+                Utilization = 0.0D;
+                m_updateUtilizationTimer.Enabled = false;
+            }
+
+        }
+        private void OnStatusMessage(MessageLevel level, string status)
+        {
+            try
+            {
+                using (Logger.SuppressLogMessages())
+                    StatusMessage?.Invoke(this, new EventArgs<string>($"{level.ToString().ToUpperInvariant()}: {status}"));
+            }
+            catch (Exception ex)
+            {
+                Logger.SwallowException(ex);
             }
         }
 
