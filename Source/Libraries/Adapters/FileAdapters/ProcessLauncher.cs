@@ -945,7 +945,7 @@ public class ProcessLauncher : FacileActionAdapterBase
                 return $"\"{filename}\" process is not responding...".CenterText(maxLength);
 
             string utilization = m_processUtilizationCalculator.UpdateInterval > 0 ? $" at {m_processUtilizationCalculator.Utilization:##0.0%}" : "";
-            return $"\"{filename}\"{(m_childProcess is null ? "" : $" and \"{ChildProcessTarget}\"") } process{(m_childProcess is null ? "" : "es")} running{utilization} for {(DateTime.Now - m_process.StartTime).ToElapsedTimeString()}.".CenterText(maxLength);
+            return $"\"{filename}\"{(m_childProcess is null ? "" : $" and \"{ChildProcessTarget}\"")} process{(m_childProcess is null ? "" : "es")} running{utilization} for {(DateTime.Now - m_process.StartTime).ToElapsedTimeString()}.".CenterText(maxLength);
         }
         catch
         {
