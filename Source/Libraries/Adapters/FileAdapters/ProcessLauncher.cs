@@ -21,14 +21,6 @@
 //
 //******************************************************************************************************
 
-using GSF;
-using GSF.Diagnostics;
-using GSF.IO;
-using GSF.Threading;
-using GSF.TimeSeries;
-using GSF.TimeSeries.Adapters;
-using GSF.TimeSeries.Statistics;
-using GSF.Units;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -39,6 +31,14 @@ using System.Management;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using GSF;
+using GSF.Diagnostics;
+using GSF.IO;
+using GSF.Threading;
+using GSF.TimeSeries;
+using GSF.TimeSeries.Adapters;
+using GSF.TimeSeries.Statistics;
+using GSF.Units;
 
 // ReSharper disable AssignNullToNotNullAttribute
 namespace FileAdapters;
