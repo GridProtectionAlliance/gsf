@@ -27,8 +27,10 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Management;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using GSF;
 using GSF.Diagnostics;
 using GSF.IO;
@@ -156,12 +158,32 @@ public class ProcessLauncher : FacileActionAdapterBase
     public const bool DefaultForceKillOnDispose = true;
 
     /// <summary>
+    /// Default value for the <see cref="ChildProcessTarget"/> property.
+    /// </summary>
+    public const string DefaultChildProcessTarget = "";
+
+    /// <summary>
+    /// Default value for the <see cref="ChildProcessQueryTimeout"/> property.
+    /// </summary>
+    public const int DefaultChildProcessQueryTimeout = 2000;
+
+    /// <summary>
+    /// Default value for the <see cref="ShowChildProcesses"/> property.
+    /// </summary>
+#if DEGUG
+    public const bool DefaultShowChildProcesses = true;
+#else
+    public const bool DefaultShowChildProcesses = false;
+#endif
+
+    /// <summary>
     /// Default value for the <see cref="TrackProcessStatistics"/> property.
     /// </summary>
     public const bool DefaultTrackProcessStatistics = true;
 
     // Fields
     private readonly Process m_process;
+    private Process m_childProcess;
     private readonly Dictionary<string, MessageLevel> m_messageLevelMap;
     private readonly ProcessUtilizationCalculator m_processUtilizationCalculator;
     private readonly ChildProcessManager m_childProcessManager;
@@ -185,6 +207,7 @@ public class ProcessLauncher : FacileActionAdapterBase
         m_process = new Process();
         m_messageLevelMap = new Dictionary<string, MessageLevel>(StringComparer.OrdinalIgnoreCase);
         m_processUtilizationCalculator = new ProcessUtilizationCalculator();
+        m_processUtilizationCalculator.StatusMessage += ProcessUtilizationCalculatorStatusMessage;
 
         // In Windows environments, make sure child processes can be terminated if parent is terminated - even if termination is not graceful
         if (!Common.IsPosixEnvironment)
@@ -363,6 +386,30 @@ public class ProcessLauncher : FacileActionAdapterBase
     public bool ForceKillOnDispose { get; set; } = DefaultForceKillOnDispose;
 
     /// <summary>
+    /// Gets or sets the name of the child process to target for additional monitoring and termination when adapter is disposed.
+    /// </summary>
+    [ConnectionStringParameter]
+    [Description("Define the name of the child process to target for additional monitoring and termination when adapter is disposed.")]
+    [DefaultValue(DefaultChildProcessTarget)]
+    public string ChildProcessTarget { get; set; } = DefaultChildProcessTarget;
+
+    /// <summary>
+    /// Gets or sets the maximum processing time allowed, in milliseconds, for querying for available associated child processes.
+    /// </summary>
+    [ConnectionStringParameter]
+    [Description("Define the maximum processing time allowed, in milliseconds, for querying for available associated child processes.")]
+    [DefaultValue(DefaultChildProcessQueryTimeout)]
+    public int ChildProcessQueryTimeout { get; set; } = DefaultChildProcessQueryTimeout;
+
+    /// <summary>
+    /// Gets or sets flag that determines if child processes should be shown during initialization for configuration purposes.
+    /// </summary>
+    [ConnectionStringParameter]
+    [Description("Define flag that determines if child processes should be shown during initialization for configuration purposes. It is not recommended to leave property enabled.")]
+    [DefaultValue(DefaultShowChildProcesses)]
+    public bool ShowChildProcesses { get; set; } = DefaultShowChildProcesses;
+
+    /// <summary>
     /// Gets or sets the interval over which to calculate lunched process utilization.
     /// </summary>
     [ConnectionStringParameter]
@@ -450,97 +497,137 @@ public class ProcessLauncher : FacileActionAdapterBase
             if (string.IsNullOrEmpty(WorkingDirectory))
                 WorkingDirectory = Directory.GetCurrentDirectory();
 
+            status.AppendLine("    ---- Adapter Status ----");
+            status.AppendLine();
+
             status.Append(base.Status);
+
+            status.AppendLine();
+            status.AppendLine("    ---- Adapter Configuration ----");
+            status.AppendLine();
+            
             status.AppendLine($"       Executable filename: {FilePath.TrimFileName(FileName, 51)}");
             status.AppendLine($"         Working directory: {FilePath.TrimFileName(WorkingDirectory, 51)}");
-
-            if (Initialized)
-            {
-                try
-                {
-                    FileVersionInfo version = m_process.MainModule!.FileVersionInfo;
-
-                    if (!string.IsNullOrWhiteSpace(version.FileVersion))
-                        status.AppendLine($"   Executable file version: {version.FileVersion}");
-
-                    if (!string.IsNullOrWhiteSpace(version.FileDescription))
-                        status.AppendLine($"    Executable description: {version.FileDescription}");
-
-                    if (!string.IsNullOrWhiteSpace(version.Comments))
-                        status.AppendLine($"       Executable comments: {version.Comments}");
-
-                    if (!string.IsNullOrWhiteSpace(version.CompanyName))
-                        status.AppendLine($"   Executable company name: {version.CompanyName}");
-
-                    if (!string.IsNullOrWhiteSpace(version.LegalCopyright))
-                        status.AppendLine($"      Executable copyright: {version.LegalCopyright}");
-
-                    if (!string.IsNullOrWhiteSpace(version.Language))
-                        status.AppendLine($"       Executable language: {version.Language}");
-
-                    if (!string.IsNullOrWhiteSpace(version.OriginalFilename))
-                        status.AppendLine($"  Executable original name: {version.OriginalFilename}");
-
-                    if (!string.IsNullOrWhiteSpace(version.InternalName))
-                        status.AppendLine($"  Executable internal name: {version.InternalName}");
-
-                    if (!string.IsNullOrWhiteSpace(version.ProductName))
-                        status.AppendLine($"   Executable product name: {version.ProductName}");
-
-                    if (!string.IsNullOrWhiteSpace(version.ProductVersion))
-                        status.AppendLine($"Executable product version: {version.ProductVersion}");
-
-                    status.AppendLine($" Executable is debug build: {version.IsDebug}");
-                }
-                catch
-                {
-                    status.AppendLine("       Version information: [unavailable]");
-                }
-
-                try
-                {
-                    if (m_process.HasExited)
-                    {
-                        status.AppendLine("        Process has exited: True");
-                        status.AppendLine($"         Process exit code: {m_process.ExitCode}");
-                        status.AppendLine($"         Process exit time: {m_process.ExitTime:yyyy-MM-dd HH:mm:ss.fff}");
-                        status.AppendLine($"      Total processor time: {m_process.TotalProcessorTime.ToElapsedTimeString()}");
-                        status.AppendLine($"            Total run-time: {(m_process.ExitTime - ((DateTime)StartTime).ToLocalTime()).ToElapsedTimeString()}");
-                    }
-                    else
-                    {
-                        status.AppendLine($"     Process is responding: {m_process.Responding}");
-                        status.AppendLine($"              Process name: {m_process.ProcessName}");
-                        status.AppendLine($"        Process start time: {m_process.StartTime:yyyy-MM-dd HH:mm:ss.fff}");
-                        status.AppendLine($"             OS Process ID: {m_process.Id}");
-                        status.AppendLine($"     Process base priority: {m_process.BasePriority}");
-                        status.AppendLine($"      Process thread count: {m_process.Threads.Count:N0}");
-                        status.AppendLine($"      Process handle count: {m_process.HandleCount:N0}");
-                        status.AppendLine($"      Process memory usage: {SI2.ToScaledString(m_process.WorkingSet64, 2, "B")} (working set)");
-
-                        if (m_processUtilizationCalculator.UpdateInterval > 0)
-                            status.AppendLine($"       Process utilization: {m_processUtilizationCalculator.Utilization:##0.0%}");                            
-
-                        status.AppendLine($"      Total processor time: {m_process.TotalProcessorTime.ToElapsedTimeString()}");
-                        status.AppendLine($"            Total run-time: {(DateTime.Now - m_process.StartTime).ToElapsedTimeString()}");
-                    }
-                }
-                catch
-                {
-                    status.AppendLine("             Process state: [unavailable]");
-                }
-            }
-
             status.AppendLine($"    Initial input filename: {FilePath.TrimFileName(InitialInputFileName, 51)}");
-            status.AppendLine($" CPU usage update interval: {(m_processUtilizationCalculator.UpdateInterval > 0 ? $"{m_processUtilizationCalculator.UpdateInterval:N0}ms" : "Disabled")}");
+            status.AppendLine($" CPU usage update interval: {(m_processUtilizationCalculator.UpdateInterval > 0 ? $"{m_processUtilizationCalculator.UpdateInterval:N0}ms" : "Disabled - Manual Refresh Only")}");
             status.AppendLine($"     Input lines processed: {m_inputLinesProcessed:N0}");
             status.AppendLine($"    Output lines processed: {m_outputLinesProcessed:N0}");
             status.AppendLine($"     Error lines processed: {m_errorLinesProcessed:N0}");
             status.AppendLine($" Interpret output for logs: {ProcessOutputAsLogMessages}");
             status.AppendLine($"   Forcing kill on dispose: {ForceKillOnDispose}");
+            status.AppendLine($"  Child process to monitor: {(string.IsNullOrWhiteSpace(ChildProcessTarget) ? "<none>" : $"\"{ChildProcessTarget}\": process {(m_childProcess is null ? "not " : "")}found")}");
+            status.AppendLine($"Child process wait timeout: {ChildProcessQueryTimeout:N0}ms");
             status.AppendLine($"       Tracking statistics: {TrackProcessStatistics}");
 
+            if (Initialized)
+            {
+                status.AppendLine(getProcessInfo("Primary", m_process, this));
+
+                if (m_childProcess is not null)
+                    status.AppendLine(getProcessInfo("Child", m_childProcess, this));
+
+                if (m_processUtilizationCalculator.UpdateInterval > 0)
+                {
+                    status.AppendLine();
+                    status.AppendLine($" Total Process utilization: {m_processUtilizationCalculator.Utilization:##0.0%}");
+                }
+            }
+
             return status.ToString();
+
+            static string getProcessInfo(string processID, Process process, ProcessLauncher instance)
+            {
+                StringBuilder status = new();
+
+                try
+                {
+                    StringBuilder versionInfo = new();
+                    FileVersionInfo version = process.MainModule!.FileVersionInfo;
+
+                    if (!string.IsNullOrWhiteSpace(version.FileVersion))
+                        versionInfo.AppendLine($"   Executable file version: {version.FileVersion}");
+
+                    if (!string.IsNullOrWhiteSpace(version.FileDescription))
+                        versionInfo.AppendLine($"    Executable description: {version.FileDescription}");
+
+                    if (!string.IsNullOrWhiteSpace(version.Comments))
+                        versionInfo.AppendLine($"       Executable comments: {version.Comments}");
+
+                    if (!string.IsNullOrWhiteSpace(version.CompanyName))
+                        versionInfo.AppendLine($"   Executable company name: {version.CompanyName}");
+
+                    if (!string.IsNullOrWhiteSpace(version.LegalCopyright))
+                        versionInfo.AppendLine($"      Executable copyright: {version.LegalCopyright}");
+
+                    if (!string.IsNullOrWhiteSpace(version.Language))
+                        versionInfo.AppendLine($"       Executable language: {version.Language}");
+
+                    if (!string.IsNullOrWhiteSpace(version.OriginalFilename))
+                        versionInfo.AppendLine($"  Executable original name: {version.OriginalFilename}");
+
+                    if (!string.IsNullOrWhiteSpace(version.InternalName))
+                        versionInfo.AppendLine($"  Executable internal name: {version.InternalName}");
+
+                    if (!string.IsNullOrWhiteSpace(version.ProductName))
+                        versionInfo.AppendLine($"   Executable product name: {version.ProductName}");
+
+                    if (!string.IsNullOrWhiteSpace(version.ProductVersion))
+                        versionInfo.AppendLine($"Executable product version: {version.ProductVersion}");
+
+                    if (versionInfo.Length > 0)
+                    {
+                        versionInfo.AppendLine($" Executable is debug build: {version.IsDebug}");
+
+                        status.AppendLine();
+                        status.AppendLine($"    ---- {processID} Process Details ----");
+                        status.AppendLine();
+                        
+                        // ReSharper disable once RedundantToStringCall
+                        status.Append(versionInfo.ToString());
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.SwallowException(ex, $"Failed to retrieve version information for {processID} process");
+                    status.AppendLine("       Version information: [unavailable]");
+                }
+
+                status.AppendLine();
+                status.AppendLine($"    ---- {processID} Process State ----");
+                status.AppendLine();
+
+                try
+                {
+                    if (process.HasExited)
+                    {
+                        status.AppendLine("        Process has exited: True");
+                        status.AppendLine($"         Process exit code: {process.ExitCode}");
+                        status.AppendLine($"         Process exit time: {process.ExitTime:yyyy-MM-dd HH:mm:ss.fff}");
+                        status.AppendLine($"      Total processor time: {process.TotalProcessorTime.ToElapsedTimeString()}");
+                        status.AppendLine($"            Total run-time: {(process.ExitTime - ((DateTime)instance.StartTime).ToLocalTime()).ToElapsedTimeString()}");
+                    }
+                    else
+                    {
+                        status.AppendLine($"     Process is responding: {process.Responding}");
+                        status.AppendLine($"              Process name: {process.ProcessName}");
+                        status.AppendLine($"        Process start time: {process.StartTime:yyyy-MM-dd HH:mm:ss.fff}");
+                        status.AppendLine($"             OS Process ID: {process.Id}");
+                        status.AppendLine($"     Process base priority: {process.BasePriority}");
+                        status.AppendLine($"      Process thread count: {process.Threads.Count:N0}");
+                        status.AppendLine($"      Process handle count: {process.HandleCount:N0}");
+                        status.AppendLine($"      Process memory usage: {SI2.ToScaledString(process.WorkingSet64, 2, "B")} (working set)");
+                        status.AppendLine($"      Total processor time: {process.TotalProcessorTime.ToElapsedTimeString()}");
+                        status.AppendLine($"            Total run-time: {(DateTime.Now - process.StartTime).ToElapsedTimeString()}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.SwallowException(ex, $"Failed to retrieve {processID} process state details");
+                    status.AppendLine("             Process state: [unavailable]");
+                }
+
+                return status.ToString();
+            }
         }
     }
 
@@ -565,11 +652,12 @@ public class ProcessLauncher : FacileActionAdapterBase
             if (ForceKillOnDispose)
                 Kill();
 
+            m_processUtilizationCalculator.StatusMessage -= ProcessUtilizationCalculatorStatusMessage;
+            m_processUtilizationCalculator.Dispose();
+
             m_process.Dispose();
             m_process.OutputDataReceived -= ProcessOutputDataReceived;
             m_process.ErrorDataReceived -= ProcessErrorDataReceived;
-
-            m_processUtilizationCalculator.Dispose();
         }
         finally
         {
@@ -583,6 +671,8 @@ public class ProcessLauncher : FacileActionAdapterBase
     /// </summary>
     public override void Initialize()
     {
+        const int ChildProcessQueryDelay = 100;
+
         base.Initialize();
 
         Dictionary<string, string> settings = Settings;
@@ -725,6 +815,18 @@ public class ProcessLauncher : FacileActionAdapterBase
         if (settings.TryGetValue(nameof(ForceKillOnDispose), out setting))
             ForceKillOnDispose = setting.ParseBoolean();
 
+        if (settings.TryGetValue(nameof(ChildProcessTarget), out setting))
+            ChildProcessTarget = setting;
+
+        if (settings.TryGetValue(nameof(ChildProcessQueryTimeout), out setting) && int.TryParse(setting, out int timeout))
+            ChildProcessQueryTimeout = timeout;
+
+        if (ChildProcessQueryTimeout < ChildProcessQueryDelay)
+            ChildProcessQueryTimeout = ChildProcessQueryDelay;
+
+        if (settings.TryGetValue(nameof(ShowChildProcesses), out setting))
+            ShowChildProcesses = setting.ParseBoolean();
+
         if (settings.TryGetValue(nameof(TrackProcessStatistics), out setting))
             TrackProcessStatistics = setting.ParseBoolean();
 
@@ -733,6 +835,59 @@ public class ProcessLauncher : FacileActionAdapterBase
         if (ForceKillOnDispose)
             m_childProcessManager?.AddProcess(m_process);
 
+        if (!string.IsNullOrWhiteSpace(ChildProcessTarget))
+        {
+            try
+            {
+                int totalWaitTime = 0;
+
+                while (m_childProcess is null && !m_process.HasExited && totalWaitTime < ChildProcessQueryTimeout)
+                {
+                    Process[] childProcesses = GetChildProcesses(m_process);
+
+                    if (ShowChildProcesses)
+                    {
+                        StringBuilder status = new();
+                        int index = 0;
+                        
+                        foreach (Process process in childProcesses)
+                            status.AppendLine($"    Child process {++index:N0}: {process.ProcessName} ({process.Id})");
+
+                        if (status.Length > 0)
+                        {
+                            status.Insert(0, $"{index:N0} child process{(index > 1 ? "es" : "")} found for \"{m_process.ProcessName}\":{Environment.NewLine}");
+                            OnStatusMessage(MessageLevel.Info, status.ToString());
+                        }
+                        else
+                        {
+                            OnStatusMessage(MessageLevel.Info, $"No child processes found for \"{m_process.ProcessName}\" after waiting {totalWaitTime:N0}ms...");
+                        }
+                    }
+
+                    if (childProcesses.FirstOrDefault(process => process.ProcessName.Equals(ChildProcessTarget, StringComparison.OrdinalIgnoreCase)) is { } childProcess)
+                    {
+                        m_childProcess = childProcess;
+
+                        if (ForceKillOnDispose)
+                            m_childProcessManager?.AddProcess(m_childProcess);
+
+                        break;
+                    }
+
+                    // Check every 100ms for child process to exist
+                    Thread.Sleep(ChildProcessQueryDelay);
+                    totalWaitTime += ChildProcessQueryDelay;
+                }
+
+                if (m_childProcess is null)
+                    OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to locate child process \"{ChildProcessTarget}\" for monitoring within {ChildProcessQueryTimeout:N0}ms"));
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to locate child process \"{ChildProcessTarget}\" for monitoring: {ex.Message}", ex));
+            }
+        }
+
         if (RedirectOutputToHostEnvironment)
             m_process.BeginOutputReadLine();
 
@@ -740,7 +895,7 @@ public class ProcessLauncher : FacileActionAdapterBase
             m_process.BeginErrorReadLine();
 
         m_processUtilizationCalculator.UpdateInterval = UtilizationUpdateInterval;
-        m_processUtilizationCalculator.Initialize(m_process);
+        m_processUtilizationCalculator.Initialize(m_process, m_childProcess);
 
         // Register launched process with the statistics engine
         if (TrackProcessStatistics)
@@ -774,7 +929,7 @@ public class ProcessLauncher : FacileActionAdapterBase
     /// <returns>A short one-line summary of the current status of this <see cref="AdapterBase"/>.</returns>
     public override string GetShortStatus(int maxLength)
     {
-        string filename = FilePath.GetFileName(FileName);
+        string filename = FilePath.GetFileNameWithoutExtension(FileName);
 
         if (!Initialized)
             return $"\"{filename}\" process has not started...".CenterText(maxLength);
@@ -790,7 +945,7 @@ public class ProcessLauncher : FacileActionAdapterBase
                 return $"\"{filename}\" process is not responding...".CenterText(maxLength);
 
             string utilization = m_processUtilizationCalculator.UpdateInterval > 0 ? $" at {m_processUtilizationCalculator.Utilization:##0.0%}" : "";
-            return $"\"{filename}\" process running{utilization} for {(DateTime.Now - m_process.StartTime).ToElapsedTimeString()}.".CenterText(maxLength);
+            return $"\"{filename}\"{(m_childProcess is null ? "" : $" and \"{ChildProcessTarget}\"")} process{(m_childProcess is null ? "" : "es")} running{utilization} for {(DateTime.Now - m_process.StartTime).ToElapsedTimeString()}.".CenterText(maxLength);
         }
         catch
         {
@@ -801,28 +956,41 @@ public class ProcessLauncher : FacileActionAdapterBase
     /// <summary>
     /// Sends specified value as input to launched process, new line will be automatically appended to text.
     /// </summary>
+    /// <remarks>
+    /// This only sends input to the parent process.
+    /// </remarks>
     /// <param name="value">Input string to send to launched process.</param>
     [AdapterCommand("Sends specified value as input to launched process, new line will be automatically appended to text.")]
     public void Input(string value)
-    {           
+    {
         m_process.StandardInput.WriteLine(value);
         m_process.StandardInput.Flush();
+        
         m_inputLinesProcessed++;
     }
 
     /// <summary>
     /// Clears any cached information associated with the launched process.
     /// </summary>
+    /// <remarks>
+    /// If child process is defined, this will also clear any cached information associated with the child process.
+    /// </remarks>
     [AdapterCommand("Clears any cached information associated with the launched process.")]
     public void Refresh()
     {
-        m_process.Refresh();
+        if (!m_process.HasExited)
+            m_process.Refresh();
+
+        if (m_childProcess is not null && !m_childProcess.HasExited)
+            m_childProcess.Refresh();
+
+        m_processUtilizationCalculator?.Refresh();
     }
 
     /// <summary>
-    /// Stops the launched process.
+    /// Stops the launched process and and associated child processes.
     /// </summary>
-    [AdapterCommand("Stops the launched process.")]
+    [AdapterCommand("Stops the launched process and and associated child processes.")]
     public void Kill()
     {
         try
@@ -836,6 +1004,11 @@ public class ProcessLauncher : FacileActionAdapterBase
         {
             OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Exception encountered while attempting to stop process launched from \"{FileName}\": {ex.Message}", ex));
         }
+    }
+
+    private void ProcessUtilizationCalculatorStatusMessage(object _, EventArgs<string> args)
+    {
+        OnStatusMessage(MessageLevel.NA, args.Argument, nameof(ProcessUtilizationCalculator));
     }
 
     private void ProcessOutputDataReceived(object sender, DataReceivedEventArgs e)
@@ -899,6 +1072,15 @@ public class ProcessLauncher : FacileActionAdapterBase
 
     // Static Methods
 
+    private static Process[] GetChildProcesses(Process process)
+    {
+        return new ManagementObjectSearcher($"SELECT * FROM Win32_Process WHERE ParentProcessID={process.Id}")
+            .Get()
+            .Cast<ManagementObject>()
+            .Select(managementObject => Process.GetProcessById(Convert.ToInt32(managementObject["ProcessId"])))
+            .ToArray();
+    }
+
     // ReSharper disable UnusedMember.Local
     // ReSharper disable UnusedParameter.Local
 
@@ -906,28 +1088,49 @@ public class ProcessLauncher : FacileActionAdapterBase
     {
         double statistic = double.NaN;
 
-        if (source is ProcessLauncher { m_disposed: false, m_process.HasExited: false } launcher)
-            statistic = launcher.m_processUtilizationCalculator.Utilization;
+        if (source is ProcessLauncher { m_disposed: false } launcher)
+            statistic = launcher.m_processUtilizationCalculator.Utilization * 100.0D;
 
         return statistic;
     }
 
     private static double GetProcessStatistic_MemoryUsage(object source, string arguments)
     {
-        double statistic = double.NaN;
+        if (source is not ProcessLauncher { m_disposed: false } launcher)
+            return double.NaN;
 
-        if (source is ProcessLauncher { m_disposed: false, m_process.HasExited: false } launcher)
-            statistic = launcher.m_process.WorkingSet64 / (double)SI2.Mega;
+        double statistic = 0.0D;
+        Process process = launcher.m_process;
+        Process childProcess = launcher.m_childProcess;
+
+        if (process is not null && !process.HasExited)
+        {
+            process.Refresh();
+            statistic += process.WorkingSet64 / (double)SI2.Mega;
+        }
+
+        if (childProcess is not null && !childProcess.HasExited)
+        {
+            childProcess.Refresh();
+            statistic += childProcess.WorkingSet64 / (double)SI2.Mega;
+        }
 
         return statistic;
     }
 
     private static double GetProcessStatistic_UpTime(object source, string arguments)
     {
-        double statistic = double.NaN;
+        if (source is not ProcessLauncher { m_disposed: false } launcher)
+            return double.NaN;
 
-        if (source is ProcessLauncher { m_disposed: false, m_process.HasExited: false } launcher)
+        double statistic = double.NaN;
+        Process process = launcher.m_process;
+        Process childProcess = launcher.m_childProcess;
+
+        if (process is not null && !process.HasExited)
             statistic = (DateTime.Now - launcher.m_process.StartTime).TotalSeconds;
+        else if (childProcess is not null && !childProcess.HasExited)
+            statistic = (DateTime.Now - launcher.m_childProcess.StartTime).TotalSeconds;
 
         return statistic;
     }
