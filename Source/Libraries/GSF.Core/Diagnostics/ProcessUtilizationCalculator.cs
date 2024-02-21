@@ -118,11 +118,7 @@ public sealed class ProcessUtilizationCalculator : IDisposable
     /// <summary>
     /// Gets associated processes for this <see cref="ProcessUtilizationCalculator"/>.
     /// </summary>
-    /// <remarks>
-    /// The <see cref="ProcessUtilizationCalculator"/> maintains a <see cref="WeakReference{T}"/> to the associated
-    /// <see cref="Process"/> so this property can be <c>null</c> if the process is no longer available.
-    /// </remarks>
-    public Process[] AssociatedProcesses => m_processReferences.Select(reference => reference.Process).ToArray();
+    public Process[] AssociatedProcesses => m_processReferences.Select(reference => reference.Process).Where(process => process is not null).ToArray();
 
     #endregion
 
