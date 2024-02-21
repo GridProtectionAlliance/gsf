@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  DataSourceValueCache.cs - Gbtc
+//  MeasurementValueCache.cs - Gbtc
 //
 //  Copyright © 2024, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -22,7 +22,7 @@
 //******************************************************************************************************
 // ReSharper disable StaticMemberInGenericType
 
-using GrafanaAdapters.DataSources.BuiltIn;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 using GrafanaAdapters.Functions;
 using GSF;
 using GSF.Diagnostics;
@@ -35,30 +35,30 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
 
-namespace GrafanaAdapters.DataSources;
+namespace GrafanaAdapters.DataSourceValueTypes;
 
 /// <summary>
 /// Represents a cache of all defined data source value types and their default instances.
 /// </summary>
-public static class DataSourceValueCache
+public static class DataSourceValueTypeCache
 {
-    private static IDataSourceValue[] s_defaultInstances;
+    private static IDataSourceValueType[] s_defaultInstances;
     private static Type[] s_loadedTypes;
     private static Dictionary<string, int> s_typeIndexMap;
     private static readonly object s_defaultInstancesLock = new();
-    private static readonly LogPublisher s_log = Logger.CreatePublisher(typeof(DataSourceValueCache), MessageClass.Component);
+    private static readonly LogPublisher s_log = Logger.CreatePublisher(typeof(DataSourceValueTypeCache), MessageClass.Component);
 
     /// <summary>
     /// Gets default instance list of all the defined data source value type implementations.
     /// </summary>
-    public static IDataSourceValue[] DefaultInstances
+    public static IDataSourceValueType[] DefaultInstances
     {
         get
         {
             // Caching default data source value types and instances so expensive assembly load with
             // type inspections and reflection-based instance creation of types are only done once.
-            // If dynamic reload is needed at runtime, call ReloadDataSourceValueTypes() method.
-            IDataSourceValue[] defaultInstances = Interlocked.CompareExchange(ref s_defaultInstances, null, null);
+            // If dynamic reload is needed at runtime, call ReloadMeasurementValueTypes() method.
+            IDataSourceValueType[] defaultInstances = Interlocked.CompareExchange(ref s_defaultInstances, null, null);
 
             if (defaultInstances is not null)
                 return defaultInstances;
@@ -71,20 +71,20 @@ public static class DataSourceValueCache
                 if (s_defaultInstances is not null)
                     return s_defaultInstances;
 
-                const string EventName = $"{nameof(DataSourceValueCache)} {nameof(IDataSourceValue)} Type Load";
+                const string EventName = $"{nameof(DataSourceValueTypeCache)} {nameof(IDataSourceValueType)} Type Load";
 
                 try
                 {
-                    s_log.Publish(MessageLevel.Info, EventName, $"Starting load for {nameof(IDataSourceValue)} types...");
+                    s_log.Publish(MessageLevel.Info, EventName, $"Starting load for {nameof(IDataSourceValueType)} types...");
                     long startTime = DateTime.UtcNow.Ticks;
 
                     // Load all data source value types from any assemblies in the current directory
-                    string dataSourceValuesPath = FilePath.GetAbsolutePath("").EnsureEnd(Path.DirectorySeparatorChar);
-                    List<Type> implementationTypes = typeof(IDataSourceValue).LoadImplementations(dataSourceValuesPath, true, false);
+                    string dataSourceValueTypesPath = FilePath.GetAbsolutePath("").EnsureEnd(Path.DirectorySeparatorChar);
+                    List<Type> implementationTypes = typeof(IDataSourceValueType).LoadImplementations(dataSourceValueTypesPath, true, false);
 
                     // To maintain consistent order between runs, we sort the data source value types by load order and then by name
-                    IDataSourceValue[] instances = implementationTypes
-                        .Select(type => (IDataSourceValue)Activator.CreateInstance(type))
+                    IDataSourceValueType[] instances = implementationTypes
+                        .Select(type => (IDataSourceValueType)Activator.CreateInstance(type))
                         .OrderBy(dsv => dsv.LoadOrder)
                         .ThenBy(dsv => dsv.GetType().Name)
                         .ToArray();
@@ -93,11 +93,11 @@ public static class DataSourceValueCache
                     Interlocked.Exchange(ref s_defaultInstances, instances.ToArray());
 
                     string elapsedTime = new TimeSpan(DateTime.UtcNow.Ticks - startTime).ToElapsedTimeString(3);
-                    s_log.Publish(MessageLevel.Info, EventName, $"Completed loading {nameof(IDataSourceValue)} types: loaded {s_loadedTypes.Length:N0} types in {elapsedTime}.");
+                    s_log.Publish(MessageLevel.Info, EventName, $"Completed loading {nameof(IDataSourceValueType)} types: loaded {s_loadedTypes.Length:N0} types in {elapsedTime}.");
                 }
                 catch (Exception ex)
                 {
-                    s_log.Publish(MessageLevel.Error, EventName, $"Failed while loading {nameof(IDataSourceValue)} types: {ex.Message}", exception: ex);
+                    s_log.Publish(MessageLevel.Error, EventName, $"Failed while loading {nameof(IDataSourceValueType)} types: {ex.Message}", exception: ex);
                 }
             }
 
@@ -130,14 +130,14 @@ public static class DataSourceValueCache
     /// <summary>
     /// Gets a default instance of the specified data source value type (by index).
     /// </summary>
-    /// <param name="dataTypeIndex">Index of target <see cref="IDataSourceValue"/> to lookup.</param>
+    /// <param name="dataTypeIndex">Index of target <see cref="IDataSourceValueType"/> to lookup.</param>
     /// <returns>Default instance of the specified data source value type, found by index.</returns>
     /// <exception cref="IndexOutOfRangeException">Invalid data type index provided.</exception>
     /// <remarks>
     /// Use this method to provide a cleaner, more specific, error message to the user when a
     /// data source value type is specified that is not found.
     /// </remarks>
-    public static IDataSourceValue GetDefaultInstance(int dataTypeIndex)
+    public static IDataSourceValueType GetDefaultInstance(int dataTypeIndex)
     {
         if (dataTypeIndex < 0 || dataTypeIndex >= LoadedTypes.Count)
             throw new IndexOutOfRangeException($"Invalid data type index provided. Index must be between 0 and {LoadedTypes.Count - 1:N0}.");
@@ -148,11 +148,11 @@ public static class DataSourceValueCache
     /// <summary>
     /// Gets type index for the specified data source value type; or, -1 if not found
     /// </summary>
-    /// <param name="dataTypeName">Type name of target <see cref="IDataSourceValue"/> to lookup.</param>
+    /// <param name="dataTypeName">Type name of target <see cref="IDataSourceValueType"/> to lookup.</param>
     /// <returns>Index of specified data source value type; or, -1 if not found.</returns>
     public static int GetTypeIndex(string dataTypeName) => TypeIndexMap.TryGetValue(dataTypeName, out int index) ? index : -1;
 
-    // Gets an index for the specified data source value type for the DataSourceValueTypes array
+    // Gets an index for the specified data source value type for the MeasurementValueTypes array
     // Lookup is case-insensitive and will match on type name or full type name
     internal static Dictionary<string, int> TypeIndexMap => s_typeIndexMap ??= CreateTypeIndexMap();
 
@@ -194,16 +194,16 @@ public static class DataSourceValueCache
     // Reinitializes all data source caches
     internal static void ReinitializeAll()
     {
-        const string InitializeMethodName = nameof(DataSourceValueCache<DataSourceValue>.Initialize);
+        const string InitializeMethodName = nameof(DataSourceValueTypeCache<MeasurementValue>.Initialize);
 
         // Just using reflection here since this method will only be called rarely
         foreach (Type type in LoadedTypes)
-            typeof(DataSourceValueCache<>).MakeGenericType(type).GetMethod(InitializeMethodName, BindingFlags.NonPublic | BindingFlags.Static)?.Invoke(null, null);
+            typeof(DataSourceValueTypeCache<>).MakeGenericType(type).GetMethod(InitializeMethodName, BindingFlags.NonPublic | BindingFlags.Static)?.Invoke(null, null);
     }
 }
 
 // Caches functions, function map and functions regex for a specific data source value type
-internal static class DataSourceValueCache<T> where T : struct, IDataSourceValue<T>
+internal static class DataSourceValueTypeCache<T> where T : struct, IDataSourceValueType<T>
 {
     public static IGrafanaFunction<T>[] Functions { get; private set; }
 
@@ -211,9 +211,9 @@ internal static class DataSourceValueCache<T> where T : struct, IDataSourceValue
 
     public static Regex FunctionsRegex { get; private set; }
 
-    public static readonly int DataTypeIndex = DataSourceValueCache.TypeIndexMap[typeof(T).Name];
+    public static readonly int DataTypeIndex = DataSourceValueTypeCache.TypeIndexMap[typeof(T).Name];
 
-    static DataSourceValueCache()
+    static DataSourceValueTypeCache()
     {
         Initialize();
     }

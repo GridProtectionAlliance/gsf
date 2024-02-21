@@ -1,5 +1,5 @@
-﻿using GrafanaAdapters.DataSources;
-using GrafanaAdapters.DataSources.BuiltIn;
+﻿using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 using GSF.Units;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,7 +21,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Variants: UnwrapAngle, Unwrap<br/>
 /// Execution: Immediate in-memory array load.
 /// </remarks>
-public abstract class UnwrapAngle<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
+public abstract class UnwrapAngle<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {
     /// <inheritdoc />
     public override string Name => nameof(UnwrapAngle<T>);
@@ -65,7 +65,7 @@ public abstract class UnwrapAngle<T> : GrafanaFunctionBase<T> where T : struct, 
     }
 
     /// <inheritdoc />
-    public class ComputeDataSourceValue : UnwrapAngle<DataSourceValue>
+    public class ComputeMeasurementValue : UnwrapAngle<MeasurementValue>
     {
     }
 

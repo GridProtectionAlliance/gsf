@@ -21,7 +21,7 @@
 //
 //******************************************************************************************************
 
-using GrafanaAdapters.DataSources;
+using GrafanaAdapters.DataSourceValueTypes;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -62,7 +62,7 @@ public class ParameterDefinitions : IReadOnlyList<IParameter>
             Add(parameter);
 
         // Data source parameter is always the last parameter
-        Add(ParameterDefinitions<IDataSourceValue>.DataSourceValues);
+        Add(ParameterDefinitions<IDataSourceValueType>.DataSourceValues);
     }
 
     private void Add(IParameter parameter)
@@ -102,7 +102,7 @@ public class ParameterDefinitions : IReadOnlyList<IParameter>
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     /// <summary>
-    /// Searches for the parameter with the specified <paramref name="name"/> and returns it's zero-based index.
+    /// Searches for the parameter with the specified <paramref name="name"/> and returns its zero-based index.
     /// </summary>
     /// <param name="name">The name of the parameter to locate in the <see cref="ParameterDefinitions" />.</param>
     /// <returns>

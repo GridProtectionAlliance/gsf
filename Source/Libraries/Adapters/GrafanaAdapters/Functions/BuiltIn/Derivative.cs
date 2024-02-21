@@ -1,5 +1,5 @@
-﻿using GrafanaAdapters.DataSources;
-using GrafanaAdapters.DataSources.BuiltIn;
+﻿using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 using GSF.Units;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +24,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Variants: Derivative, Der<br/>
 /// Execution: Deferred enumeration.
 /// </remarks>
-public abstract class Derivative<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
+public abstract class Derivative<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {
     /// <inheritdoc />
     public override string Name => nameof(Derivative<T>);
@@ -90,7 +90,7 @@ public abstract class Derivative<T> : GrafanaFunctionBase<T> where T : struct, I
     }
 
     /// <inheritdoc />
-    public class ComputeDataSourceValue : Derivative<DataSourceValue>
+    public class ComputeMeasurementValue : Derivative<MeasurementValue>
     {
     }
 

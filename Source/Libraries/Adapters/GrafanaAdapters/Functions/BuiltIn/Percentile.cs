@@ -1,5 +1,5 @@
-﻿using GrafanaAdapters.DataSources;
-using GrafanaAdapters.DataSources.BuiltIn;
+﻿using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,7 +20,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Variants: Percentile, Pctl<br/>
 /// Execution: Immediate in-memory array load.
 /// </remarks>
-public abstract class Percentile<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
+public abstract class Percentile<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {
     /// <inheritdoc />
     public override string Name => nameof(Percentile<T>);
@@ -81,7 +81,7 @@ public abstract class Percentile<T> : GrafanaFunctionBase<T> where T : struct, I
     }
 
     /// <inheritdoc />
-    public class ComputeDataSourceValue : Percentile<DataSourceValue>
+    public class ComputeMeasurementValue : Percentile<MeasurementValue>
     {
     }
 

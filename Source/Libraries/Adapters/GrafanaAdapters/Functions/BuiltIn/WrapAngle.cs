@@ -1,5 +1,5 @@
-﻿using GrafanaAdapters.DataSources;
-using GrafanaAdapters.DataSources.BuiltIn;
+﻿using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 using GSF.Units;
 using System;
 using System.Collections.Generic;
@@ -22,7 +22,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Variants: WrapAngle, Wrap<br/>
 /// Execution: Deferred enumeration.
 /// </remarks>
-public abstract class WrapAngle<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
+public abstract class WrapAngle<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {
     /// <inheritdoc />
     public override string Name => nameof(WrapAngle<T>);
@@ -65,7 +65,7 @@ public abstract class WrapAngle<T> : GrafanaFunctionBase<T> where T : struct, ID
     }
 
     /// <inheritdoc />
-    public class ComputeDataSourceValue : WrapAngle<DataSourceValue>
+    public class ComputeMeasurementValue : WrapAngle<MeasurementValue>
     {
     }
 

@@ -1,5 +1,5 @@
-﻿using GrafanaAdapters.DataSources;
-using GrafanaAdapters.DataSources.BuiltIn;
+﻿using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -17,7 +17,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Variants: Minimum, Min<br/>
 /// Execution: Immediate enumeration.
 /// </remarks>
-public abstract class Minimum<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
+public abstract class Minimum<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {
     /// <inheritdoc />
     public override string Name => nameof(Minimum<T>);
@@ -52,7 +52,7 @@ public abstract class Minimum<T> : GrafanaFunctionBase<T> where T : struct, IDat
     }
 
     /// <inheritdoc />
-    public class ComputeDataSourceValue : Minimum<DataSourceValue>
+    public class ComputeMeasurementValue : Minimum<MeasurementValue>
     {
     }
 

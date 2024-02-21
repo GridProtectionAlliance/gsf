@@ -75,7 +75,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DataSources\DataSourceValueCache.cs" />
+    <Compile Include="DataSourceValueTypes\DataSourceValueTypeCache.cs" />
+    <Compile Include="Functions\BuiltIn\Clamp.cs" />
+    <Compile Include="Functions\BuiltIn\Reference.cs" />
     <Compile Include="Functions\BuiltIn\Switch.cs" />
     <Compile Include="Metadata\DataSetAdapter.cs" />
     <Compile Include="Metadata\MetadataExtensions.cs" />
@@ -87,7 +89,7 @@
     <Compile Include="GlobalUsings.cs" />
     <Compile Include="GrafanaDataSourceBase_ApiControllerOperations.cs" />
     <Compile Include="Model\Common\AdHocFilter.cs" />
-    <Compile Include="DataSources\BuiltIn\DataSourceValue_AncillaryOperations.cs" />
+    <Compile Include="DataSourceValueTypes\BuiltIn\MeasurementValue_AncillaryOperations.cs" />
     <Compile Include="Functions\ParameterDefinition.cs" />
     <Compile Include="Functions\GrafanaFunctionBase.cs" />
     <Compile Include="Functions\IParameter.cs" />
@@ -97,12 +99,13 @@
     <Compile Include="Functions\ParsedGrafanaFunction.cs" />
     <Compile Include="Functions\QueryParameters.cs" />
     <Compile Include="Functions\BuiltIn\Evaluate.cs" />
-    <Compile Include="DataSources\IDataSourceValue.cs" />
+    <Compile Include="DataSourceValueTypes\IDataSourceValueType.cs" />
     <Compile Include="Annotations\AnnotationExtensions.cs" />
     <Compile Include="Model\Annotations\AnnotationRequest.cs" />
     <Compile Include="Model\Annotations\AnnotationResponse.cs" />
     <Compile Include="Annotations\AnnotationType.cs" />
-    <Compile Include="DataSources\DataSourceValueGroup.cs" />
+    <Compile Include="Model\Common\DataSourceValue.cs" />
+    <Compile Include="Model\Common\DataSourceValueGroup.cs" />
     <Compile Include="DeviceAlarmStateAdapter.cs" />
     <Compile Include="Model\Common\MetadataSelections.cs" />
     <Compile Include="Model\Metadata\DataSourceValueType.cs" />
@@ -156,14 +159,14 @@
     <Compile Include="Functions\BuiltIn\WrapAngle.cs" />
     <Compile Include="Model\Functions\ParameterDescription.cs" />
     <Compile Include="Model\Functions\FunctionDescription.cs" />
-    <Compile Include="DataSources\BuiltIn\PhasorValue.cs" />
-    <Compile Include="DataSources\BuiltIn\PhasorValue_AncillaryOperations.cs" />
+    <Compile Include="DataSourceValueTypes\BuiltIn\PhasorValue.cs" />
+    <Compile Include="DataSourceValueTypes\BuiltIn\PhasorValue_AncillaryOperations.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Model\Common\QueryRequest.cs" />
     <Compile Include="Model\Common\Range.cs" />
     <Compile Include="Model\Common\Target.cs" />
     <Compile Include="TargetCache.cs" />
-    <Compile Include="DataSources\BuiltIn\DataSourceValue.cs" />
+    <Compile Include="DataSourceValueTypes\BuiltIn\MeasurementValue.cs" />
     <Compile Include="Model\Common\TimeSeriesValues.cs" />
     <Compile Include="TimeSliceScannerAsync.cs" />
   </ItemGroup>
@@ -186,7 +189,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="DataSources\BuiltIn\README.md" />
+    <None Include="DataSourceValueTypes\BuiltIn\README.md" />
     <None Include="Documentation\GrafanaFunctionsRegex.xso" />
     <None Include="Documentation\README.md" />
     <None Include="Documentation\SearchSelectRegex.xso" />

@@ -21,7 +21,7 @@
 //
 //******************************************************************************************************
 
-using GrafanaAdapters.DataSources;
+using GrafanaAdapters.DataSourceValueTypes;
 using GrafanaAdapters.Functions.BuiltIn;
 using System;
 using System.Collections.Generic;
@@ -55,7 +55,7 @@ public enum GroupOperations
 }
 
 /// <summary>
-/// Represents the return type of a Grafana function.
+/// Represents the return type of Grafana function.
 /// </summary>
 public enum ReturnType
 {
@@ -186,7 +186,7 @@ public interface IGrafanaFunction
     /// <remarks>
     /// Operations that are not allowed should be taken to mean that the use of the group operation for a function is an
     /// error. Implementors should carefully consider which group operations that a function exposes as not allowed since
-    /// when a user selects an group operation that is not allowed, this results in an exception. Groups operations can
+    /// when a user selects a group operation that is not allowed, this results in an exception. Groups operations can
     /// be hidden from the user by overriding the <see cref="PublishedGroupOperations"/>. Additionally, a group operation
     /// that is not supported can be ignored, instead of throwing an exception, by forcing supported operations. This is
     /// handled by overriding the <see cref="CheckAllowedGroupOperation"/> method. See <see cref="Label{T}"/> function
@@ -276,7 +276,7 @@ public interface IGrafanaFunction
 /// <summary>
 /// Defines a common interface for Grafana functions for a specific data source value type.
 /// </summary>
-public interface IGrafanaFunction<out T> : IGrafanaFunction where T : struct, IDataSourceValue<T>
+public interface IGrafanaFunction<out T> : IGrafanaFunction where T : struct, IDataSourceValueType<T>
 {
     /// <summary>
     /// Executes the computation for the Grafana function.

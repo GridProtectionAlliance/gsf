@@ -1,5 +1,5 @@
-﻿using GrafanaAdapters.DataSources;
-using GrafanaAdapters.DataSources.BuiltIn;
+﻿using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -16,7 +16,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Variants: AbsoluteValue, Abs<br/>
 /// Execution: Deferred enumeration.
 /// </remarks>
-public abstract class AbsoluteValue<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
+public abstract class AbsoluteValue<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {
     /// <inheritdoc />
     public override string Name => nameof(AbsoluteValue<T>);
@@ -37,7 +37,7 @@ public abstract class AbsoluteValue<T> : GrafanaFunctionBase<T> where T : struct
     }
 
     /// <inheritdoc />
-    public class ComputeDataSourceValue : AbsoluteValue<DataSourceValue>
+    public class ComputeMeasurementValue : AbsoluteValue<MeasurementValue>
     {
     }
 

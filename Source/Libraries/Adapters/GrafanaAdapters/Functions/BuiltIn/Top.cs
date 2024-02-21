@@ -1,5 +1,5 @@
-﻿using GrafanaAdapters.DataSources;
-using GrafanaAdapters.DataSources.BuiltIn;
+﻿using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 using GSF;
 using System;
 using System.Collections.Generic;
@@ -25,7 +25,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Variants: Top, Largest<br/>
 /// Execution: Immediate in-memory array load.
 /// </remarks>
-public abstract class Top<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
+public abstract class Top<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {
     /// <inheritdoc />
     public override string Name => nameof(Top<T>);
@@ -95,7 +95,7 @@ public abstract class Top<T> : GrafanaFunctionBase<T> where T : struct, IDataSou
     }
 
     /// <inheritdoc />
-    public class ComputeDataSourceValue : Top<DataSourceValue>
+    public class ComputeMeasurementValue : Top<MeasurementValue>
     {
     }
 

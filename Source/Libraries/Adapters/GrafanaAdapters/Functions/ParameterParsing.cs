@@ -22,7 +22,7 @@
 //******************************************************************************************************
 // ReSharper disable PossibleMultipleEnumeration
 
-using GrafanaAdapters.DataSources;
+using GrafanaAdapters.DataSourceValueTypes;
 using GrafanaAdapters.Functions.BuiltIn;
 using GrafanaAdapters.Metadata;
 using GSF;
@@ -40,7 +40,7 @@ namespace GrafanaAdapters.Functions;
 internal static class ParameterParsing
 {
     // Gets formatted parameters to display for a target function.
-    public static string FormatParameters<T>(this IGrafanaFunction<T> function, string[] parsedParameters) where T : struct, IDataSourceValue<T>
+    public static string FormatParameters<T>(this IGrafanaFunction<T> function, string[] parsedParameters) where T : struct, IDataSourceValueType<T>
     {
         int visibleCount = parsedParameters.Length - function.InternalParameterCount;
         IEnumerable<string> parameters = parsedParameters.Take(visibleCount);
@@ -155,7 +155,7 @@ internal static class ParameterParsing
     /// In case user has requested metadata as a parameter, pass in the root target
     /// which has a higher chance of being resolved for associated metadata.
     /// </remarks>
-    public static async ValueTask<Parameters> GenerateParametersAsync<TDataSourceValue>(this IGrafanaFunction<TDataSourceValue> function, string[] parsedParameters, IAsyncEnumerable<TDataSourceValue> dataSourceValues, string rootTarget, DataSet metadata, CancellationToken cancellationToken) where TDataSourceValue : struct, IDataSourceValue<TDataSourceValue>
+    public static async ValueTask<Parameters> GenerateParametersAsync<TDataSourceValue>(this IGrafanaFunction<TDataSourceValue> function, string[] parsedParameters, IAsyncEnumerable<TDataSourceValue> dataSourceValues, string rootTarget, DataSet metadata, CancellationToken cancellationToken) where TDataSourceValue : struct, IDataSourceValueType<TDataSourceValue>
     {
         // Generate a list of value mutable parameters
         Parameters parameters = function.ParameterDefinitions.CreateParameters();
@@ -174,7 +174,7 @@ internal static class ParameterParsing
             // Data -- last parameter is always a data source value
             if (i == parameters.Count - 1)
             {
-                Debug.Assert(parameter is IParameter<IAsyncEnumerable<IDataSourceValue>>, $"Last parameter is not a data source value of type '{typeof(IAsyncEnumerable<IDataSourceValue>).Name}'.");
+                Debug.Assert(parameter is IParameter<IAsyncEnumerable<IDataSourceValueType>>, $"Last parameter is not a data source value of type '{typeof(IAsyncEnumerable<IDataSourceValueType>).Name}'.");
 
                 // Replace last parameter with data source type specific parameter with associated values
                 parameters[i] = new Parameter<IAsyncEnumerable<TDataSourceValue>>(ParameterDefinitions<TDataSourceValue>.DataSourceValues)
@@ -216,7 +216,7 @@ internal static class ParameterParsing
     /// If nothing is found, it looks through ActiveMeasurements for it.
     /// Finally, if none of the above work it throws an error.
     /// </remarks>
-    public static async ValueTask ConvertParsedValueAsync<TDataSourceValue>(this IMutableParameter parameter, string value, string target, IAsyncEnumerable<TDataSourceValue> dataSourceValues, DataSet metadata, CancellationToken cancellationToken) where TDataSourceValue : struct, IDataSourceValue<TDataSourceValue>
+    public static async ValueTask ConvertParsedValueAsync<TDataSourceValue>(this IMutableParameter parameter, string value, string target, IAsyncEnumerable<TDataSourceValue> dataSourceValues, DataSet metadata, CancellationToken cancellationToken) where TDataSourceValue : struct, IDataSourceValueType<TDataSourceValue>
     {
         // No value specified
         if (string.IsNullOrWhiteSpace(value))
@@ -306,7 +306,7 @@ internal static class ParameterParsing
             string[] targets = null;
 
             // Named target parameters can optionally specify multiple fall-back series and one final
-            // default constant value each separated by a semi-colon to use when the named target series
+            // default constant value each separated by a semicolon to use when the named target series
             // is not available, e.g.: Top(T1;T2;5, T1;T2;T3)
             if (value.IndexOf(';') > -1)
             {
@@ -336,7 +336,7 @@ internal static class ParameterParsing
                 TDataSourceValue sourceResult = await dataSourceValues.FirstOrDefaultAsync(dataSourceValue =>
                     dataSourceValue.Target.Equals(targetName, StringComparison.OrdinalIgnoreCase), cancellationToken).ConfigureAwait(false);
 
-                // Data source values are structs and cannot be null so an empty target means lookup failed
+                // Data source value types are structs and cannot be null so an empty target means lookup failed
                 if (string.IsNullOrEmpty(sourceResult.Target))
                     continue;
 
@@ -357,7 +357,7 @@ internal static class ParameterParsing
         parameter.Value = result ?? parameter.Default;
     }
 
-    private static (string value, bool success) LookupMetadata<TDataSourceValue>(string value, string target, DataSet metadata) where TDataSourceValue : struct, IDataSourceValue
+    private static (string value, bool success) LookupMetadata<TDataSourceValue>(string value, string target, DataSet metadata) where TDataSourceValue : struct, IDataSourceValueType
     {
         // Lookup target in metadata
         (string tableName, string fieldName) = value.ParseAsTableAndField<TDataSourceValue>();

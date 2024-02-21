@@ -1,5 +1,5 @@
-﻿using GrafanaAdapters.DataSources;
-using GrafanaAdapters.DataSources.BuiltIn;
+﻿using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -29,7 +29,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Variants: Label, Name<br/>
 /// Execution: Deferred enumeration.
 /// </remarks>
-public abstract class Label<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
+public abstract class Label<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {
     /// <inheritdoc />
     public override string Name => nameof(Label<T>);
@@ -77,7 +77,7 @@ public abstract class Label<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     }
 
     /// <inheritdoc />
-    public class ComputeDataSourceValue : Label<DataSourceValue>
+    public class ComputeMeasurementValue : Label<MeasurementValue>
     {
     }
 

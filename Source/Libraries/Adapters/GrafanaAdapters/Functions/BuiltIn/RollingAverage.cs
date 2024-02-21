@@ -1,5 +1,5 @@
-﻿using GrafanaAdapters.DataSources;
-using GrafanaAdapters.DataSources.BuiltIn;
+﻿using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,7 +21,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Variants: RollingAverage, RollingAvg, RollingMean<br/>
 /// Execution: Immediate in-memory array load.
 /// </remarks>
-public abstract class RollingAverage<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
+public abstract class RollingAverage<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {
     /// <inheritdoc />
     public override string Name => nameof(RollingAverage<T>);
@@ -90,7 +90,7 @@ public abstract class RollingAverage<T> : GrafanaFunctionBase<T> where T : struc
     }
 
     /// <inheritdoc />
-    public class ComputeDataSourceValue : RollingAverage<DataSourceValue>
+    public class ComputeMeasurementValue : RollingAverage<MeasurementValue>
     {
     }
 

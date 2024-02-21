@@ -1,6 +1,6 @@
 ﻿using Ciloci.Flee;
-using GrafanaAdapters.DataSources;
-using GrafanaAdapters.DataSources.BuiltIn;
+using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 using GrafanaAdapters.Metadata;
 using GSF;
 using System;
@@ -19,7 +19,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Returns a single value that represents the evaluation of an expression over a slice of the values in the source series.
 /// The <c>sliceTolerance</c> parameter is a floating-point value that must be greater than or equal to 0.001 that represents
 /// the desired time tolerance, in seconds, for the time slice. The <c>evalExpression</c> parameter must always be expressed
-/// in braces, e.g., <c>{ expression }</c>; expression is strongly typed, but not case sensitive; expression is expected to
+/// in braces, e.g., <c>{ expression }</c>; expression is strongly typed, but not case-sensitive; expression is expected to
 /// return a value that can be evaluated as a floating-point number. Aliases of target tag names are used as variable names
 /// in the <c>evalExpression</c>  when defined. If no alias is defined, all non-valid characters will be removed from target
 /// tag name, for example, variable name for tag <c>PMU.032-PZR_CI:ANG</c> would be <c>PMU032PZR_CIANG</c>. All targets are
@@ -43,11 +43,11 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// This command adds custom .NET type imports that can be used with the <c>Evaluate</c> function. <c>expr</c>defines a
 /// key-value pair definition of assembly name, i.e., <c>AssemblyName</c> = DLL filename without suffix, and type name, i.e.,
 /// <c>TypeName</c> = fully qualified case-sensitive type name, to be imported. Key-value pairs are separated with commas and
-/// multiple imports are by separated semi-colons. <c>expr</c> must be surrounded by braces. Example:
+/// multiple imports are by separated semicolons. <c>expr</c> must be surrounded by braces. Example:
 /// <c>; imports={AssemblyName=mscorlib, TypeName=System.TimeSpan; AssemblyName=MyCode, TypeName=MyCode.MyClass}</c>
 /// </para>
 /// </remarks>
-public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
+public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {
     /// <inheritdoc />
     public override string Name => nameof(Evaluate<T>);
@@ -146,6 +146,9 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
         // Data values in this array will be for current slice, one value for each target series
         T[] dataValues = await GetDataSourceValues(parameters).ToArrayAsync(cancellationToken).ConfigureAwait(false);
 
+        if (dataValues.Length == 0)
+            yield break;
+
         lock (context)
         {
             // Clear existing variables - missing values will be exposed as NaN
@@ -153,13 +156,15 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
                 context.Variables[target] = double.NaN;
 
             List<string> targets = new();
-            T lastValue = default;
+            T sourceValue = default;
             int index = 0;
 
             // Load each target as variable name with its current slice value
             foreach (T dataValue in dataValues)
             {
-                lastValue = dataValue;
+                // First non-zero time value will be used as time for the slice
+                if (sourceValue.Time == 0.0D && dataValue.Time > 0.0D)
+                    sourceValue = dataValue;
 
                 // Get alias or clean target name for use as expression variable name
                 string target = dataValue.Target.SplitAlias(out string alias);
@@ -179,6 +184,9 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
                 context.Variables[$"_v{index++}"] = dataValue.Value;
             }
 
+            if (sourceValue.Time == 0.0D)
+                yield break;
+
             // Compile and cache the expression (only compiled once per expression)
             IDynamicExpression dynamicExpression = TargetCache<IDynamicExpression>.GetOrAdd(expression, () =>
             {
@@ -193,7 +201,7 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
             });
 
             // Return evaluated expression
-            yield return lastValue with
+            yield return sourceValue with
             {
                 Value = Convert.ToDouble(dynamicExpression.Evaluate()),
                 Target = $"{string.Join("; ", targets.Take(4))}{(targets.Count > 4 ? "; ..." : "")}"
@@ -289,7 +297,7 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
     }
 
     /// <inheritdoc />
-    public class ComputeDataSourceValue : Evaluate<DataSourceValue>
+    public class ComputeMeasurementValue : Evaluate<MeasurementValue>
     {
     }
 

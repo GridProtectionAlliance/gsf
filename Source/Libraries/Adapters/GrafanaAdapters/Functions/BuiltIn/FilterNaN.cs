@@ -1,5 +1,5 @@
-﻿using GrafanaAdapters.DataSources;
-using GrafanaAdapters.DataSources.BuiltIn;
+﻿using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -17,7 +17,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Variants: FilterNaN<br/>
 /// Execution: Deferred enumeration.
 /// </remarks> 
-public abstract class FilterNaN<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValue<T>
+public abstract class FilterNaN<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {
     /// <inheritdoc />
     public override string Name => nameof(FilterNaN<T>);
@@ -52,7 +52,7 @@ public abstract class FilterNaN<T> : GrafanaFunctionBase<T> where T : struct, ID
     }
 
     /// <inheritdoc />
-    public class ComputeDataSourceValue : FilterNaN<DataSourceValue>
+    public class ComputeMeasurementValue : FilterNaN<MeasurementValue>
     {
     }
 

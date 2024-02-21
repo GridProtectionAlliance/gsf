@@ -21,7 +21,7 @@
 //
 //******************************************************************************************************
 
-using GrafanaAdapters.DataSources;
+using GrafanaAdapters.DataSourceValueTypes;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -33,7 +33,7 @@ namespace GrafanaAdapters.Functions;
 /// <summary>
 /// Represents the base functionality for any Grafana function.
 /// </summary>
-public abstract class GrafanaFunctionBase<T> : IGrafanaFunction<T> where T : struct, IDataSourceValue<T>
+public abstract class GrafanaFunctionBase<T> : IGrafanaFunction<T> where T : struct, IDataSourceValueType<T>
 {
     private int? m_requiredParameterCount;
     private int? m_optionalParameterCount;
@@ -106,7 +106,7 @@ public abstract class GrafanaFunctionBase<T> : IGrafanaFunction<T> where T : str
     }
 
     /// <inheritdoc />
-    public int DataTypeIndex => DataSourceValueCache<T>.DataTypeIndex;
+    public int DataTypeIndex => DataSourceValueTypeCache<T>.DataTypeIndex;
 
     /// <inheritdoc />
     public abstract IAsyncEnumerable<T> ComputeAsync(Parameters parameters, CancellationToken cancellationToken);
@@ -142,10 +142,10 @@ public abstract class GrafanaFunctionBase<T> : IGrafanaFunction<T> where T : str
     /// <param name="parameters">Input parameters.</param>
     /// <returns>Deferred enumeration of computed values.</returns>
     /// <remarks>
-    /// This method uses the <see cref="IDataSourceValue{T}.TransposeCompute"/> method to execute the specified
+    /// This method uses the <see cref="IDataSourceValueType{T}.TransposeCompute"/> method to execute the specified
     /// function against each data source value in the provided enumeration operating on all the values in the
-    /// in the target data source value type. For example, if the target data source value type is a phasor,
-    /// this method will execute the function against both the magnitude and angle of each phasor value.
+    /// target data source value type. For example, if the target data source value type is a phasor, this method
+    /// will execute the function against both the magnitude and angle of each phasor value.
     /// </remarks>
     protected virtual IAsyncEnumerable<T> ExecuteFunction(Func<double, double> function, Parameters parameters)
     {

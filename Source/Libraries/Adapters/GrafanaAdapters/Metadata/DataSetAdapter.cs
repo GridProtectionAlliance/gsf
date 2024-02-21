@@ -21,61 +21,60 @@
 //
 //******************************************************************************************************
 
-using GrafanaAdapters.DataSources;
+using GrafanaAdapters.DataSourceValueTypes;
 using System.Data;
 
-namespace GrafanaAdapters.Metadata
+namespace GrafanaAdapters.Metadata;
+
+/// <summary>
+/// Represents an adapter that holds the Grafana data source's metadata
+/// and is used to augment data source on demand.
+/// </summary>
+public class DataSetAdapter
 {
-    /// <summary>
-    /// Represents an adapter that holds the Grafana data source's metadata
-    /// and is used to augment data source on demand.
-    /// </summary>
-    public class DataSetAdapter
+    private readonly DataSet m_metadata;
+
+    private DataSetAdapter(DataSet metadata)
     {
-        private readonly DataSet m_metadata;
+        m_metadata = metadata;
+    }
 
-        private DataSetAdapter(DataSet metadata)
-        {
-            m_metadata = metadata;
-        }
+    /// <summary>
+    /// Gets the Grafana data source metadata, augmented as needed for the target data
+    /// source value type <typeparamref name="T"/>.
+    /// </summary>
+    /// <typeparam name="T">Data source value type for metadata augmentation.</typeparam>
+    /// <returns>
+    /// Grafana data source metadata, augmented as needed for the target data source
+    /// value type <typeparamref name="T"/>.
+    /// </returns>
+    public DataSet GetAugmentedDataSet<T>() where T : struct, IDataSourceValueType<T>
+    {
+        return GetAugmentedDataSet(default(T));
+    }
 
-        /// <summary>
-        /// Gets the Grafana data source metadata, augmented as needed for the target data
-        /// source value type <typeparamref name="T"/>.
-        /// </summary>
-        /// <typeparam name="T">Data source value type for metadata augmentation.</typeparam>
-        /// <returns>
-        /// Grafana data source metadata, augmented as needed for the target data source
-        /// value type <typeparamref name="T"/>.
-        /// </returns>
-        public DataSet GetAugmentedDataSet<T>() where T : struct, IDataSourceValue<T>
-        {
-            return GetAugmentedDataSet(default(T));
-        }
+    /// <summary>
+    /// Gets the Grafana data source metadata, augmented as needed for the target data
+    /// source value type instance <paramref name="value"/>.
+    /// </summary>
+    /// <param name="value">Instance of data source value type to use for metadata augmentation.</param>
+    /// <returns>
+    /// Grafana data source metadata, augmented as needed for the target data source
+    /// </returns>
+    public DataSet GetAugmentedDataSet(IDataSourceValueType value)
+    {
+        // Handle metadata augmentation for the target data source value type
+        value.AugmentMetadata?.Invoke(m_metadata);
 
-        /// <summary>
-        /// Gets the Grafana data source metadata, augmented as needed for the target data
-        /// source value type instance <paramref name="value"/>.
-        /// </summary>
-        /// <param name="value">Instance of data source value type to use for metadata augmentation.</param>
-        /// <returns>
-        /// Grafana data source metadata, augmented as needed for the target data source
-        /// </returns>
-        public DataSet GetAugmentedDataSet(IDataSourceValue value)
-        {
-            // Handle metadata augmentation for the target data source value type
-            value.AugmentMetadata?.Invoke(m_metadata);
+        return m_metadata;
+    }
 
-            return m_metadata;
-        }
-
-        /// <summary>
-        /// Implicitly converts a <see cref="DataSet"/> to a <see cref="DataSetAdapter"/>.
-        /// </summary>
-        /// <param name="source">Source <see cref="DataSet"/> to convert.</param>
-        public static implicit operator DataSetAdapter(DataSet source)
-        {
-            return new DataSetAdapter(source);
-        }
+    /// <summary>
+    /// Implicitly converts a <see cref="DataSet"/> to a <see cref="DataSetAdapter"/>.
+    /// </summary>
+    /// <param name="source">Source <see cref="DataSet"/> to convert.</param>
+    public static implicit operator DataSetAdapter(DataSet source)
+    {
+        return new DataSetAdapter(source);
     }
 }

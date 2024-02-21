@@ -21,7 +21,7 @@
 //
 //******************************************************************************************************
 
-using GrafanaAdapters.DataSources;
+using GrafanaAdapters.DataSourceValueTypes;
 
 namespace GrafanaAdapters.Functions;
 
@@ -29,7 +29,7 @@ namespace GrafanaAdapters.Functions;
 /// Represents a parsed Grafana function.
 /// </summary>
 /// <typeparam name="T">Data source value type.</typeparam>
-public class ParsedGrafanaFunction<T> where T : struct, IDataSourceValue<T>
+public class ParsedGrafanaFunction<T> where T : struct, IDataSourceValueType<T>
 {
     /// <summary>
     /// Parsed Grafana function.
