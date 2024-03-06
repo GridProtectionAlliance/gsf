@@ -499,8 +499,8 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
     /// specified range and loading from the log is slower than accessing the cache, so it is recommended
     /// to query at intervals more frequent than one minute to keep the cache active.
     /// </remarks>
-    [AdapterCommand("Gets a filtered list of status messages.", "Administrator", "Editor", "Viewer")]
-    public string GetFilteredStatusMessages(StringMatchingMode matchMode, string filter, bool caseSensitive, double range, string newLine)
+    [AdapterCommand("Gets a filtered list of status messages. StringMatchingMode is one of: 'Exact', 'StartsWith', 'EndsWith', 'Contains', or 'Regex'", "Administrator", "Editor", "Viewer")]
+    public string GetFilteredStatusMessages(StringMatchingMode matchMode, string filter, bool caseSensitive = false, double range = 15.0D, string newLine = "")
     {
         if (range <= 0.0D)
             throw new ArgumentOutOfRangeException(nameof(range), "Range must be greater than zero minutes.");
@@ -759,23 +759,30 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
 
     private void CheckForExpiredCacheValues()
     {
-        DateTime expireTime = DateTime.UtcNow.AddMinutes(-1);
-
-        foreach (KeyValuePair<MeasurementKey, (DateTime lastQueryTime, double value)> kvp in m_currentValueStateCache)
+        try
         {
-            if (kvp.Value.lastQueryTime >= expireTime)
-                continue;
+            DateTime expireTime = DateTime.UtcNow.AddMinutes(-1);
 
-            if (m_currentValueStateCache.TryRemove(kvp.Key, out _))
-                ServiceHostBase.RemoveCachedValue(kvp.Key);
+            foreach (KeyValuePair<MeasurementKey, (DateTime lastQueryTime, double value)> kvp in m_currentValueStateCache)
+            {
+                if (kvp.Value.lastQueryTime >= expireTime)
+                    continue;
+
+                if (m_currentValueStateCache.TryRemove(kvp.Key, out _))
+                    ServiceHostBase.RemoveCachedValue(kvp.Key);
+            }
+
+            lock (typeof(ServiceHostBase))
+            {
+                if (m_currentValueStateCache.Count > 0)
+                    m_checkForExpiredCacheValuesCancellationToken = new Action(CheckForExpiredCacheValues).DelayAndExecute(60000);
+                else
+                    DetachFromServiceHostBaseSubscribedMeasurementEvents();
+            }
         }
-
-        lock (typeof(ServiceHostBase))
+        catch (Exception ex)
         {
-            if (m_currentValueStateCache.Count > 0)
-                m_checkForExpiredCacheValuesCancellationToken = new Action(CheckForExpiredCacheValues).DelayAndExecute(60000);
-            else
-                DetachFromServiceHostBaseSubscribedMeasurementEvents();
+            Logger.SwallowException(ex, "Expired cache value check exception");
         }
     }
 
