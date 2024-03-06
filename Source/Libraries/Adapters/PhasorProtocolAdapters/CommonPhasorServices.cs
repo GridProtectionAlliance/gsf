@@ -486,9 +486,9 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
     /// 'Exact', 'StartsWith', 'EndsWith', 'Contains', or 'Regex'.
     /// </param>
     /// <param name="filter">Filter to apply to status messages, if any.</param>
+    /// <param name="caseSensitive">Determines if matching should be case-sensitive.</param>
     /// <param name="range">Time range, in minutes, to track filtered status messages.</param>
     /// <param name="newLine">New line delimiter to use for filtered status messages.</param>
-    /// <param name="caseSensitive">Determines if matching should be case-sensitive.</param>
     /// <returns>Filtered list of status messages.</returns>
     /// <remarks>
     /// Initial call will load status messages from the log and cache them for the specified range. Cached
