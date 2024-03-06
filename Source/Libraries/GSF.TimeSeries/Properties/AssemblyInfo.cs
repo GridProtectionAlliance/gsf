@@ -35,6 +35,10 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCopyright("Copyright © GPA, 2013.  All Rights Reserved.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
+
+// Open to PhasorProtocolAdapters for internal access to ServiceHostBase.StatusMessage.
+[assembly: InternalsVisibleTo("PhasorProtocolAdapters")]
+
 // Open internals for unit tests.
 [assembly: InternalsVisibleTo("GSF.Core.Tests")]
 [assembly: InternalsVisibleTo("GSF.TestsSuite")]
