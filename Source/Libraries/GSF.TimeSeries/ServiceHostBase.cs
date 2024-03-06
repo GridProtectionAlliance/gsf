@@ -2009,11 +2009,11 @@ namespace GSF.TimeSeries
                             // Make sure method is marked as invokable (i.e., AdapterCommandAttribute exists on method)
                             if (method.TryGetAttribute(out AdapterCommandAttribute commandAttribute) && (!m_serviceHelper.SecureRemoteInteractions || commandAttribute.AllowedRoles.Any(role => requestInfo.Sender.ClientUser.IsInRole(role))))
                             {
-                                ParameterInfo[] parameterInfo = method.GetParameters();
+                                ParameterInfo[] parameters = method.GetParameters();
                                 object returnValue = null;
                                 bool success = true;
 
-                                if (parameterInfo.Length == 0)
+                                if (parameters.Length == 0)
                                 {
                                     // Invoke parameterless adapter command
                                     returnValue = method.Invoke(adapter, null);
@@ -2022,24 +2022,57 @@ namespace GSF.TimeSeries
                                 {
                                     int argCount = requestInfo.Request.Arguments.Count - 2;
                                     int attachmentCount = requestInfo.Request.Attachments.Count;
+                                    int expectedParameterCount = parameters.Length - parameters.Count(p => p.HasDefaultValue);
 
                                     // Create typed parameters for method and invoke
-                                    if (argCount + attachmentCount >= parameterInfo.Length)
+                                    if (argCount + attachmentCount >= expectedParameterCount)
                                     {
+                                        static object convertToType(string value, Type type)
+                                        {
+                                            if (string.IsNullOrEmpty(value))
+                                                return null;
+
+                                            if (type == typeof(bool))
+                                                return value.ParseBoolean();
+
+                                            // This handle objects that have type converters (e.g., Enum, Color, Point, etc.)
+                                            TypeConverter converter = TypeDescriptor.GetConverter(type);
+
+                                            return converter.ConvertFromString(null!, CultureInfo.InvariantCulture, value);
+                                        }
+
                                         // Attempt to convert command parameters to the method parameter types
-                                        object[] parameters = requestInfo.Request.Arguments.Skip(2)
-                                            .Select((arg, i) => arg.Value.ConvertToType(parameterInfo[i].ParameterType))
+                                        object[] providedArgs = requestInfo.Request.Arguments.Skip(2)
+                                            .Select((arg, i) => convertToType(arg.Value, parameters[i].ParameterType))
                                             .Concat(requestInfo.Request.Attachments)
-                                            .Take(parameterInfo.Length)
                                             .ToArray();
 
+                                        object[] args = new object[parameters.Length];
+
+                                        for (int i = 0; i < args.Length; i++)
+                                        {
+                                            if (i < providedArgs.Length)
+                                            {
+                                                args[i] = providedArgs[i];
+                                            }
+                                            else if (parameters[i].HasDefaultValue)
+                                            {
+                                                args[i] = parameters[i].DefaultValue;
+                                            }
+                                            else
+                                            {
+                                                SendResponse(requestInfo, false, "Parameter count mismatch, \"{0}\" command expects at least {1} parameters.", command, expectedParameterCount);
+                                                return;
+                                            }
+                                        }
+
                                         // Invoke adapter command with specified parameters
-                                        returnValue = method.Invoke(adapter, parameters);
+                                        returnValue = method.Invoke(adapter, args);
                                     }
                                     else
                                     {
                                         success = false;
-                                        SendResponse(requestInfo, false, "Parameter count mismatch, \"{0}\" command expects {1} parameters.", command, parameterInfo.Length);
+                                        SendResponse(requestInfo, false, "Parameter count mismatch, \"{0}\" command expects at least {1} parameters.", command, expectedParameterCount);
                                     }
                                 }
 
@@ -2062,6 +2095,11 @@ namespace GSF.TimeSeries
                         {
                             SendResponse(requestInfo, false, "Specified command \"{0}\" does not exist for adapter \"{1}\" [Type = {2}].", command, adapter.Name, adapter.GetType().Name);
                         }
+                    }
+                    catch (TargetInvocationException ex)
+                    {
+                        SendResponse(requestInfo, false, "Failed to invoke command: {0}", ex.InnerException?.Message ?? ex.Message);
+                        LogException(ex);
                     }
                     catch (Exception ex)
                     {
@@ -2165,15 +2203,29 @@ namespace GSF.TimeSeries
                             if (!firstParameter)
                                 methodList.Append(", ");
 
-                            string typeName = parameter.ParameterType.ToString();
-
-                            // Assume namespace for basic System types...
-                            if (typeName.StartsWith("System.", StringComparison.OrdinalIgnoreCase) && typeName.CharCount('.') == 1)
-                                typeName = typeName.Substring(7);
-
-                            methodList.Append(typeName);
+                            methodList.Append(parameter.ParameterType.GetReflectedTypeName(false));
                             methodList.Append(' ');
                             methodList.Append(parameter.Name);
+
+                            if (parameter.HasDefaultValue)
+                            {
+                                methodList.Append(" = ");
+
+                                switch (parameter.DefaultValue)
+                                {
+                                    case null:
+                                        methodList.Append("null");
+                                        break;
+                                    case string:
+                                        methodList.Append('\'');
+                                        methodList.Append(parameter.DefaultValue.ToNonNullString());
+                                        methodList.Append('\'');
+                                        break;
+                                    default:
+                                        methodList.Append(parameter.DefaultValue.ToNonNullString());
+                                        break;
+                                }
+                            }
 
                             firstParameter = false;
                         }
