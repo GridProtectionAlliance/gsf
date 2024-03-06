@@ -253,7 +253,7 @@ namespace PhasorProtocolAdapters.IeeeC37_118
         /// a collection of measurements at a given timestamp. The <c>CreateNewFrame</c> method allows consumers to create
         /// their own <see cref="IFrame"/> implementations, in our case this will be an IEEE C37.118 data frame.
         /// </remarks>
-        protected override IFrame CreateNewFrame(Ticks timestamp)
+        protected internal override IFrame CreateNewFrame(Ticks timestamp)
         {
             // We create a new IEEE C37.118 data frame based on current configuration frame
             DataFrame dataFrame = CreateDataFrame(timestamp, m_configurationFrame2);

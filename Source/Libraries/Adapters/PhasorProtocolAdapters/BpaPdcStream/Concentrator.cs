@@ -200,7 +200,7 @@ namespace PhasorProtocolAdapters.BpaPdcStream
         /// a collection of measurements at a given timestamp. The <c>CreateNewFrame</c> method allows consumers to create
         /// their own <see cref="IFrame"/> implementations, in our case this will be a BPA PDCstream data frame.
         /// </remarks>
-        protected override IFrame CreateNewFrame(Ticks timestamp) => 
+        protected internal override IFrame CreateNewFrame(Ticks timestamp) => 
             CreateDataFrame(timestamp, m_configurationFrame);
 
         #endregion

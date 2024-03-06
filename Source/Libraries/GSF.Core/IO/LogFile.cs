@@ -37,6 +37,7 @@
 //       Modified Header.
 //
 //******************************************************************************************************
+// ReSharper disable MustUseReturnValue
 
 using System;
 using System.Collections.Generic;
@@ -171,18 +172,13 @@ namespace GSF.IO
         // Fields
         private string m_fileName;
         private int m_fileSize;
-        private LogFileFullOperation m_fileFullOperation;
-        private bool m_persistSettings;
-        private string m_settingsCategory;
         private FileStream m_fileStream;
         private readonly object m_fileStreamLock;
         private ManualResetEvent m_operationWaitHandle;
         private ProcessQueue<string> m_logEntryQueue;
         private Timer m_flushTimer;
         private Encoding m_textEncoding;
-        private bool m_disposed;
         private bool m_initialized;
-        private double m_logFilesDuration;
         private double m_flushTimerInterval;
         private readonly Dictionary<DateTime, string> m_savedFilesWithTime;
 
@@ -197,27 +193,20 @@ namespace GSF.IO
         {
             m_fileName = DefaultFileName;
             m_fileSize = DefaultFileSize;
-            m_fileFullOperation = DefaultFileFullOperation;
-            m_logFilesDuration = DefaultLogFilesDuration;
-            m_persistSettings = DefaultPersistSettings;
-            m_settingsCategory = DefaultSettingsCategory;
+            FileFullOperation = DefaultFileFullOperation;
+            LogFilesDuration = DefaultLogFilesDuration;
+            PersistSettings = DefaultPersistSettings;
+            Name = DefaultSettingsCategory;
             m_textEncoding = Encoding.Default;
             m_operationWaitHandle = new ManualResetEvent(true);
             m_savedFilesWithTime = new Dictionary<DateTime, string>();
             m_logEntryQueue = ProcessQueue<string>.CreateRealTimeQueue(WriteLogEntries);
-            if (OptimizationOptions.PreferDedicatedThreads)
-            {
-                m_logEntryQueue.SynchronizedOperationType = SynchronizedOperationType.DedicatedForeground;
-            }
-            else
-            {
-                m_logEntryQueue.SynchronizedOperationType = SynchronizedOperationType.Long;
-            }
+            m_logEntryQueue.SynchronizedOperationType = OptimizationOptions.PreferDedicatedThreads ? SynchronizedOperationType.DedicatedForeground : SynchronizedOperationType.Long;
             m_flushTimer = new Timer();
             m_flushTimerInterval = 10.0D;
             m_fileStreamLock = new object();
 
-            this.FileFull += LogFile_FileFull;
+            FileFull += LogFile_FileFull;
             m_logEntryQueue.ProcessException += ProcessExceptionHandler;
             m_flushTimer.Elapsed += FlushTimer_Elapsed;
             m_flushTimer.AutoReset = false;
@@ -230,8 +219,7 @@ namespace GSF.IO
         public LogFile(IContainer container)
             : this()
         {
-            if ((object)container != null)
-                container.Add(this);
+            container?.Add(this);
         }
 
         #endregion
@@ -242,15 +230,12 @@ namespace GSF.IO
         /// Gets or sets the name of the <see cref="LogFile"/>, including the file extension.
         /// </summary>
         /// <exception cref="ArgumentNullException">The value being assigned is null or empty string.</exception>
-        [Category("Settings"),
-        DefaultValue(DefaultFileName),
-        Description("Name of the LogFile, including the file extension.")]
+        [Category("Settings")]
+        [DefaultValue(DefaultFileName)]
+        [Description("Name of the LogFile, including the file extension.")]
         public string FileName
         {
-            get
-            {
-                return m_fileName;
-            }
+            get => m_fileName;
             set
             {
                 if (string.IsNullOrEmpty(value))
@@ -265,19 +250,16 @@ namespace GSF.IO
         /// Gets or sets the size of the <see cref="LogFile"/> in MB.
         /// </summary>
         ///<exception cref="ArgumentOutOfRangeException">The value being assigned outside the <see cref="MinFileSize"/> and <see cref="MaxFileSize"/> range.</exception>
-        [Category("Settings"),
-        DefaultValue(DefaultFileSize),
-        Description("Size of the LogFile in MB.")]
+        [Category("Settings")]
+        [DefaultValue(DefaultFileSize)]
+        [Description("Size of the LogFile in MB.")]
         public int FileSize
         {
-            get
-            {
-                return m_fileSize;
-            }
+            get => m_fileSize;
             set
             {
-                if (value < MinFileSize || value > MaxFileSize)
-                    throw new ArgumentOutOfRangeException(nameof(value), string.Format("Value must be between {0} and {1}", MinFileSize, MaxFileSize));
+                if (value is < MinFileSize or > MaxFileSize)
+                    throw new ArgumentOutOfRangeException(nameof(value), $"Value must be between {MinFileSize} and {MaxFileSize}");
 
                 m_fileSize = value;
             }
@@ -286,51 +268,28 @@ namespace GSF.IO
         /// <summary>
         /// Gets or sets the type of operation to be performed when the <see cref="LogFile"/> is full.
         /// </summary>
-        [Category("Behavior"),
-        DefaultValue(DefaultFileFullOperation),
-        Description("Type of operation to be performed when the LogFile is full.")]
-        public LogFileFullOperation FileFullOperation
-        {
-            get
-            {
-                return m_fileFullOperation;
-            }
-            set
-            {
-                m_fileFullOperation = value;
-            }
-        }
+        [Category("Behavior")]
+        [DefaultValue(DefaultFileFullOperation)]
+        [Description("Type of operation to be performed when the LogFile is full.")]
+        public LogFileFullOperation FileFullOperation { get; set; }
 
         /// <summary>
         /// Gets or sets the time duration, in hours, to save the <see cref="LogFile"/> .
         /// </summary>
-        [Category("Behavior"),
-        DefaultValue(DefaultLogFilesDuration),
-        Description("Time duration in hours to save the log files.")]
-        public double LogFilesDuration
-        {
-            get
-            {
-                return m_logFilesDuration;
-            }
-            set
-            {
-                m_logFilesDuration = value;
-            }
-        }
+        [Category("Behavior")]
+        [DefaultValue(DefaultLogFilesDuration)]
+        [Description("Time duration in hours to save the log files.")]
+        public double LogFilesDuration { get; set; }
 
         /// <summary>
         /// Gets or sets the number of seconds of inactivity before the <see cref="LogFile"/> automatically flushes the file stream.
         /// </summary>
-        [Category("Behavior"),
-        DefaultValue(DefaultFlushTimerInterval),
-        Description("Number of seconds of inactivity before the log file automatically flushes the file stream.")]
+        [Category("Behavior")]
+        [DefaultValue(DefaultFlushTimerInterval)]
+        [Description("Number of seconds of inactivity before the log file automatically flushes the file stream.")]
         public double FlushTimerInterval
         {
-            get
-            {
-                return m_flushTimerInterval;
-            }
+            get => m_flushTimerInterval;
             set
             {
                 m_flushTimerInterval = value;
@@ -344,75 +303,50 @@ namespace GSF.IO
         /// Gets or sets a boolean value that indicates whether the settings of <see cref="LogFile"/> object are 
         /// to be saved to the config file.
         /// </summary>
-        [Category("Persistence"),
-        DefaultValue(DefaultPersistSettings),
-        Description("Indicates whether the settings of LogFile object are to be saved to the config file.")]
-        public bool PersistSettings
-        {
-            get
-            {
-                return m_persistSettings;
-            }
-            set
-            {
-                m_persistSettings = value;
-            }
-        }
+        [Category("Persistence")]
+        [DefaultValue(DefaultPersistSettings)]
+        [Description("Indicates whether the settings of LogFile object are to be saved to the config file.")]
+        public bool PersistSettings { get; set; }
 
         /// <summary>
         /// Gets or sets the category under which the settings of <see cref="LogFile"/> object are to be saved
         /// to the config file if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
         /// <exception cref="ArgumentNullException">The value being assigned is null or empty string.</exception>
-        [Category("Persistence"),
-        DefaultValue(DefaultSettingsCategory),
-        Description("Category under which the settings of LogFile object are to be saved to the config file if the PersistSettings property is set to true.")]
+        [Category("Persistence")]
+        [DefaultValue(DefaultSettingsCategory)]
+        [Description("Category under which the settings of LogFile object are to be saved to the config file if the PersistSettings property is set to true.")]
         public string SettingsCategory
         {
-            get
-            {
-                return m_settingsCategory;
-            }
+            get => Name;
             set
             {
                 if (string.IsNullOrEmpty(value))
                     throw new ArgumentNullException(nameof(value));
 
-                m_settingsCategory = value;
+                Name = value;
             }
         }
 
         /// <summary>
         /// Gets or sets the <see cref="Encoding"/> to be used to encode the messages being logged.
         /// </summary>
-        [Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public virtual Encoding TextEncoding
         {
-            get
-            {
-                return m_textEncoding;
-            }
-            set
-            {
-                if ((object)value == null)
-                    m_textEncoding = Encoding.Default;
-                else
-                    m_textEncoding = value;
-            }
+            get => m_textEncoding;
+            set => m_textEncoding = value ?? Encoding.Default;
         }
 
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the <see cref="LogFile"/> object is currently enabled.
         /// </summary>
-        [Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool Enabled
         {
-            get
-            {
-                return IsOpen;
-            }
+            get => IsOpen;
             set
             {
                 if (value && !Enabled)
@@ -425,39 +359,21 @@ namespace GSF.IO
         /// <summary>
         /// Gets a flag that indicates whether the object has been disposed.
         /// </summary>
-        [Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public bool IsDisposed
-        {
-            get
-            {
-                return m_disposed;
-            }
-        }
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public bool IsDisposed { get; private set; }
 
         /// <summary>
         /// Gets a boolean value that indicates whether the <see cref="LogFile"/> is open.
         /// </summary>
         [Browsable(false)]
-        public bool IsOpen
-        {
-            get
-            {
-                return ((object)m_fileStream != null);
-            }
-        }
+        public bool IsOpen => m_fileStream is not null;
 
         /// <summary>
         /// Gets the unique identifier of the <see cref="LogFile"/> object.
         /// </summary>
         [Browsable(false)]
-        public string Name
-        {
-            get
-            {
-                return m_settingsCategory;
-            }
-        }
+        public string Name { get; private set; }
 
         /// <summary>
         /// Gets the descriptive status of the <see cref="LogFile"/> object.
@@ -467,20 +383,20 @@ namespace GSF.IO
         {
             get
             {
-                StringBuilder status = new StringBuilder();
+                StringBuilder status = new();
 
                 status.Append("     Configuration section: ");
-                status.Append(m_settingsCategory);
+                status.Append(Name);
                 status.AppendLine();
                 status.Append("       Maximum export size: ");
                 status.Append(m_fileSize.ToString());
                 status.Append(" MB");
                 status.AppendLine();
                 status.Append("       File full operation: ");
-                status.Append(m_fileFullOperation);
+                status.Append(FileFullOperation);
                 status.AppendLine();
 
-                if ((object)m_logEntryQueue != null)
+                if (m_logEntryQueue is not null)
                     status.Append(m_logEntryQueue.Status);
 
                 return status.ToString();
@@ -500,11 +416,11 @@ namespace GSF.IO
         /// </remarks>
         public void Initialize()
         {
-            if (!m_initialized)
-            {
-                LoadSettings();         // Load settings from the config file.
-                m_initialized = true;   // Initialize only once.
-            }
+            if (m_initialized)
+                return;
+
+            LoadSettings();         // Load settings from the config file.
+            m_initialized = true;   // Initialize only once.
         }
 
         /// <summary>
@@ -517,17 +433,17 @@ namespace GSF.IO
         [EditorBrowsable(EditorBrowsableState.Never)]
         public void BeginInit()
         {
-            if (!DesignMode)
-            {
-                try
-                {
-                    // Nothing needs to be done before component is initialized.
-                }
-                catch (Exception)
-                {
-                    // Prevent the IDE from crashing when component is in design mode.
-                }
-            }
+            //if (DesignMode)
+            //    return;
+
+            //try
+            //{
+            //    // Nothing needs to be done before component is initialized.
+            //}
+            //catch (Exception)
+            //{
+            //    // Prevent the IDE from crashing when component is in design mode.
+            //}
         }
 
         /// <summary>
@@ -540,16 +456,16 @@ namespace GSF.IO
         [EditorBrowsable(EditorBrowsableState.Never)]
         public void EndInit()
         {
-            if (!DesignMode)
+            if (DesignMode)
+                return;
+
+            try
             {
-                try
-                {
-                    Initialize();
-                }
-                catch (Exception)
-                {
-                    // Prevent the IDE from crashing when component is in design mode.
-                }
+                Initialize();
+            }
+            catch (Exception)
+            {
+                // Prevent the IDE from crashing when component is in design mode.
             }
         }
 
@@ -560,22 +476,24 @@ namespace GSF.IO
         /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public void SaveSettings()
         {
-            if (m_persistSettings)
-            {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
+            if (!PersistSettings)
+                return;
 
-                // Save settings under the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings["FileName", true].Update(m_fileName);
-                settings["FileSize", true].Update(m_fileSize);
-                settings["FileFullOperation", true].Update(m_fileFullOperation);
-                settings["LogFilesDuration", true].Update(m_logFilesDuration);
-                settings["FlushTimerInterval", true].Update(m_flushTimerInterval);
-                config.Save();
-            }
+            // Ensure that settings category is specified.
+            if (string.IsNullOrEmpty(Name))
+                throw new ConfigurationErrorsException("SettingsCategory property has not been set");
+
+            // Save settings under the specified category.
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[Name];
+            
+            settings["FileName", true].Update(m_fileName);
+            settings["FileSize", true].Update(m_fileSize);
+            settings["FileFullOperation", true].Update(FileFullOperation);
+            settings["LogFilesDuration", true].Update(LogFilesDuration);
+            settings["FlushTimerInterval", true].Update(m_flushTimerInterval);
+            
+            config.Save();
         }
 
         /// <summary>
@@ -585,26 +503,28 @@ namespace GSF.IO
         /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public void LoadSettings()
         {
-            if (m_persistSettings)
-            {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
+            if (!PersistSettings)
+                return;
 
-                // Load settings from the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings.Add("FileName", m_fileName, "Name of the log file including its path.");
-                settings.Add("FileSize", m_fileSize, "Maximum size of the log file in MB.");
-                settings.Add("FileFullOperation", m_fileFullOperation, "Operation (Truncate; Rollover) that is to be performed on the file when it is full.");
-                settings.Add("LogFilesDuration", m_logFilesDuration, "Time duration in hours to save the log files,files older than this duration are purged automatically");
-                settings.Add("FlushTimerInterval", m_flushTimerInterval, "Number of seconds of inactivity before the log file automatically flushes the file stream.");
-                FileName = settings["FileName"].ValueAs(m_fileName);
-                FileSize = settings["FileSize"].ValueAs(m_fileSize);
-                FileFullOperation = settings["FileFullOperation"].ValueAs(m_fileFullOperation);
-                LogFilesDuration = settings["LogFilesDuration"].ValueAs(m_logFilesDuration);
-                FlushTimerInterval = settings["FlushTimerInterval"].ValueAs(m_flushTimerInterval);
-            }
+            // Ensure that settings category is specified.
+            if (string.IsNullOrEmpty(Name))
+                throw new ConfigurationErrorsException("SettingsCategory property has not been set");
+
+            // Load settings from the specified category.
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[Name];
+            
+            settings.Add("FileName", m_fileName, "Name of the log file including its path.");
+            settings.Add("FileSize", m_fileSize, "Maximum size of the log file in MB.");
+            settings.Add("FileFullOperation", FileFullOperation, "Operation (Truncate; Rollover) that is to be performed on the file when it is full.");
+            settings.Add("LogFilesDuration", LogFilesDuration, "Time duration in hours to save the log files,files older than this duration are purged automatically");
+            settings.Add("FlushTimerInterval", m_flushTimerInterval, "Number of seconds of inactivity before the log file automatically flushes the file stream.");
+            
+            FileName = settings["FileName"].ValueAs(m_fileName);
+            FileSize = settings["FileSize"].ValueAs(m_fileSize);
+            FileFullOperation = settings["FileFullOperation"].ValueAs(FileFullOperation);
+            LogFilesDuration = settings["LogFilesDuration"].ValueAs(LogFilesDuration);
+            FlushTimerInterval = settings["FlushTimerInterval"].ValueAs(m_flushTimerInterval);
         }
 
         /// <summary>
@@ -612,32 +532,32 @@ namespace GSF.IO
         /// </summary>
         public void Open()
         {
-            if (!IsOpen)
-            {
-                // Initialize if uninitialized.
-                Initialize();
+            if (IsOpen)
+                return;
 
-                // Get the absolute file path if a relative path is specified.
-                m_fileName = FilePath.GetAbsolutePath(m_fileName);
+            // Initialize if uninitialized.
+            Initialize();
 
-                // Create the folder in which the log file will reside it, if it does not exist.
-                if (!Directory.Exists(FilePath.GetDirectoryName(m_fileName)))
-                    Directory.CreateDirectory(FilePath.GetDirectoryName(m_fileName));
+            // Get the absolute file path if a relative path is specified.
+            m_fileName = FilePath.GetAbsolutePath(m_fileName);
 
-                // Open the log file (if it exists) or creates it (if it does not exist).
-                m_fileStream = new FileStream(m_fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
+            // Create the folder in which the log file will reside it, if it does not exist.
+            if (!Directory.Exists(FilePath.GetDirectoryName(m_fileName)))
+                Directory.CreateDirectory(FilePath.GetDirectoryName(m_fileName));
 
-                // Scrolls to the end of the file so that existing data is not overwritten.
-                m_fileStream.Seek(0, SeekOrigin.End);
+            // Open the log file (if it exists) or creates it (if it does not exist).
+            m_fileStream = new FileStream(m_fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
 
-                // If this is a new log file, set its creation date to current date. This is done to prevent historic
-                // log files (when FileFullOperation = Rollover) from having the same start time in their filename.
-                if (m_fileStream.Length == 0)
-                    (new FileInfo(m_fileName)).CreationTime = DateTime.Now;
+            // Scrolls to the end of the file so that existing data is not overwritten.
+            m_fileStream.Seek(0, SeekOrigin.End);
 
-                // Start the queue to which log entries are going to be added.
-                m_logEntryQueue.Start();
-            }
+            // If this is a new log file, set its creation date to current date. This is done to prevent historic
+            // log files (when FileFullOperation = Rollover) from having the same start time in their filename.
+            if (m_fileStream.Length == 0)
+                new FileInfo(m_fileName).CreationTime = DateTime.Now;
+
+            // Start the queue to which log entries are going to be added.
+            m_logEntryQueue.Start();
         }
 
         /// <summary>
@@ -657,20 +577,20 @@ namespace GSF.IO
         /// <param name="flushQueuedEntries">true, if queued log entries are to be written to the <see cref="LogFile"/>; otherwise, false.</param>
         public void Close(bool flushQueuedEntries)
         {
-            if (IsOpen)
-            {
-                if (flushQueuedEntries)
-                    Flush();                // Write all queued log entries to the file
-                else
-                    m_logEntryQueue.Stop(); // Stop processing the queued log entries
+            if (!IsOpen)
+                return;
+            
+            if (flushQueuedEntries)
+                Flush();                // Write all queued log entries to the file
+            else
+                m_logEntryQueue.Stop(); // Stop processing the queued log entries
 
-                if ((object)m_fileStream != null)
-                {
-                    // Closes the log file.
-                    m_fileStream.Close();
-                    m_fileStream = null;
-                }
-            }
+            if (m_fileStream is null)
+                return;
+            
+            // Closes the log file.
+            m_fileStream.Close();
+            m_fileStream = null;
         }
 
         /// <summary>
@@ -692,10 +612,9 @@ namespace GSF.IO
             m_operationWaitHandle.WaitOne();
 
             if (IsOpen)
-                // Queue the text for writing to the log file.
-                m_logEntryQueue.Add(text);
+                m_logEntryQueue.Add(text);  // Queue the text for writing to the log file.
             else
-                throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open", this.GetType().Name, m_fileName));
+                throw new InvalidOperationException($"{GetType().Name} \"{m_fileName}\" is not open");
         }
 
         /// <summary>
@@ -719,7 +638,7 @@ namespace GSF.IO
         /// </remarks>
         public void WriteTimestampedLine(string text)
         {
-            WriteLine(string.Format("[{0}] {1}", DateTime.Now, text));
+            WriteLine($"[{DateTime.Now}] {text}");
         }
 
         /// <summary>
@@ -731,31 +650,31 @@ namespace GSF.IO
             // Yields to the "file full operation" to complete, if in progress.
             m_operationWaitHandle.WaitOne();
 
-            if (IsOpen)
+            if (!IsOpen)
+                throw new InvalidOperationException($"{GetType().Name} \"{m_fileName}\" is not open");
+
+            byte[] buffer;
+
+            lock (m_fileStreamLock)
             {
-                byte[] buffer;
-
-                lock (m_fileStreamLock)
-                {
-                    buffer = new byte[m_fileStream.Length];
-                    m_fileStream.Seek(0, SeekOrigin.Begin);
-                    m_fileStream.Read(buffer, 0, buffer.Length);
-                }
-
-                return m_textEncoding.GetString(buffer);
+                buffer = new byte[m_fileStream.Length];
+                m_fileStream.Seek(0, SeekOrigin.Begin);
+                m_fileStream.Read(buffer, 0, buffer.Length);
             }
 
-            throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open", this.GetType().Name, m_fileName));
+            return m_textEncoding.GetString(buffer);
+
         }
 
         /// <summary>
         /// Reads text from the <see cref="LogFile"/> and returns a list of lines created by separating the text by the "newline"
         /// characters if and where present.
         /// </summary>
+        /// <param name="removeEmptyLines"><c>true</c>, if empty lines are to be removed from the list; otherwise, <c>false</c>>.</param>
         /// <returns>A list of lines from the text read from the <see cref="LogFile"/>.</returns>
-        public List<string> ReadLines()
+        public List<string> ReadLines(bool removeEmptyLines = false)
         {
-            return new List<string>(ReadText().Split(new[] { Environment.NewLine }, StringSplitOptions.None));
+            return new List<string>(ReadText().Split(new[] { Environment.NewLine }, removeEmptyLines ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None));
         }
 
         /// <summary>
@@ -763,8 +682,7 @@ namespace GSF.IO
         /// </summary>
         protected virtual void OnFileFull()
         {
-            if ((object)FileFull != null)
-                FileFull(this, EventArgs.Empty);
+            FileFull?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>
@@ -773,8 +691,7 @@ namespace GSF.IO
         /// <param name="ex"><see cref="Exception"/> to send to <see cref="LogException"/> event.</param>
         protected virtual void OnLogException(Exception ex)
         {
-            if ((object)LogException != null)
-                LogException(this, new EventArgs<Exception>(ex));
+            LogException?.Invoke(this, new EventArgs<Exception>(ex));
         }
 
         /// <summary>
@@ -783,50 +700,48 @@ namespace GSF.IO
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected override void Dispose(bool disposing)
         {
-            if (!m_disposed)
+            if (IsDisposed)
+                return;
+            
+            try
             {
-                try
+                if (!disposing)
+                    return;
+
+                SaveSettings();
+
+                FileFull -= LogFile_FileFull;
+
+                if (m_operationWaitHandle is not null)
                 {
-                    // This will be done regardless of whether the object is finalized or disposed.
-                    if (disposing)
-                    {
-                        // This will be done only when the object is disposed by calling Dispose().
-                        SaveSettings();
-
-                        this.FileFull -= LogFile_FileFull;
-
-                        if ((object)m_operationWaitHandle != null)
-                        {
-                            m_operationWaitHandle.Close();
-                            m_operationWaitHandle = null;
-                        }
-
-                        if ((object)m_flushTimer != null)
-                        {
-                            m_flushTimer.Elapsed -= FlushTimer_Elapsed;
-                            m_flushTimer.Dispose();
-                            m_flushTimer = null;
-                        }
-
-                        if ((object)m_fileStream != null)
-                        {
-                            m_fileStream.Dispose();
-                            m_fileStream = null;
-                        }
-
-                        if ((object)m_logEntryQueue != null)
-                        {
-                            m_logEntryQueue.ProcessException -= ProcessExceptionHandler;
-                            m_logEntryQueue.Dispose();
-                            m_logEntryQueue = null;
-                        }
-                    }
+                    m_operationWaitHandle.Close();
+                    m_operationWaitHandle = null;
                 }
-                finally
+
+                if (m_flushTimer is not null)
                 {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_flushTimer.Elapsed -= FlushTimer_Elapsed;
+                    m_flushTimer.Dispose();
+                    m_flushTimer = null;
                 }
+
+                if (m_fileStream is not null)
+                {
+                    m_fileStream.Dispose();
+                    m_fileStream = null;
+                }
+
+                if (m_logEntryQueue is not null)
+                {
+                    m_logEntryQueue.ProcessException -= ProcessExceptionHandler;
+                    m_logEntryQueue.Dispose();
+                    m_logEntryQueue = null;
+                }
+            }
+            finally
+            {
+                IsDisposed = true;          // Prevent duplicate dispose.
+                base.Dispose(disposing);    // Call base class Dispose().
             }
         }
 
@@ -835,20 +750,19 @@ namespace GSF.IO
         /// </summary>
         private void ReOpen()
         {
-            if (IsOpen)
-            {
-                Close();
-                Open();
-            }
+            if (!IsOpen)
+                return;
+
+            Close();
+            Open();
         }
 
         private void WriteLogEntries(string[] items)
         {
             long currentFileSize;
-            long maximumFileSize = (long)(m_fileSize * 1048576);
+            long maximumFileSize = m_fileSize * 1048576L;
 
-            if ((object)m_flushTimer != null)
-                m_flushTimer.Stop();
+            m_flushTimer?.Stop();
 
             lock (m_fileStreamLock)
             {
@@ -857,39 +771,39 @@ namespace GSF.IO
 
             for (int i = 0; i < items.Length; i++)
             {
-                if (!string.IsNullOrEmpty(items[i]))
+                if (string.IsNullOrEmpty(items[i]))
+                    continue;
+
+                // Write entries with text.
+                byte[] buffer = m_textEncoding.GetBytes(items[i]);
+
+                if (currentFileSize + buffer.Length <= maximumFileSize)
                 {
-                    // Write entries with text.
-                    byte[] buffer = m_textEncoding.GetBytes(items[i]);
-
-                    if (currentFileSize + buffer.Length <= maximumFileSize)
+                    // Writes the entry.
+                    lock (m_fileStreamLock)
                     {
-                        // Writes the entry.
-                        lock (m_fileStreamLock)
-                        {
-                            m_fileStream.Write(buffer, 0, buffer.Length);
-                        }
-
-                        currentFileSize += buffer.Length;
+                        m_fileStream.Write(buffer, 0, buffer.Length);
                     }
-                    else
+
+                    currentFileSize += buffer.Length;
+                }
+                else
+                {
+                    // Either truncates the file or rolls over to a new file because the current file is full.
+                    // Prior to acting, it re-queues the entries that have not been written to the file.
+                    for (int j = items.Length - 1; j >= i; j--)
                     {
-                        // Either truncates the file or rolls over to a new file because the current file is full.
-                        // Prior to acting, it requeues the entries that have not been written to the file.
-                        for (int j = items.Length - 1; j >= i; j--)
-                        {
-                            m_logEntryQueue.Insert(0, items[j]);
-                        }
-
-                        // Truncates file or roll over to new file.
-                        OnFileFull();
-
-                        return;
+                        m_logEntryQueue.Insert(0, items[j]);
                     }
+
+                    // Truncates file or roll over to new file.
+                    OnFileFull();
+
+                    return;
                 }
             }
 
-            if (m_flushTimerInterval > 0.0D && (object)m_flushTimer != null)
+            if (m_flushTimerInterval > 0.0D && m_flushTimer is not null)
                 m_flushTimer.Start();
         }
 
@@ -897,8 +811,7 @@ namespace GSF.IO
         {
             try
             {
-                if ((object)m_fileStream != null)
-                    m_fileStream.Flush();
+                m_fileStream?.Flush();
             }
             catch (ObjectDisposedException)
             {
@@ -915,7 +828,7 @@ namespace GSF.IO
                 // Signals that the "file full operation" is in progress.
                 m_operationWaitHandle.Reset();
 
-                switch (m_fileFullOperation)
+                switch (FileFullOperation)
                 {
                     case LogFileFullOperation.Truncate:
                         // Deletes the existing log entries, and makes way from new ones.
@@ -939,13 +852,13 @@ namespace GSF.IO
                             // We want this to run only once, when system starts.
                             if (m_savedFilesWithTime.Count < 1)
                             {
-                                string expression = string.Format("{0}*", rootFileName);
+                                string expression = $"{rootFileName}*";
                                 string[] files = Directory.GetFiles(directoryName, expression);
 
-                                foreach (string prestartLogFile in files)
+                                foreach (string preStartLogFile in files)
                                 {
-                                    if (!m_savedFilesWithTime.ContainsKey(File.GetLastWriteTime(prestartLogFile)))
-                                        m_savedFilesWithTime.Add(File.GetLastWriteTime(prestartLogFile), prestartLogFile);
+                                    if (!m_savedFilesWithTime.ContainsKey(File.GetLastWriteTime(preStartLogFile)))
+                                        m_savedFilesWithTime.Add(File.GetLastWriteTime(preStartLogFile), preStartLogFile);
                                 }
                             }
 
@@ -954,8 +867,7 @@ namespace GSF.IO
                             DateTime creationTime = File.GetCreationTime(m_fileName);
                             DateTime lastWriteTime = File.GetLastWriteTime(m_fileName);
 
-                            List<DateTime> savedTimes;
-                            string destinationfile;
+                            string destinationFile;
                             bool fileExists = false;
 
                             // In cases where logs are filling very fast you may encounter situations
@@ -967,30 +879,30 @@ namespace GSF.IO
                                 if (fileExists)
                                     lastWriteTime = lastWriteTime.AddMilliseconds(1.0D);
 
-                                destinationfile = Path.Combine(directoryName, rootFileName) + "_" +
+                                destinationFile = Path.Combine(directoryName, rootFileName) + "_" +
                                     creationTime.ToString("yyyy-MM-dd HH!mm!ss!fff") + "_to_" +
                                     lastWriteTime.ToString("yyyy-MM-dd HH!mm!ss!fff") + FilePath.GetExtension(m_fileName);
 
-                                fileExists = File.Exists(destinationfile);
+                                fileExists = File.Exists(destinationFile);
                             }
                             while (fileExists);
 
-                            File.Move(m_fileName, destinationfile);
+                            File.Move(m_fileName, destinationFile);
 
-                            m_savedFilesWithTime.Add(lastWriteTime, destinationfile);
+                            m_savedFilesWithTime.Add(lastWriteTime, destinationFile);
 
-                            savedTimes = m_savedFilesWithTime.Keys.ToList();
+                            List<DateTime> savedTimes = m_savedFilesWithTime.Keys.ToList();
                             savedTimes.Sort();
 
                             // Save at least one file even if duration is 0 or negative.
                             for (int i = 0; i < savedTimes.Count - 1; i++)
                             {
                                 // True only when time difference is reached.
-                                if (DateTime.Compare(DateTime.Now.AddHours(-m_logFilesDuration), savedTimes[i]) > 0)
-                                {
-                                    File.Delete(m_savedFilesWithTime[savedTimes[i]]);
-                                    m_savedFilesWithTime.Remove(savedTimes[i]);
-                                }
+                                if (DateTime.Compare(DateTime.Now.AddHours(-LogFilesDuration), savedTimes[i]) <= 0)
+                                    continue;
+
+                                File.Delete(m_savedFilesWithTime[savedTimes[i]]);
+                                m_savedFilesWithTime.Remove(savedTimes[i]);
                             }
                         }
                         finally

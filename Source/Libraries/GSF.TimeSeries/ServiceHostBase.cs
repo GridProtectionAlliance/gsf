@@ -62,6 +62,7 @@ using GSF.TimeSeries.Adapters;
 using GSF.TimeSeries.Configuration;
 using GSF.TimeSeries.Reports;
 using GSF.TimeSeries.Statistics;
+using GSF.TimeSeries.Transport;
 using GSF.Units;
 
 namespace GSF.TimeSeries
@@ -144,6 +145,7 @@ namespace GSF.TimeSeries
         {
             InitializeComponent();
             ServiceName = "IaonHost";
+            s_serviceHost = new WeakReference<ServiceHostBase>(this);
         }
 
         /// <summary>
@@ -3618,6 +3620,7 @@ namespace GSF.TimeSeries
             {
                 status = status.Replace("{", "{{").Replace("}", "}}");
                 m_serviceHelper.UpdateStatus(type, publishToLog, $"{status}\r\n\r\n");
+                StatusMessage?.Invoke(this, new EventArgs<string, UpdateType>(status, type));
             }
             catch (Exception ex)
             {
@@ -3686,6 +3689,208 @@ namespace GSF.TimeSeries
         }
 
         #endregion
+
+        #endregion
+
+        #region [ Static ]
+
+        // Nested Types
+
+        // Measurement monitor adapter used to expose latest values of specific measurements.
+        // Adapter is added to the internal data publisher to allow for measurements to be
+        // directly routed and exposed as needed.
+        private sealed class MeasurementMonitor : FacileActionAdapterBase
+        {
+            // ReSharper disable once MemberHidesStaticFromOuterClass
+            public event EventHandler<EventArgs<IEnumerable<IMeasurement>>> SubscribedMeasurements;
+
+            public override string Name
+            {
+                get => nameof(MeasurementMonitor);
+                set => base.Name = value;
+            }
+
+            public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
+            {
+                SubscribedMeasurements?.Invoke(this, new EventArgs<IEnumerable<IMeasurement>>(measurements));
+            }
+
+            public override bool SupportsTemporalProcessing => false;
+
+            public override string GetShortStatus(int maxLength) =>
+                $"{nameof(MeasurementMonitor)} watching {InputMeasurementKeys.Length:N0} signals...";
+        }
+
+        // Static Fields
+        private static WeakReference<ServiceHostBase> s_serviceHost;
+
+        // Static Properties
+
+        // Gets the current status log lines (as read from file) of the service host.
+        internal static List<string> StatusLog
+        {
+            get
+            {
+                try
+                {
+                    if (s_serviceHost?.TryGetTarget(out ServiceHostBase reference) ?? false)
+                        return reference.m_serviceHelper.StatusLog.ReadLines(true);
+                }
+                catch (Exception ex)
+                {
+                    Logger.SwallowException(ex);
+                }
+
+                return new List<string>();
+            }
+        }
+
+        // Static Methods
+
+        // Attempts to get the current IaonSession from the service host.
+        private static bool TryGetIaonSession(out IaonSession session)
+        {
+            if (s_serviceHost?.TryGetTarget(out ServiceHostBase reference) ?? false)
+            {
+                if (reference.m_iaonSession is not null)
+                {
+                    session = reference.m_iaonSession;
+                    return true;
+                }
+            }
+
+            session = null;
+            return false;
+        }
+
+        // Attempts to get internal data publisher from the service host.
+        private static bool TryGetDataPublisher(out DataPublisher dataPublisher)
+        {
+            dataPublisher = null;
+
+            if (!TryGetIaonSession(out IaonSession session))
+                return false;
+
+            IEnumerable<IActionAdapter> actionAdapters = session.ActionAdapters;
+
+            if (actionAdapters.FirstOrDefault(adapter => adapter.Name.Equals("INTERNAL!DATAPUBLISHER")) is not DataPublisher publisherAdapter)
+                return false;
+
+            dataPublisher = publisherAdapter;
+            return true;
+        }
+
+        // Attempts to get the measurement monitor from the service host via internal data publisher.
+        private static bool TryGetMeasurementMonitor(out MeasurementMonitor monitor)
+        {
+            if (TryGetDataPublisher(out DataPublisher dataPublisher))
+            {
+                monitor = GetMeasurementMonitor(dataPublisher);
+                return true;
+            }
+
+            monitor = null;
+            return false;
+        }
+
+        // Get the measurement monitor from the provided internal data publisher, or creates it if it doesn't exist.
+        private static MeasurementMonitor GetMeasurementMonitor(DataPublisher dataPublisher)
+        {
+            if (dataPublisher.TryGetAdapterByName(nameof(MeasurementMonitor), out IActionAdapter actionAdapter))
+                return actionAdapter as MeasurementMonitor;
+
+            MeasurementMonitor monitor = new();
+
+            monitor.DataSource = dataPublisher.DataSource;
+            dataPublisher.Add(monitor);
+
+            monitor.Initialize();
+            monitor.Initialized = true;
+            monitor.MeasurementReportingInterval = dataPublisher.MeasurementReportingInterval;
+
+            // Start tracking cached measurements
+            monitor.Start();
+
+            return monitor;
+        }
+
+        // Attempts to get any cached measurement value from the service host.
+        internal static bool TryGetCachedValue(MeasurementKey key, out double value)
+        {
+            value = double.NaN;
+
+            if (!TryGetDataPublisher(out DataPublisher dataPublisher))
+                return false;
+
+            MeasurementMonitor monitor = GetMeasurementMonitor(dataPublisher);
+
+            // Add measurement key to monitor if it's not already being tracked
+            if (!monitor.InputMeasurementKeys.Contains(key))
+            {
+                monitor.InputMeasurementKeys = monitor.InputMeasurementKeys.Concat(new[] { key }).ToArray();
+                dataPublisher.RecalculateRoutingTables();
+            }
+
+            // Get the data publisher latest measurement cache, if available - statistics
+            // will typically be pre-cached. In this case, we can use the cache to quickly
+            // get the latest value for the measurement key instead of waiting for the next
+            // measurement to be published:
+            if (!dataPublisher.TryGetAdapterByName("LatestMeasurementCache", out IActionAdapter actionAdapter))
+                return false;
+
+            if (actionAdapter is not FacileActionAdapterBase cacheAdapter)
+                return false;
+
+            IMeasurement cachedMeasurement = cacheAdapter.LatestMeasurements.FirstOrDefault(measurement => measurement.Key == key);
+
+            if (cachedMeasurement is null)
+                return false;
+
+            value = cachedMeasurement.AdjustedValue;
+            return true;
+        }
+
+        // Remove measurement key from monitoring
+        internal static void RemoveCachedValue(MeasurementKey key)
+        {
+            if (!TryGetDataPublisher(out DataPublisher dataPublisher))
+                return;
+
+            MeasurementMonitor monitor = GetMeasurementMonitor(dataPublisher);
+
+            if (!monitor.InputMeasurementKeys.Contains(key))
+                return;
+
+            // Remove measurement key from monitor
+            monitor.InputMeasurementKeys = monitor.InputMeasurementKeys.Where(measurementKey => measurementKey != key).ToArray();
+            dataPublisher.RecalculateRoutingTables();
+        }
+
+        // Static Events
+
+        // Exposes the status message events from the service host.
+        internal static event EventHandler<EventArgs<string, UpdateType>> StatusMessage;
+
+        // Exposes the subscribed measurements event of the MeasurementMonitor in the service host via internal data publisher.
+        internal static event EventHandler<EventArgs<IEnumerable<IMeasurement>>> SubscribedMeasurements
+        {
+            add
+            {
+                if (!TryGetMeasurementMonitor(out MeasurementMonitor monitor))
+                    return;
+
+                lock (typeof(ServiceHostBase))
+                    monitor.SubscribedMeasurements += value;
+            }
+            remove
+            {
+                if (!TryGetMeasurementMonitor(out MeasurementMonitor monitor))
+                    return;
+
+                lock (typeof(ServiceHostBase))
+                    monitor.SubscribedMeasurements -= value;
+            }
+        }
 
         #endregion
     }

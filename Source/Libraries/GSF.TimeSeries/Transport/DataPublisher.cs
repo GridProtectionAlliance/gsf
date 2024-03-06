@@ -1953,6 +1953,12 @@ namespace GSF.TimeSeries.Transport
             m_routingTables.CalculateRoutingTables(null);
         }
 
+        internal void RecalculateRoutingTables()
+        {
+            m_routingTables.CalculateRoutingTables(null);
+            OnInputMeasurementKeysUpdated();
+        }
+
         private void UpdateClientNotifications()
         {
             try
