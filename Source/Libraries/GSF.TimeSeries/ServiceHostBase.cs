@@ -1773,6 +1773,9 @@ namespace GSF.TimeSeries
                 helpMessage.Append("       -O".PadRight(20));
                 helpMessage.Append("Enumerate output adapters");
                 helpMessage.AppendLine();
+                helpMessage.Append("       -actionable".PadRight(20));
+                helpMessage.Append("Returns results via an actionable event");
+                helpMessage.AppendLine();
 
                 DisplayResponseMessage(requestInfo, helpMessage.ToString());
             }
@@ -1835,10 +1838,20 @@ namespace GSF.TimeSeries
                     enumeratedItems++;
                 }
 
-                if (enumeratedItems > 0)
-                    SendResponse(requestInfo, true, adapterList.ToString());
+                if (requestInfo.Request.Arguments.Exists("actionable"))
+                {
+                    if (enumeratedItems > 0)
+                        SendResponseWithAttachment(requestInfo, true, adapterList.ToString(), null);
+                    else
+                        SendResponseWithAttachment(requestInfo, false, "No items were available enumerate.", null);
+                }
                 else
-                    SendResponse(requestInfo, false, "No items were available enumerate.");
+                {
+                    if (enumeratedItems > 0)
+                        SendResponse(requestInfo, true, adapterList.ToString());
+                    else
+                        SendResponse(requestInfo, false, "No items were available enumerate.");
+                }
             }
         }
 
@@ -2838,9 +2851,9 @@ namespace GSF.TimeSeries
                     IEnumerable<Guid> signalIDs = adapter.InputMeasurementKeys?.Select(key => key.SignalID) ?? Enumerable.Empty<Guid>();
 
                     if (requestInfo.Request.Arguments.Exists("actionable"))
-                        m_serviceHelper.SendActionableResponse(requestInfo, true, signalIDs.Select(id => id.ToByteArray()).ToArray());
+                        SendResponseWithAttachment(requestInfo, true, signalIDs.Select(id => id.ToByteArray()).ToArray(), null);
                     else
-                        DisplayResponseMessage(requestInfo, string.Join(";", signalIDs.Select(id => id.ToString())));
+                        SendResponse(requestInfo, true, string.Join(";", signalIDs.Select(id => id.ToString())));
                 }
                 else
                 {
@@ -2887,9 +2900,9 @@ namespace GSF.TimeSeries
                     IEnumerable<Guid> signalIDs = adapter.OutputMeasurements?.Select(m => m.Key.SignalID) ?? Enumerable.Empty<Guid>();
 
                     if (requestInfo.Request.Arguments.Exists("actionable"))
-                        m_serviceHelper.SendActionableResponse(requestInfo, true, signalIDs.Select(id => id.ToByteArray()).ToArray());
+                        SendResponseWithAttachment(requestInfo, true, signalIDs.Select(id => id.ToByteArray()).ToArray(), null);
                     else
-                        DisplayResponseMessage(requestInfo, string.Join(";", signalIDs.Select(id => id.ToString())));
+                        SendResponse(requestInfo, true, string.Join(";", signalIDs.Select(id => id.ToString())));
                 }
                 else
                 {
