@@ -788,7 +788,7 @@ namespace GSF.IO
         {
             if (string.IsNullOrEmpty(filePath))
             {
-                filePath = Path.DirectorySeparatorChar.ToString();
+                filePath = "." + Path.DirectorySeparatorChar;
             }
             else
             {
