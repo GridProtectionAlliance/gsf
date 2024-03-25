@@ -137,7 +137,7 @@ namespace GSF.Web.Model
             SearchSettings = typeof(T).GetCustomAttribute<AdditionalFieldSearchAttribute>();
             Take = typeof(T).GetCustomAttribute<ReturnLimitAttribute>()?.Limit ?? null;
 
-            SQLSearchModifier = typeof(T).GetMethods(BindingFlags.Static).FirstOrDefault(p => p.GetCustomAttributes<SQLSearchModifierAttribute>().Any());
+            SQLSearchModifier = typeof(T).GetMethods(BindingFlags.Public | BindingFlags.Static).FirstOrDefault(p => p.GetCustomAttributes<SQLSearchModifierAttribute>().Any());
 
             // Custom View Models are ViewOnly.
             ViewOnly = (typeof(U).GetCustomAttribute<ViewOnlyAttribute>()?.ViewOnly ?? false) ||
