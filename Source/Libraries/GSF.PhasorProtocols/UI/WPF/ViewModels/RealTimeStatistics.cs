@@ -28,6 +28,7 @@ using System.Text;
 using System.Threading;
 using System.Windows;
 using GSF.Data;
+using GSF.Diagnostics;
 using GSF.PhasorProtocols.UI.DataModels;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Transport;
@@ -137,16 +138,16 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                     if (!RealTimeStatistic.StatisticMeasurements.TryGetValue(newMeasurement.ID, out StatisticMeasurement measurement))
                         continue;
 
+                    // All statistic measurements should have a display format and data type
                     if (string.IsNullOrEmpty(measurement.DisplayFormat) || string.IsNullOrEmpty(measurement.DataType))
+                    {
+                        Logger.SwallowException(new InvalidOperationException($"Configuration Warning: Statistic measurement {measurement.SignalReference} does not have a display format or data type."));
                         continue;
+                    }
 
                     measurement.Quality = newMeasurement.ValueQualityIsGood() ? "GOOD" : "BAD";
                     measurement.Value = string.Format(measurement.DisplayFormat, ConvertValueToType(newMeasurement.AdjustedValue, measurement.DataType));
                     measurement.TimeTag = newMeasurement.Timestamp.ToString("HH:mm:ss.fff");
-
-                    // Check if measurement defines connection state
-                    if (!measurement.ConnectedState)
-                        continue;
 
                     if ((measurement.Source != "System" || !RealTimeStatistic.SystemStatistics.TryGetValue(measurement.DeviceID, out StreamStatistic streamStatistic)) &&
                         (measurement.Source != "InputStream" || !RealTimeStatistic.InputStreamStatistics.TryGetValue(measurement.DeviceID, out streamStatistic)) &&
@@ -155,84 +156,80 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                         (measurement.Source != "Subscriber" || !RealTimeStatistic.InputStreamStatistics.TryGetValue(measurement.DeviceID, out streamStatistic)))
                         continue;
 
-                    // Only process following statistic operations per device
-                    if (measurement.DeviceID > 0 && !deviceIDs.Add(measurement.DeviceID))
-                        continue;
+                    // For phasor protocols, we check if the device has been reporting data for at least five seconds before updating the status color.
+                    // This prevents assigning a status color when device is first connected and it is not known if the device is reporting data yet.
+                    // For other protocols, we update the status color immediately when the device is connected.
+                    bool reportingForFiveSeconds = true;
 
-                    if (measurement.Source == "InputStream")
+                    // Check if this is the connection state measurement for an input stream (i.e., phasor protocol)
+                    if (measurement.Source == "InputStream" && measurement.ConnectedState)
                     {
                         // Get last report time for device
                         StatisticMeasurement lastReportTimeStat = RealTimeStatistic.StatisticMeasurements.Values.FirstOrDefault(stat => string.Compare(stat.SignalReference.ToNonNullString().Trim(), $"{streamStatistic.Acronym.ToNonNullString().Trim()}!IS-ST2", StringComparison.OrdinalIgnoreCase) == 0);
 
-                        if (lastReportTimeStat is null)
-                            return;
-
-                        IMeasurement lastReportTimeStatMeasurement = measurements.FirstOrDefault(m => m.ID == lastReportTimeStat.SignalID);
-
-                        if (lastReportTimeStatMeasurement is null)
-                            return;
-
-                        long lastReportTime = (long)lastReportTimeStatMeasurement.AdjustedValue;
-
-                        if (lastReportTime <= 0)
-                            return;
-
-                        // Only updating device statuses after we are sure device has been connected for five seconds
-                        if (m_lastDeviceReportTimes.TryGetValue(measurement.DeviceID, out long lastReportTimeForDevice) && lastReportTimeForDevice > 0)
+                        if (lastReportTimeStat is not null)
                         {
-                            if (lastReportTimeForDevice > lastReportTime)
+                            IMeasurement lastReportTimeStatMeasurement = measurements.FirstOrDefault(m => m.ID == lastReportTimeStat.SignalID);
+
+                            if (lastReportTimeStatMeasurement is not null)
                             {
-                                // Last report time for device rolled over, it only has hour accuracy
-                                m_lastDeviceReportTimes[measurement.DeviceID] = lastReportTime;
-                                return;
-                            }
+                                long lastReportTime = (long)lastReportTimeStatMeasurement.AdjustedValue;
+                                reportingForFiveSeconds = false;
 
-                            // Only check further stats after five seconds - the frame rate timer only updates every five seconds so
-                            // we need to wait for count to be updated on an initial connection before checking for total frames
-                            if (lastReportTime - lastReportTimeForDevice < 5 * Ticks.PerSecond)
-                                return;
-                        }
-                        else
-                        {
-                            m_lastDeviceReportTimes.Add(measurement.DeviceID, lastReportTime);
-                            return;
+                                if (lastReportTime > 0)
+                                {
+                                    // Only updating device statuses after we are sure device has been connected and reporting data for five seconds
+                                    if (m_lastDeviceReportTimes.TryGetValue(measurement.DeviceID, out long lastReportTimeForDevice) && lastReportTimeForDevice > 0)
+                                    {
+                                        if (lastReportTimeForDevice > lastReportTime)
+                                        {
+                                            // Last report time for device rolled over, it only has hour accuracy
+                                            m_lastDeviceReportTimes[measurement.DeviceID] = lastReportTime;
+                                        }
+                                        else
+                                        {
+                                            // Check if device has been reporting for at least five seconds
+                                            reportingForFiveSeconds = lastReportTime - lastReportTimeForDevice >= 5 * Ticks.PerSecond;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        m_lastDeviceReportTimes.Add(measurement.DeviceID, lastReportTime);
+                                    }
+                                }
+                            }
                         }
                     }
 
-                    // Connected stat primarily drives the status color
-                    streamStatistic.StatusColor = Convert.ToBoolean(newMeasurement.AdjustedValue) ? "Green" : "Red";
+                    // Check for connected state stat that primarily drives the status color
+                    if (measurement.ConnectedState && reportingForFiveSeconds && measurement.DeviceID > 0 && !deviceIDs.Add(measurement.DeviceID))
+                        streamStatistic.StatusColor = Convert.ToBoolean(newMeasurement.AdjustedValue) ? "Green" : "Red";
 
                     // We do extra validation on the input stream since devices can be technically connected and not receiving data (e.g., UDP)
                     if (measurement.Source != "InputStream")
                         continue;
 
                     // Check if measurement defines total frames received
-                    ThreadPool.QueueUserWorkItem(_ =>
+                    StatisticMeasurement totalFramesStat = RealTimeStatistic.StatisticMeasurements.Values.FirstOrDefault(stat => string.Compare(stat.SignalReference.ToNonNullString().Trim(), $"{streamStatistic.Acronym.ToNonNullString().Trim()}!IS-ST1", StringComparison.OrdinalIgnoreCase) == 0);
+
+                    if (totalFramesStat is not null)
                     {
-                        StatisticMeasurement totalFramesStat = RealTimeStatistic.StatisticMeasurements.Values.FirstOrDefault(stat => string.Compare(stat.SignalReference.ToNonNullString().Trim(), $"{streamStatistic.Acronym.ToNonNullString().Trim()}!IS-ST1", StringComparison.OrdinalIgnoreCase) == 0);
-
-                        if (totalFramesStat is null)
-                            return;
-
                         IMeasurement totalFramesStatMeasurement = measurements.FirstOrDefault(m => m.ID == totalFramesStat.SignalID);
 
                         if (totalFramesStatMeasurement is { AdjustedValue: <= 0.0D })
                             streamStatistic.StatusColor = "Red";
-                    });
+                    }
 
                     // Check if measurement defines configuration out of sync state
-                    ThreadPool.QueueUserWorkItem(_ =>
+                    StatisticMeasurement configurationOutOfSyncStat = RealTimeStatistic.StatisticMeasurements.Values.FirstOrDefault(stat => string.Compare(stat.SignalReference.ToNonNullString().Trim(), $"{streamStatistic.Acronym.ToNonNullString().Trim()}!IS-ST29", StringComparison.OrdinalIgnoreCase) == 0);
+
+                    if (configurationOutOfSyncStat is not null)
                     {
-                        StatisticMeasurement configurationOutOfSyncStat = RealTimeStatistic.StatisticMeasurements.Values.FirstOrDefault(stat => string.Compare(stat.SignalReference.ToNonNullString().Trim(), $"{streamStatistic.Acronym.ToNonNullString().Trim()}!IS-ST29", StringComparison.OrdinalIgnoreCase) == 0);
-
-                        if (configurationOutOfSyncStat is null)
-                            return;
-
                         IMeasurement configurationOutOfSyncStatMeasurement = measurements.FirstOrDefault(m => m.ID == configurationOutOfSyncStat.SignalID);
 
                         if (configurationOutOfSyncStatMeasurement is not null)
                             streamStatistic.ConfigurationOutOfSync = configurationOutOfSyncStatMeasurement.AdjustedValue != 0.0D;
-                    });
+                    }
                 }
 
                 LastRefresh = "Last Refresh: " + DateTime.UtcNow.ToString("HH:mm:ss.fff");
