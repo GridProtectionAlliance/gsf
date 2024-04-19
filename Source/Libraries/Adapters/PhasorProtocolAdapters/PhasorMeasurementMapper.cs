@@ -50,6 +50,7 @@ using GSF.IO;
 using GSF.Parsing;
 using GSF.PhasorProtocols;
 using GSF.PhasorProtocols.Anonymous;
+using GSF.PhasorProtocols.IEEEC37_118;
 using GSF.Threading;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
@@ -57,6 +58,7 @@ using GSF.TimeSeries.Data;
 using GSF.TimeSeries.Statistics;
 using GSF.Units;
 using GSF.Units.EE;
+using ConfigurationCell = GSF.PhasorProtocols.Anonymous.ConfigurationCell;
 using TcpClient = GSF.Communication.TcpClient;
 using DeviceRecord = GSF.TimeSeries.Model.Device;
 using MeasurementRecord = GSF.TimeSeries.Model.Measurement;
@@ -2434,6 +2436,14 @@ namespace PhasorProtocolAdapters
 
             // Also make sure IDCodes are identical since deserialization can skip this value
             cachedConfigurationFrame.IDCode = currentConfigurationFrame.IDCode;
+
+            // For IEEE C37.118 configuration frames, also make sure the time quality info is identical since this should not count against comparison
+            if (cachedConfigurationFrame is ConfigurationFrame2 cachedConfigFrame2 && currentConfigurationFrame is ConfigurationFrame2 currentConfigFrame2)
+            {
+                cachedConfigFrame2.Timebase = currentConfigFrame2.Timebase; // Used in time calculations
+                cachedConfigFrame2.TimeQualityFlags = currentConfigFrame2.TimeQualityFlags;
+                cachedConfigFrame2.TimeQualityIndicatorCode = currentConfigFrame2.TimeQualityIndicatorCode;
+            }
 
             // Generate binary images for the configuration frames
             byte[] currentConfigFrameBuffer = new byte[currentConfigurationFrame.BinaryLength];
