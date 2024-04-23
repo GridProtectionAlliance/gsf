@@ -2437,20 +2437,26 @@ namespace PhasorProtocolAdapters
             // Also make sure IDCodes are identical since deserialization can skip this value
             cachedConfigurationFrame.IDCode = currentConfigurationFrame.IDCode;
 
-            // For IEEE C37.118 configuration frames, also make sure the time quality info is identical since this should not count against comparison
-            if (cachedConfigurationFrame is ConfigurationFrame2 cachedConfigFrame2 && currentConfigurationFrame is ConfigurationFrame2 currentConfigFrame2)
-            {
-                cachedConfigFrame2.Timebase = currentConfigFrame2.Timebase; // Used in time calculations
-                cachedConfigFrame2.TimeQualityFlags = currentConfigFrame2.TimeQualityFlags;
-                cachedConfigFrame2.TimeQualityIndicatorCode = currentConfigFrame2.TimeQualityIndicatorCode;
-            }
-
             // Generate binary images for the configuration frames
             byte[] currentConfigFrameBuffer = new byte[currentConfigurationFrame.BinaryLength];
             byte[] cachedConfigFrameBuffer = new byte[cachedConfigurationFrame.BinaryLength];
 
             currentConfigurationFrame.GenerateBinaryImage(currentConfigFrameBuffer, 0);
             cachedConfigurationFrame.GenerateBinaryImage(cachedConfigFrameBuffer, 0);
+
+            // For IEEE C37.118 configuration frames, skip header and CRC for comparisons
+            if (cachedConfigurationFrame is ConfigurationFrame2 && currentConfigurationFrame is ConfigurationFrame2)
+            {
+                int dataLength = currentConfigFrameBuffer.Length - CommonFrameHeader.FixedLength - 2;
+
+                byte[] tempBuffer = new byte[dataLength];
+                Array.Copy(currentConfigFrameBuffer, CommonFrameHeader.FixedLength, tempBuffer, 0, dataLength);
+                currentConfigFrameBuffer = tempBuffer;
+
+                tempBuffer = new byte[dataLength];
+                Array.Copy(cachedConfigFrameBuffer, CommonFrameHeader.FixedLength, tempBuffer, 0, dataLength);
+                cachedConfigFrameBuffer = tempBuffer;
+            }
 
             // Compare the binary images - if they are different, this counts as a configuration change
             if (currentConfigFrameBuffer.SequenceEqual(cachedConfigFrameBuffer))
