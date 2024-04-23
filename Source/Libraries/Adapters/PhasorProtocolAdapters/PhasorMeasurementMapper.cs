@@ -2448,11 +2448,11 @@ namespace PhasorProtocolAdapters
             if (cachedConfigurationFrame is ConfigurationFrame2 && currentConfigurationFrame is ConfigurationFrame2)
             {
                 int dataLength = currentConfigFrameBuffer.Length - CommonFrameHeader.FixedLength - 2;
-
                 byte[] tempBuffer = new byte[dataLength];
                 Array.Copy(currentConfigFrameBuffer, CommonFrameHeader.FixedLength, tempBuffer, 0, dataLength);
                 currentConfigFrameBuffer = tempBuffer;
 
+                dataLength = cachedConfigFrameBuffer.Length - CommonFrameHeader.FixedLength - 2;
                 tempBuffer = new byte[dataLength];
                 Array.Copy(cachedConfigFrameBuffer, CommonFrameHeader.FixedLength, tempBuffer, 0, dataLength);
                 cachedConfigFrameBuffer = tempBuffer;
