@@ -119,6 +119,7 @@ public class PIOutputAdapter : OutputAdapterBase
     private const string DefaultPIPointSource = nameof(GSF);
     private const string DefaultPIPointClass = "classic";
     private const bool DefaultUseCompression = true;
+    private const bool DefaultReplaceValues = false;
     private const bool DefaultUpdateExistingTagCompressionState = false;
     private const string DefaultArchiveOnChangeDataTypes = "";
     private const string DefaultTagMapCacheFileName = "";
@@ -151,6 +152,7 @@ public class PIOutputAdapter : OutputAdapterBase
     private long m_totalProcessingTime;                                 // Total point processing time 
     private volatile bool m_refreshingMetadata;                         // Flag that determines if meta-data is currently refreshing
     private double m_metadataRefreshProgress;                           // Current meta-data refresh progress
+    private AFUpdateOption m_updateOption;                              // Active update option for PI point updates
     private bool m_disposed;                                            // Flag that determines if class is disposed
 
     #endregion
@@ -188,7 +190,7 @@ public class PIOutputAdapter : OutputAdapterBase
     public override bool OutputIsForArchive => true;
 
     /// <summary>
-    /// Returns false to indicate that this <see cref="PIOutputAdapter"/> will connect synchronously
+    /// Returns false to indicate that this <see cref="PIOutputAdapter"/> will connect synchronously.
     /// </summary>
     protected override bool UseAsyncConnect => false;
 
@@ -216,7 +218,7 @@ public class PIOutputAdapter : OutputAdapterBase
     public string Password { get; set; } = DefaultPassword;
 
     /// <summary>
-    /// Gets or sets the timeout interval (in milliseconds) for the adapter's connection
+    /// Gets or sets the timeout interval (in milliseconds) for the adapter's connection.
     /// </summary>
     [ConnectionStringParameter]
     [Description("Defines the timeout interval (in milliseconds) for the adapter's connection")]
@@ -304,18 +306,26 @@ public class PIOutputAdapter : OutputAdapterBase
     public string PIPointClass { get; set; } = DefaultPIPointClass;
 
     /// <summary>
-    /// Gets or sets flag that determines if defined point compression will be used during archiving.
+    /// Gets or sets the flag that determines if compression will be used during archiving when compression is configured for tag. If disabled, configured tag compression and ReplaceValues setting are ignored.
     /// </summary>
     [ConnectionStringParameter]
-    [Description("Defines the flag that determines if defined point compression will be used during archiving.")]
+    [Description("Defines the flag that determines if compression will be used during archiving when compression is configured for tag. If disabled, configured tag compression and ReplaceValues setting are ignored.")]
     [DefaultValue(DefaultUseCompression)]
     public bool UseCompression { get; set; } = DefaultUseCompression;
 
     /// <summary>
-    /// Gets or sets the flag that determines if the compression enabled state, per UseCompression flag, should be adjusted for existing tags.
+    /// Gets or sets flag that determines if existing PI values should be replaced when UseCompression is enabled.
     /// </summary>
     [ConnectionStringParameter]
-    [Description("Defines the flag that determines if the compression enabled state, per UseCompression flag, should be adjusted for existing tags.")]
+    [Description("Defines the flag that determines if existing PI values should be replaced when UseCompression is enabled.")]
+    [DefaultValue(DefaultReplaceValues)]
+    public bool ReplaceValues { get; set; } = DefaultReplaceValues;
+
+    /// <summary>
+    /// Gets or sets the flag that determines if the compression enabled state, per UseCompression flag, should be adjusted for existing tags, overriding existing configuration.
+    /// </summary>
+    [ConnectionStringParameter]
+    [Description("Defines the flag that determines if the compression enabled state, per UseCompression flag, should be adjusted for existing tags, overriding existing configuration.")]
     [DefaultValue(DefaultUpdateExistingTagCompressionState)]
     public bool UpdateExistingTagCompressionState { get; set; } = DefaultUpdateExistingTagCompressionState;
 
@@ -424,6 +434,7 @@ public class PIOutputAdapter : OutputAdapterBase
             status.AppendLine($"        OSI-PI server name: {ServerName}");
             status.AppendLine($"       Connected to server: {(m_connection?.Connected ?? false ? "Yes" : "No")}");
             status.AppendLine($"         Using compression: {UseCompression}");
+            status.AppendLine($"   Replace existing values: {(UseCompression ? ReplaceValues : "N/A when not using compression")}");
             status.AppendLine($"  Update compression state: {UpdateExistingTagCompressionState}");
             status.AppendLine($"   Archive on change types: {ArchiveOnChangeDataTypes}");
             status.AppendLine($"  Maximum point resolution: {MaximumPointResolution:N3} seconds{(MaximumPointResolution <= 0.0D ? " - all data will be archived" : "")}");
@@ -583,6 +594,12 @@ public class PIOutputAdapter : OutputAdapterBase
         if (settings.TryGetValue(nameof(UseCompression), out setting))
             UseCompression  = setting.ParseBoolean();
 
+        if (settings.TryGetValue(nameof(ReplaceValues), out setting))
+            ReplaceValues = setting.ParseBoolean();
+
+        // Derive update option based on UseCompression / ReplaceValues settings
+        m_updateOption = UseCompression ? ReplaceValues ? AFUpdateOption.Replace : AFUpdateOption.Insert : AFUpdateOption.InsertNoCompression;
+
         if (settings.TryGetValue(nameof(UpdateExistingTagCompressionState), out setting))
             UpdateExistingTagCompressionState = setting.ParseBoolean();
 
@@ -667,9 +684,7 @@ public class PIOutputAdapter : OutputAdapterBase
         m_mappedPIPoints.Clear();
 
         lock (m_pendingMappings)
-        {
             m_pendingMappings.Clear();
-        }
 
         m_mapRequestQueue.Clear();
         m_mapRequestQueue.Start();
@@ -839,7 +854,7 @@ public class PIOutputAdapter : OutputAdapterBase
     {
         Ticks startTime = DateTime.UtcNow.Ticks;
 
-        m_connection.Server.UpdateValues(values, UseCompression ? AFUpdateOption.Insert : AFUpdateOption.InsertNoCompression);
+        m_connection.Server.UpdateValues(values, m_updateOption);
 
         Interlocked.Add(ref m_totalProcessingTime, DateTime.UtcNow.Ticks - startTime);
         Interlocked.Add(ref m_processedMeasurements, values.Length);
@@ -929,6 +944,7 @@ public class PIOutputAdapter : OutputAdapterBase
 
                 if (rows.Length > 0)
                 {
+                    // Get tag-name as defined in meta-data, adjusting as needed
                     string tagName = GetPITagName(rows[0]);
 
                     if (!string.IsNullOrWhiteSpace(tagName))
@@ -1019,8 +1035,11 @@ public class PIOutputAdapter : OutputAdapterBase
                         continue;
                     }
 
+                    // Get matching measurement row
+                    DataRow measurementRow = rows[0];
+
                     // Get tag-name as defined in meta-data, adjusting as needed
-                    tagName = GetPITagName(rows[0]);
+                    tagName = GetPITagName(measurementRow);
 
                     // If no tag name is defined in measurements there is no need to continue processing
                     if (string.IsNullOrWhiteSpace(tagName))
