@@ -171,7 +171,7 @@ public class PIConnection : IComparable<PIConnection>, IComparable, IDisposable
         if (!Server.ConnectionInfo.IsConnected)
         {
             // Attempt to open OSI-PI connection
-            if (!string.IsNullOrEmpty(UserName) && !string.IsNullOrEmpty(Password))
+            if (!string.IsNullOrEmpty(UserName))
                 Server.Connect(new NetworkCredential(UserName, Password));
             else
                 Server.Connect(true);
