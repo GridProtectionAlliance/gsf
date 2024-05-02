@@ -121,6 +121,7 @@ public class PIOutputAdapter : OutputAdapterBase
     private const bool DefaultUseCompression = true;
     private const bool DefaultReplaceValues = false;
     private const bool DefaultUpdateExistingTagCompressionState = false;
+    private const string DefaultArchiveFilterDataTypes = "*";
     private const string DefaultArchiveOnChangeDataTypes = "";
     private const string DefaultTagMapCacheFileName = "";
     private const double DefaultMaximumPointResolution = 0.0D;
@@ -140,6 +141,7 @@ public class PIOutputAdapter : OutputAdapterBase
     private readonly HashSet<MeasurementKey> m_pendingMappings;         // List of pending measurement mappings
     private readonly LongSynchronizedOperation m_handleTagRemoval;      // Tag removal operation, if any
     private Dictionary<Guid, Ticks> m_lastArchiveTimes;                 // Cache of last point archive times
+    private HashSet<SignalType> m_archiveFilterDataTypes;               // Data types to archive
     private HashSet<SignalType> m_archiveOnChangeDataTypes;             // Data types to archive on change
     private readonly Dictionary<Guid, double> m_lastArchiveValues;      // Cache of last point archive values
     private readonly Dictionary<Guid, SignalType> m_signalTypeMap;      // Map of signal types for encountered measurements
@@ -330,6 +332,49 @@ public class PIOutputAdapter : OutputAdapterBase
     public bool UpdateExistingTagCompressionState { get; set; } = DefaultUpdateExistingTagCompressionState;
 
     /// <summary>
+    /// Gets or sets the data types to archive. Value of <c>*</c> (or empty string) means all values archived, <c>DIGI</c> means only archive digital values. Separate multiple values with a comma, for example: <c>DIGI,VPHM,FREQ</c>.
+    /// </summary>
+    [ConnectionStringParameter]
+    [Description("Defines the data types to archive. Value of <c>*</c> (or empty string) means all values archived, 'DIGI' means only archive digital values. Separate multiple values with a comma, for example: DIGI,VPHM,FREQ")]
+    [DefaultValue(DefaultArchiveFilterDataTypes)]
+    public string ArchiveFilterDataTypes
+    {
+        get => m_archiveFilterDataTypes is null ? DefaultArchiveFilterDataTypes : string.Join(",", m_archiveFilterDataTypes.Select(signalType => signalType.ToString()));
+        set
+        {
+            if (string.IsNullOrWhiteSpace(value) || value.Trim().Equals(DefaultArchiveFilterDataTypes))
+            {
+                m_archiveFilterDataTypes = null;
+            }
+            else
+            {
+                HashSet<SignalType> archiveFilterDataTypes = [];
+
+                bool hasAsterisk = false;
+
+                foreach (string dataTypeEntry in value.Split([','], StringSplitOptions.RemoveEmptyEntries))
+                {
+                    string dataType = dataTypeEntry.Trim();
+
+                    if (dataType.Equals(DefaultArchiveFilterDataTypes))
+                    {
+                        hasAsterisk = true;
+                        break;
+                    }
+
+                    if (Enum.TryParse(dataType, true, out SignalType signalType))
+                        archiveFilterDataTypes.Add(signalType);
+                }
+
+                if (hasAsterisk)
+                    m_archiveFilterDataTypes = null;
+                else
+                    m_archiveFilterDataTypes = archiveFilterDataTypes.Count > 0 ? archiveFilterDataTypes : null;
+            }
+        }
+    }
+
+    /// <summary>
     /// Gets or sets the data types to only archive on change. Empty string value means all values archived, <c>*</c> means archive all values on change, <c>DIGI</c> means only archive digital values on change. Separate multiple values with a comma, for example: <c>DIGI,VPHM,FREQ</c>.
     /// </summary>
     [ConnectionStringParameter]
@@ -436,6 +481,7 @@ public class PIOutputAdapter : OutputAdapterBase
             status.AppendLine($"         Using compression: {UseCompression}");
             status.AppendLine($"   Replace existing values: {(UseCompression ? ReplaceValues : "N/A when not using compression")}");
             status.AppendLine($"  Update compression state: {UpdateExistingTagCompressionState}");
+            status.AppendLine($" Archive filter data types: {ArchiveFilterDataTypes}");
             status.AppendLine($"   Archive on change types: {ArchiveOnChangeDataTypes}");
             status.AppendLine($"  Maximum point resolution: {MaximumPointResolution:N3} seconds{(MaximumPointResolution <= 0.0D ? " - all data will be archived" : "")}");
             status.AppendLine($"  Time reasonability check: {(EnableTimeReasonabilityCheck ? "Enabled" : "Not Enabled")}");
@@ -603,6 +649,9 @@ public class PIOutputAdapter : OutputAdapterBase
         if (settings.TryGetValue(nameof(UpdateExistingTagCompressionState), out setting))
             UpdateExistingTagCompressionState = setting.ParseBoolean();
 
+        if (settings.TryGetValue(nameof(ArchiveFilterDataTypes), out setting))
+            ArchiveFilterDataTypes = setting;
+
         if (settings.TryGetValue(nameof(ArchiveOnChangeDataTypes), out setting))
             ArchiveOnChangeDataTypes = setting;
 
@@ -726,7 +775,7 @@ public class PIOutputAdapter : OutputAdapterBase
     /// <param name="measurements">Measurements to queue for processing.</param>
     public override void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
     {
-        if (m_archiveOnChangeDataTypes is null)
+        if (m_archiveFilterDataTypes is null && m_archiveOnChangeDataTypes is null)
         {
             base.QueueMeasurementsForProcessing(measurements);
         }
@@ -739,8 +788,12 @@ public class PIOutputAdapter : OutputAdapterBase
                 // Lookup measurement's signal type (data source lookup hit taken once per encountered measurement)
                 SignalType signalType = m_signalTypeMap.GetOrAdd(measurement.ID, _ => DataSource.GetSignalType(measurement.Key));
 
+                // Handle measurement filtering based on signal type
+                if (m_archiveFilterDataTypes is not null && !m_archiveFilterDataTypes.Contains(signalType))
+                    continue;
+
                 // If measurement signal type is not an archive on change data type target, process measurement as normal
-                if (!m_archiveOnChangeDataTypes.Contains(signalType))
+                if (m_archiveOnChangeDataTypes is null || !m_archiveOnChangeDataTypes.Contains(signalType))
                 {
                     measurementsToProcess.Add(measurement);
                     continue;
