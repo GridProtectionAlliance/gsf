@@ -120,7 +120,10 @@ public class PIOutputAdapter : OutputAdapterBase
     private const string DefaultPIPointClass = "classic";
     private const bool DefaultUseCompression = true;
     private const bool DefaultReplaceValues = false;
+    private const bool DefaultAddTagCompressionState = false;
     private const bool DefaultUpdateExistingTagCompressionState = false;
+    private const string DefaultCompDev = "0.001";
+    private const string DefaultCompDevDataTypeMap = $"IPHM=0.1,IPHA=0.001,VPHM=10,VPHA=0.001,FREQ=0.0001,DFDT=0.0001,ALOG=0.001,*={DefaultCompDev}";
     private const string DefaultArchiveFilterDataTypes = "*";
     private const string DefaultArchiveOnChangeDataTypes = "";
     private const string DefaultTagMapCacheFileName = "";
@@ -143,6 +146,8 @@ public class PIOutputAdapter : OutputAdapterBase
     private Dictionary<Guid, Ticks> m_lastArchiveTimes;                 // Cache of last point archive times
     private HashSet<SignalType> m_archiveFilterDataTypes;               // Data types to archive
     private HashSet<SignalType> m_archiveOnChangeDataTypes;             // Data types to archive on change
+    private Dictionary<string, double> m_compDevDataTypeMap;            // Defined compression deviations for data types
+    private double m_defaultCompDev;                                    // Default compression deviation
     private readonly Dictionary<Guid, double> m_lastArchiveValues;      // Cache of last point archive values
     private readonly Dictionary<Guid, SignalType> m_signalTypeMap;      // Map of signal types for encountered measurements
     private PIConnection m_connection;                                  // PI server connection for meta-data synchronization
@@ -324,12 +329,47 @@ public class PIOutputAdapter : OutputAdapterBase
     public bool ReplaceValues { get; set; } = DefaultReplaceValues;
 
     /// <summary>
+    /// Gets or sets the flag that determines if the compression enabled state should be added to tags if none already exists.
+    /// </summary>
+    [ConnectionStringParameter]
+    [Description("Defines the flag that determines if the compression enabled state should be added to tags if none already exists.")]
+    [DefaultValue(DefaultAddTagCompressionState)]
+    public bool AddTagCompressionState { get; set; } = DefaultAddTagCompressionState;
+
+    /// <summary>
     /// Gets or sets the flag that determines if the compression enabled state, per UseCompression flag, should be adjusted for existing tags, overriding existing configuration.
     /// </summary>
     [ConnectionStringParameter]
     [Description("Defines the flag that determines if the compression enabled state, per UseCompression flag, should be adjusted for existing tags, overriding existing configuration.")]
     [DefaultValue(DefaultUpdateExistingTagCompressionState)]
     public bool UpdateExistingTagCompressionState { get; set; } = DefaultUpdateExistingTagCompressionState;
+
+    /// <summary>
+    /// Gets or sets the defined compression deviations for data types used when UpdateExistingTagCompressionState is enabled.
+    /// </summary>
+    [ConnectionStringParameter]
+    [Description("Defines the defined compression deviations for data types used when UpdateExistingTagCompressionState is enabled. Use format \"DataType=Deviation,DataType=Deviation,...\". Default is \"IPHM=0.1,IPHA=0.001,VPHM=10,VPHA=0.001,FREQ=0.0001,DFDT=0.0001,ALOG=0.001,*=0.001\".")]
+    [DefaultValue(DefaultCompDevDataTypeMap)]
+    public string CompDevDataTypeMap
+    {
+        get => m_compDevDataTypeMap is null ? DefaultCompDevDataTypeMap : string.Join(",", m_compDevDataTypeMap.Select(kvp => $"{kvp.Key}={kvp.Value}"));
+        set
+        {
+            m_compDevDataTypeMap = new Dictionary<string, double>();
+
+            foreach (string[] parts in value.Split([','], StringSplitOptions.RemoveEmptyEntries).Select(part => part.Split(['='], StringSplitOptions.RemoveEmptyEntries)))
+            {
+                if (parts.Length == 2 && double.TryParse(parts[1].Trim(), out double compDev))
+                    m_compDevDataTypeMap[parts[0].Trim()] = compDev;
+            }
+
+            if (m_compDevDataTypeMap.TryGetValue("*", out m_defaultCompDev))
+                return;
+
+            m_defaultCompDev = double.Parse(DefaultCompDev);
+            m_compDevDataTypeMap["*"] = m_defaultCompDev;
+        }
+    }
 
     /// <summary>
     /// Gets or sets the data types to archive. Value of <c>*</c> (or empty string) means all values archived, <c>DIGI</c> means only archive digital values. Separate multiple values with a comma, for example: <c>DIGI,VPHM,FREQ</c>.
@@ -378,7 +418,7 @@ public class PIOutputAdapter : OutputAdapterBase
     /// Gets or sets the data types to only archive on change. Empty string value means all values archived, <c>*</c> means archive all values on change, <c>DIGI</c> means only archive digital values on change. Separate multiple values with a comma, for example: <c>DIGI,VPHM,FREQ</c>.
     /// </summary>
     [ConnectionStringParameter]
-    [Description("Defines the data types to only archive on change. Empty string value means all values archived, '*' means archive all values on change, and 'DIGI' means only archive digital values on change. Separate multiple values with a comma, for example: DIGI,VPHM,FREQ")]
+    [Description("Defines the data types to only archive on change. Empty string value means all values archived, '*' means archive all values on change, 'DIGI' means only archive digital values on change. Separate multiple values with a comma, for example: DIGI,VPHM,FREQ")]
     [DefaultValue(DefaultArchiveOnChangeDataTypes)]
     public string ArchiveOnChangeDataTypes
     {
@@ -480,7 +520,9 @@ public class PIOutputAdapter : OutputAdapterBase
             status.AppendLine($"       Connected to server: {(m_connection?.Connected ?? false ? "Yes" : "No")}");
             status.AppendLine($"         Using compression: {UseCompression}");
             status.AppendLine($"   Replace existing values: {(UseCompression ? ReplaceValues : "N/A when not using compression")}");
+            status.AppendLine($" Add tag compression state: {AddTagCompressionState}");
             status.AppendLine($"  Update compression state: {UpdateExistingTagCompressionState}");
+            status.AppendLine($" Compression deviation map: {CompDevDataTypeMap}");
             status.AppendLine($" Archive filter data types: {ArchiveFilterDataTypes}");
             status.AppendLine($"   Archive on change types: {ArchiveOnChangeDataTypes}");
             status.AppendLine($"  Maximum point resolution: {MaximumPointResolution:N3} seconds{(MaximumPointResolution <= 0.0D ? " - all data will be archived" : "")}");
@@ -646,8 +688,13 @@ public class PIOutputAdapter : OutputAdapterBase
         // Derive update option based on UseCompression / ReplaceValues settings
         m_updateOption = UseCompression ? ReplaceValues ? AFUpdateOption.Replace : AFUpdateOption.Insert : AFUpdateOption.InsertNoCompression;
 
+        if (settings.TryGetValue(nameof(AddTagCompressionState), out setting))
+            AddTagCompressionState = setting.ParseBoolean();
+
         if (settings.TryGetValue(nameof(UpdateExistingTagCompressionState), out setting))
             UpdateExistingTagCompressionState = setting.ParseBoolean();
+
+        CompDevDataTypeMap = settings.TryGetValue(nameof(CompDevDataTypeMap), out setting) ? setting : DefaultCompDevDataTypeMap;
 
         if (settings.TryGetValue(nameof(ArchiveFilterDataTypes), out setting))
             ArchiveFilterDataTypes = setting;
@@ -1197,11 +1244,11 @@ public class PIOutputAdapter : OutputAdapterBase
                         {
                             List<string> updatedAttributes = [];
 
-                            void updateAttribute(string attribute, object newValue)
+                            void updateAttribute(string attribute, object newValue, bool onlyUpdateIfEmpty = false)
                             {
                                 string oldValue = point.GetAttribute(attribute).ToString();
 
-                                if (string.IsNullOrEmpty(oldValue) || string.CompareOrdinal(oldValue, newValue.ToString()) != 0)
+                                if (string.IsNullOrEmpty(oldValue) || (!onlyUpdateIfEmpty && string.CompareOrdinal(oldValue, newValue.ToString()) != 0))
                                 {
                                     point.SetAttribute(attribute, newValue);
                                     updatedAttributes.Add(attribute);
@@ -1217,6 +1264,7 @@ public class PIOutputAdapter : OutputAdapterBase
                                     PICommonPointAttributes.ExtendedDescriptor,
                                     PICommonPointAttributes.Tag,
                                     PICommonPointAttributes.Compressing,
+                                    PICommonPointAttributes.CompressionDeviation,
                                     PICommonPointAttributes.EngineeringUnits);
 
                                 // Update tag meta-data if it has changed
@@ -1225,8 +1273,19 @@ public class PIOutputAdapter : OutputAdapterBase
                                 updateAttribute(PICommonPointAttributes.ExtendedDescriptor, measurementRow["SignalID"].ToString());
                                 updateAttribute(PICommonPointAttributes.Tag, tagName);
 
-                                if (createdNewTag || UpdateExistingTagCompressionState)
+                                if (createdNewTag || AddTagCompressionState || UpdateExistingTagCompressionState)
+                                {
                                     updateAttribute(PICommonPointAttributes.Compressing, UseCompression ? 1 : 0);
+
+                                    if (UseCompression && (AddTagCompressionState || UpdateExistingTagCompressionState))
+                                    {
+                                        // Update compression deviation if needed
+                                        if (!m_compDevDataTypeMap.TryGetValue(measurementRow["SignalType"].ToString(), out double compDev))
+                                            compDev = m_defaultCompDev;
+
+                                        updateAttribute(PICommonPointAttributes.CompressionDeviation, compDev, AddTagCompressionState && !UpdateExistingTagCompressionState);
+                                    }
+                                }
 
                                 // Engineering units is a new field for this view -- handle the case that it's not there
                                 if (measurements.Columns.Contains("EngineeringUnits"))
