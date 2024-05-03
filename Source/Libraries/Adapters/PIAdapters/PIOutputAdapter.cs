@@ -345,10 +345,10 @@ public class PIOutputAdapter : OutputAdapterBase
     public bool UpdateExistingTagCompressionState { get; set; } = DefaultUpdateExistingTagCompressionState;
 
     /// <summary>
-    /// Gets or sets the defined compression deviations for data types used when UpdateExistingTagCompressionState is enabled.
+    /// Gets or sets the defined compression deviations for data types used when AddTagCompressionState or UpdateExistingTagCompressionState is enabled.
     /// </summary>
     [ConnectionStringParameter]
-    [Description("Defines the defined compression deviations for data types used when UpdateExistingTagCompressionState is enabled. Use format \"DataType=Deviation,DataType=Deviation,...\". Default is \"IPHM=0.1,IPHA=0.001,VPHM=10,VPHA=0.001,FREQ=0.0001,DFDT=0.0001,ALOG=0.001,*=0.001\".")]
+    [Description($"Defines the defined compression deviations for data types used when AddTagCompressionState or UpdateExistingTagCompressionState is enabled. Use format \"DataType=Deviation,DataType=Deviation,...\". Default is \"{DefaultCompDevDataTypeMap}\".")]
     [DefaultValue(DefaultCompDevDataTypeMap)]
     public string CompDevDataTypeMap
     {
@@ -1279,7 +1279,7 @@ public class PIOutputAdapter : OutputAdapterBase
 
                                     if (UseCompression && (AddTagCompressionState || UpdateExistingTagCompressionState))
                                     {
-                                        // Update compression deviation if needed
+                                        // Add or update compression deviation if needed
                                         if (!m_compDevDataTypeMap.TryGetValue(measurementRow["SignalType"].ToString(), out double compDev))
                                             compDev = m_defaultCompDev;
 
