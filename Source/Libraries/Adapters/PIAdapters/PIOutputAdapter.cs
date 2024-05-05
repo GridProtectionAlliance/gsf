@@ -123,7 +123,7 @@ public class PIOutputAdapter : OutputAdapterBase
     private const bool DefaultAddTagCompressionState = false;
     private const bool DefaultUpdateExistingTagCompressionState = false;
     private const string DefaultCompDev = "0.001";
-    private const string DefaultCompDevDataTypeMap = $"IPHM=0.1,IPHA=0.001,VPHM=10,VPHA=0.001,FREQ=0.0001,DFDT=0.0001,ALOG=0.001,*={DefaultCompDev}";
+    private const string DefaultCompDevDataTypeMap = $"IPHM=0.1,IPHA=0.001,VPHM=10,VPHA=0.001,FREQ=0.0001,DFDT=0.0001,ALOG=0.001,DIGI=0,FLAG=0,ALRM=0,QUAL=0,*={DefaultCompDev}";
     private const string DefaultArchiveFilterDataTypes = "*";
     private const string DefaultArchiveOnChangeDataTypes = "";
     private const string DefaultTagMapCacheFileName = "";
