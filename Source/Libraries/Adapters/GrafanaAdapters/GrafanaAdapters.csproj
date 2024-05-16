@@ -76,6 +76,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataSourceValueTypes\DataSourceValueTypeCache.cs" />
+    <Compile Include="Functions\BuiltIn\KalmanFilter.cs" />
     <Compile Include="Functions\BuiltIn\Clamp.cs" />
     <Compile Include="Functions\BuiltIn\Reference.cs" />
     <Compile Include="Functions\BuiltIn\Switch.cs" />
