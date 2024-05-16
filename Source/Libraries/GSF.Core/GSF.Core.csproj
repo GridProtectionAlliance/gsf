@@ -301,6 +301,7 @@
     <Compile Include="Net\Smtp\Mail.cs" />
     <Compile Include="Net\Smtp\NamespaceDoc.cs" />
     <Compile Include="NumericalAnalysis\CurveFit.cs" />
+    <Compile Include="NumericalAnalysis\KalmanFilter.cs" />
     <Compile Include="NumericalAnalysis\RealTimeSlope.cs" />
     <Compile Include="NumericalAnalysis\SplineFit.cs" />
     <Compile Include="NumericalAnalysis\WaveFit.cs" />
