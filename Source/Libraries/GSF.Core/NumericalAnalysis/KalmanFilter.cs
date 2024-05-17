@@ -22,6 +22,8 @@
 //******************************************************************************************************
 // ReSharper disable InconsistentNaming
 
+using System.Collections.Generic;
+
 namespace GSF.NumericalAnalysis;
 
 /// <summary>
@@ -112,5 +114,21 @@ public class KalmanFilter
 
         // Return the updated state prediction
         return X;
+    }
+
+    /// <summary>
+    /// Filters a set of measurements.
+    /// </summary>
+    /// <param name="measurements">Signals to filter.</param>
+    /// <returns>Measurements with Kalman filter applied.</returns>
+    // NOTE: IReadOnlyList is implemented by List<T> and T[] so this method can be used with either.
+    public double[] Filter(IReadOnlyList<double> measurements)
+    {
+        double[] results = new double[measurements.Count];
+
+        for (int i = 0; i < measurements.Count; i++)
+            results[i] = Update(measurements[i]);
+
+        return results;
     }
 }
