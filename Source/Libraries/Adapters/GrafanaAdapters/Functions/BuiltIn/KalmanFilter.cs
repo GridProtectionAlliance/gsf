@@ -35,6 +35,12 @@ public abstract class KalmanFilter<T> : GrafanaFunctionBase<T> where T : struct,
     public override ReturnType ReturnType => ReturnType.Series;
 
     /// <inheritdoc />
+    public override bool IsSliceSeriesEquivalent => false;
+
+    /// <inheritdoc />
+    public override GroupOperations PublishedGroupOperations => GroupOperations.None | GroupOperations.Set;
+
+    /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>
     {
         new ParameterDefinition<double>
