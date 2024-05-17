@@ -1,9 +1,9 @@
 ﻿using GrafanaAdapters.DataSourceValueTypes;
 using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
+using GSF.NumericalAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using GSF.NumericalAnalysis;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
 
