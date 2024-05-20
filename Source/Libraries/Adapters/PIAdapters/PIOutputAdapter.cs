@@ -54,6 +54,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using static PIAdapters.IeeeC37118DigitalStateSets;
 
 namespace PIAdapters;
 
@@ -97,6 +98,113 @@ public enum TagRemovalOperation
     FullClone
 }
 
+/// <summary>
+/// Defines the available digital state sets for IEEE C37.118 connection states and status word bits.
+/// </summary>
+/// <remarks>
+/// These digital state sets are used to expand the status word bits into individual digital tags and are
+/// modeled on the IEEE C37.118 Interface to the PI System for compatibility with that system.
+/// </remarks>
+public readonly struct IeeeC37118DigitalStateSets
+{
+    /// <summary>
+    /// Represents the composite quality status digital state.
+    /// </summary>
+    /// <remarks>
+    /// Digital tag receives a composite status from the Data Valid, PMU Error, Sync Error and Data Sorting flags.
+    /// If any of these flags are set, the value of this tag will be set to 1. Otherwise, it will be zero.
+    /// </remarks>
+    public const int CompositeQual = 0;
+
+    /// <summary>
+    /// Represents the configuration change status bit digital state.
+    /// </summary>
+    /// <remarks>
+    /// Digital tag that is set to 1 when the configuration change flag (bit 10) in the STAT word is true.
+    /// </remarks>
+    public const int ConfigChange = 1;
+
+    /// <summary>
+    /// Represents the connect state status bit digital state.
+    /// </summary>
+    /// <remarks>
+    /// Digital tag receives the current connection state.
+    /// </remarks>
+    public const int ConnectState = 2;
+
+    /// <summary>
+    /// Represents the data sorting status bit digital state.
+    /// </summary>
+    /// <remarks>
+    /// Digital tag receives the Data Sorting bit (12) from the STAT word.
+    /// </remarks>
+    public const int DataSorting = 3;
+
+    /// <summary>
+    /// Represents the data valid status bit digital state.
+    /// </summary>
+    /// <remarks>
+    /// Digital tag receives the Data Validity bit (15) from the STAT word. 
+    /// </remarks>
+    public const int DataValid = 4;
+
+    /// <summary>
+    /// Represents the leap second status bits digital state.
+    /// </summary>
+    /// <remarks>
+    /// Digital tag receives the Leap Second quality bits (6-4) from the time quality flags. 
+    /// </remarks>
+    public const int LeapSecond = 5;
+
+    /// <summary>
+    /// Represents the nominal frequency status bit digital state.
+    /// </summary>
+    /// <remarks>
+    /// Nominal line frequency (FNOM) from last CONFIG block.
+    /// </remarks>
+    public const int NominalFreq = 6;
+
+    /// <summary>
+    /// Represents the PMU error status bit digital state.
+    /// </summary>
+    /// <remarks>
+    /// Digital tag receives the PMU Error bit (14) from the STAT word.
+    /// </remarks>
+    public const int PMUError = 7;
+
+    /// <summary>
+    /// Represents the time sync error status bit digital state.
+    /// </summary>
+    /// <remarks>
+    /// Digital tag receives the PMU Sync Error bit (13) from the STAT word. 
+    /// </remarks>
+    public const int SyncError = 8;
+
+    /// <summary>
+    /// Represents the timelock status bits digital state.
+    /// </summary>
+    /// <remarks>
+    /// Digital tag receives the Unlocked Time quality bits (5-4) from the STAT word.
+    /// </remarks>
+    public const int Timelock = 9;
+
+    /// <summary>
+    /// Represents the time quality status bits digital state.
+    /// </summary>
+    /// <remarks>
+    /// Digital tag receives the Time Quality bits (3-0) from the time quality flags.
+    /// </remarks>
+    public const int TimeQuality = 10;
+
+    /// <summary>
+    /// Represents the trigger status bits digital state.
+    /// </summary>
+    /// <remarks>
+    /// Digital tag receives the Trigger Reason bits (3-0) from the STAT word
+    /// </remarks>
+    public const int Trigger = 11;
+}
+
 #endregion
 
 /// <summary>
@@ -135,7 +243,7 @@ public class PIOutputAdapter : OutputAdapterBase
     private const double DefaultFutureTimeReasonabilityLimit = 43200.0D;
     private const bool DefaultExpandStatusBitsToTags = false;
     private const bool DefaultWriteStatusWord = true;
-    private const string DefaultStatusBitDigitalStateSets = "PIC37118_CompositeQual,PIC37118_ConfigChange,PIC37118_ConnectState,PIC37118_DataSorting,PIC37118_DataValid,PIC37118_LeapSecond,PIC37118_NominalFreq,PIC37118_PMUError,PIC37118_SyncError,PIC37118_Timelock,PIC37118_TimeQuality,PIC37118_Trigger";
+    private const string DefaultStatusBitDigitalStateSets = $"C37118_{nameof(CompositeQual)},C37118_{nameof(ConfigChange)},C37118_{nameof(ConnectState)},C37118_{nameof(DataSorting)},C37118_{nameof(DataValid)},C37118_{nameof(LeapSecond)},C37118_{nameof(NominalFreq)},C37118_{nameof(PMUError)},C37118_{nameof(SyncError)},C37118_{nameof(Timelock)},C37118_{nameof(TimeQuality)},C37118_{nameof(Trigger)}";
     private const bool DefaultExpandDigitalBitsToTags = false;
     private const bool DefaultWriteDigitalWord = true;
     private const string DefaultDigitalStateSetExpressionMap = "";
@@ -532,13 +640,13 @@ public class PIOutputAdapter : OutputAdapterBase
 
 
     /// <summary>
-    /// Gets or sets the comma separated digital state set names for IEEE C37.118 status word bits. Specify digital state set name for each of the following bits using value of 'X' (without quotes)
+    /// Gets or sets the comma separated digital state set names for IEEE C37.118 status word bits. Specify digital state set name for each of the following digital states using value of 'X' (without quotes)
     /// to indicate bit is not mapped: CompositeQual, ConfigChange, ConnectState, DataSorting, DataValid, LeapSecond, NominalFreq, PMUError, SyncError, Timelock, TimeQuality, and Trigger.
     /// If digital sets are predefined, state values are expected to be zero based and incremented by one for each value. If specified digital set name does not exist, it will be created.
     /// </summary>
     [ConnectionStringParameter]
     [Description(
-        "Defines the comma separated digital state set names for IEEE C37.118 status word bits. Specify digital state set name for each of the following bits using value of 'X' (without quotes) " +
+        "Defines the comma separated digital state set names for IEEE C37.118 status word bits. Specify digital state set name for each of the following digital states using value of 'X' (without quotes) " +
         "to indicate bit is not mapped:\r\n CompositeQual, ConfigChange, ConnectState, DataSorting, DataValid, LeapSecond, NominalFreq, PMUError, SyncError, Timelock, TimeQuality, and Trigger.\r\n" +
         "If digital sets are predefined, state values are expected to be zero based and incremented by one for each value. If specified digital set name does not exist, it will be created."
     )]
@@ -1751,25 +1859,24 @@ public class PIOutputAdapter : OutputAdapterBase
     /// <summary>
     /// Predefined status bit digital state sets.
     /// </summary>
-    public static readonly ReadOnlyCollection<string[]> PredefinedStatusBitDigitalStateSets = new(
+    public static readonly ReadOnlyCollection<string[]> PredefinedIeeeC37118DigitalStateSets = new(
     [
-        /* PIC37118_CompositeQual */ ["Good Quality", "Bad Quality"],
-        /* PIC37118_ConfigChange */  ["No Configuration Change", "Configuration Changed"],
-        /* PIC37118_ConnectState */  ["Connected", "Not Connected"],
-        /* PIC37118_DataSorting */   ["By Time", "By Arrival"],
-        /* PIC37118_DataValid */     ["Valid", "Invalid"],
-        /* PIC37118_LeapSecond */    ["No Leap Second", "Positive Leap Second Occurred", "Negative Leap Second Occurred", "Positive Leap Second Pending", "Negative Leap Second Pending"],
-        /* PIC37118_NominalFreq */   ["60Hz", "50Hz"],
-        /* PIC37118_PMUError */      ["Normal", "PMU Error"],
-        /* PIC37118_SyncError */     ["Normal", "Sync Error"],
-        /* PIC37118_TimeLock */      ["Locked", "Unlocked_10s", "Unlocked_100s", "Unlocked_1000s"],
-        /* PIC37118_TimeQuality */   ["Locked", "Unlocked Within 10^-9s", "Unlocked Within 10^-8s", "Unlocked Within 10^-7s",
-                                      "Unlocked Within 10^-6s", "Unlocked Within 10^-5s", "Unlocked Within 10^-4s", "Unlocked Within 10^-3s",
-                                      "Unlocked Within 10^-2s", "Unlocked Within 10^-1s", "Unlocked Within 1s", "Unlocked Within 10s", "Failure"],
-        /* PIC37118_Trigger */       ["Manual", "Magnitude High", "Frequency High/Low", "Reserved", "Magnitude Low", "Phase Angle Difference",
-                                      "dF/dt High", "Digital", "Vendor Defined Trigger 1", "Vendor Defined Trigger 2", "Vendor Defined Trigger 3",
-                                      "Vendor Defined Trigger 4", "Vendor Defined Trigger 5", "Vendor Defined Trigger 6", "Vendor Defined Trigger 7",
-                                      "Vendor Defined Trigger 8"]
+        /* C37118_CompositeQual */ ["Good", "Bad Quality"],
+        /* C37118_ConfigChange */  ["Normal", "Change Pending"],
+        /* C37118_ConnectState */  ["Connected", "Disconnected"],
+        /* C37118_DataSorting */   ["By Time", "By Arrival"],
+        /* C37118_DataValid */     ["Valid", "Invalid"],
+        /* C37118_LeapSecond */    ["Normal", "LeapAddPending", "LeapAddOccurred", "Transient", "Normal", "LeapDeletePending", "LeapDeleteOccurred", "Transient"],
+        /* C37118_NominalFreq */   ["60Hz", "50Hz"],
+        /* C37118_PMUError */      ["Normal", "PMU Error"],
+        /* C37118_SyncError */     ["Normal", "Sync Error"],
+        /* C37118_TimeLock */      ["Locked", "Unlocked_10s", "Unlocked_100s", "Unlocked_1000s"],
+        /* C37118_TimeQuality */   ["Locked", "MaxError_10E-9s", "MaxError_10E-8s", "MaxError_10E-7s",
+                                    "MaxError_10E-6s", "MaxError_10E-5s", "MaxError_10E-4s", "MaxError_10E-3s",
+                                    "MaxError_10E-2s", "MaxError_10E-1s", "MaxError_1s", "MaxError_10s", "Clock_Failure"],
+        /* C37118_Trigger */       ["Manual", "Magnitude Low", "Magnitude_High", "PhaseAngle_Diff", "Frequency_High_Low", "df/dt_High",
+                                    "Reserved", "Digital", "UserDefined_1", "UserDefined_2", "UserDefined_3",
+                                    "UserDefined_4", "UserDefined_5", "UserDefined_6", "UserDefined_7", "Normal"]
     ]);
 
     #endregion
