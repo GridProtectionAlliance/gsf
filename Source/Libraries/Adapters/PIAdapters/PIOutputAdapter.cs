@@ -46,11 +46,13 @@ using OSIsoft.AF.Time;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace PIAdapters;
@@ -131,6 +133,12 @@ public class PIOutputAdapter : OutputAdapterBase
     private const bool DefaultEnableTimeReasonabilityCheck = false;
     private const double DefaultPastTimeReasonabilityLimit = 43200.0D;
     private const double DefaultFutureTimeReasonabilityLimit = 43200.0D;
+    private const bool DefaultExpandStatusBitsToTags = false;
+    private const bool DefaultWriteStatusWord = true;
+    private const string DefaultStatusBitDigitalStateSets = "PIC37118_CompositeQual,PIC37118_ConfigChange,PIC37118_ConnectState,PIC37118_DataSorting,PIC37118_DataValid,PIC37118_LeapSecond,PIC37118_NominalFreq,PIC37118_PMUError,PIC37118_SyncError,PIC37118_Timelock,PIC37118_TimeQuality,PIC37118_Trigger";
+    private const bool DefaultExpandDigitalBitsToTags = false;
+    private const bool DefaultWriteDigitalWord = true;
+    private const string DefaultDigitalStateSetExpressionMap = "";
 
     // Fields
 
@@ -148,6 +156,7 @@ public class PIOutputAdapter : OutputAdapterBase
     private HashSet<SignalType> m_archiveOnChangeDataTypes;             // Data types to archive on change
     private Dictionary<string, double> m_compDevDataTypeMap;            // Defined compression deviations for data types
     private double m_defaultCompDev;                                    // Default compression deviation
+    private Dictionary<string, Regex> m_digitalStateSetExpressionMap;   // Digital state set name to digital label expression map
     private readonly Dictionary<Guid, double> m_lastArchiveValues;      // Cache of last point archive values
     private readonly Dictionary<Guid, SignalType> m_signalTypeMap;      // Map of signal types for encountered measurements
     private PIConnection m_connection;                                  // PI server connection for meta-data synchronization
@@ -448,9 +457,9 @@ public class PIOutputAdapter : OutputAdapterBase
                     if (Enum.TryParse(dataType, true, out SignalType signalType))
                         archiveOnChangeDataTypes.Add(signalType);
                 }
-            
+
                 if (hasAsterisk)
-                    archiveOnChangeDataTypes = [..Enum.GetValues(typeof(SignalType)).Cast<SignalType>()];
+                    archiveOnChangeDataTypes = [.. Enum.GetValues(typeof(SignalType)).Cast<SignalType>()];
 
                 m_archiveOnChangeDataTypes = archiveOnChangeDataTypes.Count > 0 ? archiveOnChangeDataTypes : null;
             }
@@ -506,6 +515,86 @@ public class PIOutputAdapter : OutputAdapterBase
     }
 
     /// <summary>
+    /// Gets or sets flag that determines if status bits should be expanded to tags.
+    /// </summary>
+    [ConnectionStringParameter]
+    [Description("Determines if status bits should be expanded to tags.")]
+    [DefaultValue(DefaultExpandStatusBitsToTags)]
+    public bool ExpandStatusBitsToTags { get; set; } = DefaultExpandStatusBitsToTags;
+
+    /// <summary>
+    /// Gets or sets flag that determines if status word should be written to PI as a separate tag. Commonly disabled if status bits are expanded to tags, see <see cref="ExpandStatusBitsToTags"/>.
+    /// </summary>
+    [ConnectionStringParameter]
+    [Description($"Determines if status word should be written to PI as a separate tag. Commonly disabled if status bits are expanded to tags, see \"{nameof(ExpandStatusBitsToTags)}\".")]
+    [DefaultValue(DefaultWriteStatusWord)]
+    public bool WriteStatusWord { get; set; } = DefaultWriteStatusWord;
+
+
+    /// <summary>
+    /// Gets or sets the comma separated digital state set names for IEEE C37.118 status word bits. Specify digital state set name for each of the following bits using value of 'X' (without quotes)
+    /// to indicate bit is not mapped: CompositeQual, ConfigChange, ConnectState, DataSorting, DataValid, LeapSecond, NominalFreq, PMUError, SyncError, Timelock, TimeQuality, and Trigger.
+    /// If digital sets are predefined, state values are expected to be zero based and incremented by one for each value. If specified digital set name does not exist, it will be created.
+    /// </summary>
+    [ConnectionStringParameter]
+    [Description(
+        "Defines the comma separated digital state set names for IEEE C37.118 status word bits. Specify digital state set name for each of the following bits using value of 'X' (without quotes) " +
+        "to indicate bit is not mapped:\r\n CompositeQual, ConfigChange, ConnectState, DataSorting, DataValid, LeapSecond, NominalFreq, PMUError, SyncError, Timelock, TimeQuality, and Trigger.\r\n" +
+        "If digital sets are predefined, state values are expected to be zero based and incremented by one for each value. If specified digital set name does not exist, it will be created."
+    )]
+    [DefaultValue(DefaultStatusBitDigitalStateSets)]
+    // TODO: Store value in a more code-friendly format and validate format / count 
+    public string StatusBitDigitalStateSets { get; set; } = DefaultStatusBitDigitalStateSets;
+
+    /// <summary>
+    /// Gets or sets flag that determines if digital bits should be expanded to tags.
+    /// </summary>
+    [ConnectionStringParameter]
+    [Description("Determines if digital bits should be expanded to tags.")]
+    [DefaultValue(DefaultExpandDigitalBitsToTags)]
+    public bool ExpandDigitalBitsToTags { get; set; } = DefaultExpandDigitalBitsToTags;
+
+    /// <summary>
+    /// Gets or sets flag that determines if digital word should be written to PI as a separate tag. Commonly disabled if digital bits are expanded to tags, see <see cref="ExpandDigitalBitsToTags"/>.
+    /// </summary>
+    [ConnectionStringParameter]
+    [Description($"Determines if digital word should be written to PI as a separate tag. Commonly disabled if digital bits are expanded to tags, see \"{nameof(ExpandDigitalBitsToTags)}\".")]
+    [DefaultValue(DefaultWriteDigitalWord)]
+    public bool WriteDigitalWord { get; set; } = DefaultWriteDigitalWord;
+
+    /// <summary>
+    /// Gets or sets pre-existing digital state set names mapped to a regular expression for matching digital labels. Use format "DigitalStateName=Expression;DigitalStateName=Expression;...". Use "*" for default expression.
+    /// </summary>
+    [ConnectionStringParameter]
+    [Description("Defines pre-existing digital state set names mapped to a regular expression for matching digital labels. Use format \"DigitalStateName=Expression;DigitalStateName=Expression;...\". Use \"*\" for default expression.")]
+    [DefaultValue(DefaultDigitalStateSetExpressionMap)]
+    public string DigitalStateSetExpressionMap
+    {
+        get => m_digitalStateSetExpressionMap is null ? "" : string.Join("; ", m_digitalStateSetExpressionMap.Select(kvp => $"{kvp.Key}={kvp.Value}"));
+        set
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                m_digitalStateSetExpressionMap = null;
+                return;
+            }
+
+            Dictionary<string, Regex> digitalStateSetExpressionMap = new(StringComparer.OrdinalIgnoreCase);
+            Dictionary<string, string> settings = value.ParseKeyValuePairs();
+
+            foreach (KeyValuePair<string, string> setting in settings)
+            {
+                string key = setting.Key.Trim();
+                string expression = setting.Value.Trim();
+
+                digitalStateSetExpressionMap[key] = new Regex(expression, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            }
+
+            m_digitalStateSetExpressionMap = digitalStateSetExpressionMap;
+        }
+    }
+
+    /// <summary>
     /// Returns the detailed status of the data output source.
     /// </summary>
     public override string Status
@@ -527,6 +616,12 @@ public class PIOutputAdapter : OutputAdapterBase
             status.AppendLine($"   Archive on change types: {ArchiveOnChangeDataTypes}");
             status.AppendLine($"  Maximum point resolution: {MaximumPointResolution:N3} seconds{(MaximumPointResolution <= 0.0D ? " - all data will be archived" : "")}");
             status.AppendLine($"  Time reasonability check: {(EnableTimeReasonabilityCheck ? "Enabled" : "Not Enabled")}");
+            status.AppendLine($" Write Status Bits to Tags: {ExpandStatusBitsToTags}");
+            status.AppendLine($"         Write Status Word: {WriteStatusWord}");
+            status.AppendLine($" Status Bit Digital States: {StatusBitDigitalStateSets}");
+            status.AppendLine($"Write Digital Bits to Tags: {ExpandDigitalBitsToTags}");
+            status.AppendLine($"        Write Digital Word: {WriteDigitalWord}");
+            status.AppendLine($" Digital State Expressions: {DigitalStateSetExpressionMap}");
 
             if (EnableTimeReasonabilityCheck)
             {
@@ -650,7 +745,7 @@ public class PIOutputAdapter : OutputAdapterBase
     /// </summary>
     /// <param name="maxLength">Maximum number of characters in the status string</param>
     /// <returns>Status</returns>
-    public override string GetShortStatus(int maxLength) => 
+    public override string GetShortStatus(int maxLength) =>
         $"Archived {m_processedMeasurements:N0} measurements to PI.".CenterText(maxLength);
 
     /// <summary>
@@ -671,16 +766,16 @@ public class PIOutputAdapter : OutputAdapterBase
         Instances[ServerName] = this;
 
         if (settings.TryGetValue(nameof(UserName), out setting))
-            UserName =  setting;
+            UserName = setting;
 
         if (settings.TryGetValue(nameof(Password), out setting))
             Password = setting;
 
         if (settings.TryGetValue(nameof(ConnectTimeout), out setting) && int.TryParse(setting, out int intVal))
             ConnectTimeout = intVal;
-            
+
         if (settings.TryGetValue(nameof(UseCompression), out setting))
-            UseCompression  = setting.ParseBoolean();
+            UseCompression = setting.ParseBoolean();
 
         if (settings.TryGetValue(nameof(ReplaceValues), out setting))
             ReplaceValues = setting.ParseBoolean();
@@ -755,6 +850,24 @@ public class PIOutputAdapter : OutputAdapterBase
             FutureTimeReasonabilityLimit = value;
         else
             FutureTimeReasonabilityLimit = DefaultFutureTimeReasonabilityLimit;
+
+        if (settings.TryGetValue(nameof(ExpandStatusBitsToTags), out setting))
+            ExpandStatusBitsToTags = setting.ParseBoolean();
+
+        if (settings.TryGetValue(nameof(WriteStatusWord), out setting))
+            WriteStatusWord = setting.ParseBoolean();
+
+        if (settings.TryGetValue(nameof(StatusBitDigitalStateSets), out setting))
+            StatusBitDigitalStateSets = setting;
+
+        if (settings.TryGetValue(nameof(ExpandDigitalBitsToTags), out setting))
+            ExpandDigitalBitsToTags = setting.ParseBoolean();
+
+        if (settings.TryGetValue(nameof(WriteDigitalWord), out setting))
+            WriteDigitalWord = setting.ParseBoolean();
+
+        if (settings.TryGetValue(nameof(DigitalStateSetExpressionMap), out setting))
+            DigitalStateSetExpressionMap = setting;
     }
 
     /// <summary>
@@ -929,6 +1042,10 @@ public class PIOutputAdapter : OutputAdapterBase
                     if (m_lastArchiveTimes is not null && (measurement.Timestamp - m_lastArchiveTimes.GetOrAdd(measurement.Key.SignalID, measurement.Timestamp)).ToSeconds() < MaximumPointResolution)
                         continue;
 
+                    // TODO: Check if measurement is a status value and expand to tags
+                    
+                    // TODO: Check if measurement is a digital value and expand to tags
+
                     // Queue up insert operations for parallel processing
                     m_archiveQueues[point.ID % m_archiveQueues.Length].Add
                     (
@@ -1084,6 +1201,8 @@ public class PIOutputAdapter : OutputAdapterBase
         MeasurementKey[] inputMeasurements = InputMeasurementKeys;
         int previousMeasurementReportingInterval = MeasurementReportingInterval;
         DateTime latestUpdateTime = DateTime.MinValue;
+
+        // TODO: Create hashset of status flags and digital states to be used for tag expansion
 
         m_refreshingMetadata = RunMetadataSync;
 
@@ -1360,7 +1479,7 @@ public class PIOutputAdapter : OutputAdapterBase
         {
             m_lastMetadataRefresh = latestUpdateTime > DateTime.MinValue ? latestUpdateTime : DateTime.UtcNow;
 
-            OnStatusMessage(MessageLevel.Info, handlingTagRemoval ? 
+            OnStatusMessage(MessageLevel.Info, handlingTagRemoval ?
                 "Completed metadata add/update sync operations successfully, starting delete sync operations..." :
                 "Completed metadata sync operations successfully.");
 
@@ -1392,7 +1511,7 @@ public class PIOutputAdapter : OutputAdapterBase
 
         PIServer server = m_connection.Server;
         string sourceFilter = AutoRemoveTags == TagRemovalOperation.LocalOnly ? PIPointSource : null;
-        IEnumerable<PIPoint> points = PIPoint.FindPIPoints(server, "*", sourceFilter, [ PICommonPointAttributes.Tag, PICommonPointAttributes.ExtendedDescriptor ]);
+        IEnumerable<PIPoint> points = PIPoint.FindPIPoints(server, "*", sourceFilter, [PICommonPointAttributes.Tag, PICommonPointAttributes.ExtendedDescriptor]);
         List<string> pointsToDelete = [];
         double total = server.GetPointCount();
         long processed = 0L;
@@ -1442,7 +1561,7 @@ public class PIOutputAdapter : OutputAdapterBase
         if (pointsToDelete.Count > 0)
         {
             OnStatusMessage(MessageLevel.Info, $"Delete sync operation found {pointsToDelete.Count:N0} PI tags to be removed, attempting deletion...");
-                
+
             AFErrors<string> result = server.DeletePIPoints(pointsToDelete);
 
             if (result?.HasErrors ?? false)
@@ -1484,7 +1603,7 @@ public class PIOutputAdapter : OutputAdapterBase
         if (newTags.Count > 0)
         {
             // Determine which tags no longer exist
-            HashSet<MeasurementKey> tagsToRemove = [..m_mappedPIPoints.Keys];
+            HashSet<MeasurementKey> tagsToRemove = [.. m_mappedPIPoints.Keys];
 
             // If there are existing tags that are not part of new updates, these need to be removed
             tagsToRemove.ExceptWith(newTags);
@@ -1504,8 +1623,8 @@ public class PIOutputAdapter : OutputAdapterBase
         {
             OnStatusMessage(MessageLevel.Warning, "No PI tags were mapped to measurements - " +
             (
-              m_mappedPIPoints.Count > 0 ? 
-                  $"existing tag-map with {m_mappedPIPoints.Count:N0} tags remains in use." : 
+              m_mappedPIPoints.Count > 0 ?
+                  $"existing tag-map with {m_mappedPIPoints.Count:N0} tags remains in use." :
                   "no tag-map exists so no points will be archived.")
             );
         }
@@ -1555,7 +1674,7 @@ public class PIOutputAdapter : OutputAdapterBase
         return point;
     }
 
-    private PIPoint GetPIPointBySignalID(PIServer server, Guid signalID) => 
+    private PIPoint GetPIPointBySignalID(PIServer server, Guid signalID) =>
         GetPIPointBySignalID(server, signalID, out string _);
 
     private PIPoint GetPIPointBySignalID(PIServer server, Guid signalID, out string cachedTagName)
@@ -1617,7 +1736,7 @@ public class PIOutputAdapter : OutputAdapterBase
     }
 
     // Since we may get a plethora of these requests, we use a synchronized operation to restart once
-    private void Connection_Disconnected(object sender, EventArgs e) => 
+    private void Connection_Disconnected(object sender, EventArgs e) =>
         m_restartConnection.RunOnceAsync();
 
     #endregion
@@ -1628,6 +1747,30 @@ public class PIOutputAdapter : OutputAdapterBase
     /// Accesses local output adapter instances (normally only one).
     /// </summary>
     public static readonly ConcurrentDictionary<string, PIOutputAdapter> Instances = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Predefined status bit digital state sets.
+    /// </summary>
+    public static readonly ReadOnlyCollection<string[]> PredefinedStatusBitDigitalStateSets = new(
+    [
+        /* PIC37118_CompositeQual */ ["Good Quality", "Bad Quality"],
+        /* PIC37118_ConfigChange */  ["No Configuration Change", "Configuration Changed"],
+        /* PIC37118_ConnectState */  ["Connected", "Not Connected"],
+        /* PIC37118_DataSorting */   ["By Time", "By Arrival"],
+        /* PIC37118_DataValid */     ["Valid", "Invalid"],
+        /* PIC37118_LeapSecond */    ["No Leap Second", "Positive Leap Second Occurred", "Negative Leap Second Occurred", "Positive Leap Second Pending", "Negative Leap Second Pending"],
+        /* PIC37118_NominalFreq */   ["60Hz", "50Hz"],
+        /* PIC37118_PMUError */      ["Normal", "PMU Error"],
+        /* PIC37118_SyncError */     ["Normal", "Sync Error"],
+        /* PIC37118_TimeLock */      ["Locked", "Unlocked_10s", "Unlocked_100s", "Unlocked_1000s"],
+        /* PIC37118_TimeQuality */   ["Locked", "Unlocked Within 10^-9s", "Unlocked Within 10^-8s", "Unlocked Within 10^-7s",
+                                      "Unlocked Within 10^-6s", "Unlocked Within 10^-5s", "Unlocked Within 10^-4s", "Unlocked Within 10^-3s",
+                                      "Unlocked Within 10^-2s", "Unlocked Within 10^-1s", "Unlocked Within 1s", "Unlocked Within 10s", "Failure"],
+        /* PIC37118_Trigger */       ["Manual", "Magnitude High", "Frequency High/Low", "Reserved", "Magnitude Low", "Phase Angle Difference",
+                                      "dF/dt High", "Digital", "Vendor Defined Trigger 1", "Vendor Defined Trigger 2", "Vendor Defined Trigger 3",
+                                      "Vendor Defined Trigger 4", "Vendor Defined Trigger 5", "Vendor Defined Trigger 6", "Vendor Defined Trigger 7",
+                                      "Vendor Defined Trigger 8"]
+    ]);
 
     #endregion
 }
