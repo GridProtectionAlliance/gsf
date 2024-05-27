@@ -54,6 +54,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using TagGenerator = GSF.Parsing.TemplatedExpressionParser;
 
 namespace PIAdapters;
 
@@ -106,7 +107,7 @@ public enum TagRemovalOperation
 /// based on, and are compatible with, the digital state sets defined for the IEEE C37.118 Interface to
 /// the PI System.
 /// </remarks>
-public readonly struct StatusDigitalStates
+public readonly struct StatusDigitalStateSets
 {
     /// <summary>
     /// Represents the composite quality status digital state.
@@ -246,48 +247,55 @@ public class PIOutputAdapter : OutputAdapterBase
     private const double DefaultFutureTimeReasonabilityLimit = 43200.0D;
     private const bool DefaultExpandStatusBitsToTags = false;
     private const bool DefaultWriteStatusWord = true;
-    private const string DefaultStatusDigitalStates = $"C37118_{nameof(StatusDigitalStates.CompositeQual)},C37118_{nameof(StatusDigitalStates.ConfigChange)},C37118_{nameof(StatusDigitalStates.ConnectState)},C37118_{nameof(StatusDigitalStates.DataSorting)},C37118_{nameof(StatusDigitalStates.DataValid)},C37118_{nameof(StatusDigitalStates.LeapSecond)},C37118_{nameof(StatusDigitalStates.NominalFreq)},C37118_{nameof(StatusDigitalStates.PMUError)},C37118_{nameof(StatusDigitalStates.SyncError)},C37118_{nameof(StatusDigitalStates.Timelock)},C37118_{nameof(StatusDigitalStates.TimeQuality)},C37118_{nameof(StatusDigitalStates.Trigger)}";
+    private const string DefaultStatusBitDigitalStates = $"C37118_{nameof(StatusDigitalStateSets.CompositeQual)},C37118_{nameof(StatusDigitalStateSets.ConfigChange)},C37118_{nameof(StatusDigitalStateSets.ConnectState)},C37118_{nameof(StatusDigitalStateSets.DataSorting)},C37118_{nameof(StatusDigitalStateSets.DataValid)},C37118_{nameof(StatusDigitalStateSets.LeapSecond)},C37118_{nameof(StatusDigitalStateSets.NominalFreq)},C37118_{nameof(StatusDigitalStateSets.PMUError)},C37118_{nameof(StatusDigitalStateSets.SyncError)},C37118_{nameof(StatusDigitalStateSets.Timelock)},C37118_{nameof(StatusDigitalStateSets.TimeQuality)},C37118_{nameof(StatusDigitalStateSets.Trigger)}";
+    private const string DefaultStatusBitTagNameExpressions = "{CompanyAcronym}_{DeviceAcronym}.COMPOSITE_QUAL;{CompanyAcronym}_{DeviceAcronym}.CONFIG_CHANGE;{CompanyAcronym}_{DeviceAcronym}.CONNECT_STATE;{CompanyAcronym}_{DeviceAcronym}.DATA_SORTING;{CompanyAcronym}_{DeviceAcronym}.DATA_VALID;{CompanyAcronym}_{DeviceAcronym}.LEAP_SECOND;{CompanyAcronym}_{DeviceAcronym}.NOMINAL_FREQ;{CompanyAcronym}_{DeviceAcronym}.PMU_ERROR;{CompanyAcronym}_{DeviceAcronym}.SYNC_ERROR;{CompanyAcronym}_{DeviceAcronym}.TIME_LOCK;{CompanyAcronym}_{DeviceAcronym}.TIME_QUALITY;{CompanyAcronym}_{DeviceAcronym}.TRIGGER";
     private const bool DefaultExpandDigitalBitsToTags = false;
     private const bool DefaultWriteDigitalWord = true;
-    private const string DefaultDigitalStateSetExpressionMap = "";
+    private const string DefaultDigitalBitStateExpressionMap = "";
+    private const string DefaultDigitalBitTagNameExpressionMap = "";
+    private const string DefaultDigitalBitExcludedExpressions = "SPARE_BIT;RESERVED_BIT";
 
     // Fields
 
     // Define cached mapping between GSFSchema measurements and PI points
     private readonly ConcurrentDictionary<MeasurementKey, PIPoint> m_mappedPIPoints;
 
-    private readonly ProcessQueue<AFValue>[] m_archiveQueues;           // Collection of point archival queues
-    private readonly ProcessQueue<MeasurementKey> m_mapRequestQueue;    // Requested measurement to PI point mapping queue
-    private readonly ShortSynchronizedOperation m_restartConnection;    // Restart connection operation
-    private readonly ConcurrentDictionary<Guid, string> m_tagMap;       // Tag name to measurement Guid lookup
-    private readonly HashSet<MeasurementKey> m_pendingMappings;         // List of pending measurement mappings
-    private readonly LongSynchronizedOperation m_handleTagRemoval;      // Tag removal operation, if any
-    private Dictionary<Guid, Ticks> m_lastArchiveTimes;                 // Cache of last point archive times
-    private HashSet<SignalType> m_archiveFilterDataTypes;               // Data types to archive
-    private HashSet<SignalType> m_archiveOnChangeDataTypes;             // Data types to archive on change
-    private Dictionary<string, double> m_compDevDataTypeMap;            // Defined compression deviations for data types
-    private double m_defaultCompDev;                                    // Default compression deviation
-    private string[] m_statusDigitalStates;                             // Digital state set names for status info
-    private readonly bool[] m_mappedStatusDigitalStates;                // Enabled status info digital state sets
-    private string[] m_statusTagNameExpressions;
-    private HashSet<MeasurementKey> m_statusMeasurements;               // Measurements that represent status bits
-    private Dictionary<string, Regex> m_digitalStateSetExpressionMap;   // Digital state set name to digital label expression map
-    private Dictionary<MeasurementKey, string[]> m_digitalMeasurements; // Digital measurement map to associated digital state set
-    private Dictionary<MeasurementKey, int[]> m_mappedDigitalBits;      // Mapped digitals bits
-    private Dictionary<string, string> m_digtialTagNameExpressions;
-    private readonly Dictionary<Guid, double> m_lastArchiveValues;      // Cache of last point archive values
-    private readonly Dictionary<Guid, SignalType> m_signalTypeMap;      // Map of signal types for encountered measurements
-    private PIConnection m_connection;                                  // PI server connection for meta-data synchronization
-    private long m_pastTimeReasonabilityLimit;                          // Past-timestamp reasonability limit
-    private long m_futureTimeReasonabilityLimit;                        // Future-timestamp reasonability limit
-    private DateTime m_lastMetadataRefresh;                             // Tracks time of last meta-data refresh
-    private long m_processedMappings;                                   // Total number of mappings processed so far
-    private long m_processedMeasurements;                               // Total number of measurements processed so far
-    private long m_totalProcessingTime;                                 // Total point processing time 
-    private volatile bool m_refreshingMetadata;                         // Flag that determines if meta-data is currently refreshing
-    private double m_metadataRefreshProgress;                           // Current meta-data refresh progress
-    private AFUpdateOption m_updateOption;                              // Active update option for PI point updates
-    private bool m_disposed;                                            // Flag that determines if class is disposed
+    private readonly ProcessQueue<AFValue>[] m_archiveQueues;                   // Collection of point archival queues
+    private readonly ProcessQueue<MeasurementKey> m_mapRequestQueue;            // Requested measurement to PI point mapping queue
+    private readonly ShortSynchronizedOperation m_restartConnection;            // Restart connection operation
+    private readonly ConcurrentDictionary<Guid, string> m_tagMap;               // Tag name to measurement Guid lookup
+    private readonly HashSet<MeasurementKey> m_pendingMappings;                 // List of pending measurement mappings
+    private readonly LongSynchronizedOperation m_handleTagRemoval;              // Tag removal operation, if any
+    private Dictionary<Guid, Ticks> m_lastArchiveTimes;                         // Cache of last point archive times
+    private HashSet<SignalType> m_archiveFilterDataTypes;                       // Data types to archive
+    private HashSet<SignalType> m_archiveOnChangeDataTypes;                     // Data types to archive on change
+    private Dictionary<string, double> m_compDevDataTypeMap;                    // Defined compression deviations for data types
+    private double m_defaultCompDev;                                            // Default compression deviation
+    private string[] m_statusBitDigitalStates;                                  // Digital state set names for status info
+    private readonly bool[] m_mappedStatusDigitalStates;                        // Mapped status info digital state sets
+    private string[] m_statusBitTagNameExpressions;                             // Tag name expressions for status info
+    private readonly TagGenerator[] m_statusBitTagNameGenerators;               // Tag name generators for status info
+    // TODO: Determine if the following hashset needs concurrent access
+    private HashSet<MeasurementKey> m_statusMeasurements;                       // Measurements that represent status bits
+    private Dictionary<string, Regex> m_digitalBitStateExpressionMap;           // Digital state set name to digital label expression map
+    // TODO: Determine if the following dictionary needs to be concurrent
+    private Dictionary<MeasurementKey, (string, int)[]> m_digitalMeasurements;  // Digital measurements with associated digital state / bit
+    private Dictionary<string, string> m_digitalBitTagNameExpressionMap;        // Digital tag name expressions
+    private Dictionary<string, TagGenerator> m_digitalBitTagNameGeneratorMap;   // Digital tag name generators
+    private Regex[] m_digitalBitExcludedExpressions;                            // Excluded digital label expressions
+    private readonly Dictionary<Guid, double> m_lastArchiveValues;              // Cache of last point archive values
+    private readonly Dictionary<Guid, SignalType> m_signalTypeMap;              // Map of signal types for encountered measurements
+    private PIConnection m_connection;                                          // PI server connection for meta-data synchronization
+    private long m_pastTimeReasonabilityLimit;                                  // Past-timestamp reasonability limit
+    private long m_futureTimeReasonabilityLimit;                                // Future-timestamp reasonability limit
+    private DateTime m_lastMetadataRefresh;                                     // Tracks time of last meta-data refresh
+    private long m_processedMappings;                                           // Total number of mappings processed so far
+    private long m_processedMeasurements;                                       // Total number of measurements processed so far
+    private long m_totalProcessingTime;                                         // Total point processing time 
+    private volatile bool m_refreshingMetadata;                                 // Flag that determines if meta-data is currently refreshing
+    private double m_metadataRefreshProgress;                                   // Current meta-data refresh progress
+    private AFUpdateOption m_updateOption;                                      // Active update option for PI point updates
+    private bool m_disposed;                                                    // Flag that determines if class is disposed
 
     #endregion
 
@@ -312,10 +320,13 @@ public class PIOutputAdapter : OutputAdapterBase
         m_lastArchiveValues = new Dictionary<Guid, double>();
         m_signalTypeMap = new Dictionary<Guid, SignalType>();
         m_lastMetadataRefresh = DateTime.MinValue;
-        m_statusDigitalStates = DefaultStatusDigitalStates.Split(',');
-        m_mappedStatusDigitalStates = new bool[StatusDigitalStates.Count];
+        m_statusBitDigitalStates = DefaultStatusBitDigitalStates.Split(',');
+        m_mappedStatusDigitalStates = new bool[StatusDigitalStateSets.Count];
+        m_statusBitTagNameExpressions = DefaultStatusBitTagNameExpressions.Split(';');
+        m_statusBitTagNameGenerators = new TagGenerator[StatusDigitalStateSets.Count];
         m_statusMeasurements = [];
         m_digitalMeasurements = [];
+        DigitalBitExcludedExpressions = DefaultDigitalBitExcludedExpressions;
     }
 
     #endregion
@@ -671,31 +682,70 @@ public class PIOutputAdapter : OutputAdapterBase
     public bool WriteStatusWord { get; set; } = DefaultWriteStatusWord;
 
     /// <summary>
-    /// Gets or sets the comma separated digital state set names for IEEE C37.118 status word bits. Specify digital state set name for each of the following digital states using value of 'X' (without quotes)
+    /// Gets or sets the comma separated digital state set names for IEEE C37.118 status states. Specify digital state set name for each of the following digital states using value of 'X' (without quotes)
     /// as the name to indicate state is not mapped: CompositeQual, ConfigChange, ConnectState, DataSorting, DataValid, LeapSecond, NominalFreq, PMUError, SyncError, Timelock, TimeQuality, and Trigger.
-    /// If digital sets are predefined, state values are expected to be zero based and incremented by one for each value. If specified digital set name does not exist, it will be created.
+    /// If digital state sets are predefined, state values are expected to be zero based and incremented by one for each value. If specified digital set name does not exist, it will be created.
     /// </summary>
     [ConnectionStringParameter]
     [Description(
-        "Defines the comma separated digital state set names for IEEE C37.118 status word bits. Specify digital state set name for each of the following digital states using value of 'X' (without quotes) " +
-        "as the name to indicate state is not mapped:\r\n CompositeQual, ConfigChange, ConnectState, DataSorting, DataValid, LeapSecond, NominalFreq, PMUError, SyncError, Timelock, TimeQuality, and Trigger.\r\n" +
-        "If digital sets are predefined, state values are expected to be zero based and incremented by one for each value. If specified digital set name does not exist, it will be created."
-    )]
-    [DefaultValue(DefaultStatusDigitalStates)]
-    public string StatusBitDigitalStateSets
+        "Defines the comma separated digital state set names for IEEE C37.118 status states. Specify digital state set name for each of the following digital states using value of 'X' (without quotes) " + 
+        "as the name to indicate state is not mapped:\r\n CompositeQual, ConfigChange, ConnectState, DataSorting, DataValid, LeapSecond, NominalFreq, PMUError, SyncError, Timelock, TimeQuality, and Trigger.\r\n" + 
+        "If digital sets are predefined, state values are expected to be zero based and incremented by one for each value. If specified digital set name does not exist, it will be created.")
+    ]
+    [DefaultValue(DefaultStatusBitDigitalStates)]
+    public string StatusBitDigitalStates
     {
-        get => string.Join(", ", m_statusDigitalStates);
+        get => string.Join(", ", m_statusBitDigitalStates);
         set
         {
             if (string.IsNullOrWhiteSpace(value))
-                value = DefaultStatusDigitalStates;
+                value = DefaultStatusBitDigitalStates;
 
             string[] states = value.Split([','], StringSplitOptions.RemoveEmptyEntries);
 
-            if (states.Length != StatusDigitalStates.Count)
-                throw new InvalidOperationException($"Expecting one digital state set name for each of \"{DefaultStatusDigitalStates}\"");
+            if (states.Length != StatusDigitalStateSets.Count)
+                throw new InvalidOperationException($"Expecting one digital state set name for each of \"{DefaultStatusBitDigitalStates}\"");
 
-            m_statusDigitalStates = states;
+            m_statusBitDigitalStates = states;
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets the semicolon separated tag naming expressions for IEEE C37.118 status states. Specify tag naming expression for each of the following digital states:
+    /// CompositeQual, ConfigChange, ConnectState, DataSorting, DataValid, LeapSecond, NominalFreq, PMUError, SyncError, Timelock, TimeQuality, and Trigger.
+    /// Expression can be left blank if no digital state name is mapped for the corresponding state in <see cref="StatusBitDigitalStates"/>.
+    /// </summary>
+    [ConnectionStringParameter]
+    [Description(
+        "Defines the semicolon separated tag naming expressions for IEEE C37.118 status states. Specify tag naming expression for each of the following digital states:\r\n" + 
+        "CompositeQual, ConfigChange, ConnectState, DataSorting, DataValid, LeapSecond, NominalFreq, PMUError, SyncError, Timelock, TimeQuality, and Trigger.\r\n" +
+        $"Expression can be left blank if no digital state name is mapped for the corresponding state in '{nameof(StatusBitDigitalStates)}'.")
+    ]
+    [DefaultValue(DefaultStatusBitTagNameExpressions)]
+    public string StatusBitTagNameExpressions
+    {
+        get => string.Join(", ", m_statusBitTagNameExpressions);
+        set
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                value = DefaultStatusBitTagNameExpressions;
+
+            string[] expressions = value.Split(';');
+
+            if (expressions.Length != StatusDigitalStateSets.Count)
+                throw new InvalidOperationException($"Expecting one tag naming expression for each digital state set name of \"{DefaultStatusBitDigitalStates}\"");
+
+            // We cache original strings since templated expression parser encodes special characters
+            m_statusBitTagNameExpressions = expressions;
+
+            // Establish tag name generators for status bits
+            for (int i = 0; i < StatusDigitalStateSets.Count; i++)
+            {
+                m_statusBitTagNameGenerators[i] = new TagGenerator
+                {
+                    TemplatedExpression = m_statusBitTagNameExpressions[i]
+                };
+            }
         }
     }
 
@@ -716,19 +766,23 @@ public class PIOutputAdapter : OutputAdapterBase
     public bool WriteDigitalWord { get; set; } = DefaultWriteDigitalWord;
 
     /// <summary>
-    /// Gets or sets pre-existing digital state set names mapped to a regular expression for matching digital labels. Use format "DigitalStateName=Expression;DigitalStateName=Expression;...". Use "*" for default expression.
+    /// Gets or sets the semicolon separated pre-existing digital bit state set names mapped to a regular expression for matching digital labels.
+    /// Use format "DigitalStateName=Expression;DigitalStateName=Expression;...". Use "*" for default expression.
     /// </summary>
     [ConnectionStringParameter]
-    [Description("Defines pre-existing digital state set names mapped to a regular expression for matching digital labels. Use format \"DigitalStateName=Expression;DigitalStateName=Expression;...\". Use \"*\" for default expression.")]
-    [DefaultValue(DefaultDigitalStateSetExpressionMap)]
-    public string DigitalStateSetExpressionMap
+    [Description(
+        "Defines the semicolon separated pre-existing digital bit state set names mapped to a regular expression for matching digital labels. " +
+        "Use format \"DigitalStateName=Expression;DigitalStateName=Expression;...\". Use \"*\" for default expression.")
+    ]
+    [DefaultValue(DefaultDigitalBitStateExpressionMap)]
+    public string DigitalBitStateExpressionMap
     {
-        get => m_digitalStateSetExpressionMap is null ? "" : string.Join("; ", m_digitalStateSetExpressionMap.Select(kvp => $"{kvp.Key}={kvp.Value}"));
+        get => m_digitalBitStateExpressionMap is null ? "" : string.Join("; ", m_digitalBitStateExpressionMap.Select(kvp => $"{kvp.Key}={kvp.Value}"));
         set
         {
             if (string.IsNullOrWhiteSpace(value))
             {
-                m_digitalStateSetExpressionMap = null;
+                m_digitalBitStateExpressionMap = null;
                 return;
             }
 
@@ -743,8 +797,60 @@ public class PIOutputAdapter : OutputAdapterBase
                 digitalStateSetExpressionMap[key] = new Regex(expression, RegexOptions.Compiled | RegexOptions.IgnoreCase);
             }
 
-            m_digitalStateSetExpressionMap = digitalStateSetExpressionMap;
+            m_digitalBitStateExpressionMap = digitalStateSetExpressionMap;
         }
+    }
+
+    /// <summary>
+    /// Gets or sets the semicolon separated digital state set name to tag name expression map. One expression should
+    /// exist for each state defined in <see cref="DigitalBitStateExpressionMap"/>.
+    /// Use format "DigitalStateName=Expression;DigitalStateName=Expression;...". Use "*" for default expression.
+    /// </summary>
+    [ConnectionStringParameter]
+    [Description(
+        $"Defines the semicolon separated digital state set name to tag name expression map. One expression should exist for each state defined in '{nameof(DigitalBitStateExpressionMap)}'. "+
+        "Use format \"DigitalStateName=Expression;DigitalStateName=Expression;...\". Use \"*\" for default expression.")
+    ]
+    [DefaultValue(DefaultDigitalBitTagNameExpressionMap)]
+    public string DigitalBitTagNameExpressionMap
+    {
+        get => m_digitalBitTagNameExpressionMap is null ? "" : m_digitalBitTagNameExpressionMap.JoinKeyValuePairs();
+        set
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                m_digitalBitTagNameExpressionMap = null;
+                m_digitalBitTagNameGeneratorMap = null;
+                return;
+            }
+
+            // We cache original strings since templated expression parser encodes special characters
+            m_digitalBitTagNameExpressionMap = value.ParseKeyValuePairs();
+
+            // Establish tag name generators for digital bits
+            m_digitalBitTagNameGeneratorMap = new Dictionary<string, TagGenerator>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (KeyValuePair<string, string> kvp in m_digitalBitTagNameExpressionMap)
+            {
+                m_digitalBitTagNameGeneratorMap[kvp.Key] = new TagGenerator
+                {
+                    TemplatedExpression = kvp.Value
+                };
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets the semicolon separated regular expressions for excluding digital labels from being expanded to tags.
+    /// </summary>
+    [ConnectionStringParameter]
+    [Description("Defines the semicolon separated regular expressions for excluding digital labels from being expanded to tags.")]
+    [DefaultValue(DefaultDigitalBitExcludedExpressions)]
+    public string DigitalBitExcludedExpressions
+    {
+        get => string.Join("; ", m_digitalBitExcludedExpressions.Select(expression => expression.ToString()));
+        set => m_digitalBitExcludedExpressions = string.IsNullOrWhiteSpace(value) ? [] : value.Split([';'], StringSplitOptions.RemoveEmptyEntries)
+            .Select(expression => new Regex(expression, RegexOptions.IgnoreCase | RegexOptions.Compiled)).ToArray();
     }
 
     /// <summary>
@@ -771,10 +877,13 @@ public class PIOutputAdapter : OutputAdapterBase
             status.AppendLine($"  Time reasonability check: {(EnableTimeReasonabilityCheck ? "Enabled" : "Not Enabled")}");
             status.AppendLine($" Write Status Bits to Tags: {ExpandStatusBitsToTags}");
             status.AppendLine($"         Write Status Word: {WriteStatusWord}");
-            status.AppendLine($" Status Bit Digital States: {StatusBitDigitalStateSets}");
+            status.AppendLine($" Status Bit Digital States: {StatusBitDigitalStates}");
+            status.AppendLine($" Status Bit Tag Name Exprs: {StatusBitTagNameExpressions}");
             status.AppendLine($"Write Digital Bits to Tags: {ExpandDigitalBitsToTags}");
             status.AppendLine($"        Write Digital Word: {WriteDigitalWord}");
-            status.AppendLine($" Digital State Expressions: {DigitalStateSetExpressionMap}");
+            status.AppendLine($"Digital Bit State Expr Map: {DigitalBitStateExpressionMap}");
+            status.AppendLine($" Digital Tag Name Expr Map: {DigitalBitTagNameExpressionMap}");
+            status.AppendLine($"Digital Bit Excluded Exprs: {DigitalBitExcludedExpressions}");
 
             if (EnableTimeReasonabilityCheck)
             {
@@ -1010,8 +1119,11 @@ public class PIOutputAdapter : OutputAdapterBase
         if (settings.TryGetValue(nameof(WriteStatusWord), out setting))
             WriteStatusWord = setting.ParseBoolean();
 
-        if (settings.TryGetValue(nameof(StatusBitDigitalStateSets), out setting))
-            StatusBitDigitalStateSets = setting;
+        if (settings.TryGetValue(nameof(StatusBitDigitalStates), out setting))
+            StatusBitDigitalStates = setting;
+
+        if (settings.TryGetValue(nameof(StatusBitTagNameExpressions), out setting))
+            StatusBitTagNameExpressions = setting;
 
         if (settings.TryGetValue(nameof(ExpandDigitalBitsToTags), out setting))
             ExpandDigitalBitsToTags = setting.ParseBoolean();
@@ -1019,8 +1131,23 @@ public class PIOutputAdapter : OutputAdapterBase
         if (settings.TryGetValue(nameof(WriteDigitalWord), out setting))
             WriteDigitalWord = setting.ParseBoolean();
 
-        if (settings.TryGetValue(nameof(DigitalStateSetExpressionMap), out setting))
-            DigitalStateSetExpressionMap = setting;
+        if (settings.TryGetValue(nameof(DigitalBitStateExpressionMap), out setting))
+            DigitalBitStateExpressionMap = setting;
+
+        if (settings.TryGetValue(nameof(DigitalBitTagNameExpressionMap), out setting))
+            DigitalBitTagNameExpressionMap = setting;
+
+        if (settings.TryGetValue(nameof(DigitalBitExcludedExpressions), out setting))
+            DigitalBitExcludedExpressions = setting;
+
+        if (ExpandDigitalBitsToTags && string.IsNullOrWhiteSpace(DigitalBitStateExpressionMap))
+            OnStatusMessage(MessageLevel.Warning, $"No digital state name expressions are defined in '{nameof(DigitalBitStateExpressionMap)}', digital bits will not be expanded to tags.");
+
+        string[] digitalStatesForLabelExpressions = m_digitalBitStateExpressionMap is null ? [] : m_digitalBitStateExpressionMap.Keys.Select(key => key.ToLowerInvariant()).ToArray();
+        string[] digitalStatesForTagNameExpressions = m_digitalBitTagNameExpressionMap is null ? [] : m_digitalBitTagNameExpressionMap.Keys.Select(key => key.ToLowerInvariant()).ToArray();
+
+        if (digitalStatesForLabelExpressions.CompareTo(digitalStatesForTagNameExpressions, false) != 0)
+            throw new InvalidOperationException($"Digital bit expression configuration mismatch: expecting one digital state set name in '{nameof(DigitalBitTagNameExpressionMap)}' for each defined in '{nameof(DigitalBitStateExpressionMap)}'.");
     }
 
     /// <summary>
@@ -1154,12 +1281,20 @@ public class PIOutputAdapter : OutputAdapterBase
                     continue;
             }
 
+
             // Lookup connection point mapping for this measurement, if it wasn't found - go ahead and exit
             if (!m_mappedPIPoints.TryGetValue(measurement.Key, out PIPoint point))
                 continue;
 
+            // TODO: It is possible that for status/digital values, no PI Point will exist for status word or digital word
+            // TODO: In this case, we should create a new PI Point for the mapped status bits and digital bits
+            // TODO: May need a separate dictionary of PI Points for status bits and digital bits
+            // TODO: Check if measurement is a status value and expand for measurement keys if requested
+            // TODO: Check if measurement is a digital value and expand for measurement keys if requested
+
             if (point is null)
             {
+
                 // If connection point is not defined, kick off process to create a new mapping
                 try
                 {
@@ -1360,176 +1495,10 @@ public class PIOutputAdapter : OutputAdapterBase
         DateTime latestUpdateTime = DateTime.MinValue;
 
         if (ExpandStatusBitsToTags)
-        {
-            HashSet<MeasurementKey> statusMeasurements = [];
+            EstablishStatusBitStateSets(inputMeasurements, inputMeasurementTypes, stateSets);
 
-            // Create hash set of status flags to be used for tag expansion
-            for (int i = 0; i < inputMeasurementTypes.Length; i++)
-            {
-                SignalType signalType = inputMeasurementTypes[i];
-
-                if (signalType == SignalType.STAT)
-                    statusMeasurements.Add(inputMeasurements[i]);
-            }
-
-            m_statusMeasurements = statusMeasurements;
-
-            // When expanding status bits to tags, validate digital state sets exist, creating them if needed
-            for (int i = 0; i < m_statusDigitalStates.Length; i++)
-            {
-                string state = m_statusDigitalStates[i].Trim();
-
-                // States marked with 'X' are not mapped
-                if (state.Equals("X", StringComparison.OrdinalIgnoreCase))
-                {
-                    m_mappedStatusDigitalStates[i] = false;
-                    continue;
-                }
-
-                m_mappedStatusDigitalStates[i] = true;
-
-                if (stateSets.Contains(state))
-                    continue;
-
-                AFEnumerationSet newSet = new(state);
-                string[] elements = StatusDigitalStateSetValues[i];
-
-                for (int j = 0; j <  elements.Length; j++)
-                {
-                    string element = elements[j].Trim();
-                    newSet.Add(new AFEnumerationValue(element, j));
-                }
-
-                stateSets.Add(newSet);
-            }
-        }
-
-        if (ExpandDigitalBitsToTags)
-        {
-            HashSet<string> validDigitalStateNames = new(StringComparer.OrdinalIgnoreCase);
-
-            foreach (string state in m_digitalStateSetExpressionMap.Keys)
-            {
-                // Validate digital state sets exists, has two elements, and first element is zero and second element is one
-                if (stateSets.Contains(state))
-                {
-                    AFEnumerationSet stateSet = stateSets[state];
-
-                    if (stateSet.Count != 2)
-                    {
-                        OnStatusMessage(MessageLevel.Warning, $"Digital state set '{state}' does not define exactly two elements, digital bit expansion will be skipped for this state.");
-                        continue;
-                    }
-
-                    if (stateSet[0].Value != 0)
-                    {
-                        OnStatusMessage(MessageLevel.Warning, $"Digital state set '{state}' does not define first element value as zero, digital bit expansion will be skipped for this state.");
-                        continue;
-                    }
-
-                    if (stateSet[0].Value != 1)
-                    {
-                        OnStatusMessage(MessageLevel.Warning, $"Digital state set '{state}' does not second element value as one, digital bit expansion will be skipped for this state.");
-                        continue;
-                    }
-
-                    validDigitalStateNames.Add(state);
-                }
-                else
-                {
-                    OnStatusMessage(MessageLevel.Warning, $"Digital state set '{state}' not found in PI server, digital bit expansion will be skipped for this state.");
-                }
-            }
-
-            if (validDigitalStateNames.Count == 0)
-            {
-                OnStatusMessage(MessageLevel.Error, "None of the configured digital state sets were found in PI server, no digital bit expansions will occur.");
-            }
-            else
-            {
-                (string state, Regex expression)[] stateExpressions = m_digitalStateSetExpressionMap.Where(item => !item.Value.ToString().Equals("*") && validDigitalStateNames.Contains(item.Key)).Select(item => (item.Key, item.Value)).ToArray();
-                string defaultState = m_digitalStateSetExpressionMap.Where(item => item.Value.ToString().Equals("*") && validDigitalStateNames.Contains(item.Key)).Select(item => item.Key).FirstOrDefault();
-                Dictionary<MeasurementKey, string[]> digitalMeasurements = [];
-                Dictionary<MeasurementKey, int[]> mappedDigitalBits = [];
-
-                // Create map of digital states to be used for tag expansion
-                for (int i = 0; i < inputMeasurementTypes.Length; i++)
-                {
-                    SignalType signalType = inputMeasurementTypes[i];
-
-                    if (signalType != SignalType.DIGI)
-                        continue;
-
-                    MeasurementKey key = inputMeasurements[i];
-                    Guid signalID = key.SignalID;
-                    DataRow[] rows = measurements.Select($"SignalID='{signalID}'");
-
-                    if (rows.Length <= 0)
-                        continue;
-
-                    // Get matching measurement row
-                    DataRow measurementRow = rows[0];
-
-                    // Access digital label from AlternateTag field in meta-data
-                    string digitalLabel = measurementRow["AlternateTag"].ToNonNullString().Trim();
-
-                    if (string.IsNullOrWhiteSpace(digitalLabel))
-                        continue;
-
-                    string[] digitalLabels = new string[16];
-
-                    // Split digital label into 16 separate labels, one for each bit
-                    // For IEEE C37.118.2-2011 (or earlier) Config Frame 2, each 16 bytes represent each label
-                    // For IEEE C37.118.2-2011 (or later) Config Frame 3, labels are variable length and separated with a pipe-symbol
-                    // If pipe symbol exists, assume Config Frame 3
-                    string[] parts = digitalLabel.Split(['|'], StringSplitOptions.RemoveEmptyEntries);
-
-                    if (parts.Length == 1)
-                    {
-                        for (int j = 0; j < Math.Min(parts.Length, 16); j++)
-                            digitalLabels[j] = parts[j].Trim();
-                    }
-                    else
-                    {
-                        for (int j = 0; j < digitalLabel.Length; j += 16)
-                            digitalLabels[j] = digitalLabel.Substring(j, 16).PadRight(16);
-                    }
-
-                    // Attempt to match digital labels to a digital state
-                    List<(string state, int bit)> mappedDigitalStates = [];
-
-                    for (int j = 0; j < 16; j++)
-                    {
-                        if (string.IsNullOrWhiteSpace(digitalLabels[j]))
-                            continue;
-
-                        bool matched = false;
-
-                        foreach ((string state, Regex expression) in stateExpressions)
-                        {
-                            if (expression.IsMatch(digitalLabel))
-                            {
-                                mappedDigitalStates.Add((state, j));
-                                matched = true;
-                                break;
-                            }
-                        }
-
-                        if (!matched && !string.IsNullOrWhiteSpace(defaultState))
-                            mappedDigitalStates.Add((defaultState, j));
-                    }
-
-                    if (mappedDigitalStates.Count == 0)
-                        continue;
-                    
-                    digitalMeasurements[key] = mappedDigitalStates.Select(item => item.state).ToArray();
-                    mappedDigitalBits[key] = mappedDigitalStates.Select(item => item.bit).ToArray();
-                }
-
-                m_digitalMeasurements = digitalMeasurements;
-                m_mappedDigitalBits = mappedDigitalBits;
-            }
-        }
+        if (ExpandDigitalBitsToTags && m_digitalBitStateExpressionMap?.Count > 0)
+            EstablishDigitalBitStateSets(measurements, inputMeasurements, inputMeasurementTypes, stateSets);
 
         m_refreshingMetadata = RunMetadataSync;
 
@@ -1566,22 +1535,6 @@ public class PIOutputAdapter : OutputAdapterBase
                     if (!Enabled)
                         return;
 
-                    if (ExpandStatusBitsToTags && m_statusMeasurements.Contains(key))
-                    {
-                        HandleStatusBitExpansion(key);
-
-                        if (!WriteStatusWord)
-                            continue;
-                    }
-
-                    if (ExpandDigitalBitsToTags && m_digitalMeasurements.ContainsKey(key))
-                    {
-                        HandleDigitalBitExpansion(key);
-
-                        if (!WriteDigitalWord)
-                            continue;
-                    }
-
                     Guid signalID = key.SignalID;
                     DataRow[] rows = measurements.Select($"SignalID='{signalID}'");
 
@@ -1597,6 +1550,24 @@ public class PIOutputAdapter : OutputAdapterBase
 
                     // Get matching measurement row
                     DataRow measurementRow = rows[0];
+
+                    // Handle tag mapping for status bit expansions
+                    if (ExpandStatusBitsToTags && m_statusMeasurements.Contains(key))
+                    {
+                        HandleStatusBitTagMapExpansion(key, measurementRow);
+
+                        if (!WriteStatusWord)
+                            continue;
+                    }
+
+                    // Handle tag mapping for digital bit expansions
+                    if (ExpandDigitalBitsToTags && m_digitalMeasurements.ContainsKey(key))
+                    {
+                        HandleDigitalBitTagMapExpansion(key, measurementRow);
+
+                        if (!WriteDigitalWord)
+                            continue;
+                    }
 
                     // Get tag-name as defined in meta-data, adjusting as needed
                     tagName = GetPITagName(measurementRow);
@@ -1837,12 +1808,193 @@ public class PIOutputAdapter : OutputAdapterBase
             m_handleTagRemoval.RunOnceAsync();
     }
 
-    private void HandleStatusBitExpansion(MeasurementKey key)
+    private void EstablishStatusBitStateSets(MeasurementKey[] inputMeasurements, SignalType[] inputMeasurementTypes, PIStateSets stateSets)
+    {
+        HashSet<MeasurementKey> statusMeasurements = [];
+
+        // Create hash set of status flags to be used for tag expansion
+        for (int i = 0; i < inputMeasurementTypes.Length; i++)
+        {
+            SignalType signalType = inputMeasurementTypes[i];
+
+            if (signalType == SignalType.STAT)
+                statusMeasurements.Add(inputMeasurements[i]);
+        }
+
+        m_statusMeasurements = statusMeasurements;
+
+        // When expanding status bits to tags, validate digital state sets exist, creating them if needed
+        for (int i = 0; i < StatusDigitalStateSets.Count; i++)
+        {
+            string state = m_statusBitDigitalStates[i].Trim();
+
+            // States marked with 'X' are not mapped
+            if (state.Equals("X", StringComparison.OrdinalIgnoreCase))
+            {
+                m_mappedStatusDigitalStates[i] = false;
+                continue;
+            }
+
+            m_mappedStatusDigitalStates[i] = true;
+
+            if (stateSets.Contains(state))
+                continue;
+
+            // Create digital state set if it doesn't exist
+            AFEnumerationSet newSet = new(state);
+            string[] elements = StatusDigitalStateSetValues[i];
+
+            for (int j = 0; j < elements.Length; j++)
+            {
+                string element = elements[j].Trim();
+                newSet.Add(new AFEnumerationValue(element, j));
+            }
+
+            stateSets.Add(newSet);
+        }
+    }
+
+    private void EstablishDigitalBitStateSets(DataTable measurements, MeasurementKey[] inputMeasurements, SignalType[] inputMeasurementTypes, PIStateSets stateSets)
+    {
+        HashSet<string> validDigitalStateNames = new(StringComparer.OrdinalIgnoreCase);
+
+        foreach (string state in m_digitalBitStateExpressionMap.Keys)
+        {
+            // Validate digital state sets exists, has two elements, and first element is zero and second element is one
+            if (stateSets.Contains(state))
+            {
+                AFEnumerationSet stateSet = stateSets[state];
+
+                if (stateSet.Count != 2)
+                {
+                    OnStatusMessage(MessageLevel.Warning, $"Digital state set '{state}' does not define exactly two elements, digital bit expansion will be skipped for this state.");
+                    continue;
+                }
+
+                if (stateSet[0].Value != 0)
+                {
+                    OnStatusMessage(MessageLevel.Warning, $"Digital state set '{state}' does not define first element value as zero, digital bit expansion will be skipped for this state.");
+                    continue;
+                }
+
+                if (stateSet[1].Value != 1)
+                {
+                    OnStatusMessage(MessageLevel.Warning, $"Digital state set '{state}' does not define second element value as one, digital bit expansion will be skipped for this state.");
+                    continue;
+                }
+
+                validDigitalStateNames.Add(state);
+            }
+            else
+            {
+                OnStatusMessage(MessageLevel.Warning, $"Digital state set '{state}' not found in PI server, digital bit expansion will be skipped for this state.");
+            }
+        }
+
+        if (validDigitalStateNames.Count == 0)
+        {
+            OnStatusMessage(MessageLevel.Error, "None of the configured digital state sets were valid and/or found in PI server, no digital bit expansions will occur.");
+        }
+        else
+        {
+            // The goal here is to create a map of digital measurements to digital states. In order to determine which digital states are
+            // associated with each digital bit, the user defines a regular expression for each digital state that is used to match the
+            // digital label defined in the IEEE C37.118 configuration. Certain naming conventions are expected to have a pattern that can
+            // be used to determine which digital state is associated with each bit. For example, a digital label of "BREAKER_101" might
+            // have a PI digital state of "Breaker" with elements "Open" and "Closed" and be at bit 3 (of 0-15) in the 16-bit digital word.
+            (string state, Regex expression)[] stateExpressions = m_digitalBitStateExpressionMap.Where(item => !item.Value.ToString().Equals("*") && validDigitalStateNames.Contains(item.Key)).Select(item => (item.Key, item.Value)).ToArray();
+            string defaultState = m_digitalBitStateExpressionMap.Where(item => item.Value.ToString().Equals("*") && validDigitalStateNames.Contains(item.Key)).Select(item => item.Key).FirstOrDefault();
+            Dictionary<MeasurementKey, (string state, int bit)[]> digitalMeasurements = [];
+
+            // Create map of digital states to be used for tag expansion
+            for (int i = 0; i < inputMeasurementTypes.Length; i++)
+            {
+                SignalType signalType = inputMeasurementTypes[i];
+
+                if (signalType != SignalType.DIGI)
+                    continue;
+
+                MeasurementKey key = inputMeasurements[i];
+                Guid signalID = key.SignalID;
+                DataRow[] rows = measurements.Select($"SignalID='{signalID}'");
+
+                if (rows.Length <= 0)
+                    continue;
+
+                // Get matching measurement row
+                DataRow measurementRow = rows[0];
+
+                // Access digital label from AlternateTag field in meta-data
+                string digitalLabel = measurementRow["AlternateTag"].ToNonNullString().Trim();
+
+                if (string.IsNullOrWhiteSpace(digitalLabel))
+                    continue;
+
+                string[] digitalLabels = new string[16];
+
+                // Split digital label into 16 separate labels, one for each bit
+                // For IEEE C37.118.2-2011 (or earlier) Config Frame 2, each 16 bytes represent each label
+                // For IEEE C37.118.2-2011 (or later) Config Frame 3, labels are variable length and separated with a pipe-symbol
+                // If pipe symbol exists, assume Config Frame 3
+                string[] parts = digitalLabel.Split('|');
+
+                if (parts.Length == 1)
+                {
+                    // Fixed length digital labels for config frame 2
+                    for (int j = 0; j < digitalLabel.Length && j < 16*16; j += 16)
+                        digitalLabels[j] = digitalLabel.Substring(j, 16).PadRight(16);
+                }
+                else
+                {
+                    // Variable length digital labels for config frame 3
+                    for (int j = 0; j < Math.Min(parts.Length, 16); j++)
+                        digitalLabels[j] = parts[j].Trim();
+                }
+
+                // Attempt to match digital labels to a digital state
+                List<(string state, int bit)> mappedDigitalStates = [];
+
+                for (int j = 0; j < 16; j++)
+                {
+                    if (string.IsNullOrWhiteSpace(digitalLabels[j]))
+                        continue;
+
+                    // Skip digital labels that match excluded expressions, e.g., SPARE or RESERVED
+                    if (m_digitalBitExcludedExpressions.Any(expression => expression.IsMatch(digitalLabels[j])))
+                        continue;
+
+                    bool matched = false;
+
+                    foreach ((string state, Regex expression) in stateExpressions)
+                    {
+                        if (expression.IsMatch(digitalLabel))
+                        {
+                            mappedDigitalStates.Add((state, j));
+                            matched = true;
+                            break;
+                        }
+                    }
+
+                    if (!matched && !string.IsNullOrWhiteSpace(defaultState))
+                        mappedDigitalStates.Add((defaultState, j));
+                }
+
+                if (mappedDigitalStates.Count == 0)
+                    continue;
+                    
+                digitalMeasurements[key] = mappedDigitalStates.ToArray();
+            }
+
+            m_digitalMeasurements = digitalMeasurements;
+        }
+    }
+
+    private void HandleStatusBitTagMapExpansion(MeasurementKey key, DataRow measurementRow)
     {
 
     }
 
-    private void HandleDigitalBitExpansion(MeasurementKey key)
+    private void HandleDigitalBitTagMapExpansion(MeasurementKey key, DataRow measurementRow)
     {
 
     }
@@ -2102,27 +2254,27 @@ public class PIOutputAdapter : OutputAdapterBase
     public static readonly ConcurrentDictionary<string, PIOutputAdapter> Instances = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
-    /// Predefined digital state set AF Enumeration values for IEEE C37.118 connection states and status word bits,
-    /// see <see cref="StatusDigitalStates"/>.
+    /// Predefined digital state set AF enumeration values for IEEE C37.118 connection states and status word bits,
+    /// see <see cref="StatusDigitalStateSets"/>.
     /// </summary>
     public static readonly ReadOnlyCollection<string[]> StatusDigitalStateSetValues = new(
     [
-        /* C37118_CompositeQual */ ["Good", "Bad Quality"],
-        /* C37118_ConfigChange */  ["Normal", "Change Pending"],
-        /* C37118_ConnectState */  ["Connected", "Disconnected"],
-        /* C37118_DataSorting */   ["By Time", "By Arrival"],
-        /* C37118_DataValid */     ["Valid", "Invalid"],
-        /* C37118_LeapSecond */    ["Normal", "LeapAddPending", "LeapAddOccurred", "Transient", "Normal", "LeapDeletePending", "LeapDeleteOccurred", "Transient"],
-        /* C37118_NominalFreq */   ["60Hz", "50Hz"],
-        /* C37118_PMUError */      ["Normal", "PMU Error"],
-        /* C37118_SyncError */     ["Normal", "Sync Error"],
-        /* C37118_TimeLock */      ["Locked", "Unlocked_10s", "Unlocked_100s", "Unlocked_1000s"],
-        /* C37118_TimeQuality */   ["Locked", "MaxError_10E-9s", "MaxError_10E-8s", "MaxError_10E-7s",
-                                    "MaxError_10E-6s", "MaxError_10E-5s", "MaxError_10E-4s", "MaxError_10E-3s",
-                                    "MaxError_10E-2s", "MaxError_10E-1s", "MaxError_1s", "MaxError_10s", "Clock_Failure"],
-        /* C37118_Trigger */       ["Manual", "Magnitude Low", "Magnitude_High", "PhaseAngle_Diff", "Frequency_High_Low", "df/dt_High",
-                                    "Reserved", "Digital", "UserDefined_1", "UserDefined_2", "UserDefined_3",
-                                    "UserDefined_4", "UserDefined_5", "UserDefined_6", "UserDefined_7", "Normal"]
+        /* 00: C37118_CompositeQual */ ["Good", "Bad Quality"],
+        /* 01: C37118_ConfigChange */  ["Normal", "Change Pending"],
+        /* 02: C37118_ConnectState */  ["Connected", "Disconnected"],
+        /* 03: C37118_DataSorting */   ["By Time", "By Arrival"],
+        /* 04: C37118_DataValid */     ["Valid", "Invalid"],
+        /* 05: C37118_LeapSecond */    ["Normal", "LeapAddPending", "LeapAddOccurred", "Transient", "Normal", "LeapDeletePending", "LeapDeleteOccurred", "Transient"],
+        /* 06: C37118_NominalFreq */   ["60Hz", "50Hz"],
+        /* 07: C37118_PMUError */      ["Normal", "PMU Error"],
+        /* 08: C37118_SyncError */     ["Normal", "Sync Error"],
+        /* 09: C37118_TimeLock */      ["Locked", "Unlocked_10s", "Unlocked_100s", "Unlocked_1000s"],
+        /* 10: C37118_TimeQuality */   ["Locked", "MaxError_10E-9s", "MaxError_10E-8s", "MaxError_10E-7s",
+                                        "MaxError_10E-6s", "MaxError_10E-5s", "MaxError_10E-4s", "MaxError_10E-3s",
+                                        "MaxError_10E-2s", "MaxError_10E-1s", "MaxError_1s", "MaxError_10s", "Clock_Failure"],
+        /* 11: C37118_Trigger */       ["Manual", "Magnitude Low", "Magnitude_High", "PhaseAngle_Diff", "Frequency_High_Low", "df/dt_High",
+                                        "Reserved", "Digital", "UserDefined_1", "UserDefined_2", "UserDefined_3",
+                                        "UserDefined_4", "UserDefined_5", "UserDefined_6", "UserDefined_7", "Normal"]
     ]);
 
     #endregion
