@@ -87,7 +87,7 @@ public static class MetadataHelpers
     }
 
     /// <summary>
-    /// Lookups up point tag name from provided <paramref name="signalID"/>.
+    /// Looks up point tag name from provided <paramref name="signalID"/>.
     /// </summary>
     /// <param name="instance">Target <see cref="IAdapter"/> instance.</param>
     /// <param name="signalID"><see cref="Guid"/> signal ID to lookup.</param>
@@ -108,24 +108,71 @@ public static class MetadataHelpers
     }
 
     /// <summary>
-    /// Lookups up associated device name from provided <paramref name="signalID"/>.
+    /// Looks up signal reference from provided <paramref name="signalID"/>.
     /// </summary>
     /// <param name="instance">Target <see cref="IAdapter"/> instance.</param>
     /// <param name="signalID"><see cref="Guid"/> signal ID to lookup.</param>
     /// <param name="measurementTable">Measurement table name used for meta-data lookup.</param>
-    /// <returns>Device name, if found; otherwise, string representation of associated point tag.</returns>
-    public static string LookupDevice(this IAdapter instance, Guid signalID, string measurementTable = DefaultMeasurementTable)
+    /// <returns>Signal reference name, if found; otherwise, string representation of provided signal ID.</returns>
+    public static string LookupSignalReference(this IAdapter instance, Guid signalID, string measurementTable = DefaultMeasurementTable)
     {
         DataRow record = instance.DataSource.LookupMetadata(signalID, measurementTable);
-        string device = null;
+        string signalReference = null;
 
         if (record is not null)
-            device = record["Device"].ToString();
+            signalReference = record["SignalReference"].ToString();
 
-        if (string.IsNullOrWhiteSpace(device))
-            device = instance.LookupPointTag(signalID, measurementTable);
+        if (string.IsNullOrWhiteSpace(signalReference))
+            signalReference = signalID.ToString();
 
-        return device.ToUpper();
+        return signalReference.ToUpper();
+    }
+
+    /// <summary>
+    /// Looks up or creates measurement key based on provided <paramref name="signalID"/>.
+    /// </summary>
+    /// <param name="instance">Target <see cref="IAdapter"/> instance.</param>
+    /// <param name="signalID"><see cref="Guid"/> signal ID to lookup.</param>
+    /// <param name="id">Measurement ID to use for creating new measurement key.</param>
+    /// <param name="source">Source name used for meta-data lookup.</param>
+    /// <param name="measurementTable">Measurement table name used for meta-data lookup.</param>
+    /// <returns>Found or newly created measurement key. Failure to create key results in <see cref="MeasurementKey.Undefined"/>.</returns>
+    /// <remarks>
+    /// This is a metadata first lookup operation.
+    /// </remarks>
+    public static MeasurementKey LookupMeasurementKey(this IAdapter instance, Guid signalID, ulong id, string source = "PPA", string measurementTable = DefaultMeasurementTable)
+    {
+        DataRow record = instance.DataSource.LookupMetadata(signalID, measurementTable);
+        string key = record?["ID"].ToString();
+
+        return string.IsNullOrWhiteSpace(key) ? id == ulong.MaxValue ? MeasurementKey.Undefined : 
+                MeasurementKey.CreateOrUpdate(signalID, source, id) : 
+                MeasurementKey.LookUpOrCreate(key);
+    }
+
+    /// <summary>
+    /// Looks up associated device acronym and ID from provided <paramref name="signalID"/>.
+    /// </summary>
+    /// <param name="instance">Target <see cref="IAdapter"/> instance.</param>
+    /// <param name="signalID"><see cref="Guid"/> signal ID to lookup.</param>
+    /// <param name="measurementTable">Measurement table name used for meta-data lookup.</param>
+    /// <returns>Device acronym and ID tuple, if found; otherwise, string representation of associated point tag and ID of zero.</returns>
+    public static (string acronym, int ID) LookupDevice(this IAdapter instance, Guid signalID, string measurementTable = DefaultMeasurementTable)
+    {
+        DataRow record = instance.DataSource.LookupMetadata(signalID, measurementTable);
+        string deviceAcronym = null;
+        int deviceID = 0;
+
+        if (record is not null)
+        {
+            deviceAcronym = record["Device"].ToString();
+            deviceID = int.Parse(record["DeviceID"].ToString());
+        }
+
+        if (string.IsNullOrWhiteSpace(deviceAcronym))
+            deviceAcronym = instance.LookupPointTag(signalID, measurementTable);
+
+        return (deviceAcronym.ToUpper().Trim(), deviceID);
     }
 
     /// <summary>
@@ -151,7 +198,30 @@ public static class MetadataHelpers
     public static bool PointTagExists(this IAdapter instance, string pointTag, out Guid signalID, string measurementTable = DefaultMeasurementTable)
     {
         DataRow[] rows = instance.DataSource.Tables[measurementTable].Select($"PointTag = '{pointTag}'");
+
         if (rows.Length != 0 && !string.IsNullOrWhiteSpace(rows[0]["PointTag"].ToString()))
+        {
+            signalID = Guid.Parse(rows[0]["SignalID"].ToString());
+            return true;
+        }
+
+        signalID = Guid.Empty;
+        return false;
+    }
+
+    /// <summary>
+    /// Determines if <paramref name="signalReference"/> exists in local configuration.
+    /// </summary>
+    /// <param name="instance">Target <see cref="IAdapter"/> instance.</param>
+    /// <param name="signalReference">Point tag to find./</param>
+    /// <param name="signalID">Signal ID of measurement with specified point tag.</param>
+    /// <param name="measurementTable">Measurement table name used for meta-data lookup.</param>
+    /// <returns><c>true</c>, if <paramref name="signalReference"/> is found; otherwise, <c>false</c>.</returns>
+    public static bool SignalReferenceExists(this IAdapter instance, string signalReference, out Guid signalID, string measurementTable = DefaultMeasurementTable)
+    {
+        DataRow[] rows = instance.DataSource.Tables[measurementTable].Select($"SignalReference = '{signalReference}'");
+        
+        if (rows.Length != 0 && !string.IsNullOrWhiteSpace(rows[0]["SignalReference"].ToString()))
         {
             signalID = Guid.Parse(rows[0]["SignalID"].ToString());
             return true;
