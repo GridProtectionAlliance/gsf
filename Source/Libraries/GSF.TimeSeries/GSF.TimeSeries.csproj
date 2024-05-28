@@ -99,6 +99,7 @@
     <Compile Include="Adapters\IndependentOutputAdapterManagerBase.cs" />
     <Compile Include="Adapters\IOptimizedRoutingConsumer.cs" />
     <Compile Include="Adapters\IRouteMappingTables.cs" />
+    <Compile Include="Adapters\MetadataHelpers.cs" />
     <Compile Include="Adapters\OneSecondDataWindowAdapterBase.cs" />
     <Compile Include="Adapters\RoutingPassthroughMethod.cs" />
     <Compile Include="Adapters\RouteMappingDoubleBufferQueue.cs" />
