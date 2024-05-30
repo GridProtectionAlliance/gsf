@@ -1089,6 +1089,21 @@ namespace GSF.TimeSeries
                 // binary cache, load from the XML cache
                 configuration ??= xmlCacheLoadAttempted ? xmlCache : GetXMLCachedConfigurationDataSet();
 
+                // Attempt to add primary key to ActiveMeasurements table
+                try
+                {
+                    if (configuration is not null)
+                    {
+                        DataTable activeMeasurements = configuration.Tables["ActiveMeasurements"];
+                        activeMeasurements.PrimaryKey = [activeMeasurements.Columns["SignalID"]];
+                    }
+                }
+                catch (Exception ex)
+                {
+                    DisplayStatusMessage($"Failed to add primary key to ActiveMeasurements: {ex.Message}", UpdateType.Warning);
+                    LogException(ex);
+                }
+
                 // Attempt to update data source on all adapters in all collections
                 if (configuration is null || !PropagateDataSource(configuration))
                     return false;
