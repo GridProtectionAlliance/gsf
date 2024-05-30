@@ -25,6 +25,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
 using System.Globalization;
@@ -414,6 +415,9 @@ namespace GSF.TimeSeries.Statistics
             m_performanceMonitor = new PerformanceMonitor();
 
             SourceRegistered += HandleSourceRegistered;
+
+            // Track active statistics engine singleton instance
+            s_activeEngine = this;
         }
 
         #endregion
@@ -434,11 +438,6 @@ namespace GSF.TimeSeries.Statistics
         }
 
         /// <summary>
-        /// Gets the flag indicating if this adapter supports temporal processing.
-        /// </summary>
-        public override bool SupportsTemporalProcessing => false;
-
-        /// <summary>
         /// Returns the detailed status of the statistics engine.
         /// </summary>
         public override string Status
@@ -451,8 +450,8 @@ namespace GSF.TimeSeries.Statistics
                 status.AppendLine($" Recently calculated stats: {m_lastStatisticCalculationCount:N0}");
                 status.AppendLine($"     Last stat calculation: {m_lastStatisticCalculationTime:yyyy-MM-dd HH:mm:ss}");
 
-                lock (StatisticSources)
-                    status.AppendLine($"    Statistic source count: {StatisticSources.Count:N0}");
+                lock (s_statisticSources)
+                    status.AppendLine($"    Statistic source count: {s_statisticSources.Count:N0}");
 
                 status.AppendLine($"Forward statistics to SNMP: {s_forwardToSnmp}");
 
@@ -613,11 +612,11 @@ namespace GSF.TimeSeries.Statistics
             StatisticSource[] sources;
             bool configurationChanged = false;
 
-            lock (StatisticSources)
+            lock (s_statisticSources)
             {
                 // Obtain a snapshot of the sources that are
                 // currently registered with the statistics engine
-                sources = StatisticSources.ToArray();
+                sources = s_statisticSources.ToArray();
             }
 
             using (AdoDataConnection database = new("systemSettings"))
@@ -787,11 +786,11 @@ namespace GSF.TimeSeries.Statistics
 
             StatisticSource[] sources;
 
-            lock (StatisticSources)
+            lock (s_statisticSources)
             {
                 // Obtain a snapshot of the sources that are
                 // currently registered with the statistics engine
-                sources = StatisticSources.ToArray();
+                sources = s_statisticSources.ToArray();
             }
 
             // Create a lookup table from signal reference to statistic source
@@ -843,11 +842,11 @@ namespace GSF.TimeSeries.Statistics
                 StatisticSource[] sources;
                 Statistic[] statistics;
 
-                lock (StatisticSources)
+                lock (s_statisticSources)
                 {
                     // Get a snapshot of the current list of sources
                     // that can be iterated safely without locking
-                    sources = StatisticSources.ToArray();
+                    sources = s_statisticSources.ToArray();
                 }
 
                 lock (m_statisticsLock)
@@ -924,6 +923,10 @@ namespace GSF.TimeSeries.Statistics
                         MeasurementKey key = MeasurementKey.LookUpOrCreate(signalID, measurement[nameof(ID)].ToString());
 
                         double value = statistic.Method(target, statistic.Arguments);
+
+                        // Update the statistic with latest key and value
+                        statistic.Key = key;
+                        statistic.Value = value;
 
                         if (s_forwardToSnmp && OID.SnmpStats.TryGetValue(source.SourceCategory, out uint[] categoryOID))
                         {
@@ -1050,7 +1053,8 @@ namespace GSF.TimeSeries.Statistics
         #region [ Static ]
 
         // Static Fields
-        private static readonly List<StatisticSource> StatisticSources;
+        private static StatisticsEngine s_activeEngine;
+        private static readonly List<StatisticSource> s_statisticSources;
         private static readonly bool s_forwardToSnmp;
 
         // Static Constructor
@@ -1060,13 +1064,34 @@ namespace GSF.TimeSeries.Statistics
         /// </summary>
         static StatisticsEngine()
         {
-            StatisticSources = new List<StatisticSource>();
+            s_statisticSources = new List<StatisticSource>();
 
             CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings["systemSettings"];
 
             settings.Add("ForwardStatisticsToSnmp", "false", "Defines flag that determines if statistics should be published as SNMP trap messages.");
 
             s_forwardToSnmp = settings["ForwardStatisticsToSnmp"].ValueAs(false);
+        }
+
+        // Static Properties
+
+        /// <summary>
+        /// Gets the <see cref="Statistic"/> instances that are registered with the active statistics engine.
+        /// </summary>
+        public static ReadOnlyDictionary<MeasurementKey, Statistic> Statistics
+        {
+            get
+            {
+                StatisticsEngine instance = s_activeEngine;
+
+                if (instance is null)
+                    return new ReadOnlyDictionary<MeasurementKey, Statistic>(new Dictionary<MeasurementKey, Statistic>());
+
+                lock (instance.m_statisticsLock)
+                    return new ReadOnlyDictionary<MeasurementKey, Statistic>(instance.m_statistics
+                        .Where(statistic => statistic.Key is not null && statistic.Key != MeasurementKey.Undefined)
+                        .ToDictionary(statistic => statistic.Key, statistic => statistic));
+            }
         }
 
         // Static Methods
@@ -1102,9 +1127,9 @@ namespace GSF.TimeSeries.Statistics
                 StatisticMeasurementNameFormat = statisticMeasurementNameFormat
             };
 
-            lock (StatisticSources)
+            lock (s_statisticSources)
             {
-                if (StatisticSources.Any(registeredSource => registeredSource.SourceReference.TryGetTarget(out object target) && target == source))
+                if (s_statisticSources.Any(registeredSource => registeredSource.SourceReference.TryGetTarget(out object target) && target == source))
                     throw new InvalidOperationException($"Unable to register {sourceName} as statistic source because it is already registered.");
 
                 if (source is IAdapter adapter)
@@ -1115,7 +1140,7 @@ namespace GSF.TimeSeries.Statistics
                         return;
                 }
 
-                StatisticSources.Add(sourceInfo);
+                s_statisticSources.Add(sourceInfo);
             }
 
             OnSourceRegistered(source);
@@ -1137,14 +1162,14 @@ namespace GSF.TimeSeries.Statistics
             if (source is null)
                 return;
 
-            lock (StatisticSources)
+            lock (s_statisticSources)
             {
-                for (int i = 0; i < StatisticSources.Count; i++)
+                for (int i = 0; i < s_statisticSources.Count; i++)
                 {
-                    if (!StatisticSources[i].SourceReference.TryGetTarget(out object target) || target != source)
+                    if (!s_statisticSources[i].SourceReference.TryGetTarget(out object target) || target != source)
                         continue;
 
-                    StatisticSources.RemoveAt(i);
+                    s_statisticSources.RemoveAt(i);
                     break;
                 }
             }
@@ -1187,9 +1212,9 @@ namespace GSF.TimeSeries.Statistics
             string acronym = signalReference.Substring(statSuffix + 1, statIndex - statSuffix - 1);
             signalIndex = Convert.ToInt32(signalReference.Substring(statIndex + 3));
 
-            lock (StatisticSources)
+            lock (s_statisticSources)
             {
-                foreach (StatisticSource statisticSource in StatisticSources)
+                foreach (StatisticSource statisticSource in s_statisticSources)
                 {
                     if (!statisticSource.SourceAcronym.Equals(acronym, StringComparison.OrdinalIgnoreCase))
                         continue;
@@ -1275,16 +1300,16 @@ namespace GSF.TimeSeries.Statistics
         {
             List<int> expiredSources = new();
 
-            lock (StatisticSources)
+            lock (s_statisticSources)
             {
-                for (int i = 0; i < StatisticSources.Count; i++)
+                for (int i = 0; i < s_statisticSources.Count; i++)
                 {
-                    if (!StatisticSources[i].SourceReference.TryGetTarget(out object _))
+                    if (!s_statisticSources[i].SourceReference.TryGetTarget(out object _))
                         expiredSources.Add(i);
                 }
 
                 for (int i = expiredSources.Count - 1; i >= 0; i--)
-                    StatisticSources.RemoveAt(expiredSources[i]);
+                    s_statisticSources.RemoveAt(expiredSources[i]);
             }
         }
 
