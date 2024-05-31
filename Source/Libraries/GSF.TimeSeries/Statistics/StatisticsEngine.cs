@@ -437,6 +437,9 @@ namespace GSF.TimeSeries.Statistics
             }
         }
 
+        /// <inheritdoc />
+        public override bool SupportsTemporalProcessing => false;
+
         /// <summary>
         /// Returns the detailed status of the statistics engine.
         /// </summary>
