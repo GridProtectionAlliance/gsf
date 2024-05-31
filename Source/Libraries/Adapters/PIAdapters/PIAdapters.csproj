@@ -64,6 +64,10 @@
       <Project>{ff3fcba6-f01a-4ec2-bc3f-6ba832afcf88}</Project>
       <Name>GSF.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\GSF.PhasorProtocols\GSF.PhasorProtocols.csproj">
+      <Project>{54ca98cc-2f0a-41f2-879d-0e42b17e8544}</Project>
+      <Name>GSF.PhasorProtocols</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\GSF.TimeSeries\GSF.TimeSeries.csproj">
       <Project>{412f9f59-d9b9-4c8e-96d2-20492644198c}</Project>
       <Name>GSF.TimeSeries</Name>
