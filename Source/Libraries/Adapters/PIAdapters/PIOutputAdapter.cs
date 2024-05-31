@@ -1,4 +1,5 @@
-﻿//  PIOutputAdapter.cs - Gbtc
+﻿//******************************************************************************************************
+//  PIOutputAdapter.cs - Gbtc
 //
 //  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -23,6 +24,8 @@
 //       Updated code to use AF-SDK - using single PIConnection for now
 //  03/16/2021 - J. Ritchie Carroll
 //       Updated to add automated tag-removal operations during metadata synchronization.
+//  05/31/2024 - J. Ritchie Carroll
+//       Updated to add digital state set support and improved configuration options.
 //
 //******************************************************************************************************
 // ReSharper disable InconsistentlySynchronizedField
