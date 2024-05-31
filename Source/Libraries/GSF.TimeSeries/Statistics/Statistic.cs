@@ -46,29 +46,29 @@ namespace GSF.TimeSeries.Statistics
         public MeasurementKey Key { get; internal set; } = MeasurementKey.Undefined;
 
         /// <summary>
-        /// The method to be called to calculate the statistic.
+        /// Gets the method to be called to calculate the statistic.
         /// </summary>
-        public StatisticCalculationFunction Method { get; set; }
+        public StatisticCalculationFunction Method { get; internal set; }
 
         /// <summary>
-        /// The name of the source of the statistic.
+        /// Gets the name of the source of the statistic.
         /// </summary>
-        public string Source { get; set; }
+        public string Source { get; internal set; }
 
         /// <summary>
-        /// The index of the signal associated with the statistic.
+        /// Gets the index of the signal associated with the statistic.
         /// </summary>
-        public int Index { get; set; }
+        public int Index { get; internal set; }
 
         /// <summary>
-        /// The arguments to be passed into the statistic calculation function.
+        /// Gets the arguments to be passed into the statistic calculation function.
         /// </summary>
-        public string Arguments { get; set; }
+        public string Arguments { get; internal set; }
 
         /// <summary>
-        /// Target data type of the statistic.
+        /// Gets the target data type of the statistic.
         /// </summary>
-        public Type DataType { get; set; }
+        public Type DataType { get; internal set; }
 
         /// <summary>
         /// Gets the last calculated value of the statistic.
