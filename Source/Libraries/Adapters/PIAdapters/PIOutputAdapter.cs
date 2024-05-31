@@ -401,7 +401,6 @@ public class PIOutputAdapter : OutputAdapterBase
         m_qualityWordMeasurements = [];
         m_qualityBitMeasurements = [];
         m_connectionStatistics = [];
-        m_activeStatistics = new ReadOnlyDictionary<MeasurementKey, Statistic>(new Dictionary<MeasurementKey, Statistic>());
         m_digitalWordMeasurements = [];
         m_digitalBitMeasurements = [];
         m_integerValueTypes = [];
@@ -424,13 +423,13 @@ public class PIOutputAdapter : OutputAdapterBase
         {
             base.DataSource = value;
 
-            // Notify DMD algorithm that configuration has been reloaded
+            // Notify adapter that configuration has been reloaded
             m_configurationReloaded?.Set();
         }
     }
 
     /// <summary>
-    /// Gets or sets primary keys of input measurements the PI output adapter expects.
+    /// Gets or sets primary keys of input measurements the <see cref="PIOutputAdapter"/> expects.
     /// </summary>
     public override MeasurementKey[] InputMeasurementKeys
     {
@@ -1178,9 +1177,11 @@ public class PIOutputAdapter : OutputAdapterBase
     /// Returns a brief status of this <see cref="PIOutputAdapter"/>
     /// </summary>
     /// <param name="maxLength">Maximum number of characters in the status string</param>
-    /// <returns>Status</returns>
-    public override string GetShortStatus(int maxLength) =>
-        $"Archived {m_processedMeasurements:N0} measurements to PI.".CenterText(maxLength);
+    /// <returns>Short status.</returns>
+    public override string GetShortStatus(int maxLength)
+    {
+        return $"Archived {m_processedMeasurements:N0} measurements to PI.".CenterText(maxLength);
+    }
 
     /// <summary>
     /// Initializes this <see cref="PIOutputAdapter"/>.
@@ -1707,6 +1708,14 @@ public class PIOutputAdapter : OutputAdapterBase
         KeyValuePair<MeasurementKey, MeasurementKey>[] connectionStatistics = m_connectionStatistics.ToArray();
         List<IMeasurement> connectStateMeasurements = [];
 
+        // Make sure we have a local reference to active statistics, refreshing statistics cache when member value is null.
+        // Metadata refresh sets this member to null to force a refresh on next statistics calculation cycle in case new
+        // statistics have been added to the engine. Statistics only appear in the cache once they have been calculated.
+        ReadOnlyDictionary<MeasurementKey, Statistic> activeStatistics = m_activeStatistics ??= StatisticsEngine.Statistics;
+
+        if (activeStatistics is null)
+            return;
+
         // Update connect states when statistics are calculated, typically every ten seconds
         foreach (KeyValuePair<MeasurementKey, MeasurementKey> kvp in connectionStatistics)
         {
@@ -1725,7 +1734,7 @@ public class PIOutputAdapter : OutputAdapterBase
             bool connected = false;
 
             // Query last connected state from active statistics
-            if (m_activeStatistics.TryGetValue(statisticKey, out Statistic statistic))
+            if (activeStatistics.TryGetValue(statisticKey, out Statistic statistic))
                 connected = statistic.Value > 0.0D;
 
             connectStateMeasurements.Add(new Measurement
@@ -2433,8 +2442,8 @@ public class PIOutputAdapter : OutputAdapterBase
         int connectedStatisticIndex = rows.Length > 0 ? rows[0].Field<int>("SignalIndex") : 8;
         DataTable measurements = DataSource.Tables["ActiveMeasurements"];
 
-        // Refresh active statistics
-        m_activeStatistics = StatisticsEngine.Statistics;
+        // Reset active statistics cache
+        Interlocked.Exchange(ref m_activeStatistics, null);
 
         Dictionary<MeasurementKey, MeasurementKey[]> qualityWordMeasurements = [];
         Dictionary<MeasurementKey, MeasurementKey> connectionStatistics = [];
