@@ -2441,10 +2441,7 @@ public class PIOutputAdapter : OutputAdapterBase
         DataRow[] rows = DataSource.Tables["Statistics"]?.Select("Source='InputStream' AND IsConnectedState > 0") ?? [];
         int connectedStatisticIndex = rows.Length > 0 ? rows[0].Field<int>("SignalIndex") : 8;
         DataTable measurements = DataSource.Tables["ActiveMeasurements"];
-
-        // Reset active statistics cache
-        Interlocked.Exchange(ref m_activeStatistics, null);
-
+        
         Dictionary<MeasurementKey, MeasurementKey[]> qualityWordMeasurements = [];
         Dictionary<MeasurementKey, MeasurementKey> connectionStatistics = [];
 
@@ -2472,6 +2469,9 @@ public class PIOutputAdapter : OutputAdapterBase
         Interlocked.Exchange(ref m_qualityWordMeasurements, qualityWordMeasurements);
         Interlocked.Exchange(ref m_qualityBitMeasurements, qualityBitMeasurements);
         Interlocked.Exchange(ref m_connectionStatistics, connectionStatistics);
+
+        // Reset active statistics cache
+        Interlocked.Exchange(ref m_activeStatistics, null);
     }
 
     private void MapDigitalBitStateSetsToTags(List<Guid> newRecords)
