@@ -226,9 +226,9 @@ public readonly struct C37118DigitalStateSets
 
     internal const int Count = Trigger + 1;
 
-    internal static HashSet<int> StatusBitStates => [CompositeQual, ConfigChange, DataSorting, DataValid, NominalFreq, PMUError, SyncError, Timelock, Trigger];
-    
-    internal static HashSet<int> QualityBitStates => [ConnectState, LeapSecond, TimeQuality];
+    internal static Dictionary<int, int> StatusBitStates => new() { [CompositeQual] = 0, [ConfigChange] = 1, [DataSorting] = 2, [DataValid] = 3, [NominalFreq] = 4, [PMUError] = 5, [SyncError] = 6, [Timelock] = 7, [Trigger] = 8 };
+
+    internal static Dictionary<int, int> QualityBitStates => new() { [ConnectState] = 0, [LeapSecond] = 1, [TimeQuality] = 2 };
 }
 
 #endregion
@@ -339,7 +339,7 @@ public class PIOutputAdapter : OutputAdapterBase
         $"C37118_{nameof(C37118DigitalStateSets.PMUError)}," + 
         $"C37118_{nameof(C37118DigitalStateSets.SyncError)}," + 
         $"C37118_{nameof(C37118DigitalStateSets.Timelock)}," + 
-        $"C37118_{nameof(C37118DigitalStateSets.TimeQuality)}" +
+        $"C37118_{nameof(C37118DigitalStateSets.TimeQuality)}," +
         $"C37118_{nameof(C37118DigitalStateSets.Trigger)}";
     private const string DefaultIEEEC371118TagNameExpressions = 
         "{CompanyAcronym}_{DeviceAcronym}.COMPOSITE_QUAL;" +
@@ -352,7 +352,7 @@ public class PIOutputAdapter : OutputAdapterBase
         "{CompanyAcronym}_{DeviceAcronym}.PMU_ERROR;" +
         "{CompanyAcronym}_{DeviceAcronym}.SYNC_ERROR;" +
         "{CompanyAcronym}_{DeviceAcronym}.TIME_LOCK;" +
-        "{CompanyAcronym}_{DeviceAcronym}.TIME_QUALITY" +
+        "{CompanyAcronym}_{DeviceAcronym}.TIME_QUALITY;" +
         "{CompanyAcronym}_{DeviceAcronym}.TRIGGER";
     private const bool DefaultExpandDigitalBitsToTags = false;
     private const bool DefaultWriteDigitalWord = true;
@@ -391,7 +391,7 @@ public class PIOutputAdapter : OutputAdapterBase
     private Dictionary<MeasurementKey, MeasurementKey[]> m_qualityWordMeasurements;     // Quality word measurement to quality bit measurements map
     private Dictionary<MeasurementKey, int> m_qualityBitMeasurements;                   // Quality bit measurement to digital state index map
     private Dictionary<MeasurementKey, MeasurementKey> m_connectionStatistics;          // Quality word measurement to connection statistic map
-    private ReadOnlyDictionary<MeasurementKey, Statistic> m_activeStatistics;           // Registered statistics for the active statistics engine
+    private ReadOnlyDictionary<MeasurementKey, double> m_activeStatistics;              // Active statistic measurement values
     private Dictionary<string, Regex> m_digitalBitStateExpressionMap;                   // Digital state set name to digital label expression map
     private Dictionary<string, string> m_digitalBitTagNameExpressionMap;                // Digital state set name to digital bit tag name expression map
     private Dictionary<string, TagGenerator> m_digitalBitTagNameGeneratorMap;           // Digital state set name to digital bit tag name generator map
@@ -556,8 +556,8 @@ public class PIOutputAdapter : OutputAdapterBase
     /// </summary>
     [ConnectionStringParameter]
     [Description(
-        "Determines if this adapter should automatically update existing tags when managing metadata for PI points (recommended). This will make openPDC the controller for maintaining PI tag "+
-        "metadata (like the tag name) for local metadata; otherwise, when False, PI tools will be required to maintain points, including local tag name updates. Value will only be considered "+
+        "Determines if this adapter should automatically update existing tags when managing metadata for PI points (recommended). This will make openPDC the controller for maintaining PI tag\r\n"+
+        "metadata (like the tag name) for local metadata; otherwise, when False, PI tools will be required to maintain points, including local tag name updates. Value will only be considered\r\n" +
         "when RunMetadataSync is True.")]
     [DefaultValue(DefaultAutoUpdateTags)]
     public bool AutoUpdateTags { get; set; } = DefaultAutoUpdateTags;
@@ -567,8 +567,8 @@ public class PIOutputAdapter : OutputAdapterBase
     /// </summary>
     [ConnectionStringParameter]
     [Description(
-        "Determines if this adapter should automatically remove PI tags that no longer exist locally in metadata (use with caution). This will make openPDC the controller - even for deletes - "+
-        "when maintaining PI tag metadata; otherwise, when value is set to DoNotRemove, PI tags will persist even when they no longer exist in local metadata. Value will only be considered "+
+        "Determines if this adapter should automatically remove PI tags that no longer exist locally in metadata (use with caution). This will make openPDC the controller - even for deletes -\r\n" +
+        "when maintaining PI tag metadata; otherwise, when value is set to DoNotRemove, PI tags will persist even when they no longer exist in local metadata. Value will only be considered\r\n" +
         "when RunMetadataSync is True.")]
     [DefaultValue(typeof(TagRemovalOperation), DefaultAutoRemoveTags)]
     public TagRemovalOperation AutoRemoveTags { get; set; } = (TagRemovalOperation)Enum.Parse(typeof(TagRemovalOperation), DefaultAutoRemoveTags);
@@ -618,7 +618,7 @@ public class PIOutputAdapter : OutputAdapterBase
     /// </summary>
     [ConnectionStringParameter]
     [Description(
-        "Defines the point class string used when automatically creating new PI points during the metadata update. On the PI server, this class should inherit from classic. "+
+        "Defines the point class string used when automatically creating new PI points during the metadata update. On the PI server, this class should inherit from classic.\r\n" +
         "Value will only be considered when RunMetadataSync is True.")]
     [DefaultValue(DefaultPIPointClass)]
     public string PIPointClass { get; set; } = DefaultPIPointClass;
@@ -690,7 +690,7 @@ public class PIOutputAdapter : OutputAdapterBase
     /// </summary>
     [ConnectionStringParameter]
     [Description(
-        "Defines the defined compression deviations for data types used when AddTagCompressionState or UpdateExistingTagCompressionState is enabled. "+
+        "Defines the defined compression deviations for data types used when AddTagCompressionState or UpdateExistingTagCompressionState is enabled.\r\n" +
         $"Use format \"DataType=Deviation,DataType=Deviation,...\". Example: \"{DefaultCompDevDataTypeMap}\".")]
     [DefaultValue(DefaultCompDevDataTypeMap)]
     public string CompDevDataTypeMap
@@ -726,7 +726,7 @@ public class PIOutputAdapter : OutputAdapterBase
     /// </summary>
     [ConnectionStringParameter]
     [Description(
-        "Defines the defined value spans for data types used when AddTagCompressionState or UpdateExistingTagCompressionState is enabled. " +
+        "Defines the defined value spans for data types used when AddTagCompressionState or UpdateExistingTagCompressionState is enabled.\r\n" +
         $"Use format \"DataType=Deviation,DataType=Deviation,...\". Example: \"{DefaultSpanDataTypeMap}\".")]
     [DefaultValue(DefaultSpanDataTypeMap)]
     public string SpanDataTypeMap
@@ -762,7 +762,7 @@ public class PIOutputAdapter : OutputAdapterBase
     /// </summary>
     [ConnectionStringParameter]
     [Description(
-        "Defines the defined step enabled for values for data types used when AddTagCompressionState or UpdateExistingTagCompressionState is enabled. " +
+        "Defines the defined step enabled for values for data types used when AddTagCompressionState or UpdateExistingTagCompressionState is enabled.\r\n" +
         $"Use format \"DataType=Deviation,DataType=Deviation,...\". Example: \"{DefaultStepDataTypeMap}\".")]
     [DefaultValue(DefaultStepDataTypeMap)]
     public string StepDataTypeMap
@@ -774,10 +774,11 @@ public class PIOutputAdapter : OutputAdapterBase
 
             foreach (string[] parts in value.Split([','], StringSplitOptions.RemoveEmptyEntries).Select(part => part.Split(['='], StringSplitOptions.RemoveEmptyEntries)))
             {
-                if (parts.Length != 2 || !bool.TryParse(parts[1].Trim(), out bool step))
+                if (parts.Length != 2 || !int.TryParse(parts[1].Trim(), out int stepValue))
                     continue;
 
                 string type = parts[0].Trim();
+                bool step = stepValue > 0;
 
                 if (type.Equals("*"))
                     m_stepDataTypeMap[SignalType.NONE] = step;
@@ -788,7 +789,7 @@ public class PIOutputAdapter : OutputAdapterBase
             if (m_stepDataTypeMap.TryGetValue(SignalType.NONE, out m_defaultStep))
                 return;
 
-            m_defaultStep = bool.Parse(DefaultStep);
+            m_defaultStep = int.Parse(DefaultStep) > 0;
             m_stepDataTypeMap[SignalType.NONE] = m_defaultStep;
         }
     }
@@ -798,7 +799,7 @@ public class PIOutputAdapter : OutputAdapterBase
     /// </summary>
     [ConnectionStringParameter]
     [Description(
-        "Defines the defined zero values for data types used when AddTagCompressionState or UpdateExistingTagCompressionState is enabled. " +
+        "Defines the defined zero values for data types used when AddTagCompressionState or UpdateExistingTagCompressionState is enabled.\r\n" +
         $"Use format \"DataType=Deviation,DataType=Deviation,...\". Example: \"{DefaultZeroDataTypeMap}\".")]
     [DefaultValue(DefaultZeroDataTypeMap)]
     public string ZeroDataTypeMap
@@ -835,7 +836,7 @@ public class PIOutputAdapter : OutputAdapterBase
     /// </summary>
     [ConnectionStringParameter]
     [Description(
-        "Defines the data types to archive. Value of <c>*</c> (or empty string) means all values archived, 'DIGI' means only archive digital values. "+
+        "Defines the data types to archive. Value of <c>*</c> (or empty string) means all values archived, 'DIGI' means only archive digital values.\r\n" +
         "Separate multiple values with a comma, for example: DIGI,VPHM,FREQ")]
     [DefaultValue(DefaultArchiveFilterDataTypes)]
     public string ArchiveFilterDataTypes
@@ -881,7 +882,7 @@ public class PIOutputAdapter : OutputAdapterBase
     /// </summary>
     [ConnectionStringParameter]
     [Description(
-        "Defines the data types to only archive on change. Empty string value means all values archived, '*' means archive all values on change, "+
+        "Defines the data types to only archive on change. Empty string value means all values archived, '*' means archive all values on change,\r\n" +
         "'DIGI' means only archive digital values on change. Separate multiple values with a comma, for example: DIGI,VPHM,FREQ")]
     [DefaultValue(DefaultArchiveOnChangeDataTypes)]
     public string ArchiveOnChangeDataTypes
@@ -935,7 +936,7 @@ public class PIOutputAdapter : OutputAdapterBase
     /// </summary>
     [ConnectionStringParameter]
     [Description(
-        "Defines the maximum time resolution, in seconds, for data points being archived, e.g., a value 1.0 would mean that data would be archived no "+
+        "Defines the maximum time resolution, in seconds, for data points being archived, e.g., a value 1.0 would mean that data would be archived no\r\n" +
         "more than once per second. A zero value indicates that all data should be archived.")]
     [DefaultValue(DefaultMaximumPointResolution)]
     public double MaximumPointResolution { get; set; } = DefaultMaximumPointResolution;
@@ -1011,7 +1012,7 @@ public class PIOutputAdapter : OutputAdapterBase
     /// </summary>
     [ConnectionStringParameter]
     [Description(
-        "Defines the comma separated digital state set names for IEEE C37.118 status states. Specify digital state set name for each of the following digital states using value of 'X' (without quotes) " + 
+        "Defines the comma separated digital state set names for IEEE C37.118 status states. Specify digital state set name for each of the following digital states using value of 'X' (without quotes)\r\n" + 
         "as the name to indicate state is not mapped:\r\n CompositeQual, ConfigChange, ConnectState, DataSorting, DataValid, LeapSecond, NominalFreq, PMUError, SyncError, Timelock, TimeQuality, and Trigger.\r\n" + 
         "If digital sets are predefined, state values are expected to be zero based and incremented by one for each value. If specified digital set name does not exist, it will be created.")
     ]
@@ -1094,7 +1095,7 @@ public class PIOutputAdapter : OutputAdapterBase
     /// </summary>
     [ConnectionStringParameter]
     [Description(
-        "Defines the semicolon separated pre-existing digital bit state set names mapped to a regular expression for matching digital labels. " +
+        "Defines the semicolon separated pre-existing digital bit state set names mapped to a regular expression for matching digital labels.\r\n" +
         "Use format \"DigitalStateName=Expression;DigitalStateName=Expression;...\". Use \"*\" for default expression.")
     ]
     [DefaultValue(DefaultDigitalBitStateExpressionMap)]
@@ -1131,7 +1132,7 @@ public class PIOutputAdapter : OutputAdapterBase
     /// </summary>
     [ConnectionStringParameter]
     [Description(
-        $"Defines the semicolon separated digital state set name to tag name expression map. One expression should exist for each state defined in '{nameof(DigitalBitStateExpressionMap)}'. "+
+        $"Defines the semicolon separated digital state set name to tag name expression map. One expression should exist for each state defined in '{nameof(DigitalBitStateExpressionMap)}'.\r\n" +
         "Use format \"DigitalStateName=Expression;DigitalStateName=Expression;...\". Use \"*\" for default expression.")
     ]
     [DefaultValue(DefaultDigitalBitTagNameExpressionMap)]
@@ -1481,8 +1482,7 @@ public class PIOutputAdapter : OutputAdapterBase
         if (settings.TryGetValue(nameof(IEEEC37118DigitalStates), out setting))
             IEEEC37118DigitalStates = setting;
 
-        if (settings.TryGetValue(nameof(IEEEC37118TagNameExpressions), out setting))
-            IEEEC37118TagNameExpressions = setting;
+        IEEEC37118TagNameExpressions = settings.TryGetValue(nameof(IEEEC37118TagNameExpressions), out setting) ? setting : DefaultIEEEC371118TagNameExpressions;
 
         if (settings.TryGetValue(nameof(ExpandDigitalBitsToTags), out setting))
             ExpandDigitalBitsToTags = setting.ParseBoolean();
@@ -1880,9 +1880,9 @@ public class PIOutputAdapter : OutputAdapterBase
         // Make sure we have a local reference to active statistics, refreshing statistics cache when member value is null.
         // Metadata refresh sets this member to null to force a refresh on next statistics calculation cycle in case new
         // statistics have been added to the engine. Statistics only appear in the cache once they have been calculated.
-        ReadOnlyDictionary<MeasurementKey, Statistic> activeStatistics = m_activeStatistics ??= StatisticsEngine.Statistics;
+        ReadOnlyDictionary<MeasurementKey, double> activeStatistics = m_activeStatistics ??= StatisticsEngine.Statistics;
 
-        if (activeStatistics is null)
+        if (activeStatistics is null || activeStatistics.Count == 0)
             return;
 
         // Update connect states when statistics are calculated, typically every ten seconds
@@ -1903,8 +1903,8 @@ public class PIOutputAdapter : OutputAdapterBase
             bool connected = false;
 
             // Query last connected state from active statistics
-            if (activeStatistics.TryGetValue(statisticKey, out Statistic statistic))
-                connected = statistic.Value > 0.0D;
+            if (activeStatistics.TryGetValue(statisticKey, out double value))
+                connected = value > 0.0D;
 
             connectStateMeasurements.Add(new Measurement
             {
@@ -2470,6 +2470,8 @@ public class PIOutputAdapter : OutputAdapterBase
     {
         PIServer server = m_connection.Server;
         PIStateSets stateSets = server.StateSets;
+        
+        stateSets.Refresh();
 
         for (int i = 0; i < C37118DigitalStateSets.Count; i++)
         {
@@ -2498,10 +2500,11 @@ public class PIOutputAdapter : OutputAdapterBase
             }
 
             stateSets.Add(newSet);
+            newSet.CheckIn();
         }
     }
 
-    private (Dictionary<MeasurementKey, (string, MeasurementKey[])>, Dictionary<MeasurementKey, int>) MapDigitalStateSetsToTags(List<Guid> newRecords, SignalType targetSignalType, HashSet<int> targetBitStates)
+    private (Dictionary<MeasurementKey, (string, MeasurementKey[])>, Dictionary<MeasurementKey, int>) MapDigitalStateSetsToTags(List<Guid> newRecords, SignalType targetSignalType, Dictionary<int, int> targetBitStates)
     {
         MeasurementKey[] inputMeasurementKeys = InputMeasurementKeys;
         SignalType[] inputMeasurementTypes = InputMeasurementKeyTypes;
@@ -2527,11 +2530,18 @@ public class PIOutputAdapter : OutputAdapterBase
 
             MeasurementKey key = inputMeasurementKeys[i];
             (string deviceAcronym, int deviceID) = this.LookupDevice(key.SignalID);
+
+            if (deviceID == 0)
+            {
+                OnStatusMessage(MessageLevel.Warning, $"Failed to lookup device for measurement '{key}' - digital state set mapping skipped.");
+                continue;
+            }
+
             string sourceSignalReference = this.LookupSignalReference(key.SignalID);
 
             for (int j = 0; j < C37118DigitalStateSets.Count; j++)
             {
-                if (!m_c37118MappedDigitalStates[j] || !targetBitStates.Contains(j))
+                if (!m_c37118MappedDigitalStates[j] || !targetBitStates.ContainsKey(j))
                     continue;
 
                 string state = m_c37118DigitalStates[j].Trim();
@@ -2564,7 +2574,6 @@ public class PIOutputAdapter : OutputAdapterBase
 
         Dictionary<MeasurementKey, (string, MeasurementKey[])> wordMeasurementSet = [];
         Dictionary<MeasurementKey, int> bitMeasurements = [];
-        int index = 0;
 
         foreach (KeyValuePair<Guid, (MeasurementKey, string, int, ulong)> kvp in signalIDBitStateMap)
         {
@@ -2572,11 +2581,11 @@ public class PIOutputAdapter : OutputAdapterBase
             (MeasurementKey sourceKey, string sourceSignalReference, int stateIndex, ulong pointID) = kvp.Value;
             MeasurementKey statusBitKey = this.LookupMeasurementKey(signalID, pointID);
 
-            if (statusBitKey != MeasurementKey.Undefined)
-                bitMeasurements[statusBitKey] = stateIndex;
+            Debug.Assert(statusBitKey != MeasurementKey.Undefined, "Failed to lookup or create status bit measurement key");
 
+            bitMeasurements[statusBitKey] = stateIndex;
             (_, MeasurementKey[] bitKeys) = wordMeasurementSet.GetOrAdd(sourceKey, _ => (sourceSignalReference, new MeasurementKey[targetBitStates.Count]));
-            bitKeys[index++] = statusBitKey;
+            bitKeys[targetBitStates[stateIndex]] = statusBitKey;
         }
 
         return (wordMeasurementSet, bitMeasurements);
@@ -2806,6 +2815,13 @@ public class PIOutputAdapter : OutputAdapterBase
                 MeasurementKey key = kvp.Key;
                 (string[] digitalLabels, (string state, int bit)[] sets) = kvp.Value;
                 (string deviceAcronym, int deviceID) = this.LookupDevice(key.SignalID);
+                
+                if (deviceID == 0)
+                {
+                    OnStatusMessage(MessageLevel.Warning, $"Failed to lookup device for measurement '{key}' - digital state set mapping skipped.");
+                    continue;
+                }
+
                 string sourceSignalReference = this.LookupSignalReference(key.SignalID);
 
                 foreach ((string state, int bit) in sets)
