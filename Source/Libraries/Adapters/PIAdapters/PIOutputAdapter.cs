@@ -1197,25 +1197,25 @@ public class PIOutputAdapter : OutputAdapterBase
             status.AppendLine($"   Update descriptor state: {UpdateExistingDescriptorState}");
             status.AppendLine($" Add tag compression state: {AddTagCompressionState}");
             status.AppendLine($"  Update compression state: {UpdateExistingTagCompressionState}");
-            status.AppendLine($" Compression deviation map: {CompDevDataTypeMap}");
-            status.AppendLine($"Compression value span map: {SpanDataTypeMap}");
-            status.AppendLine($"Compression step-is-on map: {StepEnabledDataTypeMap}");
-            status.AppendLine($"Compression zero-value map: {ZeroValueDataTypeMap}");
-            status.AppendLine($" Archive filter data types: {ArchiveFilterDataTypes}");
-            status.AppendLine($"   Archive on change types: {ArchiveOnChangeDataTypes}");
+            status.AppendLine($" Compression deviation map: {CompDevDataTypeMap.TrimWithEllipsisMiddle(51)}");
+            status.AppendLine($"Compression value span map: {SpanDataTypeMap.TrimWithEllipsisMiddle(51)}");
+            status.AppendLine($"Compression step-is-on map: {StepEnabledDataTypeMap.TrimWithEllipsisMiddle(51)}");
+            status.AppendLine($"Compression zero-value map: {ZeroValueDataTypeMap.TrimWithEllipsisMiddle(51)}");
+            status.AppendLine($" Archive filter data types: {ArchiveFilterDataTypes.TrimWithEllipsisMiddle(51)}");
+            status.AppendLine($"   Archive on change types: {ArchiveOnChangeDataTypes.TrimWithEllipsisMiddle(51)}");
             status.AppendLine($"  Maximum point resolution: {MaximumPointResolution:N3} seconds{(MaximumPointResolution <= 0.0D ? " - all data will be archived" : "")}");
             status.AppendLine($"  Time reasonability check: {(EnableTimeReasonabilityCheck ? "Enabled" : "Not Enabled")}");
             status.AppendLine($" Write Status Bits to Tags: {ExpandStatusBitsToTags}");
             status.AppendLine($"         Write Status Word: {WriteStatusWord}");
             status.AppendLine($"Write Quality Bits to Tags: {ExpandQualityBitsToTags}");
             status.AppendLine($"        Write Quality Word: {WriteQualityWord}");
-            status.AppendLine($"IEEEC37.118 Digital States: {IEEEC37118DigitalStates}");
-            status.AppendLine($"IEEEC37.118 Tag Name Exprs: {IEEEC37118TagNameExpressions}");
+            status.AppendLine($"IEEEC37.118 Digital States: {IEEEC37118DigitalStates.TrimWithEllipsisMiddle(51)}");
+            status.AppendLine($"IEEEC37.118 Tag Name Exprs: {IEEEC37118TagNameExpressions.TrimWithEllipsisMiddle(51)}");
             status.AppendLine($"Write Digital Bits to Tags: {ExpandDigitalBitsToTags}");
             status.AppendLine($"        Write Digital Word: {WriteDigitalWord}");
-            status.AppendLine($"Digital Bit State Expr Map: {DigitalBitStateExpressionMap}");
-            status.AppendLine($" Digital Tag Name Expr Map: {DigitalBitTagNameExpressionMap}");
-            status.AppendLine($"Digital Bit Excluded Exprs: {DigitalBitExcludedExpressions}");
+            status.AppendLine($"Digital Bit State Expr Map: {DigitalBitStateExpressionMap.TrimWithEllipsisMiddle(51)}");
+            status.AppendLine($" Digital Tag Name Expr Map: {DigitalBitTagNameExpressionMap.TrimWithEllipsisMiddle(51)}");
+            status.AppendLine($"Digital Bit Excluded Exprs: {DigitalBitExcludedExpressions.TrimWithEllipsisMiddle(51)}");
 
             if (EnableTimeReasonabilityCheck)
             {
