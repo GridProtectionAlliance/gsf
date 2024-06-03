@@ -289,8 +289,8 @@ public class PIOutputAdapter : OutputAdapterBase
         "ALRM=1," +
         "QUAL=1," +
         $"*={DefaultSpan}";
-    private const string DefaultStep = "0";
-    private const string DefaultStepDataTypeMap =
+    private const string DefaultStepEnabled = "0";
+    private const string DefaultStepEnabledDataTypeMap =
         "IPHM=0," +
         "IPHA=0," +
         "VPHM=0," +
@@ -302,9 +302,9 @@ public class PIOutputAdapter : OutputAdapterBase
         "FLAG=1," +
         "ALRM=1," +
         "QUAL=1," +
-        $"*={DefaultStep}";
-    private const string DefaultZero = "0";
-    private const string DefaultZeroDataTypeMap =
+        $"*={DefaultStepEnabled}";
+    private const string DefaultZeroValue = "0";
+    private const string DefaultZeroValueDataTypeMap =
         "IPHM=0," +
         "IPHA=-180," +
         "VPHM=0," +
@@ -316,7 +316,7 @@ public class PIOutputAdapter : OutputAdapterBase
         "FLAG=0," +
         "ALRM=0," +
         "QUAL=0," +
-        $"*={DefaultZero}";
+        $"*={DefaultZeroValue}";
     private const string DefaultArchiveFilterDataTypes = "*";
     private const string DefaultArchiveOnChangeDataTypes = "";
     private const string DefaultTagMapCacheFileName = "";
@@ -375,12 +375,12 @@ public class PIOutputAdapter : OutputAdapterBase
     private HashSet<SignalType> m_archiveOnChangeDataTypes;                             // Data types to archive on change
     private Dictionary<SignalType, double> m_compDevDataTypeMap;                        // Defined compression deviations for data types
     private Dictionary<SignalType, double> m_spanDataTypeMap;                           // Defined value spans for data types
-    private Dictionary<SignalType, bool> m_stepDataTypeMap;                             // Defined step enabled flags for data types
-    private Dictionary<SignalType, double> m_zeroDataTypeMap;                           // Defined zero values for data types
+    private Dictionary<SignalType, bool> m_stepEnabledDataTypeMap;                      // Defined step enabled flags for data types
+    private Dictionary<SignalType, double> m_zeroValueDataTypeMap;                      // Defined zero values for data types
     private double m_defaultCompDev;                                                    // Default compression deviation
     private double m_defaultSpan;                                                       // Default value span
-    private bool m_defaultStep;                                                         // Default step value
-    private double m_defaultZero;                                                       // Default zero value
+    private bool m_defaultStepEnabled;                                                  // Default step enabled flag
+    private double m_defaultZeroValue;                                                  // Default zero value
     private string[] m_c37118DigitalStates;                                             // IEEE C37.118 digital state set names
     private readonly bool[] m_c37118MappedDigitalStates;                                // IEEE C37.118 mapped digital state sets
     private string[] m_c37118TagNameExpressions;                                        // IEEE C37.118 tag name expressions
@@ -727,7 +727,7 @@ public class PIOutputAdapter : OutputAdapterBase
     [ConnectionStringParameter]
     [Description(
         "Defines the defined value spans for data types used when AddTagCompressionState or UpdateExistingTagCompressionState is enabled.\r\n" +
-        $"Use format \"DataType=Deviation,DataType=Deviation,...\". Example: \"{DefaultSpanDataTypeMap}\".")]
+        $"Use format \"DataType=Span,DataType=Span,...\". Example: \"{DefaultSpanDataTypeMap}\".")]
     [DefaultValue(DefaultSpanDataTypeMap)]
     public string SpanDataTypeMap
     {
@@ -763,14 +763,14 @@ public class PIOutputAdapter : OutputAdapterBase
     [ConnectionStringParameter]
     [Description(
         "Defines the defined step enabled for values for data types used when AddTagCompressionState or UpdateExistingTagCompressionState is enabled.\r\n" +
-        $"Use format \"DataType=Deviation,DataType=Deviation,...\". Example: \"{DefaultStepDataTypeMap}\".")]
-    [DefaultValue(DefaultStepDataTypeMap)]
-    public string StepDataTypeMap
+        $"Use format \"DataType=StepEnabled,DataType=StepEnabled,...\". Example: \"{DefaultStepEnabledDataTypeMap}\".")]
+    [DefaultValue(DefaultStepEnabledDataTypeMap)]
+    public string StepEnabledDataTypeMap
     {
-        get => m_stepDataTypeMap is null ? DefaultStepDataTypeMap : string.Join(",", m_stepDataTypeMap.Select(kvp => $"{(kvp.Key == SignalType.NONE ? "*" : kvp.Key.ToString())}={(kvp.Value ? 1 : 0)}"));
+        get => m_stepEnabledDataTypeMap is null ? DefaultStepEnabledDataTypeMap : string.Join(",", m_stepEnabledDataTypeMap.Select(kvp => $"{(kvp.Key == SignalType.NONE ? "*" : kvp.Key.ToString())}={(kvp.Value ? 1 : 0)}"));
         set
         {
-            m_stepDataTypeMap = new Dictionary<SignalType, bool>();
+            m_stepEnabledDataTypeMap = new Dictionary<SignalType, bool>();
 
             foreach (string[] parts in value.Split([','], StringSplitOptions.RemoveEmptyEntries).Select(part => part.Split(['='], StringSplitOptions.RemoveEmptyEntries)))
             {
@@ -781,16 +781,16 @@ public class PIOutputAdapter : OutputAdapterBase
                 bool step = stepValue > 0;
 
                 if (type.Equals("*"))
-                    m_stepDataTypeMap[SignalType.NONE] = step;
+                    m_stepEnabledDataTypeMap[SignalType.NONE] = step;
                 else if (Enum.TryParse(parts[0], true, out SignalType signalType))
-                    m_stepDataTypeMap[signalType] = step;
+                    m_stepEnabledDataTypeMap[signalType] = step;
             }
 
-            if (m_stepDataTypeMap.TryGetValue(SignalType.NONE, out m_defaultStep))
+            if (m_stepEnabledDataTypeMap.TryGetValue(SignalType.NONE, out m_defaultStepEnabled))
                 return;
 
-            m_defaultStep = int.Parse(DefaultStep) > 0;
-            m_stepDataTypeMap[SignalType.NONE] = m_defaultStep;
+            m_defaultStepEnabled = int.Parse(DefaultStepEnabled) > 0;
+            m_stepEnabledDataTypeMap[SignalType.NONE] = m_defaultStepEnabled;
         }
     }
 
@@ -800,14 +800,14 @@ public class PIOutputAdapter : OutputAdapterBase
     [ConnectionStringParameter]
     [Description(
         "Defines the defined zero values for data types used when AddTagCompressionState or UpdateExistingTagCompressionState is enabled.\r\n" +
-        $"Use format \"DataType=Deviation,DataType=Deviation,...\". Example: \"{DefaultZeroDataTypeMap}\".")]
-    [DefaultValue(DefaultZeroDataTypeMap)]
-    public string ZeroDataTypeMap
+        $"Use format \"DataType=ZeroValue,DataType=ZeroValue,...\". Example: \"{DefaultZeroValueDataTypeMap}\".")]
+    [DefaultValue(DefaultZeroValueDataTypeMap)]
+    public string ZeroValueDataTypeMap
     {
-        get => m_zeroDataTypeMap is null ? DefaultZeroDataTypeMap : string.Join(",", m_zeroDataTypeMap.Select(kvp => $"{(kvp.Key == SignalType.NONE ? "*" : kvp.Key.ToString())}={kvp.Value}"));
+        get => m_zeroValueDataTypeMap is null ? DefaultZeroValueDataTypeMap : string.Join(",", m_zeroValueDataTypeMap.Select(kvp => $"{(kvp.Key == SignalType.NONE ? "*" : kvp.Key.ToString())}={kvp.Value}"));
         set
         {
-            m_zeroDataTypeMap = new Dictionary<SignalType, double>();
+            m_zeroValueDataTypeMap = new Dictionary<SignalType, double>();
 
             foreach (string[] parts in value.Split([','], StringSplitOptions.RemoveEmptyEntries).Select(part => part.Split(['='], StringSplitOptions.RemoveEmptyEntries)))
             {
@@ -817,16 +817,16 @@ public class PIOutputAdapter : OutputAdapterBase
                 string type = parts[0].Trim();
 
                 if (type.Equals("*"))
-                    m_zeroDataTypeMap[SignalType.NONE] = zero;
+                    m_zeroValueDataTypeMap[SignalType.NONE] = zero;
                 else if (Enum.TryParse(parts[0], true, out SignalType signalType))
-                    m_zeroDataTypeMap[signalType] = zero;
+                    m_zeroValueDataTypeMap[signalType] = zero;
             }
 
-            if (m_zeroDataTypeMap.TryGetValue(SignalType.NONE, out m_defaultZero))
+            if (m_zeroValueDataTypeMap.TryGetValue(SignalType.NONE, out m_defaultZeroValue))
                 return;
 
-            m_defaultZero = double.Parse(DefaultZero);
-            m_zeroDataTypeMap[SignalType.NONE] = m_defaultZero;
+            m_defaultZeroValue = double.Parse(DefaultZeroValue);
+            m_zeroValueDataTypeMap[SignalType.NONE] = m_defaultZeroValue;
         }
     }
 
@@ -1198,9 +1198,9 @@ public class PIOutputAdapter : OutputAdapterBase
             status.AppendLine($" Add tag compression state: {AddTagCompressionState}");
             status.AppendLine($"  Update compression state: {UpdateExistingTagCompressionState}");
             status.AppendLine($" Compression deviation map: {CompDevDataTypeMap}");
-            status.AppendLine($"      Compression span map: {SpanDataTypeMap}");
-            status.AppendLine($"      Compression step map: {StepDataTypeMap}");
-            status.AppendLine($"      Compression zero map: {ZeroDataTypeMap}");
+            status.AppendLine($"Compression value span map: {SpanDataTypeMap}");
+            status.AppendLine($"Compression step-is-on map: {StepEnabledDataTypeMap}");
+            status.AppendLine($"Compression zero-value map: {ZeroValueDataTypeMap}");
             status.AppendLine($" Archive filter data types: {ArchiveFilterDataTypes}");
             status.AppendLine($"   Archive on change types: {ArchiveOnChangeDataTypes}");
             status.AppendLine($"  Maximum point resolution: {MaximumPointResolution:N3} seconds{(MaximumPointResolution <= 0.0D ? " - all data will be archived" : "")}");
@@ -1404,8 +1404,8 @@ public class PIOutputAdapter : OutputAdapterBase
 
         CompDevDataTypeMap = settings.TryGetValue(nameof(CompDevDataTypeMap), out setting) ? setting : DefaultCompDevDataTypeMap;
         SpanDataTypeMap = settings.TryGetValue(nameof(SpanDataTypeMap), out setting) ? setting : DefaultSpanDataTypeMap;
-        StepDataTypeMap = settings.TryGetValue(nameof(StepDataTypeMap), out setting) ? setting : DefaultStepDataTypeMap;
-        ZeroDataTypeMap = settings.TryGetValue(nameof(ZeroDataTypeMap), out setting) ? setting : DefaultZeroDataTypeMap;
+        StepEnabledDataTypeMap = settings.TryGetValue(nameof(StepEnabledDataTypeMap), out setting) ? setting : DefaultStepEnabledDataTypeMap;
+        ZeroValueDataTypeMap = settings.TryGetValue(nameof(ZeroValueDataTypeMap), out setting) ? setting : DefaultZeroValueDataTypeMap;
 
         if (settings.TryGetValue(nameof(ArchiveFilterDataTypes), out setting))
             ArchiveFilterDataTypes = setting;
@@ -2042,7 +2042,7 @@ public class PIOutputAdapter : OutputAdapterBase
     /// </summary>
     protected override void ExecuteMetadataRefresh()
     {
-        if (!Initialized || m_connection is null)
+        if (!Enabled || !Initialized || m_connection is null)
             return;
 
         if (!m_connection.Connected)
@@ -2192,14 +2192,15 @@ public class PIOutputAdapter : OutputAdapterBase
                     // Lookup PI point trying signal ID and tag name
                     PIPoint point = GetPIPoint(server, signalID, tagName);
 
+                    bool isStatusBitTag = m_statusBitMeasurements.TryGetValue(key, out int stateIndex);
+                    bool isQualityBitTag = !isStatusBitTag && m_qualityBitMeasurements.TryGetValue(key, out stateIndex);
+                    bool isDigitalBitTag = m_digitalBitMeasurements.TryGetValue(key, out (string state, int) digital);
+                    bool isDigitalType = isStatusBitTag || isQualityBitTag || isDigitalBitTag;
+
                     if (AutoCreateTags && point is null)
                     {
                         try
                         {
-                            bool isStatusBitTag = m_statusBitMeasurements.TryGetValue(key, out int stateIndex);
-                            bool isQualityBitTag = !isStatusBitTag && m_qualityBitMeasurements.TryGetValue(key, out stateIndex);
-                            bool isDigitalBitTag = m_digitalBitMeasurements.TryGetValue(key, out (string state, int) digital);
-                            bool isDigitalType = isStatusBitTag || isQualityBitTag || isDigitalBitTag;
                             bool isWordType = signalType is SignalType.FLAG or SignalType.QUAL or SignalType.DIGI;
                             string digitalSetName = null;
 
@@ -2353,27 +2354,31 @@ public class PIOutputAdapter : OutputAdapterBase
 
                                 if (createdNewTag && AddTagCompressionState || UpdateExistingTagCompressionState)
                                 {
-                                    Debug.Assert(signalType.ToString().Equals(measurementRow["SignalType"].ToString(), StringComparison.OrdinalIgnoreCase), "Signal type mismatch between measurement and meta-data");
-
+                                    // Add or update compression settings
                                     updateAttribute(PICommonPointAttributes.Compressing, UseCompression ? 1 : 0);
 
-                                    // Add or update compression settings
-                                    if (!m_compDevDataTypeMap.TryGetValue(signalType, out double compDev))
-                                        compDev = m_defaultCompDev;
+                                    // Compression settings for digital types are readonly
+                                    if (!isDigitalType)
+                                    {
+                                        Debug.Assert(signalType.ToString().Equals(measurementRow["SignalType"].ToString(), StringComparison.OrdinalIgnoreCase), "Signal type mismatch between measurement and meta-data");
 
-                                    if (!m_spanDataTypeMap.TryGetValue(signalType, out double span))
-                                        span = m_defaultSpan;
+                                        if (!m_compDevDataTypeMap.TryGetValue(signalType, out double compDev))
+                                            compDev = m_defaultCompDev;
 
-                                    if (!m_stepDataTypeMap.TryGetValue(signalType, out bool step))
-                                        step = m_defaultStep;
+                                        if (!m_spanDataTypeMap.TryGetValue(signalType, out double span))
+                                            span = m_defaultSpan;
 
-                                    if (!m_zeroDataTypeMap.TryGetValue(signalType, out double zero))
-                                        zero = m_defaultZero;
+                                        if (!m_stepEnabledDataTypeMap.TryGetValue(signalType, out bool stepEnabled))
+                                            stepEnabled = m_defaultStepEnabled;
 
-                                    updateAttribute(PICommonPointAttributes.CompressionDeviation, compDev);
-                                    updateAttribute(PICommonPointAttributes.Span, span);
-                                    updateAttribute(PICommonPointAttributes.Step, step ? 1 : 0);
-                                    updateAttribute(PICommonPointAttributes.Zero, zero);
+                                        if (!m_zeroValueDataTypeMap.TryGetValue(signalType, out double zeroValue))
+                                            zeroValue = m_defaultZeroValue;
+
+                                        updateAttribute(PICommonPointAttributes.CompressionDeviation, compDev);
+                                        updateAttribute(PICommonPointAttributes.Span, span);
+                                        updateAttribute(PICommonPointAttributes.Step, stepEnabled ? 1 : 0);
+                                        updateAttribute(PICommonPointAttributes.Zero, zeroValue);
+                                    }
                                 }
 
                                 // Engineering units is a new field for this view -- handle the case that it's not there
