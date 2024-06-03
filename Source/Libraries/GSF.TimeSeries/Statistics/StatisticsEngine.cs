@@ -347,7 +347,7 @@ namespace GSF.TimeSeries.Statistics
         // Fields
         private readonly object m_statisticsLock;
         private readonly List<Statistic> m_statistics;
-        private readonly ConcurrentDictionary<MeasurementKey, double> m_statisticMeasurements;
+        private readonly ConcurrentDictionary<MeasurementKey, double> m_currentStatistics;
 
         private Timer m_reloadStatisticsTimer;
         private Timer m_statisticCalculationTimer;
@@ -377,7 +377,7 @@ namespace GSF.TimeSeries.Statistics
         {
             m_statisticsLock = new object();
             m_statistics = new List<Statistic>();
-            m_statisticMeasurements = new ConcurrentDictionary<MeasurementKey, double>();
+            m_currentStatistics = new ConcurrentDictionary<MeasurementKey, double>();
             m_reloadStatisticsTimer = new Timer();
             m_statisticCalculationTimer = new Timer();
 
@@ -837,7 +837,7 @@ namespace GSF.TimeSeries.Statistics
                     src.StatisticMeasurements = statisticMeasurements;
             }
 
-            m_statisticMeasurements.Clear();
+            m_currentStatistics.Clear();
 
             OnStatusMessage(MessageLevel.Info, $"Loaded {m_statistics.Count} statistic calculation definitions and {statisticMeasurementCount} statistic measurement definitions.");
         }
@@ -957,7 +957,7 @@ namespace GSF.TimeSeries.Statistics
                         }
 
                         // Track latest value of the statistic measurement
-                        m_statisticMeasurements[key] = value;
+                        m_currentStatistics[key] = value;
 
                         // Calculate the current value of the statistic measurement
                         return new Measurement()
@@ -1085,7 +1085,7 @@ namespace GSF.TimeSeries.Statistics
         /// <summary>
         /// Gets the statistic measurements and latest values that are registered with the active statistics engine.
         /// </summary>
-        public static ReadOnlyDictionary<MeasurementKey, double> Statistics
+        public static ReadOnlyDictionary<MeasurementKey, double> CurrentStatistics
         {
             get
             {
@@ -1093,7 +1093,7 @@ namespace GSF.TimeSeries.Statistics
 
                 return instance is null ? 
                     new ReadOnlyDictionary<MeasurementKey, double>(new Dictionary<MeasurementKey, double>()) : 
-                    new ReadOnlyDictionary<MeasurementKey, double>(instance.m_statisticMeasurements);
+                    new ReadOnlyDictionary<MeasurementKey, double>(instance.m_currentStatistics);
             }
         }
 
