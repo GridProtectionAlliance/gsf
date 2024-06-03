@@ -38,13 +38,8 @@ namespace GSF.TimeSeries.Statistics
     /// <summary>
     /// Represents a statistic calculation.
     /// </summary>
-    public class Statistic
+    internal class Statistic
     {
-        /// <summary>
-        /// Gets the key of the measurement associated with the statistic.
-        /// </summary>
-        public MeasurementKey Key { get; internal set; } = MeasurementKey.Undefined;
-
         /// <summary>
         /// Gets the method to be called to calculate the statistic.
         /// </summary>
@@ -69,10 +64,5 @@ namespace GSF.TimeSeries.Statistics
         /// Gets the target data type of the statistic.
         /// </summary>
         public Type DataType { get; internal set; }
-
-        /// <summary>
-        /// Gets the last calculated value of the statistic.
-        /// </summary>
-        public double Value { get; internal set; } = double.NaN;
     }
 }

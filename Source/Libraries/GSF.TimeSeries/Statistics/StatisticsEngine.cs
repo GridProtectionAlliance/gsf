@@ -24,6 +24,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -346,6 +347,7 @@ namespace GSF.TimeSeries.Statistics
         // Fields
         private readonly object m_statisticsLock;
         private readonly List<Statistic> m_statistics;
+        private readonly ConcurrentDictionary<MeasurementKey, double> m_statisticMeasurements;
 
         private Timer m_reloadStatisticsTimer;
         private Timer m_statisticCalculationTimer;
@@ -375,6 +377,7 @@ namespace GSF.TimeSeries.Statistics
         {
             m_statisticsLock = new object();
             m_statistics = new List<Statistic>();
+            m_statisticMeasurements = new ConcurrentDictionary<MeasurementKey, double>();
             m_reloadStatisticsTimer = new Timer();
             m_statisticCalculationTimer = new Timer();
 
@@ -834,6 +837,8 @@ namespace GSF.TimeSeries.Statistics
                     src.StatisticMeasurements = statisticMeasurements;
             }
 
+            m_statisticMeasurements.Clear();
+
             OnStatusMessage(MessageLevel.Info, $"Loaded {m_statistics.Count} statistic calculation definitions and {statisticMeasurementCount} statistic measurement definitions.");
         }
 
@@ -927,10 +932,6 @@ namespace GSF.TimeSeries.Statistics
 
                         double value = statistic.Method(target, statistic.Arguments);
 
-                        // Update the statistic with latest key and value
-                        statistic.Key = key;
-                        statistic.Value = value;
-
                         if (s_forwardToSnmp && OID.SnmpStats.TryGetValue(source.SourceCategory, out uint[] categoryOID))
                         {
                             try
@@ -954,6 +955,9 @@ namespace GSF.TimeSeries.Statistics
                                 OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to publish statistic \"{signalReference}\" via SNMP: {ex.Message}", ex));
                             }
                         }
+
+                        // Track latest value of the statistic measurement
+                        m_statisticMeasurements[key] = value;
 
                         // Calculate the current value of the statistic measurement
                         return new Measurement()
@@ -1079,21 +1083,17 @@ namespace GSF.TimeSeries.Statistics
         // Static Properties
 
         /// <summary>
-        /// Gets the <see cref="Statistic"/> instances that are registered with the active statistics engine.
+        /// Gets the statistic measurements and latest values that are registered with the active statistics engine.
         /// </summary>
-        public static ReadOnlyDictionary<MeasurementKey, Statistic> Statistics
+        public static ReadOnlyDictionary<MeasurementKey, double> Statistics
         {
             get
             {
                 StatisticsEngine instance = s_activeEngine;
 
-                if (instance is null)
-                    return new ReadOnlyDictionary<MeasurementKey, Statistic>(new Dictionary<MeasurementKey, Statistic>());
-
-                lock (instance.m_statisticsLock)
-                    return new ReadOnlyDictionary<MeasurementKey, Statistic>(instance.m_statistics
-                        .Where(statistic => statistic.Key is not null && statistic.Key != MeasurementKey.Undefined)
-                        .ToDictionary(statistic => statistic.Key, statistic => statistic));
+                return instance is null ? 
+                    new ReadOnlyDictionary<MeasurementKey, double>(new Dictionary<MeasurementKey, double>()) : 
+                    new ReadOnlyDictionary<MeasurementKey, double>(instance.m_statisticMeasurements);
             }
         }
 
