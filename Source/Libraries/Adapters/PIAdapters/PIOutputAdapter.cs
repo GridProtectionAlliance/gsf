@@ -391,7 +391,7 @@ public class PIOutputAdapter : OutputAdapterBase
     private Dictionary<MeasurementKey, MeasurementKey[]> m_qualityWordMeasurements;     // Quality word measurement to quality bit measurements map
     private Dictionary<MeasurementKey, int> m_qualityBitMeasurements;                   // Quality bit measurement to digital state index map
     private Dictionary<MeasurementKey, MeasurementKey> m_connectionStatistics;          // Quality word measurement to connection statistic map
-    private ReadOnlyDictionary<MeasurementKey, double> m_activeStatistics;              // Active statistic measurement values
+    private ReadOnlyDictionary<MeasurementKey, double> m_currentStatistics;             // Current statistic measurement values
     private Dictionary<string, Regex> m_digitalBitStateExpressionMap;                   // Digital state set name to digital label expression map
     private Dictionary<string, string> m_digitalBitTagNameExpressionMap;                // Digital state set name to digital bit tag name expression map
     private Dictionary<string, TagGenerator> m_digitalBitTagNameGeneratorMap;           // Digital state set name to digital bit tag name generator map
@@ -1670,9 +1670,11 @@ public class PIOutputAdapter : OutputAdapterBase
             }
 
             MeasurementKey[] bitKeys = null;
+
+            // For the following logic, the measurement can only be one (or none) of a status, quality or digital word, but not more than one:
             bool isExpandedStatusWord = ExpandStatusBitsToTags && m_statusWordMeasurements.TryGetValue(key, out bitKeys);
             bool isExpandedQualityWord = ExpandQualityBitsToTags && !isExpandedStatusWord && m_qualityWordMeasurements.TryGetValue(key, out bitKeys);
-            bool isExpandedDigitalWord = ExpandDigitalBitsToTags && !isExpandedStatusWord && !isExpandedQualityWord && m_digitalWordMeasurements.TryGetValue(key, out bitKeys);
+            bool isExpandedDigitalWord = ExpandDigitalBitsToTags && !isExpandedQualityWord && m_digitalWordMeasurements.TryGetValue(key, out bitKeys);
             bool isExpandedWord = isExpandedStatusWord || isExpandedQualityWord || isExpandedDigitalWord;
 
             // Lookup connection point mapping for this measurement, if it wasn't found - go ahead and exit
@@ -1686,7 +1688,7 @@ public class PIOutputAdapter : OutputAdapterBase
             else if (isExpandedDigitalWord)
                 ProcessDigitalWordBitStates(measurement, bitKeys);
 
-            // If status, quality or digital word is not to be written, skip processing
+            // If status, quality or digital word value is not being written, skip its processing
             if (m_excludedWords.Contains(key))
                 continue;
 
@@ -1777,14 +1779,15 @@ public class PIOutputAdapter : OutputAdapterBase
         bool configChanged = (statusWord & (ushort)StatusFlags.ConfigurationChanged) > 0;
         IMeasurement[] statusBitMeasurements = new IMeasurement[statusBitKeys.Length];
 
-        // Get nominal frequency from last associated configuration frame
+        // Get nominal frequency from last associated configuration frame - defaults to 60Hz
         m_nominalFrequencies.TryGetValue(measurement.Key, out LineFrequency nominalFrequency);
 
         for (int i = 0; i < statusBitKeys.Length; i++)
         {
             MeasurementKey key = statusBitKeys[i];
 
-            m_statusBitMeasurements.TryGetValue(key, out int stateIndex);
+            if (!m_statusBitMeasurements.TryGetValue(key, out int stateIndex))
+                stateIndex = -1;
 
             int value = stateIndex switch
             {
@@ -1823,10 +1826,11 @@ public class PIOutputAdapter : OutputAdapterBase
 
         foreach (MeasurementKey key in qualityBitKeys)
         {
-            m_qualityBitMeasurements.TryGetValue(key, out int stateIndex);
+            if (!m_qualityBitMeasurements.TryGetValue(key, out int stateIndex))
+                stateIndex = -1;
 
-            // Connect state digital state is handled by statistics engine calculation event
-            // since if connection is lost, we won't receive a quality measurement
+            // Connect state digital state set is handled by statistics engine calculation
+            // event since if connection is lost, we won't receive a quality measurement
             if (stateIndex == C37118DigitalStateSets.ConnectState)
                 continue;
 
@@ -1865,7 +1869,7 @@ public class PIOutputAdapter : OutputAdapterBase
             {
                 Metadata = key.Metadata,
                 Timestamp = measurement.Timestamp,
-                Value = (ushort)(digitalWord & (ushort)(1 << digital.bit)) == 0 ? 0 : 1
+                Value = (digitalWord & (1 << digital.bit)) == 0 ? 0 : 1
             };
         }
 
@@ -1875,14 +1879,15 @@ public class PIOutputAdapter : OutputAdapterBase
     private void StatisticsEngine_Calculated(object sender, EventArgs e)
     {
         KeyValuePair<MeasurementKey, MeasurementKey>[] connectionStatistics = m_connectionStatistics.ToArray();
-        List<IMeasurement> connectStateMeasurements = [];
+        List<IMeasurement> connectStateMeasurements = new(connectionStatistics.Length);
 
         // Make sure we have a local reference to active statistics, refreshing statistics cache when member value is null.
         // Metadata refresh sets this member to null to force a refresh on next statistics calculation cycle in case new
-        // statistics have been added to the engine. Statistics only appear in the cache once they have been calculated.
-        ReadOnlyDictionary<MeasurementKey, double> activeStatistics = m_activeStatistics ??= StatisticsEngine.Statistics;
+        // statistics have been added to the engine. Statistics only appear in the cache once they have been calculated,
+        // so accessing current statistics outside this event may not return all available statistics.
+        ReadOnlyDictionary<MeasurementKey, double> currentStatistics = m_currentStatistics ??= StatisticsEngine.CurrentStatistics;
 
-        if (activeStatistics is null || activeStatistics.Count == 0)
+        if (currentStatistics is null || currentStatistics.Count == 0)
             return;
 
         // Update connect states when statistics are calculated, typically every ten seconds
@@ -1902,8 +1907,8 @@ public class PIOutputAdapter : OutputAdapterBase
 
             bool connected = false;
 
-            // Query last connected state from active statistics
-            if (activeStatistics.TryGetValue(statisticKey, out double value))
+            // Query last connected state from current statistics
+            if (currentStatistics.TryGetValue(statisticKey, out double value))
                 connected = value > 0.0D;
 
             connectStateMeasurements.Add(new Measurement
@@ -2298,7 +2303,6 @@ public class PIOutputAdapter : OutputAdapterBase
                         {
                             // Attempt to look up last update time for record
                             database ??= new AdoDataConnection("systemSettings");
-
                             updateTime = Convert.ToDateTime(database.Connection.ExecuteScalar($"SELECT UpdatedOn FROM Measurement WHERE SignalID = '{signalID}'"));
                         }
                     }
@@ -2522,7 +2526,7 @@ public class PIOutputAdapter : OutputAdapterBase
         // When expanding status or quality bits to tags, validate digital state sets exist, creating them if needed
         ValidateC37118DigitalStates();
 
-        // Create status or quality bit measurements for each mapped status digital state set
+        // Create status or quality bit measurements for each mapped digital state set
         Dictionary<Guid, (MeasurementKey sourceKey, string sourceSignalReference, int statusIndex, ulong pointID)> signalIDBitStateMap = [];
         bool recordsAdded = false;
 
@@ -2584,13 +2588,13 @@ public class PIOutputAdapter : OutputAdapterBase
         {
             Guid signalID = kvp.Key;
             (MeasurementKey sourceKey, string sourceSignalReference, int stateIndex, ulong pointID) = kvp.Value;
-            MeasurementKey statusBitKey = this.LookupMeasurementKey(signalID, pointID);
+            MeasurementKey stateBitKey = this.LookupMeasurementKey(signalID, pointID);
 
-            Debug.Assert(statusBitKey != MeasurementKey.Undefined, "Failed to lookup or create status bit measurement key");
+            Debug.Assert(stateBitKey != MeasurementKey.Undefined, "Failed to lookup or create state bit measurement key");
 
-            bitMeasurements[statusBitKey] = stateIndex;
+            bitMeasurements[stateBitKey] = stateIndex;
             (_, MeasurementKey[] bitKeys) = wordMeasurementSet.GetOrAdd(sourceKey, _ => (sourceSignalReference, new MeasurementKey[targetBitStates.Count]));
-            bitKeys[targetBitStates[stateIndex]] = statusBitKey;
+            bitKeys[targetBitStates[stateIndex]] = stateBitKey;
         }
 
         return (wordMeasurementSet, bitMeasurements);
@@ -2665,8 +2669,8 @@ public class PIOutputAdapter : OutputAdapterBase
         Interlocked.Exchange(ref m_qualityBitMeasurements, qualityBitMeasurements);
         Interlocked.Exchange(ref m_connectionStatistics, connectionStatistics);
 
-        // Reset active statistics cache
-        Interlocked.Exchange(ref m_activeStatistics, null);
+        // Reset current statistics cache - this method call is a result of a metadata refresh, there may be new statistics
+        Interlocked.Exchange(ref m_currentStatistics, null);
     }
 
     private void MapDigitalBitStateSetsToTags(List<Guid> newRecords)
@@ -2683,6 +2687,8 @@ public class PIOutputAdapter : OutputAdapterBase
         PIServer server = m_connection.Server;
         PIStateSets stateSets = server.StateSets;
         DataTable measurements = DataSource.Tables["ActiveMeasurements"];
+
+        stateSets.Refresh();
 
         foreach (string state in m_digitalBitStateExpressionMap.Keys)
         {
@@ -2879,9 +2885,10 @@ public class PIOutputAdapter : OutputAdapterBase
                 (MeasurementKey sourceKey, string state, int bit, ulong pointID) = kvp.Value;
                 MeasurementKey digitalBitKey = this.LookupMeasurementKey(signalID, pointID);
 
+                Debug.Assert(digitalBitKey != MeasurementKey.Undefined, "Failed to lookup or create digital bit measurement key");
+
                 // Map digital bit measurements to their associated digital states / bits
-                if (digitalBitKey != MeasurementKey.Undefined)
-                    digitalBitMeasurements[digitalBitKey] = (state, bit);
+                digitalBitMeasurements[digitalBitKey] = (state, bit);
 
                 // Map digital word measurement to associated digital bit measurements
                 digitalWordMeasurements.GetOrAdd(sourceKey, _ => new MeasurementKey[16])[bit] = digitalBitKey;
