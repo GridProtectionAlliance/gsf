@@ -166,7 +166,12 @@ public static class MetadataHelpers
         if (record is not null)
         {
             deviceAcronym = record["Device"].ToString();
-            deviceID = int.Parse(record["DeviceID"].ToString());
+
+            // DeviceID from measurement table is a runtime ID, so we look up the actual device ID
+            using AdoDataConnection connection = new("systemSettings");
+            TableOperations<DeviceRecord> deviceTable = new(connection);
+            DeviceRecord device = deviceTable.QueryRecordWhere("Acronym = {0}", deviceAcronym);
+            deviceID = device?.ID ?? 0;
         }
 
         if (string.IsNullOrWhiteSpace(deviceAcronym))
