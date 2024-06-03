@@ -41,27 +41,27 @@ namespace GSF.TimeSeries.Statistics
     internal class Statistic
     {
         /// <summary>
-        /// Gets the method to be called to calculate the statistic.
+        /// The method to be called to calculate the statistic.
         /// </summary>
         public StatisticCalculationFunction Method { get; set; }
 
         /// <summary>
-        /// Gets the name of the source of the statistic.
+        /// The name of the source of the statistic.
         /// </summary>
         public string Source { get; set; }
 
         /// <summary>
-        /// Gets the index of the signal associated with the statistic.
+        /// The index of the signal associated with the statistic.
         /// </summary>
         public int Index { get; set; }
 
         /// <summary>
-        /// Gets the arguments to be passed into the statistic calculation function.
+        /// The arguments to be passed into the statistic calculation function.
         /// </summary>
         public string Arguments { get; set; }
 
         /// <summary>
-        /// Gets the target data type of the statistic.
+        /// Target data type of the statistic.
         /// </summary>
         public Type DataType { get; set; }
     }
