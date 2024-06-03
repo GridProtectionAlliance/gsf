@@ -36,7 +36,6 @@ using GSF.Diagnostics;
 using GSF.TimeSeries.Statistics;
 using GSF.Web.Shared.Model;
 using Newtonsoft.Json.Linq;
-using StatisticRecord = GSF.Web.Shared.Model.Statistic;
 
 namespace GSF.Web.Shared
 {
@@ -127,14 +126,14 @@ namespace GSF.Web.Shared
         private static Action<string, UpdateType> s_logStatusMessageFunction;
         private static Action<Exception> s_logExceptionFunction;
         private static readonly LogPublisher s_log;
-        private static readonly Dictionary<Guid, StatisticRecord> s_statisticReferences;
-        private static StatisticRecord[] s_statistics;
+        private static readonly Dictionary<Guid, Statistic> s_statisticReferences;
+        private static Statistic[] s_statistics;
         
         // Static Constructor
         static SharedHub()
         {
             s_log = Logger.CreatePublisher(typeof(SharedHub), MessageClass.Component);
-            s_statisticReferences = new Dictionary<Guid, StatisticRecord>();
+            s_statisticReferences = new Dictionary<Guid, Statistic>();
         }
 
         // Static Properties
@@ -155,7 +154,7 @@ namespace GSF.Web.Shared
             {
                 using (AdoDataConnection connection = new AdoDataConnection("systemSettings"))
                 {
-                    TableOperations<StatisticRecord> statistics = new TableOperations<StatisticRecord>(connection);
+                    TableOperations<Statistic> statistics = new TableOperations<Statistic>(connection);
                     s_statistics = statistics.QueryRecords().ToArray();
                 }
             }
@@ -399,7 +398,7 @@ namespace GSF.Web.Shared
         /// For best results, this function should be called after all statistic engine sources have been registered.
         /// <paramref name="metadataRecord"/> object expected to contain a "signalid" and "signalreference" property.
         /// </remarks>
-        public StatisticRecord GetStatistic(dynamic metadataRecord)
+        public Statistic GetStatistic(dynamic metadataRecord)
         {
             Guid signalID = metadataRecord.signalid;
 
@@ -415,7 +414,7 @@ namespace GSF.Web.Shared
 
                 InitializeStatistics();
 
-                foreach (StatisticRecord statistic in s_statistics)
+                foreach (Statistic statistic in s_statistics)
                 {
                     if (statistic.Source.Equals(source, StringComparison.OrdinalIgnoreCase) && statistic.SignalIndex == signalIndex)
                         return statistic;
@@ -442,7 +441,7 @@ namespace GSF.Web.Shared
 
         private object ToJsonFormatRecord(dynamic metadataRecord)
         {
-            StatisticRecord statistic = GetStatistic(metadataRecord);
+            Statistic statistic = GetStatistic(metadataRecord);
             Guid signalID = metadataRecord.signalid;
             dynamic obj = new JObject();
 
