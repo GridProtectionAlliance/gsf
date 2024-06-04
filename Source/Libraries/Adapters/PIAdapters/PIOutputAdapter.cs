@@ -1111,12 +1111,17 @@ public class PIOutputAdapter : OutputAdapterBase
             }
 
             Dictionary<string, Regex> digitalStateSetExpressionMap = new(StringComparer.OrdinalIgnoreCase);
-            Dictionary<string, string> settings = value.ParseKeyValuePairs();
+            string[] settings = value.Split([';'], StringSplitOptions.RemoveEmptyEntries);
 
-            foreach (KeyValuePair<string, string> setting in settings)
+            foreach (string setting in settings)
             {
-                string key = setting.Key.Trim();
-                string expression = setting.Value.Trim();
+                int equalIndex = setting.IndexOf('=');
+
+                if (equalIndex < 0)
+                    throw new FormatException($"Digital bit state expression \"{setting}\" is missing an equals sign.");
+
+                string key = setting.Substring(0, equalIndex).Trim();
+                string expression = setting.Substring(equalIndex + 1).Trim();
 
                 digitalStateSetExpressionMap[key] = new Regex(expression, RegexOptions.Compiled | RegexOptions.IgnoreCase);
             }
@@ -1148,8 +1153,24 @@ public class PIOutputAdapter : OutputAdapterBase
                 return;
             }
 
+            Dictionary<string, string> digitalBitTagNameExpressionMap = new(StringComparer.OrdinalIgnoreCase);
+            string[] settings = value.Split([';'], StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (string setting in settings)
+            {
+                int equalIndex = setting.IndexOf('=');
+
+                if (equalIndex < 0)
+                    throw new FormatException($"Digital bit tag name expression \"{setting}\" is missing an equals sign.");
+
+                string key = setting.Substring(0, equalIndex).Trim();
+                string expression = setting.Substring(equalIndex + 1).Trim();
+
+                digitalBitTagNameExpressionMap[key] = expression;
+            }
+
             // We cache original strings since templated expression parser encodes special characters
-            m_digitalBitTagNameExpressionMap = value.ParseKeyValuePairs();
+            m_digitalBitTagNameExpressionMap = digitalBitTagNameExpressionMap;
 
             // Establish tag name generators for digital bits
             m_digitalBitTagNameGeneratorMap = new Dictionary<string, TagGenerator>(StringComparer.OrdinalIgnoreCase);
@@ -1934,7 +1955,7 @@ public class PIOutputAdapter : OutputAdapterBase
     {
         Ticks startTime = DateTime.UtcNow.Ticks;
 
-        m_connection.Server.UpdateValues(values, m_updateOption);
+        m_connection?.Server.UpdateValues(values, m_updateOption);
 
         Interlocked.Add(ref m_totalProcessingTime, DateTime.UtcNow.Ticks - startTime);
         Interlocked.Add(ref m_processedMeasurements, values.Length);
@@ -1991,7 +2012,7 @@ public class PIOutputAdapter : OutputAdapterBase
                 // Provide some level of feed back on progress of mapping process
                 Interlocked.Increment(ref m_processedMappings);
 
-                if (Interlocked.Read(ref m_processedMappings) % 100 == 0)
+                if (Interlocked.Read(ref m_processedMappings) % 100 == 0 && m_mappedPIPoints.Count > m_pendingMappings.Count)
                     OnStatusMessage(MessageLevel.Info, $"Mapped {m_mappedPIPoints.Count - m_pendingMappings.Count:N0} PI tags to measurements, {1.0D - m_pendingMappings.Count / (double)m_mappedPIPoints.Count:0.00%} complete...");
             }
         }
@@ -2685,7 +2706,7 @@ public class PIOutputAdapter : OutputAdapterBase
         Interlocked.Exchange(ref m_qualityBitMeasurements, qualityBitMeasurements);
         Interlocked.Exchange(ref m_connectionStatistics, connectionStatistics);
 
-        // Reset current statistics cache - this method call is a result of a metadata refresh, there may be new statistics
+        // Reset current statistics cache - this mapping method is called as a result of a metadata refresh, there may be new statistics
         Interlocked.Exchange(ref m_currentStatistics, null);
     }
 
@@ -2789,8 +2810,10 @@ public class PIOutputAdapter : OutputAdapterBase
                 if (parts.Length == 1)
                 {
                     // Fixed length digital labels for config frame 2
-                    for (int j = 0; j < digitalLabel.Length && j < 16*16; j += 16)
-                        digitalLabels[j] = digitalLabel.Substring(j, 16).PadRight(16);
+                    digitalLabel = digitalLabel.PadRight(256);
+
+                    for (int j = 0; j < 16; j++)
+                        digitalLabels[j] = digitalLabel.Substring(j * 16, 16);
                 }
                 else
                 {
@@ -2873,13 +2896,13 @@ public class PIOutputAdapter : OutputAdapterBase
                     {
                         OnStatusMessage(MessageLevel.Info, $"Creating digital bit {bit} input measurement \"{signalReference}\" for digital state '{state}'...");
 
-                        string label = digitalLabels[bit].ToUpperInvariant().Trim();
+                        string label = digitalLabels[bit];
 
                         // Create point tag for digital bit based on configured tag name generator
                         string pointTag = CreatePointTag(tagGenerator, deviceAcronym, label, bit + 1);
 
                         // Create new measurement record for digital bit
-                        MeasurementRecord record = this.GetMeasurementRecord(deviceID, pointTag, null, signalReference, $"{deviceAcronym}: {label} {state}");
+                        MeasurementRecord record = this.GetMeasurementRecord(deviceID, pointTag, null, signalReference, $"{deviceAcronym}: {label.Trim()} {state}");
                         signalID = record.SignalID;
                         pointID = (ulong)record.PointID;
                         recordsAdded = true;
@@ -2921,7 +2944,8 @@ public class PIOutputAdapter : OutputAdapterBase
         deviceAcronym ??= "";
         label ??= "";
 
-        deviceAcronym = deviceAcronym.ToUpperInvariant().Trim();
+        deviceAcronym = deviceAcronym.Trim().Replace(' ', '_');
+        label = label.Replace(' ', '_');
 
         // Attempt to lookup first phasor label associated with this device for better base KV guess
         string firstPhasorLabel = m_deviceFirstPhasorLabelCache.GetOrAdd(deviceAcronym, _ =>
@@ -2947,7 +2971,8 @@ public class PIOutputAdapter : OutputAdapterBase
         foreach (KeyValuePair<string, string> field in s_calcSignalTypeFields)
             substitutions.Add(field.Key, field.Value);
 
-        return tagNameGenerator.Execute(substitutions);
+        // Point tag expressions are from user-configuration, so we ensure the result is a valid tag name
+        return s_validPointTag.Replace(tagNameGenerator.Execute(substitutions).ToUpperInvariant(), "");
     }
 
     private LineFrequency LoadNominalFrequency(string signalReference)
@@ -3261,6 +3286,7 @@ public class PIOutputAdapter : OutputAdapterBase
     private static readonly string s_companyAcronym;
     private static readonly LineFrequency s_nominalFrequency;
     private static readonly string[] s_commonVoltageLevels = ["44", "69", "115", "138", "161", "169", "230", "345", "500", "765", "1100"];
+    private static readonly Regex s_validPointTag;
 
     /// <summary>
     /// Accesses local output adapter instances (normally only one).
@@ -3302,7 +3328,7 @@ public class PIOutputAdapter : OutputAdapterBase
             if (string.IsNullOrWhiteSpace(s_companyAcronym))
                 s_companyAcronym = "GPA";
 
-            s_companyAcronym = s_companyAcronym.ToUpperInvariant().Trim();
+            s_companyAcronym = s_companyAcronym.ToUpperInvariant().Trim().Replace(' ', '_');
 
             if (!Enum.TryParse(systemSettings["NominalFrequency"]?.Value, true, out s_nominalFrequency))
                 s_nominalFrequency = LineFrequency.Hz60;
@@ -3311,6 +3337,8 @@ public class PIOutputAdapter : OutputAdapterBase
         {
             Logger.SwallowException(ex, "Failed to initialize default company acronym");
         }
+
+        s_validPointTag = new Regex(@"^[A-Z0-9\-\+!\:_\.@#\$]$", RegexOptions.Compiled);
     }
 
     // Static Methods
