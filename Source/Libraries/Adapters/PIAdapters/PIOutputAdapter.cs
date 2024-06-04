@@ -547,7 +547,7 @@ public class PIOutputAdapter : OutputAdapterBase
     /// Gets or sets whether this adapter should automatically create new tags when managing metadata for PI points.
     /// </summary>
     [ConnectionStringParameter]
-    [Description("Determines if this adapter should automatically create new tags when managing metadata for PI points (recommended). Value will only be considered when RunMetadataSync is True.")]
+    [Description($"Determines if this adapter should automatically create new tags when managing metadata for PI points (recommended). Value will only be considered when '{nameof(RunMetadataSync)}' is True.")]
     [DefaultValue(DefaultAutoCreateTags)]
     public bool AutoCreateTags { get; set; } = DefaultAutoCreateTags;
 
@@ -558,7 +558,7 @@ public class PIOutputAdapter : OutputAdapterBase
     [Description(
         "Determines if this adapter should automatically update existing tags when managing metadata for PI points (recommended). This will make openPDC the controller for maintaining PI tag\r\n"+
         "metadata (like the tag name) for local metadata; otherwise, when False, PI tools will be required to maintain points, including local tag name updates. Value will only be considered\r\n" +
-        "when RunMetadataSync is True.")]
+        $"when '{nameof(RunMetadataSync)}' is True.")]
     [DefaultValue(DefaultAutoUpdateTags)]
     public bool AutoUpdateTags { get; set; } = DefaultAutoUpdateTags;
 
@@ -569,7 +569,7 @@ public class PIOutputAdapter : OutputAdapterBase
     [Description(
         "Determines if this adapter should automatically remove PI tags that no longer exist locally in metadata (use with caution). This will make openPDC the controller - even for deletes -\r\n" +
         "when maintaining PI tag metadata; otherwise, when value is set to DoNotRemove, PI tags will persist even when they no longer exist in local metadata. Value will only be considered\r\n" +
-        "when RunMetadataSync is True.")]
+        $"when '{nameof(RunMetadataSync)}' is True.")]
     [DefaultValue(typeof(TagRemovalOperation), DefaultAutoRemoveTags)]
     public TagRemovalOperation AutoRemoveTags { get; set; } = (TagRemovalOperation)Enum.Parse(typeof(TagRemovalOperation), DefaultAutoRemoveTags);
 
@@ -601,7 +601,7 @@ public class PIOutputAdapter : OutputAdapterBase
     /// Gets or sets the number of tag name prefixes, e.g., "SOURCE!", applied by subscriptions to remove from PI tag names.
     /// </summary>
     [ConnectionStringParameter]
-    [Description("Defines the number of tag name prefixes applied by subscriptions, e.g., \"SOURCE!\", to remove from PI tag names. Value will only be considered when RunMetadataSync is True.")]
+    [Description($"Defines the number of tag name prefixes applied by subscriptions, e.g., \"SOURCE!\", to remove from PI tag names. Value will only be considered when '{nameof(RunMetadataSync)}' is True.")]
     [DefaultValue(DefaultTagNamePrefixRemoveCount)]
     public int TagNamePrefixRemoveCount { get; set; } = DefaultTagNamePrefixRemoveCount;
 
@@ -609,7 +609,7 @@ public class PIOutputAdapter : OutputAdapterBase
     /// Gets or sets the point source string used when automatically creating new PI points during the metadata update
     /// </summary>
     [ConnectionStringParameter]
-    [Description("Defines the point source string used when automatically creating new PI points during the metadata update. Value will only be considered when RunMetadataSync is True.")]
+    [Description($"Defines the point source string used when automatically creating new PI points during the metadata update. Value will only be considered when '{nameof(RunMetadataSync)}' is True.")]
     [DefaultValue(DefaultPIPointSource)]
     public string PIPointSource { get; set; } = DefaultPIPointSource;
 
@@ -619,7 +619,7 @@ public class PIOutputAdapter : OutputAdapterBase
     [ConnectionStringParameter]
     [Description(
         "Defines the point class string used when automatically creating new PI points during the metadata update. On the PI server, this class should inherit from classic.\r\n" +
-        "Value will only be considered when RunMetadataSync is True.")]
+        $"Value will only be considered when '{nameof(RunMetadataSync)}' is True.")]
     [DefaultValue(DefaultPIPointClass)]
     public string PIPointClass { get; set; } = DefaultPIPointClass;
 
@@ -635,7 +635,7 @@ public class PIOutputAdapter : OutputAdapterBase
     /// Gets or sets flag that determines if existing PI values should be replaced when UseCompression is enabled.
     /// </summary>
     [ConnectionStringParameter]
-    [Description("Defines the flag that determines if existing PI values should be replaced when UseCompression is enabled.")]
+    [Description($"Defines the flag that determines if existing PI values should be replaced when '{nameof(UseCompression)}' is enabled.")]
     [DefaultValue(DefaultReplaceValues)]
     public bool ReplaceValues { get; set; } = DefaultReplaceValues;
 
@@ -681,7 +681,7 @@ public class PIOutputAdapter : OutputAdapterBase
     /// Gets or sets the flag that determines if the compression enabled state, per UseCompression flag, should be adjusted for existing tags, overriding existing configuration.
     /// </summary>
     [ConnectionStringParameter]
-    [Description("Defines the flag that determines if the compression enabled state, per UseCompression flag, should be adjusted for existing tags, overriding existing configuration.")]
+    [Description($"Defines the flag that determines if the compression enabled state, per '{nameof(UseCompression)}' flag, should be adjusted for existing tags, overriding existing configuration.")]
     [DefaultValue(DefaultUpdateExistingTagCompressionState)]
     public bool UpdateExistingTagCompressionState { get; set; } = DefaultUpdateExistingTagCompressionState;
 
@@ -690,7 +690,7 @@ public class PIOutputAdapter : OutputAdapterBase
     /// </summary>
     [ConnectionStringParameter]
     [Description(
-        "Defines the defined compression deviations for data types used when AddTagCompressionState or UpdateExistingTagCompressionState is enabled.\r\n" +
+        $"Defines the defined compression deviations for data types used when '{nameof(AddTagCompressionState)}' or '{nameof(UpdateExistingTagCompressionState)}' is enabled.\r\n" +
         $"Use format \"DataType=Deviation,DataType=Deviation,...\". Example: \"{DefaultCompDevDataTypeMap}\".")]
     [DefaultValue(DefaultCompDevDataTypeMap)]
     public string CompDevDataTypeMap
@@ -726,7 +726,7 @@ public class PIOutputAdapter : OutputAdapterBase
     /// </summary>
     [ConnectionStringParameter]
     [Description(
-        "Defines the defined value spans for data types used when AddTagCompressionState or UpdateExistingTagCompressionState is enabled.\r\n" +
+        $"Defines the defined value spans for data types used when '{nameof(AddTagCompressionState)}' or '{nameof(UpdateExistingTagCompressionState)}' is enabled.\r\n" +
         $"Use format \"DataType=Span,DataType=Span,...\". Example: \"{DefaultSpanDataTypeMap}\".")]
     [DefaultValue(DefaultSpanDataTypeMap)]
     public string SpanDataTypeMap
@@ -762,7 +762,7 @@ public class PIOutputAdapter : OutputAdapterBase
     /// </summary>
     [ConnectionStringParameter]
     [Description(
-        "Defines the defined step enabled for values for data types used when AddTagCompressionState or UpdateExistingTagCompressionState is enabled.\r\n" +
+        $"Defines the defined step enabled for values for data types used when '{nameof(AddTagCompressionState)}' or '{nameof(UpdateExistingTagCompressionState)}' is enabled.\r\n" +
         $"Use format \"DataType=StepEnabled,DataType=StepEnabled,...\". Example: \"{DefaultStepEnabledDataTypeMap}\".")]
     [DefaultValue(DefaultStepEnabledDataTypeMap)]
     public string StepEnabledDataTypeMap
@@ -799,7 +799,7 @@ public class PIOutputAdapter : OutputAdapterBase
     /// </summary>
     [ConnectionStringParameter]
     [Description(
-        "Defines the defined zero values for data types used when AddTagCompressionState or UpdateExistingTagCompressionState is enabled.\r\n" +
+        $"Defines the defined zero values for data types used when '{nameof(AddTagCompressionState)}' or '{nameof(UpdateExistingTagCompressionState)}' is enabled.\r\n" +
         $"Use format \"DataType=ZeroValue,DataType=ZeroValue,...\". Example: \"{DefaultZeroValueDataTypeMap}\".")]
     [DefaultValue(DefaultZeroValueDataTypeMap)]
     public string ZeroValueDataTypeMap
@@ -985,7 +985,7 @@ public class PIOutputAdapter : OutputAdapterBase
     /// Gets or sets flag that determines if status word should be written to PI as a separate tag. Commonly disabled if IEEE C37.118 status bits are expanded to tags, see <see cref="ExpandStatusBitsToTags"/>.
     /// </summary>
     [ConnectionStringParameter]
-    [Description($"Determines if status word should be written to PI as a separate tag. Commonly disabled if IEEE C37.118 status bits are expanded to tags, see \"{nameof(ExpandStatusBitsToTags)}\".")]
+    [Description($"Determines if status word should be written to PI as a separate tag. Commonly disabled if IEEE C37.118 status bits are expanded to tags, see '{nameof(ExpandStatusBitsToTags)}'.")]
     [DefaultValue(DefaultWriteStatusWord)]
     public bool WriteStatusWord { get; set; } = DefaultWriteStatusWord;
 
@@ -1001,7 +1001,7 @@ public class PIOutputAdapter : OutputAdapterBase
     /// Gets or sets flag that determines if quality word should be written to PI as a separate tag. Commonly disabled if IEEE C37.118 quality bits are expanded to tags, see <see cref="ExpandQualityBitsToTags"/>.
     /// </summary>
     [ConnectionStringParameter]
-    [Description($"Determines if quality word should be written to PI as a separate tag. Commonly disabled if IEEE C37.118 quality bits are expanded to tags, see \"{nameof(ExpandQualityBitsToTags)}\".")]
+    [Description($"Determines if quality word should be written to PI as a separate tag. Commonly disabled if IEEE C37.118 quality bits are expanded to tags, see '{nameof(ExpandQualityBitsToTags)}'.")]
     [DefaultValue(DefaultWriteQualityWord)]
     public bool WriteQualityWord { get; set; } = DefaultWriteQualityWord;
 
@@ -1085,7 +1085,7 @@ public class PIOutputAdapter : OutputAdapterBase
     /// Gets or sets flag that determines if digital word should be written to PI as a separate tag. Commonly disabled if digital bits are expanded to tags, see <see cref="ExpandDigitalBitsToTags"/>.
     /// </summary>
     [ConnectionStringParameter]
-    [Description($"Determines if digital word should be written to PI as a separate tag. Commonly disabled if digital bits are expanded to tags, see \"{nameof(ExpandDigitalBitsToTags)}\".")]
+    [Description($"Determines if digital word should be written to PI as a separate tag. Commonly disabled if digital bits are expanded to tags, see '{nameof(ExpandDigitalBitsToTags)}'.")]
     [DefaultValue(DefaultWriteDigitalWord)]
     public bool WriteDigitalWord { get; set; } = DefaultWriteDigitalWord;
 
@@ -1658,6 +1658,10 @@ public class PIOutputAdapter : OutputAdapterBase
                 return;
 
             MeasurementKey key = measurement.Key;
+
+            if (key is null)
+                continue;
+
             Ticks timestamp = measurement.Timestamp;
 
             // Validate timestamp reasonability as compared to local clock, when enabled
@@ -1777,17 +1781,15 @@ public class PIOutputAdapter : OutputAdapterBase
         bool dataSorting = (statusWord & (ushort)StatusFlags.DataSortingType) == 0;
         bool compositeQuality = dataIsValid && !deviceError && !syncError && dataSorting;
         bool configChanged = (statusWord & (ushort)StatusFlags.ConfigurationChanged) > 0;
-        IMeasurement[] statusBitMeasurements = new IMeasurement[statusBitKeys.Length];
+        List<IMeasurement> statusBitMeasurements = new(statusBitKeys.Length);
 
         // Get nominal frequency from last associated configuration frame - defaults to 60Hz
         m_nominalFrequencies.TryGetValue(measurement.Key, out LineFrequency nominalFrequency);
 
-        for (int i = 0; i < statusBitKeys.Length; i++)
+        foreach (MeasurementKey key in statusBitKeys)
         {
-            MeasurementKey key = statusBitKeys[i];
-
-            if (!m_statusBitMeasurements.TryGetValue(key, out int stateIndex))
-                stateIndex = -1;
+            if (key is null || !m_statusBitMeasurements.TryGetValue(key, out int stateIndex))
+                continue;
 
             int value = stateIndex switch
             {
@@ -1803,31 +1805,31 @@ public class PIOutputAdapter : OutputAdapterBase
                 _ => 0
             };
 
-            statusBitMeasurements[i] = new Measurement
+            statusBitMeasurements.Add(new Measurement
             {
                 Metadata = key.Metadata,
                 Timestamp = measurement.Timestamp,
                 Value = value
-            };
+            });
         }
 
-        ProcessMeasurements(statusBitMeasurements);
+        if (statusBitMeasurements.Count > 0)
+            ProcessMeasurements(statusBitMeasurements.ToArray());
     }
 
     private void ProcessQualityWordBitStates(IMeasurement measurement, MeasurementKey[] qualityBitKeys)
     {
-        if (qualityBitKeys is null || qualityBitKeys.Length < 2)
+        if (qualityBitKeys is null || qualityBitKeys.Length == 0)
             return;
 
         const uint QualityMask = (uint)TimeQualityFlags.TimeQualityIndicatorCodeMask;
         uint qualityWord = (uint)measurement.AdjustedValue; // Quality bits are in hi-word
-        IMeasurement[] qualityBitMeasurements = new IMeasurement[qualityBitKeys.Length - 1];
-        int index = 0;
+        List<IMeasurement> qualityBitMeasurements = new(qualityBitKeys.Length);
 
         foreach (MeasurementKey key in qualityBitKeys)
         {
-            if (!m_qualityBitMeasurements.TryGetValue(key, out int stateIndex))
-                stateIndex = -1;
+            if (key is null || !m_qualityBitMeasurements.TryGetValue(key, out int stateIndex))
+                continue;
 
             // Connect state digital state set is handled by statistics engine calculation
             // event since if connection is lost, we won't receive a quality measurement
@@ -1841,15 +1843,16 @@ public class PIOutputAdapter : OutputAdapterBase
                 _ => 0
             };
 
-            qualityBitMeasurements[index++] = new Measurement
+            qualityBitMeasurements.Add(new Measurement
             {
                 Metadata = key.Metadata,
                 Timestamp = measurement.Timestamp,
                 Value = value
-            };
+            });
         }
 
-        ProcessMeasurements(qualityBitMeasurements);
+        if (qualityBitMeasurements.Count > 0)
+            ProcessMeasurements(qualityBitMeasurements.ToArray());
     }
 
     private void ProcessDigitalWordBitStates(IMeasurement measurement, MeasurementKey[] digitalBitKeys)
@@ -1858,22 +1861,23 @@ public class PIOutputAdapter : OutputAdapterBase
             return;
 
         ushort digitalWord = (ushort)measurement.AdjustedValue;
-        IMeasurement[] digitalBitMeasurements = new IMeasurement[digitalBitKeys.Length];
-        int index = 0;
+        List<IMeasurement> digitalBitMeasurements = new(digitalBitKeys.Length);
 
         foreach (MeasurementKey key in digitalBitKeys)
         {
-            m_digitalBitMeasurements.TryGetValue(key, out (string, int bit) digital);
+            if (key is null || !m_digitalBitMeasurements.TryGetValue(key, out (string, int bit) digital))
+                continue;
 
-            digitalBitMeasurements[index++] = new Measurement
+            digitalBitMeasurements.Add(new Measurement
             {
                 Metadata = key.Metadata,
                 Timestamp = measurement.Timestamp,
                 Value = (digitalWord & (1 << digital.bit)) == 0 ? 0 : 1
-            };
+            });
         }
 
-        ProcessMeasurements(digitalBitMeasurements);
+        if (digitalBitMeasurements.Count > 0)
+            ProcessMeasurements(digitalBitMeasurements.ToArray());
     }
 
     private void StatisticsEngine_Calculated(object sender, EventArgs e)
@@ -1896,10 +1900,13 @@ public class PIOutputAdapter : OutputAdapterBase
             MeasurementKey sourceKey = kvp.Key;
             MeasurementKey statisticKey = kvp.Value;
 
+            if (sourceKey is null || statisticKey is null)
+                continue;
+
             if (!m_qualityWordMeasurements.TryGetValue(sourceKey, out MeasurementKey[] bitKeys))
                 continue;
 
-            MeasurementKey connectStateKey = bitKeys.FirstOrDefault(bitKey => 
+            MeasurementKey connectStateKey = bitKeys.FirstOrDefault(bitKey => bitKey is not null &&
                 m_qualityBitMeasurements.TryGetValue(bitKey, out int stateIndex) && stateIndex == C37118DigitalStateSets.ConnectState);
 
             if (connectStateKey is null)
@@ -1919,7 +1926,8 @@ public class PIOutputAdapter : OutputAdapterBase
             });
         }
 
-        ProcessMeasurements(connectStateMeasurements.ToArray());
+        if (connectStateMeasurements.Count > 0)
+            ProcessMeasurements(connectStateMeasurements.ToArray());
     }
 
     private void ArchiveAFValues(AFValue[] values)
@@ -2094,6 +2102,10 @@ public class PIOutputAdapter : OutputAdapterBase
         for (int i = 0; i < inputMeasurementKeys.Length; i++)
         {
             MeasurementKey key = inputMeasurementKeys[i];
+
+            if (key is null)
+                continue;
+
             SignalType signalType = inputMeasurementTypes[i];
 
             if (signalType is SignalType.FLAG or SignalType.QUAL or SignalType.DIGI)
@@ -2148,6 +2160,10 @@ public class PIOutputAdapter : OutputAdapterBase
                 for (int i = 0; i < inputMeasurementKeys.Length; i++)
                 {
                     MeasurementKey key = inputMeasurementKeys[i];
+
+                    if (key is null)
+                        continue;
+
                     SignalType signalType = inputMeasurementTypes[i];
                     Guid signalID = key.SignalID;
 
