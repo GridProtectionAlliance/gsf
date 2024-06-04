@@ -1014,7 +1014,7 @@ public class PIOutputAdapter : OutputAdapterBase
     [Description(
         "Defines the comma separated digital state set names for IEEE C37.118 status states. Specify digital state set name for each of the following digital states using value of 'X' (without quotes)\r\n" + 
         "as the name to indicate state is not mapped:\r\n CompositeQual, ConfigChange, ConnectState, DataSorting, DataValid, LeapSecond, NominalFreq, PMUError, SyncError, Timelock, TimeQuality, and Trigger.\r\n" + 
-        "If digital sets are predefined, state values are expected to be zero based and incremented by one for each value. If specified digital set name does not exist, it will be created.")
+        "If specified digital set name does not exist, it will be created.")
     ]
     [DefaultValue(DefaultIEEEC37118DigitalStates)]
     public string IEEEC37118DigitalStates
