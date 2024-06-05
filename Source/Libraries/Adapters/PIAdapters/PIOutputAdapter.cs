@@ -1352,7 +1352,7 @@ public class PIOutputAdapter : OutputAdapterBase
         for (int i = 0; i < m_archiveQueues.Length; i++)
         {
             status.AppendLine();
-            status.AppendLine($">> Archive Queue Status (1 of {i:N0})");
+            status.AppendLine($">> Archive Queue Status ({i + 1:N0} of {m_archiveQueues.Length:N0})");
             status.AppendLine();
             status.Append(m_archiveQueues[i].Status);
             status.AppendLine();
