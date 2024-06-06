@@ -81,7 +81,7 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         protected OutputAdapterBase()
         {
-            MetadataRefreshOperation = new LongSynchronizedOperation(ExecuteMetadataRefresh)
+            MetadataRefreshOperation = new LongSynchronizedOperation(ExecuteMetadataRefresh, ex => OnProcessException(MessageLevel.Error, ex, nameof(ExecuteMetadataRefresh)))
             {
                 IsBackground = true
             };
@@ -89,7 +89,7 @@ namespace GSF.TimeSeries.Adapters
             InternalProcessQueue = ProcessQueue<IMeasurement>.CreateRealTimeQueue(ProcessMeasurements);
             InternalProcessQueue.ProcessException += m_measurementQueue_ProcessException;
 
-            m_connectionOperation = new LongSynchronizedOperation(AttemptConnectionOperation)
+            m_connectionOperation = new LongSynchronizedOperation(AttemptConnectionOperation, ex => OnProcessException(MessageLevel.Error, ex, nameof(AttemptConnectionOperation)))
             {
                 IsBackground = true
             };

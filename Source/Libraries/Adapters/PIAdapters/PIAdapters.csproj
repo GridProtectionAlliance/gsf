@@ -43,13 +43,13 @@
       <HintPath>..\..\..\Dependencies\OSI\OSIsoft.AFSDK.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="PIConnection.cs" />
     <Compile Include="PIConnectionPool.cs">
       <SubType>Code</SubType>
@@ -64,6 +64,10 @@
     <ProjectReference Include="..\..\GSF.Core\GSF.Core.csproj">
       <Project>{ff3fcba6-f01a-4ec2-bc3f-6ba832afcf88}</Project>
       <Name>GSF.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\GSF.PhasorProtocols\GSF.PhasorProtocols.csproj">
+      <Project>{54ca98cc-2f0a-41f2-879d-0e42b17e8544}</Project>
+      <Name>GSF.PhasorProtocols</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\GSF.TimeSeries\GSF.TimeSeries.csproj">
       <Project>{412f9f59-d9b9-4c8e-96d2-20492644198c}</Project>

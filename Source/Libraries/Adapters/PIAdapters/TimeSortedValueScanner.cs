@@ -28,143 +28,142 @@ using OSIsoft.AF.Time;
 using System;
 using System.Collections.Generic;
 
-namespace PIAdapters
+namespace PIAdapters;
+
+/// <summary>
+/// Reads a series of record values from a <see cref="PIPointList"/> in time sorted order.
+/// </summary>
+public class TimeSortedValueScanner
 {
+    #region [ Properties ]
+
     /// <summary>
-    /// Reads a series of record values from a <see cref="PIPointList"/> in time sorted order.
+    /// Gets or sets the source points that this scanner is reading from.
     /// </summary>
-    public class TimeSortedValueScanner
+    public PIPointList Points { get; set; }
+
+    /// <summary>
+    /// Gets or sets the minimum value of the timestamps of the data points returned by the scanner.
+    /// </summary>
+    public AFTime StartTime { get; set; }
+
+    /// <summary>
+    /// Gets or sets the maximum value of the timestamps of the data points returned by the scanner.
+    /// </summary>
+    public AFTime EndTime { get; set; }
+
+    /// <summary>
+    /// Gets or sets the handler used to manage any exceptions that may occur while reading data.
+    /// </summary>
+    public Action<Exception> DataReadExceptionHandler { get; set; }
+
+    #endregion
+
+    #region [ Methods ]
+
+    /// <summary>
+    /// Reads all <see cref="AFValue"/> instances in time sorted order as a yielding enumerable.
+    /// </summary>
+    /// <param name="pageFactor">Defines a paging factor used to load more data into a page.</param>
+    /// <returns>Each recorded <see cref="AFValue"/> in time-sorted order for the specified <see cref="Points"/> and time-range.</returns>
+    public IEnumerable<AFValue> Read(int pageFactor = 1)
     {
-        #region [ Properties ]
+        PIPagingConfiguration config = new(PIPageType.TagCount, Points.Count * pageFactor < 1 ? 1 : pageFactor);
+        List<IEnumerator<AFValue>> enumerators = [];
 
-        /// <summary>
-        /// Gets or sets the source points that this scanner is reading from.
-        /// </summary>
-        public PIPointList Points { get; set; }
-
-        /// <summary>
-        /// Gets or sets the minimum value of the timestamps of the data points returned by the scanner.
-        /// </summary>
-        public AFTime StartTime { get; set; }
-
-        /// <summary>
-        /// Gets or sets the maximum value of the timestamps of the data points returned by the scanner.
-        /// </summary>
-        public AFTime EndTime { get; set; }
-
-        /// <summary>
-        /// Gets or sets the handler used to manage any exceptions that may occur while reading data.
-        /// </summary>
-        public Action<Exception> DataReadExceptionHandler { get; set; }
-
-        #endregion
-
-        #region [ Methods ]
-
-        /// <summary>
-        /// Reads all <see cref="AFValue"/> instances in time sorted order as a yielding enumerable.
-        /// </summary>
-        /// <param name="pageFactor">Defines a paging factor used to load more data into a page.</param>
-        /// <returns>Each recorded <see cref="AFValue"/> in time-sorted order for the specified <see cref="Points"/> and time-range.</returns>
-        public IEnumerable<AFValue> Read(int pageFactor = 1)
+        try
         {
-            PIPagingConfiguration config = new(PIPageType.TagCount, Points.Count * pageFactor < 1 ? 1 : pageFactor);
-            List<IEnumerator<AFValue>> enumerators = new();
-
-            try
+            // Setup enumerators for each set of points that have data
+            foreach (AFValues scanner in Points.RecordedValues(new AFTimeRange(StartTime, EndTime), AFBoundaryType.Inside, null, false, config))
             {
-                // Setup enumerators for each set of points that have data
-                foreach (AFValues scanner in Points.RecordedValues(new AFTimeRange(StartTime, EndTime), AFBoundaryType.Inside, null, false, config))
-                {
-                    IEnumerator<AFValue> enumerator = scanner.GetEnumerator();
+                IEnumerator<AFValue> enumerator = scanner.GetEnumerator();
 
-                    // Add enumerator to the list if it has at least one value
-                    if (enumerator.MoveNext())
-                        enumerators.Add(enumerator);
-                }
+                // Add enumerator to the list if it has at least one value
+                if (enumerator.MoveNext())
+                    enumerators.Add(enumerator);
             }
-            catch (OperationCanceledException)
-            {
-                // Errors that occur during bulk calls get trapped here, actual error is stored on the PIPagingConfiguration object
-                DataReadExceptionHandler(config.Error);
-            }
-            catch (Exception ex)
-            {
-                DataReadExceptionHandler(ex);
-            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Errors that occur during bulk calls get trapped here, actual error is stored on the PIPagingConfiguration object
+            DataReadExceptionHandler(config.Error);
+        }
+        catch (Exception ex)
+        {
+            DataReadExceptionHandler(ex);
+        }
 
-            if (enumerators.Count == 0)
-                yield break;
+        if (enumerators.Count == 0)
+            yield break;
 
-            List<int> completed = new();
+        List<int> completed = [];
+
+        // Start publishing data points in time-sorted order
+        do
+        {
+            AFTime publishTime = AFTime.MaxValue;
             AFValue dataPoint;
 
-            // Start publishing data points in time-sorted order
-            do
+            // Find minimum publication time for current values
+            foreach (IEnumerator<AFValue> enumerator in enumerators)
             {
-                AFTime publishTime = AFTime.MaxValue;
+                dataPoint = enumerator.Current;
 
-                // Find minimum publication time for current values
-                foreach (IEnumerator<AFValue> enumerator in enumerators)
+                if (dataPoint?.Timestamp < publishTime)
+                    publishTime = dataPoint.Timestamp;
+            }
+
+            int index = 0;
+
+            // Publish all values at the current time
+            foreach (IEnumerator<AFValue> enumerator in enumerators)
+            {
+                bool enumerationComplete = false;
+                dataPoint = enumerator.Current;
+
+                if (dataPoint?.Timestamp <= publishTime)
                 {
-                    dataPoint = enumerator.Current;
-
-                    if (dataPoint.Timestamp < publishTime)
-                        publishTime = dataPoint.Timestamp;
-                }
-
-                int index = 0;
-
-                // Publish all values at the current time
-                foreach (IEnumerator<AFValue> enumerator in enumerators)
-                {
-                    bool enumerationComplete = false;
-                    dataPoint = enumerator.Current;
-
-                    if (dataPoint.Timestamp <= publishTime)
+                    // Attempt to advance to next data point, tracking completed enumerators
+                    if (!enumerator.MoveNext())
                     {
-                        // Attempt to advance to next data point, tracking completed enumerators
-                        if (!enumerator.MoveNext())
-                        {
-                            enumerationComplete = true;
-                            completed.Add(index);
-                        }
+                        enumerationComplete = true;
+                        completed.Add(index);
+                    }
 
-                        yield return dataPoint;
+                    yield return dataPoint;
 
-                        // Make sure any point IDs with duplicated times directly follow
-                        if (!enumerationComplete)
+                    // Make sure any point IDs with duplicated times directly follow
+                    if (!enumerationComplete)
+                    {
+                        while (enumerator.Current?.Timestamp <= publishTime)
                         {
-                            while (enumerator.Current.Timestamp <= publishTime)
+                            yield return enumerator.Current;
+
+                            if (!enumerator.MoveNext())
                             {
-                                yield return enumerator.Current;
-
-                                if (!enumerator.MoveNext())
-                                {
-                                    completed.Add(index);
-                                    break;
-                                }
+                                completed.Add(index);
+                                break;
                             }
                         }
                     }
-
-                    index++;
                 }
 
-                // Remove completed enumerators
-                if (completed.Count > 0)
-                {
-                    completed.Sort();
-
-                    for (int i = completed.Count - 1; i >= 0; i--)
-                        enumerators.RemoveAt(completed[i]);
-
-                    completed.Clear();
-                }
+                index++;
             }
-            while (enumerators.Count > 0);
-        }
 
-        #endregion
+            if (completed.Count == 0)
+                continue;
+
+            // Remove completed enumerators
+            completed.Sort();
+
+            for (int i = completed.Count - 1; i >= 0; i--)
+                enumerators.RemoveAt(completed[i]);
+
+            completed.Clear();
+        }
+        while (enumerators.Count > 0);
     }
+
+    #endregion
 }
