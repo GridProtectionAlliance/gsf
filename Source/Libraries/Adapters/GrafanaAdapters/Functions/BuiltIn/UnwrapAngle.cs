@@ -30,7 +30,7 @@ public abstract class UnwrapAngle<T> : GrafanaFunctionBase<T> where T : struct, 
     public override string Description => "Returns a series of values that represent an adjusted set of angles that are unwrapped.";
 
     /// <inheritdoc />
-    public override string[] Aliases => new[] { "Unwrap" };
+    public override string[] Aliases => ["Unwrap"];
 
     /// <inheritdoc />
     public override ReturnType ReturnType => ReturnType.Series;

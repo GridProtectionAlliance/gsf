@@ -26,7 +26,7 @@ public abstract class Modulo<T> : GrafanaFunctionBase<T> where T : struct, IData
     public override string Description => "Returns a series of values that represent each of the values in the source series modulo by N.";
 
     /// <inheritdoc />
-    public override string[] Aliases => new[] { "Modulus", "Mod" };
+    public override string[] Aliases => ["Modulus", "Mod"];
 
     /// <inheritdoc />
     public override ReturnType ReturnType => ReturnType.Series;

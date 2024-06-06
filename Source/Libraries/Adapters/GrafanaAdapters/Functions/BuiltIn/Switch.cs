@@ -29,7 +29,7 @@ public abstract class Switch<T> : GrafanaFunctionBase<T> where T : struct, IData
     public override string Description => "Returns a single value selected using the first series of a slice of values as the zero-based index from the remaining series.";
 
     /// <inheritdoc />
-    public override string[] Aliases => new[] { "Select" };
+    public override string[] Aliases => ["Select"];
 
     /// <inheritdoc />
     public override ReturnType ReturnType => ReturnType.Scalar;

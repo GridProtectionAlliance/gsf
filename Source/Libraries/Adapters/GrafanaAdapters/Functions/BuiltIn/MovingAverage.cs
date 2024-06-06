@@ -30,7 +30,7 @@ public abstract class MovingAverage<T> : GrafanaFunctionBase<T> where T : struct
     public override string Description => "Returns a series of values that represent the simple moving average (SMA) of the values in the source series.";
 
     /// <inheritdoc />
-    public override string[] Aliases => new[] { "MovingAvg", "MovingMean", "SimpleMovingAverage", "SMA" };
+    public override string[] Aliases => ["MovingAvg", "MovingMean", "SimpleMovingAverage", "SMA"];
 
     /// <inheritdoc />
     public override ReturnType ReturnType => ReturnType.Series;

@@ -69,7 +69,7 @@ internal static class ParameterParsing
             if (parsedParameters is not null)
                 return (parsedParameters.Select(parameter => parameter.Trim()).ToArray(), updatedQueryExpression);
 
-            parsedParameters = new List<string>();
+            parsedParameters = [];
 
             int requiredParameters = function.RequiredParameterCount;
 
@@ -321,7 +321,7 @@ internal static class ParameterParsing
                 }
             }
 
-            targets ??= new[] { value };
+            targets ??= [value];
 
             foreach (string targetName in targets)
             {

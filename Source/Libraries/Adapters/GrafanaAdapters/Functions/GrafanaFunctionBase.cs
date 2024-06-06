@@ -81,7 +81,7 @@ public abstract class GrafanaFunctionBase<T> : IGrafanaFunction<T> where T : str
     public virtual bool ResultIsSetTargetSeries => false;
 
     /// <inheritdoc />
-    public virtual ParameterDefinitions ParameterDefinitions => new();
+    public virtual ParameterDefinitions ParameterDefinitions => [];
 
     /// <inheritdoc />
     public virtual int RequiredParameterCount => m_requiredParameterCount ??= ParameterDefinitions.Count(parameter => parameter.Required) - 1;

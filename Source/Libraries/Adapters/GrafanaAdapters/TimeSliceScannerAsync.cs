@@ -61,7 +61,7 @@ public class TimeSliceScannerAsync<T> where T : struct, IDataSourceValueType<T>
     /// <returns>Next time slice.</returns>
     public async Task<IAsyncEnumerable<T>> ReadNextTimeSliceAsync()
     {
-        List<T> nextSlice = new();
+        List<T> nextSlice = [];
         T dataPoint;
 
         // Handle initial read
@@ -91,7 +91,7 @@ public class TimeSliceScannerAsync<T> where T : struct, IDataSourceValueType<T>
             return nextSlice.ToAsyncEnumerable();
         }
 
-        List<int> completed = new();
+        List<int> completed = [];
         int index = 0;
 
         // Publish all values at the current time
@@ -149,7 +149,7 @@ public class TimeSliceScannerAsync<T> where T : struct, IDataSourceValueType<T>
     /// <param name="cancellationToken">Cancellation token.</param>
     public static async ValueTask<TimeSliceScannerAsync<T>> Create(DataSourceValueGroup<T>[] dataSources, double tolerance, CancellationToken cancellationToken)
     {
-        List<IAsyncEnumerator<T>> enumerators = new();
+        List<IAsyncEnumerator<T>> enumerators = [];
     
         foreach (DataSourceValueGroup<T> group in dataSources)
         {

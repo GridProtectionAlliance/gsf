@@ -31,7 +31,7 @@ public abstract class WrapAngle<T> : GrafanaFunctionBase<T> where T : struct, ID
     public override string Description => "Returns a series of values that represent an adjusted set of angles that are wrapped.";
 
     /// <inheritdoc />
-    public override string[] Aliases => new[] { "Wrap" };
+    public override string[] Aliases => ["Wrap"];
 
     /// <inheritdoc />
     public override ReturnType ReturnType => ReturnType.Series;

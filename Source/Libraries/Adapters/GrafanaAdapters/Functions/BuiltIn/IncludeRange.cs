@@ -30,7 +30,7 @@ public abstract class IncludeRange<T> : GrafanaFunctionBase<T> where T : struct,
     public override string Description => "Returns a series of values that represent a filtered set of the values in the source series where each value falls between the specified low and high.";
 
     /// <inheritdoc />
-    public override string[] Aliases => new[] { "Include" };
+    public override string[] Aliases => ["Include"];
 
     /// <inheritdoc />
     public override ReturnType ReturnType => ReturnType.Series;

@@ -130,7 +130,7 @@ partial class GrafanaDataSourceBase
 
             DynamicMethod dynamicMethod = new($"{nameof(ProcessQueryRequestAsync)}_{typeName}",
                 typeof(Task<IEnumerable<TimeSeriesValues>>),
-                new[] { typeof(GrafanaDataSourceBase), typeof(QueryRequest), typeof(CancellationToken) },
+                [typeof(GrafanaDataSourceBase), typeof(QueryRequest), typeof(CancellationToken)],
                 typeof(GrafanaDataSourceBase));
 
             ILGenerator generator = dynamicMethod.GetILGenerator();
@@ -209,8 +209,8 @@ partial class GrafanaDataSourceBase
 
         return Task.Factory.StartNew(() =>
         {
-            List<MetadataMap[]> groupedMaps = new();
-            List<MetadataMap> matchingMaps = new() { metadataMaps[0] };
+            List<MetadataMap[]> groupedMaps = [];
+            List<MetadataMap> matchingMaps = [metadataMaps[0]];
             MetadataMap firstGroupMap = metadataMaps[0];
 
             // Organize metadata maps with overlapped coordinates into groups, this code
@@ -228,7 +228,7 @@ partial class GrafanaDataSourceBase
                     if (matchingMaps.Count > 1)
                         groupedMaps.Add(matchingMaps.ToArray());
 
-                    matchingMaps = new List<MetadataMap> { currentMap };
+                    matchingMaps = [currentMap];
                     firstGroupMap = currentMap;
                 }
             }

@@ -111,7 +111,7 @@ public abstract partial class GrafanaDataSourceBase
     {
         DateTime startTime = request.range.from.ParseJsonTimestamp();
         DateTime stopTime = request.range.to.ParseJsonTimestamp();
-        List<QueryParameters> targetQueryParameters = new();
+        List<QueryParameters> targetQueryParameters = [];
 
         // Create query parameters for each target
         foreach (Target target in request.targets)
@@ -139,22 +139,21 @@ public abstract partial class GrafanaDataSourceBase
                          selection.fieldNames.Length > 0 &&
                          selection.fieldNames.All(fieldName => !string.IsNullOrWhiteSpace(fieldName)))
                     .Select(selection => (selection.tableName, selection.fieldNames))
-                    .ToArray()
-                    ?? Array.Empty<(string, string[])>()
+                    .ToArray() ?? []
             });
         }
 
         // Get augmented metadata for data source value type
         DataSet metadata = instance.Metadata.GetAugmentedDataSet<T>();
 
-        List<DataSourceValueGroup<T>> valueGroups = new();
+        List<DataSourceValueGroup<T>> valueGroups = [];
 
         // Query each target -- each returned value group has a 'Source' value enumerable that may contain deferred
         // enumerations that need evaluation before the final result can be serialized and returned to Grafana
         foreach (QueryParameters queryParameters in targetQueryParameters)
         {
             // Organize value groups by given Grafana target data source query, i.e., all results with the same RefID
-            List<DataSourceValueGroup<T>> queryValueGroups = new();
+            List<DataSourceValueGroup<T>> queryValueGroups = [];
 
             try
             {
@@ -215,7 +214,7 @@ public abstract partial class GrafanaDataSourceBase
             {
                 // In cases where a deferred function enumeration specifically reports a
                 // syntax error exception, e.g., 'Evaluate', expose the details here
-                series.datapoints = Array.Empty<double[]>();
+                series.datapoints = [];
                 series.syntaxError = ex.Message;
             }
         });

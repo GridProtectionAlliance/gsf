@@ -25,7 +25,7 @@ public abstract class AbsoluteValue<T> : GrafanaFunctionBase<T> where T : struct
     public override string Description => "Returns a series of values that represent the absolute value each of the values in the source series.";
 
     /// <inheritdoc />
-    public override string[] Aliases => new[] { "Abs" };
+    public override string[] Aliases => ["Abs"];
 
     /// <inheritdoc />
     public override ReturnType ReturnType => ReturnType.Series;

@@ -29,7 +29,7 @@ public abstract class KalmanFilter<T> : GrafanaFunctionBase<T> where T : struct,
     public override string Description => "Returns a series of values that are passed though a Kalman filter which predicts the next state based on the current estimate useful for filtering out noise or reducing variance from a series of values.";
 
     /// <inheritdoc />
-    public override string[] Aliases => new[] { "LQE", " LinearQuadraticEstimate" };
+    public override string[] Aliases => ["LQE", " LinearQuadraticEstimate"];
 
     /// <inheritdoc />
     public override ReturnType ReturnType => ReturnType.Series;

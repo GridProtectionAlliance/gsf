@@ -56,7 +56,7 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
     public override string Description => "Evaluates an expression over a slice of values in one or more series.";
 
     /// <inheritdoc />
-    public override string[] Aliases => new[] { "Eval" };
+    public override string[] Aliases => ["Eval"];
 
     /// <inheritdoc />
     public override ReturnType ReturnType => ReturnType.Scalar;
@@ -155,7 +155,7 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
             foreach (string target in context.Variables.Keys)
                 context.Variables[target] = double.NaN;
 
-            List<string> targets = new();
+            List<string> targets = [];
             T sourceValue = default;
             int index = 0;
 
@@ -222,7 +222,7 @@ public abstract class Evaluate<T> : GrafanaFunctionBase<T> where T : struct, IDa
     // 'Evaluate' function has special parameter parsing requirements, so we override the default implementation:
     public override (List<string>, string) ParseParameters(QueryParameters queryParameters, string queryExpression)
     {
-        List<string> parsedParameters = new();
+        List<string> parsedParameters = [];
 
         int lastIndex = 0;
 

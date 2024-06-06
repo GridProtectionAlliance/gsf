@@ -358,7 +358,7 @@ public class DeviceAlarmStateAdapter : FacileActionAdapterBase
         m_lastExternalDatabaseStateChange = 0L;
         m_mappedAlarmStates = new Dictionary<AlarmState, string>();
         m_stateCounts = CreateNewStateCountsMap();
-        m_compositeStates = new List<int>();
+        m_compositeStates = [];
         m_stateCountLock = new object();
 
         LoadAlarmStates();
@@ -366,11 +366,11 @@ public class DeviceAlarmStateAdapter : FacileActionAdapterBase
         // Parse external database mapped alarm states, if defined
         if (!string.IsNullOrEmpty(ExternalDatabaseMappedAlarmStates))
         {
-            string[] mappings = ExternalDatabaseMappedAlarmStates.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+            string[] mappings = ExternalDatabaseMappedAlarmStates.Split([','], StringSplitOptions.RemoveEmptyEntries);
 
             foreach (string mapping in mappings)
             {
-                string[] parts = mapping.Split(new[] { '=' }, StringSplitOptions.RemoveEmptyEntries);
+                string[] parts = mapping.Split(['='], StringSplitOptions.RemoveEmptyEntries);
 
                 if (parts.Length == 2 && Enum.TryParse(parts[0].Trim(), out AlarmState state))
                     m_mappedAlarmStates[state] = parts[1].Trim();
@@ -439,7 +439,7 @@ public class DeviceAlarmStateAdapter : FacileActionAdapterBase
             // Foreign key relationship with Device table with delete cascade should ensure automatic removals
         }
 
-        List<MeasurementKey> inputMeasurementKeys = new();
+        List<MeasurementKey> inputMeasurementKeys = [];
 
         // Load measurement signal ID to alarm device map
         foreach (AlarmDevice alarmDevice in alarmDeviceTable.QueryRecords())
@@ -536,7 +536,7 @@ public class DeviceAlarmStateAdapter : FacileActionAdapterBase
         lock (m_alarmStates)
         {
             ImmediateMeasurements measurements = LatestMeasurements;
-            List<AlarmDevice> alarmDeviceUpdates = new();
+            List<AlarmDevice> alarmDeviceUpdates = [];
             Dictionary<AlarmState, int> stateCounts = CreateNewStateCountsMap();
 
             OnStatusMessage(MessageLevel.Info, "Updating device alarm states");
@@ -687,8 +687,8 @@ public class DeviceAlarmStateAdapter : FacileActionAdapterBase
                         if (state == AlarmState.Good)
                             continue;
 
-                        // First encountered alarmed device with highest alarm state will be reported as composite state
-                        // because AlarmState values after Good are order by highest to lowest before OutOfService
+                        // First encountered alarmed device with the highest alarm state will be reported as composite
+                        // state because AlarmState values after Good are order by highest to lowest before OutOfService
                         if (state >= compositeState)
                             continue;
 
@@ -768,7 +768,7 @@ public class DeviceAlarmStateAdapter : FacileActionAdapterBase
                 substitutions[$"{{Device.{column.ColumnName}}}"] = metadata[column.ColumnName].ToString();
         }
 
-        List<object> parameters = new();
+        List<object> parameters = [];
         string commandParameters = parameterTemplate.Execute(substitutions);
         string[] splitParameters = commandParameters.Split(',');
 
@@ -806,7 +806,7 @@ public class DeviceAlarmStateAdapter : FacileActionAdapterBase
 
     #region [ Static ]
 
-    private static readonly string[] s_shortTimeNames = { " yr", " yr", " d", " d", " hr", " hr", " m", " m", " s", " s", "< " };
+    private static readonly string[] s_shortTimeNames = [" yr", " yr", " d", " d", " hr", " hr", " m", " m", " s", " s", "< "];
     private static readonly double s_daysPerYear = new Time(Time.SecondsPerYear(DateTime.UtcNow.Year)).ToDays();
 
     private static Dictionary<AlarmState, int> CreateNewStateCountsMap()

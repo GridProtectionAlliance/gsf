@@ -26,7 +26,7 @@ public abstract class Average<T> : GrafanaFunctionBase<T> where T : struct, IDat
     public override string Description => "Returns a single value that represents the mean of the values in the source series.";
 
     /// <inheritdoc />
-    public override string[] Aliases => new[] { "Avg", "Mean" };
+    public override string[] Aliases => ["Avg", "Mean"];
 
     /// <inheritdoc />
     public override ReturnType ReturnType => ReturnType.Scalar;

@@ -27,7 +27,7 @@ public abstract class Total<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     public override string Description => "Returns a single value that represents the sum of the values in the source series.";
 
     /// <inheritdoc />
-    public override string[] Aliases => new[] { "Add", "Sum" };
+    public override string[] Aliases => ["Add", "Sum"];
 
     /// <inheritdoc />
     public override ReturnType ReturnType => ReturnType.Scalar;
