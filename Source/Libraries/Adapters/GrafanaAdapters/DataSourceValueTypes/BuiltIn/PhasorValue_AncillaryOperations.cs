@@ -69,9 +69,9 @@ public partial struct PhasorValue : IDataSourceValueType<PhasorValue>
         init => Flags = value;
     }
 
-    readonly double[] IDataSourceValueType.TimeSeriesValue => new[] { Magnitude, Angle, Time };
+    readonly double[] IDataSourceValueType.TimeSeriesValue => [Magnitude, Angle, Time];
 
-    readonly string[] IDataSourceValueType.TimeSeriesValueDefinition => new[] { nameof(Magnitude), nameof(Angle), nameof(Time) };
+    readonly string[] IDataSourceValueType.TimeSeriesValueDefinition => [nameof(Magnitude), nameof(Angle), nameof(Time)];
 
     readonly int IDataSourceValueType.ValueIndex => (int)PrimaryValueTarget;
 
@@ -107,8 +107,8 @@ public partial struct PhasorValue : IDataSourceValueType<PhasorValue>
 
     readonly string IDataSourceValueType.MetadataTableName => MetadataTableName;
 
-    readonly string[] IDataSourceValueType.RequiredMetadataFieldNames => new[]
-    {
+    readonly string[] IDataSourceValueType.RequiredMetadataFieldNames =>
+    [
         "MagnitudeID",       // <string> Measurement key representing magnitude, e.g., PPA:101
         "AngleID",           // <string> Measurement key representing angle, e.g., PPA:102
         "MagnitudeSignalID", //  <Guid>  Signal ID representing magnitude
@@ -116,7 +116,7 @@ public partial struct PhasorValue : IDataSourceValueType<PhasorValue>
         "MagnitudePointTag", // <string> Point tag representing magnitude, e.g, GPA_SHELBY:BUS1.MAG
         "AnglePointTag",     // <string> Point tag representing angle, e.g, GPA_SHELBY:BUS1.ANG
         "PointTag"           // <string> Point tag representing phasor, e.g, GPA_SHELBY:BUS1
-    };
+    ];
 
     readonly Action<DataSet> IDataSourceValueType.AugmentMetadata => AugmentMetadata;
 
@@ -146,11 +146,11 @@ public partial struct PhasorValue : IDataSourceValueType<PhasorValue>
         // A target ID set is: (target, (measurementKey, pointTag)[])
         return
         (
-            record["PointTag"].ToString(), new[]
-            {
+            record["PointTag"].ToString(),
+            [
                 (record.KeyFromRecord("MagnitudeID", "MagnitudeSignalID"), record["MagnitudePointTag"].ToString()),
                 (record.KeyFromRecord("AngleID", "AngleSignalID"), record["AnglePointTag"].ToString())
-            }
+            ]
         );
     }
 

@@ -34,7 +34,7 @@ public abstract class Random<T> : GrafanaFunctionBase<T> where T : struct, IData
     public override string Description => "Returns a series of N, or N% of total, values that are a random sample of the values in the source series.";
 
     /// <inheritdoc />
-    public override string[] Aliases => new[] { "Rand", "Sample" };
+    public override string[] Aliases => ["Rand", "Sample"];
 
     /// <inheritdoc />
     public override ReturnType ReturnType => ReturnType.Series;
@@ -91,7 +91,7 @@ public abstract class Random<T> : GrafanaFunctionBase<T> where T : struct, IData
         bool normalizeTime = parameters.Value<bool>(1);
         double baseTime = values[0].Time;
         double timeStep = (values[length - 1].Time - baseTime) / (valueN - 1).NotZero(1);
-        List<int> indexes = new(Enumerable.Range(0, length));
+        List<int> indexes = [..Enumerable.Range(0, length)];
         indexes.Scramble();
 
         T transposeOrder(T dataValue, int index) => TransposeCompute(dataValue, values, index) with

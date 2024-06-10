@@ -44,7 +44,7 @@ public abstract class TimeDifference<T> : GrafanaFunctionBase<T> where T : struc
     public override GroupOperations PublishedGroupOperations => GroupOperations.None;
 
     /// <inheritdoc />
-    public override string[] Aliases => new[] { "TimeDiff", "Elapsed" };
+    public override string[] Aliases => ["TimeDiff", "Elapsed"];
 
     /// <inheritdoc />
     public override ParameterDefinitions ParameterDefinitions => new List<IParameter>

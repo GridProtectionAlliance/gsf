@@ -67,9 +67,9 @@ public partial struct MeasurementValue : IDataSourceValueType<MeasurementValue>
         init => Flags = value;
     }
 
-    readonly double[] IDataSourceValueType.TimeSeriesValue => new[] { Value, Time };
+    readonly double[] IDataSourceValueType.TimeSeriesValue => [Value, Time];
 
-    readonly string[] IDataSourceValueType.TimeSeriesValueDefinition => new[] { nameof(Value), nameof(Time) };
+    readonly string[] IDataSourceValueType.TimeSeriesValueDefinition => [nameof(Value), nameof(Time)];
 
     readonly int IDataSourceValueType.ValueIndex => ValueIndex;
 
@@ -97,12 +97,12 @@ public partial struct MeasurementValue : IDataSourceValueType<MeasurementValue>
 
     readonly string IDataSourceValueType.MetadataTableName => MetadataTableName;
 
-    readonly string[] IDataSourceValueType.RequiredMetadataFieldNames => new[]
-    {
+    readonly string[] IDataSourceValueType.RequiredMetadataFieldNames =>
+    [
         "ID",       // <string> Measurement key, e.g., PPA:101
         "SignalID", //  <Guid>  Signal ID
         "PointTag"  // <string> Point tag, e.g., GPA_SHELBY:FREQ
-    };
+    ];
 
     readonly Action<DataSet> IDataSourceValueType.AugmentMetadata => null; // No augmentation needed
 
@@ -132,7 +132,7 @@ public partial struct MeasurementValue : IDataSourceValueType<MeasurementValue>
         // A target ID set is: (target, (measurementKey, pointTag)[])
         // For the simple MeasurementValue functionality the target is the point tag
         string pointTag = record["PointTag"].ToString();
-        return (pointTag, new[] { (record.KeyFromRecord(), pointTag) });
+        return (pointTag, [(record.KeyFromRecord(), pointTag)]);
     }
 
     readonly DataRow IDataSourceValueType.RecordFromKey(MeasurementKey key, DataSet metadata)

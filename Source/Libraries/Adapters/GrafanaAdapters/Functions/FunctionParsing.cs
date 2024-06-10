@@ -58,7 +58,7 @@ internal static class FunctionParsing
         // Match all top-level functions in expression
         MatchCollection matches = functionsRegex.Matches(expression);
 
-        List<ParsedGrafanaFunction<T>> parsedGrafanaFunctions = new();
+        List<ParsedGrafanaFunction<T>> parsedGrafanaFunctions = [];
 
         foreach (Match match in matches)
         {
@@ -96,7 +96,7 @@ internal static class FunctionParsing
             //     Round(3, Interval(0.0333, ACME-STAR:FREQ; ACME-PLUS:FREQ))
             //
             // As an optimization in this scenario, replace the slice operation with the equivalent interval operation.
-            // Because of this automatic optimization, slice operations meeting this criteria are also hidden from the
+            // Because of this automatic optimization, slice operations meeting these criteria are also hidden from the
             // 'PublishedGroupOperations' function property, see 'GetGrafanaFunctions' method below.
             if (groupOperation == GroupOperations.Slice && function.ReturnType == ReturnType.Series && function.IsSliceSeriesEquivalent)
             {
@@ -156,7 +156,7 @@ internal static class FunctionParsing
 
                 string grafanaFunctionsPath = FilePath.GetAbsolutePath("").EnsureEnd(Path.DirectorySeparatorChar);
                 List<Type> implementationTypes = typeof(IGrafanaFunction).LoadImplementations(grafanaFunctionsPath, true, false);
-                List<IGrafanaFunction> functions = new();
+                List<IGrafanaFunction> functions = [];
 
                 foreach (Type type in implementationTypes.Where(type => type.GetConstructor(Type.EmptyTypes) is not null))
                 {

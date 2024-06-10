@@ -55,7 +55,7 @@ public class ParameterDefinitions : IReadOnlyList<IParameter>
     /// </exception>
     public ParameterDefinitions(IEnumerable<IParameter> parameters)
     {
-        m_parameters = new List<IParameter>();
+        m_parameters = [];
         m_parameterNameMap = new Dictionary<string, IParameter>(StringComparer.OrdinalIgnoreCase);
 
         foreach (IParameter parameter in parameters)

@@ -33,7 +33,7 @@ public abstract class Derivative<T> : GrafanaFunctionBase<T> where T : struct, I
     public override string Description => "Returns a series of values that represent the rate of change, per time units, for the difference between consecutive values in the source series.";
 
     /// <inheritdoc />
-    public override string[] Aliases => new[] { "Der" };
+    public override string[] Aliases => ["Der"];
 
     /// <inheritdoc />
     public override ReturnType ReturnType => ReturnType.Series;

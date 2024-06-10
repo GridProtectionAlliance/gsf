@@ -38,7 +38,7 @@ public abstract class Label<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     public override string Description => "Renames a series with the specified label value.";
 
     /// <inheritdoc />
-    public override string[] Aliases => new[] { "Name" };
+    public override string[] Aliases => ["Name"];
 
     /// <inheritdoc />
     public override ReturnType ReturnType => ReturnType.Series;

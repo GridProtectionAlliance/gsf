@@ -31,7 +31,7 @@ public abstract class Clamp<T> : GrafanaFunctionBase<T> where T : struct, IDataS
     public override string Description => "Returns a series of values that represent each of the values in the source series clamped to the inclusive range of min and max.";
 
     /// <inheritdoc />
-    public override string[] Aliases => new[] { "Limit" };
+    public override string[] Aliases => ["Limit"];
 
     /// <inheritdoc />
     public override ReturnType ReturnType => ReturnType.Series;

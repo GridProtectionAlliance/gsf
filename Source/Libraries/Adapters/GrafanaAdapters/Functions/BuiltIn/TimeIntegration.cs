@@ -33,7 +33,7 @@ public abstract class TimeIntegration<T> : GrafanaFunctionBase<T> where T : stru
     public override string Description => "Returns a single value that represents the time-based integration.";
 
     /// <inheritdoc />
-    public override string[] Aliases => new[] { "TimeInt" };
+    public override string[] Aliases => ["TimeInt"];
 
     /// <inheritdoc />
     public override ReturnType ReturnType => ReturnType.Scalar;

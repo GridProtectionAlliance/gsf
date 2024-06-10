@@ -28,7 +28,7 @@ public abstract class Difference<T> : GrafanaFunctionBase<T> where T : struct, I
     public override string Description => "Returns a series of values that represent the difference between consecutive values in the source series.";
 
     /// <inheritdoc />
-    public override string[] Aliases => new[] { "Diff" };
+    public override string[] Aliases => ["Diff"];
 
     /// <inheritdoc />
     public override ReturnType ReturnType => ReturnType.Series;

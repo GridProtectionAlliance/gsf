@@ -188,7 +188,7 @@ partial class GrafanaDataSourceBase
                             requestedGroupOperations = allowedGroupOperations;
                     }
 
-                    List<FunctionDescription> descriptions = new();
+                    List<FunctionDescription> descriptions = [];
 
                     void addFunctionDescription(GroupOperations targetGroupOperation, IReadOnlyList<IParameter> definitions)
                     {
@@ -301,7 +301,7 @@ partial class GrafanaDataSourceBase
                 }
 
                 // Search target is a 'SELECT' statement, this operates as a filter for in memory metadata (not a database query)
-                List<string> results = new();
+                List<string> results = [];
 
                 // Provided unrestricted metadata table field names if data type index is -1, otherwise if
                 // meta-data table does not contain the field names required by the data source value type,
@@ -311,7 +311,7 @@ partial class GrafanaDataSourceBase
 
                 // If table name is not in meta-data for unrestricted search, we have no choice but to attempt
                 // meta-data augmentation for each default data source value instance - this is expensive, but
-                // operation will cached and is only be a one-time operation
+                // operation will be cached and is only a one-time operation
                 if (dataTypeIndex == -1 && !metadata.Tables.Contains(tableName))
                 {
                     foreach (IDataSourceValueType defaultDataSourceValue in DataSourceValueTypeCache.DefaultInstances)
@@ -319,7 +319,7 @@ partial class GrafanaDataSourceBase
                 }
 
                 DataTable table = metadata.Tables[tableName];
-                List<string> validFieldNames = new();
+                List<string> validFieldNames = [];
 
                 for (int i = 0; i < fieldNames?.Length; i++)
                 {
@@ -408,7 +408,7 @@ partial class GrafanaDataSourceBase
         DataSet metadata = Metadata.GetAugmentedDataSet<MeasurementValue>();
         Dictionary<string, DataRow> definitions = request.ParseSourceDefinitions(type, metadata, useFilterExpression);
         IEnumerable<TimeSeriesValues> annotationData = await Query(request.ExtractQueryRequest(definitions.Keys, MaximumAnnotationsPerRequest), cancellationToken).ConfigureAwait(false);
-        List<AnnotationResponse> responses = new();
+        List<AnnotationResponse> responses = [];
 
         foreach (TimeSeriesValues values in annotationData)
         {
@@ -513,10 +513,7 @@ partial class GrafanaDataSourceBase
         {
             // Parse the connection string into a dictionary of key-value pairs for easy lookups
             Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
-
-            return !settings.ContainsKey("DeviceIDs") ?
-                new List<int>() :
-                settings["DeviceIDs"].Split(',').Select(int.Parse);
+            return settings.TryGetValue("DeviceIDs", out string setting) ? setting.Split(',').Select(int.Parse) : [];
         }
     }
 }

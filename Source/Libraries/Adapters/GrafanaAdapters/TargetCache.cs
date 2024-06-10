@@ -43,7 +43,7 @@ public static class TargetCaches
 
     static TargetCaches()
     {
-        ResetCacheFunctions = new List<Action>();
+        ResetCacheFunctions = [];
 
         s_resetAllCaches = new ShortSynchronizedOperation(() =>
         {

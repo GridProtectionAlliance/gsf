@@ -29,7 +29,7 @@ public abstract class Percentile<T> : GrafanaFunctionBase<T> where T : struct, I
     public override string Description => "Returns a series of N, or N% of total, values from the start of the source series.";
 
     /// <inheritdoc />
-    public override string[] Aliases => new[] { "Pctl" };
+    public override string[] Aliases => ["Pctl"];
 
     /// <inheritdoc />
     public override ReturnType ReturnType => ReturnType.Scalar;

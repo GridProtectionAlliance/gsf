@@ -111,7 +111,7 @@ public abstract partial class GrafanaDataSourceBase
     {
         DateTime startTime = request.range.from.ParseJsonTimestamp();
         DateTime stopTime = request.range.to.ParseJsonTimestamp();
-        List<QueryParameters> targetQueryParameters = new();
+        List<QueryParameters> targetQueryParameters = [];
 
         // Create query parameters for each target
         foreach (Target target in request.targets)
@@ -120,7 +120,7 @@ public abstract partial class GrafanaDataSourceBase
                 continue;
 
             // Parse any query commands in target
-            (bool dropEmptySeries, bool includePeaks, bool fullResolutionQuery, string imports, string radialDistribution, target.target) =
+            (bool dropEmptySeries, bool includePeaks, bool fullResolutionQuery, string imports, string radialDistribution, string interval, target.target) =
                 ParseQueryCommands(target.target);
 
             targetQueryParameters.Add(new QueryParameters
@@ -128,7 +128,7 @@ public abstract partial class GrafanaDataSourceBase
                 SourceTarget = target,
                 StartTime = startTime,
                 StopTime = stopTime,
-                Interval = fullResolutionQuery ? "0s" : request.interval,
+                Interval = fullResolutionQuery ? "0s" : string.IsNullOrEmpty(interval) ? request.interval : interval,
                 IncludePeaks = includePeaks && !fullResolutionQuery,
                 DropEmptySeries = dropEmptySeries,
                 Imports = imports,
@@ -139,22 +139,21 @@ public abstract partial class GrafanaDataSourceBase
                          selection.fieldNames.Length > 0 &&
                          selection.fieldNames.All(fieldName => !string.IsNullOrWhiteSpace(fieldName)))
                     .Select(selection => (selection.tableName, selection.fieldNames))
-                    .ToArray()
-                    ?? Array.Empty<(string, string[])>()
+                    .ToArray() ?? []
             });
         }
 
         // Get augmented metadata for data source value type
         DataSet metadata = instance.Metadata.GetAugmentedDataSet<T>();
 
-        List<DataSourceValueGroup<T>> valueGroups = new();
+        List<DataSourceValueGroup<T>> valueGroups = [];
 
         // Query each target -- each returned value group has a 'Source' value enumerable that may contain deferred
         // enumerations that need evaluation before the final result can be serialized and returned to Grafana
         foreach (QueryParameters queryParameters in targetQueryParameters)
         {
             // Organize value groups by given Grafana target data source query, i.e., all results with the same RefID
-            List<DataSourceValueGroup<T>> queryValueGroups = new();
+            List<DataSourceValueGroup<T>> queryValueGroups = [];
 
             try
             {
@@ -215,7 +214,7 @@ public abstract partial class GrafanaDataSourceBase
             {
                 // In cases where a deferred function enumeration specifically reports a
                 // syntax error exception, e.g., 'Evaluate', expose the details here
-                series.datapoints = Array.Empty<double[]>();
+                series.datapoints = [];
                 series.syntaxError = ex.Message;
             }
         });
@@ -575,16 +574,17 @@ public abstract partial class GrafanaDataSourceBase
         });
     }
 
-    private static (bool, bool, bool, string, string, string) ParseQueryCommands(string expression)
+    private static (bool, bool, bool, string, string, string, string) ParseQueryCommands(string expression)
     {
         // Parse and cache any query commands found in target expression
-        return TargetCache<(bool, bool, bool, string, string, string)>.GetOrAdd(expression, () =>
+        return TargetCache<(bool, bool, bool, string, string, string, string)>.GetOrAdd(expression, () =>
         {
             bool dropEmptySeries = false;
             bool includePeaks = false;
             bool fullResolutionQuery = false;
             string imports = string.Empty;
             string radialDistribution = string.Empty;
+            string interval = string.Empty;
 
             Match commandMatch = s_dropEmptySeriesCommand.Match(expression);
 
@@ -628,7 +628,16 @@ public abstract partial class GrafanaDataSourceBase
                 expression = expression.Replace(commandMatch.Value, "");
             }
 
-            return (dropEmptySeries, includePeaks, fullResolutionQuery, imports, radialDistribution, expression);
+            commandMatch = s_intervalCommand.Match(expression);
+
+            if (commandMatch.Success)
+            {
+                string result = commandMatch.Result("${Expression}");
+                interval = result.Trim();
+                expression = expression.Replace(commandMatch.Value, "");
+            }
+
+            return (dropEmptySeries, includePeaks, fullResolutionQuery, imports, radialDistribution, interval, expression);
         });
     }
 
@@ -659,6 +668,7 @@ public abstract partial class GrafanaDataSourceBase
     private static readonly Regex s_fullResolutionQueryCommand = new(@";\s*FullResolution(Query|Data)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
     private static readonly Regex s_importsCommand = new(@";\s*Imports\s*=\s*\{(?<Expression>.+)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
     private static readonly Regex s_radialDistributionCommand = new(@";\s*RadialDistribution\s*=\s*\{(?<Expression>.+)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private static readonly Regex s_intervalCommand = new(@";\s*Interval\s*=\s*(?<Expression>.+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     // Define a regular expression that splits on semicolon except when semicolon is inside a single-quoted string. A simple
     // string.Split on semicolon will not work properly for cases where a semicolon is used inside a filter expression that

@@ -25,7 +25,7 @@ public abstract class Distinct<T> : GrafanaFunctionBase<T> where T : struct, IDa
     public override string Description => "Returns a series of values that represent the unique set of values in the source series.";
 
     /// <inheritdoc />
-    public override string[] Aliases => new[] { "Unique" };
+    public override string[] Aliases => ["Unique"];
 
     /// <inheritdoc />
     public override ReturnType ReturnType => ReturnType.Series;

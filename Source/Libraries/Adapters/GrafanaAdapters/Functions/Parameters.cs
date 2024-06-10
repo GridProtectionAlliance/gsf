@@ -54,7 +54,7 @@ public class Parameters : IList<IMutableParameter>
 
     internal Parameters(IEnumerable<IMutableParameter> parameters)
     {
-        m_parameters = new List<IMutableParameter>(parameters);
+        m_parameters = [..parameters];
     }
 
     private Dictionary<string, IMutableParameter> ParameterNameMap =>

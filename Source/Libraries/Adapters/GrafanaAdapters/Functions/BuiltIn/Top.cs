@@ -34,7 +34,7 @@ public abstract class Top<T> : GrafanaFunctionBase<T> where T : struct, IDataSou
     public override string Description => "Returns a series of N, or N% of total, values that are the largest in the source series.";
 
     /// <inheritdoc />
-    public override string[] Aliases => new[] { "Largest" };
+    public override string[] Aliases => ["Largest"];
 
     /// <inheritdoc />
     public override ReturnType ReturnType => ReturnType.Series;

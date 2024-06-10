@@ -30,7 +30,7 @@ public abstract class RollingAverage<T> : GrafanaFunctionBase<T> where T : struc
     public override string Description => "Returns a series of values that represent the rolling average of the values in the source series.";
 
     /// <inheritdoc />
-    public override string[] Aliases => new[] { "RollingAvg", "RollingMean" };
+    public override string[] Aliases => ["RollingAvg", "RollingMean"];
 
     /// <inheritdoc />
     public override ReturnType ReturnType => ReturnType.Series;

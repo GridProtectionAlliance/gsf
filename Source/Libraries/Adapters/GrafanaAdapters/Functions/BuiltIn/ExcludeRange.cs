@@ -30,7 +30,7 @@ public abstract class ExcludeRange<T> : GrafanaFunctionBase<T> where T : struct,
     public override string Description => "Returns a series of values that represent a filtered set of the values in the source series where each value falls outside the specified low and high.";
 
     /// <inheritdoc />
-    public override string[] Aliases => new[] { "Exclude" };
+    public override string[] Aliases => ["Exclude"];
 
     /// <inheritdoc />
     public override ReturnType ReturnType => ReturnType.Series;

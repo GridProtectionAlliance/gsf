@@ -34,7 +34,7 @@ public abstract class Bottom<T> : GrafanaFunctionBase<T> where T : struct, IData
     public override string Description => "Returns a series of N, or N% of total, values that are the smallest in the source series.";
 
     /// <inheritdoc />
-    public override string[] Aliases => new[] { "Bot", "Smallest" };
+    public override string[] Aliases => ["Bot", "Smallest"];
 
     /// <inheritdoc />
     public override ReturnType ReturnType => ReturnType.Series;

@@ -30,7 +30,7 @@ public abstract class StandardDeviation<T> : GrafanaFunctionBase<T> where T : st
     public override string Description => "Returns a single value that represents the standard deviation of the values in the source series.";
 
     /// <inheritdoc />
-    public override string[] Aliases => new[] { "StdDev" };
+    public override string[] Aliases => ["StdDev"];
 
     /// <inheritdoc />
     public override ReturnType ReturnType => ReturnType.Scalar;
@@ -80,8 +80,8 @@ public abstract class StandardDeviation<T> : GrafanaFunctionBase<T> where T : st
         {
             bool useSampleCalc = parameters.Value<bool>(0);
 
-            List<double> magnitudes = new();
-            List<double> angles = new();
+            List<double> magnitudes = [];
+            List<double> angles = [];
             PhasorValue lastValue = default;
 
             // Immediately load values in-memory only enumerating data source once
