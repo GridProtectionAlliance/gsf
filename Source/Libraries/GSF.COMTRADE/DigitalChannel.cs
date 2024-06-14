@@ -25,6 +25,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using Newtonsoft.Json;
 
 namespace GSF.COMTRADE
@@ -73,7 +74,7 @@ namespace GSF.COMTRADE
 
             if (parts.Length >= 5)
             {
-                Index = int.Parse(parts[0].Trim());
+                Index = int.Parse(parts[0].Trim(), CultureInfo.InvariantCulture);
                 Name = parts[1];
                 PhaseID = parts[2];
                 CircuitComponent = parts[3];
@@ -81,7 +82,7 @@ namespace GSF.COMTRADE
             }
             else
             {
-                Index = int.Parse(parts[0].Trim());
+                Index = int.Parse(parts[0].Trim(), CultureInfo.InvariantCulture);
                 Name = parts[1];
                 NormalState = parts[2].Trim().ParseBoolean();
             }
@@ -197,7 +198,7 @@ namespace GSF.COMTRADE
                 // Dn,ch_id,ph,ccbm,y
                 values = new List<string>
                 {
-                    Index.ToString(),
+                    Index.ToString(CultureInfo.InvariantCulture),
                     Name,
                     PhaseID,
                     CircuitComponent,
@@ -209,7 +210,7 @@ namespace GSF.COMTRADE
                 // Dn,ch_id,y
                 values = new List<string>
                 {
-                    Index.ToString(),
+                    Index.ToString(CultureInfo.InvariantCulture),
                     Name,
                     NormalState ? "1" : "0"
                 };
