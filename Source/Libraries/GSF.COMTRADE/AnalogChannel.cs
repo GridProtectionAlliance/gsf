@@ -128,21 +128,21 @@ namespace GSF.COMTRADE
             if (parts.Length < 10 || (!useRelaxedValidation && parts.Length != 10 && parts.Length != 13))
                 throw new InvalidOperationException($"Unexpected number of line image elements for analog channel definition: {parts.Length} - expected 10 or 13{Environment.NewLine}Image = {lineImage}");
 
-            Index = int.Parse(parts[0].Trim());
+            Index = int.Parse(parts[0].Trim(), CultureInfo.InvariantCulture);
             Name = parts[1];
             Units = parts[4];   // Assign Units before PhaseID
             PhaseID = parts[2];
             CircuitComponent = parts[3];
-            Multiplier = double.Parse(parts[5].Trim());
-            Adder = double.Parse(parts[6].Trim());
-            Skew = double.Parse(parts[7].Trim());
-            MinValue = double.Parse(parts[8].Trim());
-            MaxValue = double.Parse(parts[9].Trim());
+            Multiplier = double.Parse(parts[5].Trim(), CultureInfo.InvariantCulture);
+            Adder = double.Parse(parts[6].Trim(), CultureInfo.InvariantCulture);
+            Skew = double.Parse(parts[7].Trim(), CultureInfo.InvariantCulture);
+            MinValue = double.Parse(parts[8].Trim(), CultureInfo.InvariantCulture);
+            MaxValue = double.Parse(parts[9].Trim(), CultureInfo.InvariantCulture);
 
             if (parts.Length >= 13)
             {
-                PrimaryRatio = double.Parse(parts[10].Trim());
-                SecondaryRatio = double.Parse(parts[11].Trim());
+                PrimaryRatio = double.Parse(parts[10].Trim(), CultureInfo.InvariantCulture);
+                SecondaryRatio = double.Parse(parts[11].Trim(), CultureInfo.InvariantCulture);
                 ScalingIdentifier = parts[12].Trim()[0];
             }
         }
@@ -535,7 +535,7 @@ namespace GSF.COMTRADE
             // An,ch_id,ph,ccbm,uu,a,b,skew,min,max
             List<string> values = new List<string>
             {
-                Index.ToString(),
+                Index.ToString(CultureInfo.InvariantCulture),
                 Name,
                 PhaseID,
                 CircuitComponent,

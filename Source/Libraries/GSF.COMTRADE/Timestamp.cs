@@ -58,11 +58,11 @@ namespace GSF.COMTRADE
 
             if (parts.Length == 4)
             {
-                double.TryParse(parts[parts.Length - 1], out milliseconds);
+                TryParse(parts[parts.Length - 1], out milliseconds);
                 parts = new[] { parts[0], parts[1], parts[2] };
             }
 
-            double.TryParse(parts[parts.Length - 1], out double seconds);
+            TryParse(parts[parts.Length - 1], out double seconds);
 
             seconds += milliseconds;
 
@@ -95,6 +95,17 @@ namespace GSF.COMTRADE
         {
             // dd/mm/yyyy,hh:mm:ss.ssssss
             return Value.ToString("dd/MM/yyyy,HH:mm:ss.ffffff", CultureInfo.InvariantCulture);
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+        private static bool TryParse(string s, out double result)
+        {
+            NumberStyles style = NumberStyles.Float | NumberStyles.AllowThousands;
+            return double.TryParse(s, style, CultureInfo.InvariantCulture, out result);
         }
 
         #endregion
