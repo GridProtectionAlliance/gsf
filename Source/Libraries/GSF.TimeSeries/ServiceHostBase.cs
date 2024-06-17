@@ -45,6 +45,7 @@ using System.ServiceProcess;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using System.Xml;
 using GSF.Collections;
 using GSF.Communication;
@@ -738,7 +739,7 @@ namespace GSF.TimeSeries
                     .AppendLine(string.Join(Environment.NewLine, certificateGenerator.DebugLog ?? new List<string>()))
                     .ToString();
 
-                EventLog.WriteEntry(ServiceName, message, EventLogEntryType.Information, 0);
+                TryWriteToEventLog(message, EventLogEntryType.Information);
             }
             catch (Exception ex)
             {
@@ -749,7 +750,7 @@ namespace GSF.TimeSeries
                     .AppendLine(string.Join(Environment.NewLine, certificateGenerator?.DebugLog ?? new List<string>()))
                     .ToString();
 
-                EventLog.WriteEntry(ServiceName, message, EventLogEntryType.Error, 0);
+                TryWriteToEventLog(message, EventLogEntryType.Error);
             }
         }
 
@@ -1363,6 +1364,18 @@ namespace GSF.TimeSeries
                 m_disposed = true;          // Prevent duplicate dispose.
                 base.Dispose(disposing);    // Call base class Dispose().
             }
+        }
+
+        // Attempt to log event to Windows event log during system initialization.
+        // On failure, ignore errors and continue system initalization.
+        // Eventually GSF logger will be initialized and can handle exceptions that occur when writing to the event log.
+        private void TryWriteToEventLog(string message, EventLogEntryType entryType)
+        {
+            try
+            {
+                EventLog.WriteEntry(ServiceName, message, entryType, 0);
+            }
+            catch {}
         }
 
         #endregion
