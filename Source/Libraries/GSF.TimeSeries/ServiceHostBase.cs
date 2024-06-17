@@ -45,6 +45,7 @@ using System.ServiceProcess;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using System.Xml;
 using GSF.Collections;
 using GSF.Communication;
@@ -737,8 +738,7 @@ namespace GSF.TimeSeries
                     .AppendLine("Certificate Generation Log:")
                     .AppendLine(string.Join(Environment.NewLine, certificateGenerator.DebugLog ?? new List<string>()))
                     .ToString();
-
-                EventLog.WriteEntry(ServiceName, message, EventLogEntryType.Information, 0);
+                WriteEventLog(message, EventLogEntryType.Information);
             }
             catch (Exception ex)
             {
@@ -748,8 +748,7 @@ namespace GSF.TimeSeries
                     .AppendLine("Certificate Generation Log:")
                     .AppendLine(string.Join(Environment.NewLine, certificateGenerator?.DebugLog ?? new List<string>()))
                     .ToString();
-
-                EventLog.WriteEntry(ServiceName, message, EventLogEntryType.Error, 0);
+                WriteEventLog(message, EventLogEntryType.Error);
             }
         }
 
@@ -1365,6 +1364,19 @@ namespace GSF.TimeSeries
             }
         }
 
+        /// <summary>
+        /// Attempt to log event to Windows event log.
+        /// On failure continue System Initalization.
+        /// Eventually GSF Logging will come up and can handle exceptions when writting to the event log.
+        /// </summary>
+        private void WriteEventLog(string message, EventLogEntryType entryType)
+        {
+            try
+            {
+                EventLog.WriteEntry(ServiceName, message, entryType, 0);
+            }
+            catch {}
+        }
         #endregion
 
         #region [ Service Binding ]
