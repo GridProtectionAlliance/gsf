@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,7 +32,9 @@ using System.Web.Http;
 using System.Web.Http.Dependencies;
 using GSF.Web.Model;
 using GSF.Web.Security;
+using Microsoft.Owin;
 using Owin;
+using OwinAppFunc = System.Func<System.Collections.Generic.IDictionary<string, object>, System.Threading.Tasks.Task>;
 
 namespace GSF.Web.Hosting
 {
@@ -231,6 +234,12 @@ namespace GSF.Web.Hosting
         /// </code>
         /// </remarks>
         IWebPageControllerBuilder UseCustomRoutes(Action<HttpRouteCollection> routeConfig);
+
+        /// <summary>
+        /// Map all routes to the default web page instead of 404 Not Found.
+        /// </summary>
+        /// <returns>The web page controller builder.</returns>
+        IWebPageControllerBuilder UseSinglePage();
     }
 
     /// <summary>
@@ -294,6 +303,7 @@ namespace GSF.Web.Hosting
             public Type ModelType { get; set; }
             public AuthenticationOptions AuthenticationOptions { get; set; }
             public Action<HttpRouteCollection> RouteConfig { get; set; } = DefaultRouteConfig;
+            public bool IsSinglePageApplication { get; set; }
 
             public IWebPageControllerBuilder UseDefaultWebPage(string defaultWebPage)
             {
@@ -323,6 +333,12 @@ namespace GSF.Web.Hosting
                 return this;
             }
 
+            public IWebPageControllerBuilder UseSinglePage()
+            {
+                IsSinglePageApplication = true;
+                return this;
+            }
+
             private static void DefaultRouteConfig(HttpRouteCollection _) { }
         }
 
@@ -332,11 +348,61 @@ namespace GSF.Web.Hosting
         /// <param name="app">The app builder for the web server pipeline.</param>
         /// <param name="webServer"><see cref="WebServer"/> instance to use for controller.</param>
         /// <param name="webPageControllerConfig">Function used to configure the web page controller.</param>
-        public static void UseWebPageController(this IAppBuilder app, WebServer webServer, Action<IWebPageControllerBuilder> webPageControllerConfig)
+        public static IAppBuilder UseWebPageController(this IAppBuilder app, WebServer webServer, Action<IWebPageControllerBuilder> webPageControllerConfig)
         {
             WebPageControllerBuilder builder = new WebPageControllerBuilder();
             webPageControllerConfig(builder);
 
+            return builder.IsSinglePageApplication
+                ? app.UseSinglePageWebPageController(webServer, builder)
+                : app.UseWebPageController(webServer, builder);
+        }
+
+        /// <summary>
+        /// Registers web page controller in web server pipeline.
+        /// </summary>
+        /// <param name="app">The app builder for the web server pipeline.</param>
+        /// <param name="webServer"><see cref="WebServer"/> instance to use for controller.</param>
+        /// <param name="defaultWebPage">The default page to display on the default path.</param>
+        /// <param name="model">Reference to model to use when rendering Razor templates, if any.</param>
+        /// <param name="modelType">Type of <paramref name="model"/>, if any.</param>
+        /// <param name="options">Authentication options for enabling sessions.</param>
+        public static IAppBuilder UseWebPageController(this IAppBuilder app, WebServer webServer, string defaultWebPage = "Index.html", object model = null, Type modelType = null, AuthenticationOptions options = null)
+        {
+            void Configure(WebPageControllerBuilder builder) => builder
+                .UseModel(model, modelType)
+                .UseDefaultWebPage(defaultWebPage)
+                .UseAuthenticationOptions(options);
+
+            return app.UseWebPageController(webServer, builder => Configure((WebPageControllerBuilder)builder));
+        }
+
+        private static IAppBuilder UseSinglePageWebPageController(this IAppBuilder app, WebServer webServer, WebPageControllerBuilder builder)
+        {
+            IAppBuilder branchBuilder = app.New();
+            branchBuilder.UseWebPageController(webServer, builder, true);
+
+            app.Use(new Func<OwinAppFunc, OwinAppFunc>(main =>
+            {
+                // This is called only when the main application builder
+                // is built, not per request.
+                var branch = (OwinAppFunc)branchBuilder.Build(typeof(OwinAppFunc));
+
+                return async context =>
+                {
+                    await main(context);
+
+                    OwinContext owinContext = new OwinContext(context);
+                    if (owinContext.Response.StatusCode == (int)HttpStatusCode.NotFound)
+                        await branch(context);
+                };
+            }));
+
+            return app.UseWebPageController(webServer, builder, false);
+        }
+
+        private static IAppBuilder UseWebPageController(this IAppBuilder app, WebServer webServer, WebPageControllerBuilder builder, bool spa = false)
+        {
             HttpConfiguration httpConfig = new HttpConfiguration();
             httpConfig.DependencyResolver = GetDependencyResolver(webServer, builder.Model, builder.ModelType);
 
@@ -349,7 +415,7 @@ namespace GSF.Web.Hosting
 
             httpConfig.Routes.MapHttpRoute(
                 name: "WebPage",
-                routeTemplate: "{*pageName}",
+                routeTemplate: spa ? "{*all}" : "{*pageName}",
                 defaults: new
                 {
                     controller = "WebPage",
@@ -358,31 +424,14 @@ namespace GSF.Web.Hosting
                 }
             );
 
-            app.UseWebApi(httpConfig);
+            IAppBuilder webApiBuilder = app.UseWebApi(httpConfig);
 
             httpConfig.IncludeErrorDetailPolicy = IncludeErrorDetailPolicy.Always;
 
             // Check for configuration issues before first request
             httpConfig.EnsureInitialized();
-        }
 
-        /// <summary>
-        /// Registers web page controller in web server pipeline.
-        /// </summary>
-        /// <param name="app">The app builder for the web server pipeline.</param>
-        /// <param name="webServer"><see cref="WebServer"/> instance to use for controller.</param>
-        /// <param name="defaultWebPage">The default page to display on the default path.</param>
-        /// <param name="model">Reference to model to use when rendering Razor templates, if any.</param>
-        /// <param name="modelType">Type of <paramref name="model"/>, if any.</param>
-        /// <param name="options">Authentication options for enabling sessions.</param>
-        public static void UseWebPageController(this IAppBuilder app, WebServer webServer, string defaultWebPage = "Index.html", object model = null, Type modelType = null, AuthenticationOptions options = null)
-        {
-            void Configure(WebPageControllerBuilder builder) => builder
-                .UseModel(model, modelType)
-                .UseDefaultWebPage(defaultWebPage)
-                .UseAuthenticationOptions(options);
-
-            app.UseWebPageController(webServer, builder => Configure((WebPageControllerBuilder)builder));
+            return webApiBuilder;
         }
 
         /// <summary>
