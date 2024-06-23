@@ -46,12 +46,14 @@ namespace DynamicCalculator
         private const int DefaultFramesPerSecond = 30;
         private const double DefaultLagTime = 5.0D;
         private const double DefaultLeadTime = 5.0D;
+        private const bool DefaultSpamTriggerPrevention = false;
 
         // Fields
         private readonly Mail m_mailClient;
         private long m_expressionSuccesses;
         private long m_expressionFailures;
         private long m_totalEmailOperations;
+        private bool m_multiTriggerPrevention = false;
 
         #endregion
 
@@ -67,6 +69,17 @@ namespace DynamicCalculator
 
         #region [ Properties ]
 
+        /// <summary>
+        /// Gets or sets the Double Trigger prevention.
+        /// </summary>
+        [ConnectionStringParameter]
+        [Description("Define whether the Trigger continously being met will send multiple email or if this needs to be prevented.")]
+        [DefaultValue(DefaultSpamTriggerPrevention)]
+        public bool MultiTriggerPrevention
+        {
+            get;
+            set;
+        }
         /// <summary>
         /// Gets or sets the textual representation of the boolean expression.
         /// </summary>
@@ -376,6 +389,10 @@ namespace DynamicCalculator
 
             if (settings.TryGetValue(nameof(EnableSSL), out setting) && !string.IsNullOrWhiteSpace(setting))
                 EnableSSL = setting.ParseBoolean();
+            
+            if (settings.TryGetValue(nameof(MultiTriggerPrevention), out setting) && !string.IsNullOrWhiteSpace(setting))
+                MultiTriggerPrevention = setting.ParseBoolean();
+            m_multiTriggerPrevention = false;
         }
 
         /// <summary>
@@ -386,6 +403,9 @@ namespace DynamicCalculator
         {            
             if (value.ToString().ParseBoolean())
             {
+                if (m_multiTriggerPrevention && MultiTriggerPrevention)
+                    return;
+                m_multiTriggerPrevention = true;
                 m_expressionSuccesses++;
                 m_mailClient.Body = Body.Interpolate(Variables);
                 m_mailClient.Send();
@@ -393,6 +413,7 @@ namespace DynamicCalculator
             }
             else
             {
+                m_multiTriggerPrevention = false;
                 m_expressionFailures++;
             }
         }
