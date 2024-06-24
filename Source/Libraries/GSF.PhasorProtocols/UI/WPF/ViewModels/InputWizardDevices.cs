@@ -443,6 +443,8 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             get => m_useSourcePrefix;
             set
             {
+                Mouse.OverrideCursor = Cursors.Wait;
+
                 m_useSourcePrefix = value;
                 OnPropertyChanged(nameof(UseSourcePrefix));
 
@@ -472,6 +474,10 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
                 m_deviceAcronyms = ItemsSource.Select(childDevice => childDevice.Acronym).ToArray();
                 OnPropertyChanged(nameof(DeviceAcronyms));
+
+                ParseConfiguration(false);
+
+                Mouse.OverrideCursor = null;
             }
         }
 
@@ -965,6 +971,9 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                     Guid? uniqueID = null;
                     decimal? longitude = null, latitude = null;
 
+                    if (string.IsNullOrWhiteSpace(deviceAcronym))
+                        deviceAcronym = stationAcronym;
+
                     if (cell is ConfigurationCell3 configCell3)
                     {
                         uniqueID = configCell3.GlobalID;
@@ -1228,7 +1237,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                         if (phasor is PhasorDefinition3 phasor3 && Enum.TryParse(phasor3.UserFlags.ToString(), out VoltageLevel level))
                             configBaseKV = level.Value().ToString();
 
-                        return guessBaseKV(phasorExists(phasor) ? existingPhasors?[phasor.Index].BaseKV.ToString() : configBaseKV, phasor.Label, string.IsNullOrWhiteSpace(existingDevice?.Name) ? existingDevice?.Acronym ?? "" : existingDevice?.Name);
+                        return guessBaseKV(phasorExists(phasor) ? existingPhasors?[phasor.Index].BaseKV.ToString() : configBaseKV, phasor.Label, string.IsNullOrWhiteSpace(existingDevice?.Name) ? existingDevice?.Acronym ?? deviceAcronym : existingDevice?.Name);
                     }
 
                     float getMagnitudeMultiplier(IPhasorDefinition phasor) => 
@@ -1249,9 +1258,9 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                     {
                         ID = deviceID,
                         UniqueID = existingDevice?.UniqueID ?? uniqueID,
-                        Acronym = string.IsNullOrWhiteSpace(existingDevice?.Acronym) ? stationAcronym : existingDevice.Acronym,
+                        Acronym = string.IsNullOrWhiteSpace(existingDevice?.Acronym) ? deviceAcronym : existingDevice.Acronym,
                         Name = string.IsNullOrWhiteSpace(existingDevice?.Name) ? stationName : existingDevice.Name,
-                        ConfigAcronym = $"Device{deviceIndex} label from config: {stationAcronym}{(string.IsNullOrWhiteSpace(cell.IDLabel) ? "" : $" ({cell.IDLabel})")}",
+                        ConfigAcronym = $"Device{deviceIndex} label from config: {deviceAcronym}{(string.IsNullOrWhiteSpace(cell.IDLabel) ? "" : $" ({cell.IDLabel})")}",
                         ConfigName = $"Device{deviceIndex} name derived from config: {stationName}",
                         Longitude = existingDevice?.Longitude ?? longitude ?? -98.6m,
                         Latitude = existingDevice?.Latitude ?? latitude ?? 37.5m,
