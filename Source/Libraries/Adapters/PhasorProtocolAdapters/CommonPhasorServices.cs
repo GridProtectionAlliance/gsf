@@ -60,6 +60,7 @@ using GSF.TimeSeries.Statistics;
 using GSF.Units;
 using GSF.Units.EE;
 using PhasorProtocolAdapters.Model;
+using MeasurementRecord = GSF.TimeSeries.Model.Measurement;
 
 namespace PhasorProtocolAdapters;
 
@@ -914,6 +915,8 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
     private static TemplatedExpressionParser s_pointTagExpressionParser;
     private static Dictionary<string, DataRow> s_signalTypes;
 
+    private static readonly string[] s_commonVoltageLevels = ["44", "69", "115", "138", "161", "169", "230", "345", "500", "765", "1100"];
+
     //Static Constructor
     static CommonPhasorServices()
     {
@@ -957,6 +960,9 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
         deviceAcronym = deviceAcronym.Trim();
         vendorAcronym = vendorAcronym.Trim();
 
+        if (baseKV == 0)
+            baseKV = GuessBaseKV(label, deviceAcronym);
+
         // Define fixed parameter replacements
         Dictionary<string, string> substitutions = new()
         {
@@ -977,6 +983,51 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
             substitutions.Add($"{{SignalType.{columns[i].ColumnName}}}", signalTypeValues[i].ToNonNullString());
 
         return s_pointTagExpressionParser.Execute(substitutions);
+    }
+
+    private static int GuessBaseKV(string phasorLabel, string deviceAcronym)
+    {
+        if (string.IsNullOrWhiteSpace(phasorLabel))
+        {
+            // Calls to CreatePointTag are typically made commonly in sequence for all measurements, then calls stop,
+            // so we create an expiring memory cache with a map of first phasor tags associated with each device
+            Dictionary<string, string> firstPhasorPointTagCache = MemoryCache<Dictionary<string, string>>.GetOrAdd(nameof(GuessBaseKV), () => new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase));
+            
+            phasorLabel = firstPhasorPointTagCache.GetOrAdd(deviceAcronym, _ =>
+            {
+                try
+                {
+                    // Attempt to lookup first phasor magnitude tag associated with this device
+                    using AdoDataConnection connection = new("systemSettings");
+                    TableOperations<MeasurementRecord> measurementTable = new(connection);
+                    MeasurementRecord record = measurementTable.QueryRecordWhere("SignalReference = {0}", SignalReference.ToString(deviceAcronym, SignalKind.Magnitude, 1));
+                    return record?.PointTag;
+                }
+                catch (Exception ex)
+                {
+                    Logger.SwallowException(ex, $"Failed while looking up first phasor tag associated with device '{deviceAcronym}'");
+                    return null;
+                }
+            });
+        }
+        
+        // Check phasor label for voltage level as a priority over device acronym for better base KV guess
+        if (!string.IsNullOrWhiteSpace(phasorLabel))
+        {
+            foreach (string voltageLevel in s_commonVoltageLevels)
+            {
+                if (phasorLabel.IndexOf(voltageLevel, StringComparison.Ordinal) > -1)
+                    return int.Parse(voltageLevel);
+            }
+        }
+
+        foreach (string voltageLevel in s_commonVoltageLevels)
+        {
+            if (deviceAcronym.IndexOf(voltageLevel, StringComparison.Ordinal) > -1)
+                return int.Parse(voltageLevel);
+        }
+
+        return 0;
     }
 
     private static TemplatedExpressionParser InitializePointTagExpressionParser()
@@ -1628,17 +1679,17 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
             }
         }
 
-        if (skipOptimization || renameAllPointTags)
-        {
-            // If skipOptimization is set to true, automatically set it back to false
-            const string clearParametersQuery =
-                "UPDATE DataOperation SET Arguments = '' " +
-                "WHERE AssemblyName = 'PhasorProtocolAdapters.dll' " +
-                "AND TypeName = 'PhasorProtocolAdapters.CommonPhasorServices' " +
-                "AND MethodName = 'PhasorDataSourceValidation'";
+        if (!skipOptimization && !renameAllPointTags)
+            return;
 
-            database.Connection.ExecuteNonQuery(clearParametersQuery);
-        }
+        // If skipOptimization is set to true, automatically set it back to false
+        const string ClearParametersQuery =
+            "UPDATE DataOperation SET Arguments = '' " +
+            "WHERE AssemblyName = 'PhasorProtocolAdapters.dll' " +
+            "AND TypeName = 'PhasorProtocolAdapters.CommonPhasorServices' " +
+            "AND MethodName = 'PhasorDataSourceValidation'";
+
+        database.Connection.ExecuteNonQuery(ClearParametersQuery);
     }
 
     /// <summary>
