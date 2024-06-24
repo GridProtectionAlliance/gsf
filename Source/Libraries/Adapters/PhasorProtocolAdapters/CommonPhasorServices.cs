@@ -989,8 +989,8 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
     {
         if (string.IsNullOrWhiteSpace(phasorLabel))
         {
-            // Calls to CreatePointTag are typically made commonly in sequence for all measurements, then calls stop,
-            // so we create an expiring memory cache with a map of first phasor tags associated with each device
+            // Calls to CreatePointTag are commonly made in sequence for all measurements, then calls stop, so
+            // we create an expiring memory cache with a map of first phasor tags associated with each device
             Dictionary<string, string> firstPhasorPointTagCache = MemoryCache<Dictionary<string, string>>.GetOrAdd(nameof(GuessBaseKV), () => new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase));
             
             phasorLabel = firstPhasorPointTagCache.GetOrAdd(deviceAcronym, _ =>
