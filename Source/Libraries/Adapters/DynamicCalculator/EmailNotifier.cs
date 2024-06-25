@@ -46,14 +46,14 @@ namespace DynamicCalculator
         private const int DefaultFramesPerSecond = 30;
         private const double DefaultLagTime = 5.0D;
         private const double DefaultLeadTime = 5.0D;
-        private const bool DefaultSpamTriggerPrevention = false;
+        private const bool DefaultMultiTriggerPrevention = false;
 
         // Fields
         private readonly Mail m_mailClient;
         private long m_expressionSuccesses;
         private long m_expressionFailures;
         private long m_totalEmailOperations;
-        private bool m_multiTriggerPrevention = false;
+        private bool m_triggerDetected;
 
         #endregion
 
@@ -70,11 +70,11 @@ namespace DynamicCalculator
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the Double Trigger prevention.
+        /// Gets or sets flag that determines if the trigger continuously being met will send multiple emails or should be prevented.
         /// </summary>
         [ConnectionStringParameter]
-        [Description("Define whether the Trigger continously being met will send multiple email or if this needs to be prevented.")]
-        [DefaultValue(DefaultSpamTriggerPrevention)]
+        [Description("Defines flag that determines if the trigger continuously being met will send multiple emails or should be prevented.")]
+        [DefaultValue(DefaultMultiTriggerPrevention)]
         public bool MultiTriggerPrevention
         {
             get;
@@ -392,7 +392,8 @@ namespace DynamicCalculator
             
             if (settings.TryGetValue(nameof(MultiTriggerPrevention), out setting) && !string.IsNullOrWhiteSpace(setting))
                 MultiTriggerPrevention = setting.ParseBoolean();
-            m_multiTriggerPrevention = false;
+
+            m_triggerDetected = false;
         }
 
         /// <summary>
@@ -403,9 +404,10 @@ namespace DynamicCalculator
         {            
             if (value.ToString().ParseBoolean())
             {
-                if (m_multiTriggerPrevention && MultiTriggerPrevention)
+                if (m_triggerDetected && MultiTriggerPrevention)
                     return;
-                m_multiTriggerPrevention = true;
+
+                m_triggerDetected = true;
                 m_expressionSuccesses++;
                 m_mailClient.Body = Body.Interpolate(Variables);
                 m_mailClient.Send();
@@ -413,7 +415,7 @@ namespace DynamicCalculator
             }
             else
             {
-                m_multiTriggerPrevention = false;
+                m_triggerDetected = false;
                 m_expressionFailures++;
             }
         }
