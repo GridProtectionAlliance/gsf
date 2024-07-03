@@ -1747,10 +1747,41 @@ internal class InputWizardDevices : PagedViewModelBase<InputWizardDevice, string
                     else
                         device.Acronym = inputWizardDevice.Acronym.ToUpper();
 
-                    device ??= new Device { Acronym = inputWizardDevice.Acronym.ToUpper() };
+                    bool newDevice = false;
+
+                    if (device is null)
+                    {
+                        device = new Device { Acronym = inputWizardDevice.Acronym.ToUpper() };
+                        newDevice = true;
+                    }
 
                     if (device.UniqueID == Guid.Empty && inputWizardDevice.UniqueID.HasValue)
                         device.UniqueID = inputWizardDevice.UniqueID.Value;
+
+                    if (newDevice && device.UniqueID != Guid.Empty)
+                    {
+                        try
+                        {
+                            // If about to add a new device and unique ID already exists locally, then
+                            // source device implementation of configuration 3 GlobalID is faulty. In
+                            // this case we just create our own unique ID normally...
+                            if (Device.GetDevice(null, $"WHERE UniqueID = '{device.UniqueID.ToString().ToLower()}'") is not null)
+                            {
+                                try
+                                {
+                                    CommonFunctions.LogException(null, "Non-unique GlobalID encountered", new InvalidOperationException($"GlobalID {{{device.UniqueID}}} in for new device \"{device.Acronym}\" [ID: {device.ID}] already exists in database. Check device configuration."));
+                                }
+                                finally
+                                {
+                                    device.UniqueID = Guid.Empty;
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            CommonFunctions.LogException(null, "Failed while attempting query unique ID", ex);
+                        }
+                    }
 
                     device.Name = inputWizardDevice.Name;
                     device.CompanyID = CompanyID == 0 ? null : CompanyID;
