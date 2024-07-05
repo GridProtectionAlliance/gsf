@@ -685,7 +685,7 @@ namespace GSF.TimeSeries.UI
 
                     if (provider.UserData.IsAzureAD)
                         s_windowsServiceClient.Helper.Password = string.Empty;
-                    else
+                    else if (provider.SecurePassword?.Length > 0)
                         s_windowsServiceClient.Helper.SecurePassword = provider.SecurePassword;
 
                     s_windowsServiceClient.Helper.Connect();
