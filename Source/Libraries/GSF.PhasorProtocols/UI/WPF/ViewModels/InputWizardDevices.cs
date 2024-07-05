@@ -1623,7 +1623,7 @@ internal class InputWizardDevices : PagedViewModelBase<InputWizardDevice, string
 
         cc.Closed += delegate
         {
-            if (cc.DialogResult == null || !cc.DialogResult.GetValueOrDefault())
+            if (cc.DialogResult is null || !cc.DialogResult.GetValueOrDefault())
                 return;
 
             m_configurationFrame = cc.ConfigurationFrame;
