@@ -392,6 +392,7 @@
     private static double s_defaultCalculationLeadTime;
     private static int s_nominalFrequency;
     private static string s_systemName;
+    private static string s_commonVoltageLevels;
 
     // Quasi-Static Properties
     private Dictionary<string, object> AppModelGlobal
@@ -489,6 +490,26 @@
             return UserInfo.CurrentUserID;
 
         return Thread.CurrentPrincipal.Identity.Name;
+    }
+
+    private string CommonVoltageLevels
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(s_commonVoltageLevels))
+            {
+                List<string> voltageLevels = new List<string>();
+
+                foreach (string voltageLevel in GSF.Units.EE.CommonVoltageLevels.Values)
+                {
+                    voltageLevels.Add("\"" + voltageLevel + "\"");
+                }
+
+                s_commonVoltageLevels = string.Join(", ", voltageLevels);
+            }
+
+            return s_commonVoltageLevels;
+        }
     }
 
     // This function simply limits access to UI elements that the user does not have access to, server-side
@@ -731,7 +752,7 @@
             if (!isEmpty(nominalVoltage) && nominalVoltage !== 0)
                 return nominalVoltage;
 
-            const commonVoltageLevels = [ "44", "69", "115", "138", "161", "169", "230", "345", "500", "765", "1100" ];
+            const commonVoltageLevels = [ @Raw(CommonVoltageLevels) ];
 
             // Check phasor label before device
             for (let i = 0; i < commonVoltageLevels.length; i++) {

@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 
 namespace GSF.Units.EE
 {
@@ -96,20 +97,39 @@ namespace GSF.Units.EE
     }
 
     /// <summary>
+    /// Defines common transmission voltage levels.
+    /// </summary>
+    public static class CommonVoltageLevels
+    {
+        /// <summary>
+        /// Gets common transmission voltage level values.
+        /// </summary>
+        public static readonly string[] Values;
+
+        static CommonVoltageLevels()
+        {
+            Values = VoltageLevelExtensions.VoltageLevelMap.Values
+                .OrderByDescending(voltage => voltage)
+                .Select(voltage => voltage.ToString())
+                .ToArray();
+        }
+    }
+
+    /// <summary>
     /// Defines extension functions related to <see cref="VoltageLevel"/> enumeration.
     /// </summary>
     public static class VoltageLevelExtensions
     {
-        private static readonly Dictionary<VoltageLevel, int> m_voltageLevelMap;
+        internal static readonly Dictionary<VoltageLevel, int> VoltageLevelMap;
 
         static VoltageLevelExtensions()
         {
-            m_voltageLevelMap = new Dictionary<VoltageLevel, int>();
+            VoltageLevelMap = new Dictionary<VoltageLevel, int>();
 
             foreach (VoltageLevel value in Enum.GetValues(typeof(VoltageLevel)))
             {
                 if (int.TryParse(value.GetDescription(), out int level))
-                    m_voltageLevelMap[value] = level;
+                    VoltageLevelMap[value] = level;
             }
         }
 
@@ -118,8 +138,10 @@ namespace GSF.Units.EE
         /// </summary>
         /// <param name="level">Target <see cref="VoltageLevel"/> enum value.</param>
         /// <returns>Voltage level for the specified <paramref name="level"/>.</returns>
-        public static int Value(this VoltageLevel level) => 
-            m_voltageLevelMap.TryGetValue(level, out int value) ? value : 0;
+        public static int Value(this VoltageLevel level)
+        {
+            return VoltageLevelMap.TryGetValue(level, out int value) ? value : 0;
+        }
 
         /// <summary>
         /// Attempts to get the <see cref="VoltageLevel"/> enum value for the source kV <paramref name="value"/>.
@@ -132,13 +154,13 @@ namespace GSF.Units.EE
         /// </returns>
         public static bool TryGetVoltageLevel(this int value, out VoltageLevel level)
         {
-            foreach (KeyValuePair<VoltageLevel, int> kvp in m_voltageLevelMap)
+            foreach (KeyValuePair<VoltageLevel, int> kvp in VoltageLevelMap)
             {
-                if (kvp.Value == value)
-                {
-                    level = kvp.Key;
-                    return true;
-                }
+                if (kvp.Value != value)
+                    continue;
+
+                level = kvp.Key;
+                return true;
             }
 
             level = default;

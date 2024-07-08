@@ -915,7 +915,7 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
     private static TemplatedExpressionParser s_pointTagExpressionParser;
     private static Dictionary<string, DataRow> s_signalTypes;
 
-    private static readonly string[] s_commonVoltageLevels = ["1100", "765", "500", "345", "230", "169", "161", "138", "115", "69", "44"];
+    private static readonly string[] s_commonVoltageLevels = CommonVoltageLevels.Values;
 
     //Static Constructor
     static CommonPhasorServices()
