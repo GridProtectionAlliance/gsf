@@ -37,7 +37,7 @@ internal static class MemoryCache<T>
     static MemoryCache()
     {
         // Reflected type name is used to ensure unique cache name for generic types
-        string cacheName = $"{nameof(PhasorProtocolAdapters)}-{typeof(T).GetReflectedTypeName()}";
+        string cacheName = $"{nameof(PhasorProtocolAdapters)}-{typeof(T).GetReflectedTypeName(false)}";
         s_memoryCache = new MemoryCache(cacheName);
     }
 
