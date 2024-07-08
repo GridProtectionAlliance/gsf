@@ -3285,7 +3285,7 @@ public class PIOutputAdapter : OutputAdapterBase
     private static Dictionary<string, string> s_calcSignalTypeFields;
     private static readonly string s_companyAcronym;
     private static readonly LineFrequency s_nominalFrequency;
-    private static readonly string[] s_commonVoltageLevels = ["44", "69", "115", "138", "161", "169", "230", "345", "500", "765", "1100"];
+    private static readonly string[] s_commonVoltageLevels = CommonVoltageLevels.Values;
     private static readonly Regex s_validPointTag;
 
     /// <summary>
