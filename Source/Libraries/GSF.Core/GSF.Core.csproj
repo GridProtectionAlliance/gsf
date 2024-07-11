@@ -104,6 +104,6 @@
     <None Include="GSF.Core.ruleset" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Generators\GSF.CodeGenerators\GSF.CodeGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+    <ProjectReference Include="..\..\Generators\GSF.CodeGenerators\GSF.CodeGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 </Project>
