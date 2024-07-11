@@ -1,61 +1,55 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>9.0.30729</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{FF3FCBA6-F01A-4EC2-BC3F-6BA832AFCF88}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>GSF</RootNamespace>
-    <AssemblyName>GSF.Core</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
+    <TargetFramework>net48</TargetFramework>
     <LangVersion>latest</LangVersion>
+    <AssemblyTitle>GSF.Core</AssemblyTitle>
+    <Company>Grid Protection Alliance</Company>
+    <Product>Grid Solutions Framework</Product>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <Description>Library of .NET functions, extensions and components including asynchronous processing queues, configuration APIs, diagnostics, error handling, console functions, adapter framework, active directory and local account functions, checksum algorithms, unit conversion, binary parsing, cron-style task scheduler, Unix and NTP time classes, precision timer, 24-bit signed and unsigned integers, database extensions and abstraction layer, extensions for drawing, reflection, XML, buffers, chars, date/times, enumerations, strings, etc.</Description>
+    <Copyright>Copyright © GPA, 2013.  All Rights Reserved.</Copyright>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <Version>2.4.189-beta</Version>
+    <AssemblyVersion>2.4.189.0</AssemblyVersion>
+    <FileVersion>2.4.189.0</FileVersion>
+    <DocumentationFile>$(OutputPath)\$(AssemblyName).XML</DocumentationFile>
+    <CodeAnalysisRuleSet>GSF.Core.ruleset</CodeAnalysisRuleSet>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <OutputPath>..\..\..\Build\Output\$(Configuration)\Libraries\</OutputPath>
+    <DocumentationFile>..\..\..\Build\Output\$(Configuration)\Libraries\$(AssemblyName).xml</DocumentationFile>
+    <BuildDependsOn>$(BuildDependsOn);AfterBuildMigrated</BuildDependsOn>
+    <Authors>Grid Protection Alliance</Authors>
+    <PackageId>GSF.Core</PackageId>
+    <PackageProjectUrl>https://github.com/GridProtectionAlliance/gsf</PackageProjectUrl>
+    <PackageTags>Core Energy Utility Adapters Functions Extensions Queues Threads Serialization Units Checksums Endianness Bits Words Diagnostics LDAP ActiveDirectory Configuration User Account ADO Database Abstraction Task Scheduling</PackageTags>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>..\..\..\Build\Output\$(Configuration)\Libraries\</OutputPath>
     <DefineConstants>TRACE;DEBUG;DNF45;DNF46</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <DocumentationFile>$(OutputPath)\$(AssemblyName).XML</DocumentationFile>
-    <RunCodeAnalysis>false</RunCodeAnalysis>
-    <CodeAnalysisRuleSet>GSF.Core.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisIgnoreGeneratedCode>true</CodeAnalysisIgnoreGeneratedCode>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>..\..\..\Build\Output\$(Configuration)\Libraries\</OutputPath>
     <DefineConstants>TRACE;DNF45;DNF46</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <DocumentationFile>$(OutputPath)\$(AssemblyName).XML</DocumentationFile>
-    <CodeAnalysisRuleSet>GSF.Core.ruleset</CodeAnalysisRuleSet>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Prefer32Bit>false</Prefer32Bit>
-    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Mono|AnyCPU'">
-    <OutputPath>..\..\..\Build\Output\$(Configuration)\Libraries\</OutputPath>
     <DefineConstants>TRACE;MONO;DNF45;DNF46</DefineConstants>
-    <DocumentationFile>$(OutputPath)\$(AssemblyName).XML</DocumentationFile>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>GSF.Core.ruleset</CodeAnalysisRuleSet>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Prefer32Bit>false</Prefer32Bit>
-    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
+  <Import Project="..\GSF.Core.Shared\GSF.Core.Shared.projitems" Label="Shared" />
+  <Target Name="AfterBuildMigrated">
+    <CallTarget Targets="SignBuild" />
+  </Target>
+  <Target Name="SignBuild" Condition="'$(SIGNTOOL)' != ''">
+    <Exec Command="$(SIGNTOOL) $(TargetPath)" />
+  </Target>
   <ItemGroup>
     <Reference Include="Antlr3.Runtime, Version=3.5.0.2, Culture=neutral, PublicKeyToken=eb42632606e9261f, processorArchitecture=MSIL">
       <HintPath>..\..\Dependencies\NuGet\Antlr.3.5.0.2\lib\Antlr3.Runtime.dll</HintPath>
@@ -73,310 +67,32 @@
       <HintPath>..\..\Dependencies\Mono\Novell.Directory.Ldap.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.configuration" />
-    <Reference Include="System.Core" />
     <Reference Include="System.Data.Entity.Design" />
     <Reference Include="System.Design" />
     <Reference Include="System.DirectoryServices" />
     <Reference Include="System.DirectoryServices.AccountManagement" />
-    <Reference Include="System.Drawing" />
     <Reference Include="System.Management" />
-    <Reference Include="System.Numerics" />
-    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Security" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Web" />
-    <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Adapters\AdapterLoader.cs" />
-    <Compile Include="Adapters\Adapter.cs" />
-    <Compile Include="Adapters\IAdapter.cs" />
-    <Compile Include="Adapters\NamespaceDoc.cs" />
-    <Compile Include="BigBinaryValue.cs" />
-    <Compile Include="BinaryCodedDecimal.cs" />
-    <Compile Include="Collections\FileBackedDictionary.cs" />
-    <Compile Include="Collections\FileBackedHashSet.cs" />
-    <Compile Include="Collections\FileBackedLookupTable.cs" />
-    <Compile Include="Collections\HashHelpers.cs" />
-    <Compile Include="Collections\DictionaryDebugView.cs" />
-    <Compile Include="Collections\OrderedDictionary.cs" />
-    <Compile Include="Collections\OrderedDictionary.KeyCollection.cs" />
-    <Compile Include="Collections\OrderedDictionary.ValueCollection.cs" />
-    <Compile Include="Collections\RollingWindow.cs" />
-    <Compile Include="Common.cs" />
-    <Compile Include="ComponentModel\DataAnnotations\EmailValidationAttribute.cs" />
-    <Compile Include="ComponentModel\DataAnnotations\AcronymValidationAttribute.cs" />
-    <Compile Include="ComponentModel\DataAnnotations\UrlValidationAttribute.cs" />
-    <Compile Include="ComponentModel\EvaluationOrderException.cs" />
-    <Compile Include="ComponentModel\IValueExpressionAttribute.cs" />
-    <Compile Include="ComponentModel\IValueExpressionScope.cs" />
-    <Compile Include="ComponentModel\TypeConvertedValueExpressionAttribute.cs" />
-    <Compile Include="ComponentModel\TypeRegistryExtensions.cs" />
-    <Compile Include="ComponentModel\ValueExpressionAttributeBase.cs" />
-    <Compile Include="ComponentModel\UpdateValueExpressionAttribute.cs" />
-    <Compile Include="ComponentModel\ValueExpressionParser.cs" />
-    <Compile Include="ComponentModel\DataAnnotations\InitialValueScriptAttribute.cs" />
-    <Compile Include="ComponentModel\DataAnnotations\IsDeletedFlagAttribute.cs" />
-    <Compile Include="ComponentModel\DataAnnotations\LabelAttribute.cs" />
-    <Compile Include="ComponentModel\DataAnnotations\NamespaceDoc.cs" />
-    <Compile Include="ComponentModel\ValueExpressionScopeBase.cs" />
-    <Compile Include="ComponentModel\NamespaceDoc.cs" />
-    <Compile Include="ComponentModel\DataAnnotations\PrimaryLabelAttribute.cs" />
-    <Compile Include="Console\Command.cs" />
-    <Compile Include="Console\CommandException.cs" />
-    <Compile Include="Console\CommandResponse.cs" />
-    <Compile Include="Collections\IPagedList.cs" />
-    <Compile Include="ComponentModel\DefaultValueExpressionAttribute.cs" />
-    <Compile Include="Data\BulkDataOperationBase.cs" />
-    <Compile Include="Data\DataDeleter.cs" />
-    <Compile Include="Data\DataInserter.cs" />
-    <Compile Include="Data\DataUpdater.cs" />
-    <Compile Include="Data\Model\AdditionalFieldSearchAttribute.cs" />
-    <Compile Include="Data\Model\ClaimAttribute.cs" />
-    <Compile Include="Data\Model\EncryptDataAttribute.cs" />
-    <Compile Include="Data\Model\CSVExcludeFieldAttribute.cs" />
-    <Compile Include="Data\Model\DefaultSortOrderAttribute.cs" />
-    <Compile Include="Data\Model\DeleteRolesAttribute.cs" />
-    <Compile Include="Data\Model\ReturnLimitAttribute.cs" />
-    <Compile Include="Data\Model\SQLSearchFilter.cs" />
-    <Compile Include="Data\Model\SQLSearchModifierAttribute.cs" />
-    <Compile Include="Data\Model\ViewOnlyAttribute.cs" />
-    <Compile Include="Data\Model\AllowSearchAttribute.cs" />
-    <Compile Include="Data\Model\CustomViewAttribute.cs" />
-    <Compile Include="Data\Model\PatchRolesAttribute.cs" />
-    <Compile Include="Data\Model\PostRolesAttribute.cs" />
-    <Compile Include="Data\Model\ParentKeyAttribute.cs" />
-    <Compile Include="Data\Model\NonRecordFieldAttribute.cs" />
-    <Compile Include="Data\Model\ITableOperations.cs" />
-    <Compile Include="Data\Model\RootQueryRestrictionAttribute.cs" />
-    <Compile Include="Data\Model\SearchableAttribute.cs" />
-    <Compile Include="Data\Model\AmendExpressionAttribute.cs" />
-    <Compile Include="Data\Model\FieldDataTypeAttribute.cs" />
-    <Compile Include="Data\Model\GetRolesAttribute.cs" />
-    <Compile Include="Data\Model\SettingsCategoryAttribute.cs" />
-    <Compile Include="Data\Model\ConfigFileTableNamePrefixAttribute.cs" />
-    <Compile Include="Data\Model\UseEscapedNameAttribute.cs" />
-    <Compile Include="Data\Model\TableNameAttribute.cs" />
-    <Compile Include="Data\Model\FieldNameAttribute.cs" />
-    <Compile Include="Data\Model\NamespaceDoc.cs" />
-    <Compile Include="Data\Model\PrimaryKeyAttribute.cs" />
-    <Compile Include="Data\Model\RecordOperationAttribute.cs" />
-    <Compile Include="Data\Model\RecordRestriction.cs" />
-    <Compile Include="Data\Model\TableOperations.cs" />
-    <Compile Include="Collections\PagedList.cs" />
-    <Compile Include="Data\Schema.cs" />
-    <Compile Include="Diagnostics\ChildProcessManager.cs" />
-    <Compile Include="Diagnostics\PerformanceMonitorBase.cs" />
-    <Compile Include="Diagnostics\ProcessUtilizationCalculator.cs" />
-    <Compile Include="Diagnostics\SystemPerformanceMonitor.cs" />
-    <Compile Include="Diagnostics\ThreadPoolMonitor.cs" />
-    <Compile Include="Drawing\Point.cs" />
-    <Compile Include="Identity\IUserInfo.cs" />
-    <Compile Include="Identity\UnixUserInfo.cs" />
-    <Compile Include="Identity\WindowsUserInfo.cs" />
-    <Compile Include="Interop\IIniFile.cs" />
-    <Compile Include="Interop\WindowsIniFile.cs" />
-    <Compile Include="Interop\UnixIniFile.cs" />
-    <Compile Include="IO\CachedFileStream.cs" />
-    <Compile Include="IO\FilePath.cs" />
-    <Compile Include="IO\Outage.cs" />
-    <Compile Include="IO\OutageLog.cs" />
-    <Compile Include="IO\OutageLogProcessor.cs" />
-    <Compile Include="IO\RunTimeLog.cs" />
-    <Compile Include="IO\SafeFileWatcher.cs" />
-    <Compile Include="ITrackable.cs" />
-    <Compile Include="NativeBinaryValue.cs" />
-    <Compile Include="BinaryValueBase.cs" />
-    <Compile Include="BitExtensions.cs" />
-    <Compile Include="BitwiseCast.cs" />
-    <Compile Include="ByteEncoding.cs" />
-    <Compile Include="Collections\DoubleBufferedQueueManager.cs" />
-    <Compile Include="Collections\ListCollection.cs" />
-    <Compile Include="Collections\PriorityQueue.cs" />
-    <Compile Include="Collections\AsyncDoubleBufferedQueue.cs" />
-    <Compile Include="Collections\AsyncQueue.cs" />
-    <Compile Include="Collections\CollectionExtensions.cs" />
-    <Compile Include="Collections\DictionaryList.cs" />
-    <Compile Include="Collections\DoubleBufferedQueue.cs" />
-    <Compile Include="Collections\ProcessDictionary.cs" />
-    <Compile Include="Collections\NamespaceDoc.cs" />
-    <Compile Include="Collections\ProcessQueue.cs" />
-    <Compile Include="Collections\ProcessQueueStatistics.cs" />
-    <Compile Include="CompoundValue.cs" />
-    <Compile Include="Configuration\AppSettingsBase.cs" />
-    <Compile Include="Configuration\CategorizedSettingsBase.cs" />
-    <Compile Include="Configuration\CategorizedSettingsElement.cs" />
-    <Compile Include="Configuration\CategorizedSettingsElementCollection.cs" />
-    <Compile Include="Configuration\CategorizedSettingsSection.cs" />
-    <Compile Include="Configuration\ConfigurationFile.cs" />
-    <Compile Include="Configuration\ConnectionStringParser.cs" />
-    <Compile Include="Configuration\EncryptSettingAttribute.cs" />
-    <Compile Include="Configuration\IniSettingsBase.cs" />
-    <Compile Include="Configuration\IPersistSettings.cs" />
-    <Compile Include="Configuration\NamespaceDoc.cs" />
-    <Compile Include="Configuration\RegistrySettingsBase.cs" />
-    <Compile Include="Configuration\SerializeSettingAttribute.cs" />
-    <Compile Include="Configuration\SettingNameAttribute.cs" />
-    <Compile Include="Configuration\SettingsBase.cs" />
-    <Compile Include="Console\Arguments.cs" />
-    <Compile Include="Console\Events.cs" />
-    <Compile Include="Console\NamespaceDoc.cs" />
-    <Compile Include="Data\AdoDataConnection.cs" />
-    <Compile Include="Data\DataExtensions.cs" />
-    <Compile Include="Data\DataSetEqualityComparer.cs" />
-    <Compile Include="Data\DataSetExtensions.cs" />
-    <Compile Include="Data\NamespaceDoc.cs" />
-    <Compile Include="DateTimeExtensions.cs" />
-    <Compile Include="Diagnostics\NamespaceDoc.cs" />
-    <Compile Include="Diagnostics\PerformanceCounter.cs" />
-    <Compile Include="Diagnostics\PerformanceMonitor.cs" />
-    <Compile Include="Drawing\BitmapExtensions.cs" />
-    <Compile Include="Drawing\NamespaceDoc.cs" />
-    <Compile Include="EndianOrder.cs" />
-    <Compile Include="ErrorManagement\ErrorLogger.cs">
+    <Compile Update="ErrorManagement\ErrorLogger.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="ErrorManagement\ErrorModule.cs" />
-    <Compile Include="ErrorManagement\NamespaceDoc.cs" />
-    <Compile Include="ErrorManagement\SmtpTraceListener.cs" />
-    <Compile Include="FastObjectFactory.cs" />
-    <Compile Include="FuzzyStrings\ApproximatelyEquals.cs" />
-    <Compile Include="FuzzyStrings\FuzzyStringComparisonOptions.cs" />
-    <Compile Include="FuzzyStrings\FuzzyStringComparisonTolerance.cs" />
-    <Compile Include="FuzzyStrings\HammingDistance.cs" />
-    <Compile Include="FuzzyStrings\JaccardDistance.cs" />
-    <Compile Include="FuzzyStrings\JaroDistance.cs" />
-    <Compile Include="FuzzyStrings\JaroWinklerDistance.cs" />
-    <Compile Include="FuzzyStrings\LevenshteinDistance.cs" />
-    <Compile Include="FuzzyStrings\LongestCommonSubsequence.cs" />
-    <Compile Include="FuzzyStrings\LongestCommonSubstring.cs" />
-    <Compile Include="FuzzyStrings\Operations.cs" />
-    <Compile Include="FuzzyStrings\OverlapCoefficient.cs" />
-    <Compile Include="FuzzyStrings\RatcliffObershelpSimilarity.cs" />
-    <Compile Include="FuzzyStrings\SorensenDiceDistance.cs" />
-    <Compile Include="FuzzyStrings\TanimotoCoefficient.cs" />
-    <Compile Include="IdentifiableItem.cs" />
-    <Compile Include="Identity\NamespaceDoc.cs" />
-    <Compile Include="Identity\UserAccountControl.cs" />
-    <Compile Include="Identity\UserInfo.cs" />
-    <Compile Include="InitializationException.cs" />
-    <Compile Include="Interop\IniFile.cs" />
-    <Compile Include="Interop\NamespaceDoc.cs" />
-    <Compile Include="Interop\VBArrayDescriptor.cs" />
-    <Compile Include="Interop\WindowsApi.cs" />
-    <Compile Include="BufferPool.cs" />
-    <Compile Include="IO\Compression\CompressionExtensions.cs" />
-    <Compile Include="IO\Compression\FileCompressor.cs" />
-    <Compile Include="IO\Compression\NamespaceDoc.cs" />
-    <Compile Include="IO\Compression\PatternCompressor.cs" />
-    <Compile Include="IO\Compression\PatternDecompressor.cs" />
-    <Compile Include="IO\ExportDestination.cs" />
-    <Compile Include="IO\FileProcessor.cs" />
-    <Compile Include="IO\InterprocessCache.cs" />
-    <Compile Include="IO\IsamDataFileBase.cs" />
-    <Compile Include="IO\LogFile.cs">
+    <Compile Update="IO\LogFile.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="IO\MultipleDestinationExporter.cs">
+    <Compile Update="IO\MultipleDestinationExporter.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="IO\NamespaceDoc.cs" />
-    <Compile Include="IProvideStatus.cs" />
-    <Compile Include="ISupportLifecycle.cs" />
-    <Compile Include="LittleBinaryValue.cs" />
-    <Compile Include="NamespaceDoc.cs" />
-    <Compile Include="Net\Security\CertificatePolicy.cs" />
-    <Compile Include="Net\Security\CertificatePolicyChecker.cs" />
-    <Compile Include="Net\Security\ICertificateChecker.cs" />
-    <Compile Include="Net\Security\CertificateGenerator.cs" />
-    <Compile Include="Net\Security\SimpleCertificateChecker.cs" />
-    <Compile Include="Net\Security\SimplePolicyChecker.cs" />
-    <Compile Include="Net\Smtp\Mail.cs" />
-    <Compile Include="Net\Smtp\NamespaceDoc.cs" />
-    <Compile Include="NumericalAnalysis\CurveFit.cs" />
-    <Compile Include="NumericalAnalysis\KalmanFilter.cs" />
-    <Compile Include="NumericalAnalysis\RealTimeSlope.cs" />
-    <Compile Include="NumericalAnalysis\SplineFit.cs" />
-    <Compile Include="NumericalAnalysis\WaveFit.cs" />
-    <Compile Include="NumericExtensions.cs" />
-    <Compile Include="ObjectState.cs" />
-    <Compile Include="OptimizationOptions.cs" />
-    <Compile Include="Parsing\BinaryImageBase.cs" />
-    <Compile Include="Parsing\BinaryImageParserBase.cs" />
-    <Compile Include="Parsing\BooleanExpression.cs" />
-    <Compile Include="Parsing\CommonHeaderBase.cs" />
-    <Compile Include="Parsing\FrameImageParserBase.cs" />
-    <Compile Include="Parsing\IBinaryImageParser.cs" />
-    <Compile Include="Parsing\ICommonHeader.cs" />
-    <Compile Include="Parsing\IFrameImageParser.cs" />
-    <Compile Include="Parsing\ISupportBinaryImage.cs" />
-    <Compile Include="Parsing\ISupportBinaryImageExtensions.cs" />
-    <Compile Include="Parsing\ISupportFrameImage.cs" />
-    <Compile Include="Parsing\ISupportSourceIdentifiableFrameImage.cs" />
-    <Compile Include="Parsing\MultiSourceFrameImageParserBase.cs" />
-    <Compile Include="Parsing\NamespaceDoc.cs" />
-    <Compile Include="Parsing\StringParser.cs" />
-    <Compile Include="Parsing\TemplatedExpressionParser.cs" />
-    <Compile Include="PrecisionTimer.cs" />
-    <Compile Include="ProcessProgress.cs" />
-    <Compile Include="ProcessProgressHandler.cs" />
-    <Compile Include="Properties\Annotations.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Range.cs" />
-    <Compile Include="Security\Cryptography\DataProtection.cs" />
-    <Compile Include="Security\Cryptography\X509\CertificateMaker.cs" />
-    <Compile Include="Security\Cryptography\X509\CertificateSigningMode.cs" />
-    <Compile Include="Security\Cryptography\X509\CipherEngine.cs" />
-    <Compile Include="Security\Cryptography\X509\DerWriter.cs" />
-    <Compile Include="Security\Cryptography\X509\X509CertificateGenerator.cs" />
-    <Compile Include="StringExtensions.cs" />
-    <Compile Include="Text\Diff.cs" />
-    <Compile Include="Text\DiffMatchPatch.cs" />
-    <Compile Include="Text\Patch.cs" />
-    <Compile Include="Threading\ManagedCancellationTokenSource.cs" />
-    <Compile Include="Threading\WaitHandleExtensions.cs" />
-    <Compile Include="Trackable.cs" />
-    <Compile Include="ReusableObjectPool.cs" />
-    <Compile Include="Scheduling\NamespaceDoc.cs" />
-    <Compile Include="Searching\AsyncSearcher.cs" />
-    <Compile Include="Security\Cryptography\CharacterGroup.cs" />
-    <Compile Include="Security\Cryptography\NamespaceDoc.cs" />
-    <Compile Include="Security\Cryptography\PasswordGenerator.cs" />
-    <Compile Include="Security\Cryptography\Random.cs" />
-    <Compile Include="Scheduling\Schedule.cs" />
-    <Compile Include="Scheduling\ScheduleManager.cs">
+    <Compile Update="Scheduling\ScheduleManager.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Scheduling\SchedulePart.cs" />
-    <Compile Include="Security\Cryptography\Cipher.cs" />
-    <Compile Include="Security\Cryptography\Standard.cs" />
-    <Compile Include="Security\Cryptography\SymmetricAlgorithmExtensions.cs" />
-    <Compile Include="Serialization.cs" />
-    <Compile Include="Collections\SettingsCollection.cs" />
-    <Compile Include="Threading\InterprocessLock.cs" />
-    <Compile Include="Threading\InterprocessReaderWriterLock.cs" />
-    <Compile Include="Threading\ManagedThread.cs" />
-    <Compile Include="Threading\ManagedThreadPool.cs" />
-    <Compile Include="Threading\ManagedThreads.cs" />
-    <Compile Include="TimeSpanExtensions.cs" />
-    <Compile Include="TransformEqualityComparer.cs" />
-    <Compile Include="TypeExtensions.cs" />
-    <Compile Include="USTimeZones.cs" />
-    <Compile Include="Validation\EmailAddressValidator.cs" />
-    <Compile Include="Validation\IValidator.cs" />
-    <Compile Include="Validation\NamespaceDoc.cs" />
-    <Compile Include="Validation\NonNullStringValidator.cs" />
-    <Compile Include="Validation\NumericRangeValidator.cs" />
-    <Compile Include="Validation\ValidationService.cs" />
-    <Compile Include="Xml\NamespaceDoc.cs" />
-    <Compile Include="Xml\XmlExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="ErrorManagement\ErrorLogger.bmp" />
@@ -385,22 +101,9 @@
     <EmbeddedResource Include="Scheduling\ScheduleManager.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="GSF.Core.nuspec" />
     <None Include="GSF.Core.ruleset" />
-    <None Include="packages.GSF.Core.config" />
   </ItemGroup>
-  <ItemGroup />
-  <Import Project="..\GSF.Core.Shared\GSF.Core.Shared.projitems" Label="Shared" />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Target Name="AfterBuild">
-    <CallTarget Targets="SignBuild" />
-  </Target>
-  <Target Name="SignBuild" Condition="'$(SIGNTOOL)' != ''">
-    <Exec Command="$(SIGNTOOL) $(TargetPath)" />
-  </Target>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\Generators\GSF.CodeGenerators\GSF.CodeGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+  </ItemGroup>
 </Project>

@@ -27,19 +27,11 @@ using System.Resources;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-// Assembly identity attributes.
-[assembly: AssemblyVersion("2.4.189.0")]
-
 [assembly: SuppressMessage("Microsoft.Usage", "CA2243:AttributeStringLiteralsShouldParseCorrectly")]
-[assembly: AssemblyInformationalVersion("2.4.189-beta")]
-
-// Informational attributes.
-[assembly: AssemblyCompany("Grid Protection Alliance")]
-[assembly: AssemblyCopyright("Copyright © GPA, 2013.  All Rights Reserved.")]
-[assembly: AssemblyProduct("Grid Solutions Framework")]
 // Open internals for unit tests.
 [assembly: InternalsVisibleTo("GSF.Core.Tests")]
 [assembly: InternalsVisibleTo("GSF.TestsSuite")]
+[assembly: InternalsVisibleTo("LibraryTester")]
 // Assembly manifest attributes.
 #if DEBUG
 [assembly: AssemblyConfiguration("Debug Build")]
@@ -48,10 +40,7 @@ using System.Runtime.InteropServices;
 #endif
 
 [assembly: AssemblyDefaultAlias("GSF.Core")]
-[assembly: AssemblyDescription("Library of .NET functions, extensions and components including asynchronous processing queues, configuration APIs, diagnostics, error handling, console functions, adapter framework, active directory and local account functions, checksum algorithms, unit conversion, binary parsing, cron-style task scheduler, Unix and NTP time classes, precision timer, 24-bit signed and unsigned integers, database extensions and abstraction layer, extensions for drawing, reflection, XML, buffers, chars, date/times, enumerations, strings, etc.")]
-[assembly: AssemblyTitle("GSF.Core")]
 
 // Other configuration attributes.
 [assembly: ComVisible(false)]
 [assembly: Guid("9448a8b5-35c1-4dc7-8c42-8712153ac08a")]
-[assembly: NeutralResourcesLanguage("en-US")]
