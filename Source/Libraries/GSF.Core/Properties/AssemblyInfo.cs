@@ -1,4 +1,4 @@
-﻿//******************************************************************************************************
+//******************************************************************************************************
 //  AssemblyInfo.cs - Gbtc
 //
 //  Copyright © 2013, Grid Protection Alliance.  All Rights Reserved.
@@ -26,8 +26,6 @@ using System.Reflection;
 using System.Resources;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-
-[assembly: SuppressMessage("Microsoft.Usage", "CA2243:AttributeStringLiteralsShouldParseCorrectly")]
 
 // Open internals for unit tests.
 [assembly: InternalsVisibleTo("GSF.Core.Tests")]
