@@ -27,15 +27,11 @@ using System.Resources;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
+[assembly: SuppressMessage("Microsoft.Usage", "CA2243:AttributeStringLiteralsShouldParseCorrectly")]
 // Open internals for unit tests.
 [assembly: InternalsVisibleTo("GSF.Core.Tests")]
 [assembly: InternalsVisibleTo("GSF.TestsSuite")]
 [assembly: InternalsVisibleTo("LibraryTester")]
-
-// Assembly identity attributes.
-[assembly: AssemblyVersion("2.4.189.0")]
-[assembly: AssemblyInformationalVersion("2.4.189-beta")]
-
 // Assembly manifest attributes.
 #if DEBUG
 [assembly: AssemblyConfiguration("Debug Build")]
