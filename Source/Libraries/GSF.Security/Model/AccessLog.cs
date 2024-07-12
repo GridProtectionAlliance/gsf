@@ -51,6 +51,12 @@ namespace GSF.Security.Model
         /// </summary>
         public bool AccessGranted { get; set; }
 
+
+        /// <summary>
+        /// Node ID of the Application.
+        /// </summary>
+        public Guid NodeID { get; set; }
+
         /// <summary>
         /// Created on field.
         /// </summary>
