@@ -38,7 +38,7 @@
 -- IMPORTANT NOTE: When making updates to this schema, please increment the version number!
 -- *******************************************************************************************
 CREATE VIEW SchemaVersion AS
-SELECT 15 AS VersionNumber
+SELECT 16 AS VersionNumber
 FROM dual;
 
 CREATE TABLE ErrorLog(
@@ -948,6 +948,7 @@ CREATE TABLE AccessLog (
     ID NUMBER NOT NULL,
     UserName VARCHAR2(200) NOT NULL,
     AccessGranted NUMBER NOT NULL,
+    NodeID VARCHAR2(36) NOT NULL,
     CreatedOn DATE NOT NULL
 );
 

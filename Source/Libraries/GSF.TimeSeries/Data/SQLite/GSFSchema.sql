@@ -33,7 +33,7 @@ PRAGMA foreign_keys = ON;
 -- IMPORTANT NOTE: When making updates to this schema, please increment the version number!
 -- *******************************************************************************************
 CREATE VIEW SchemaVersion AS
-SELECT 15 AS VersionNumber;
+SELECT 16 AS VersionNumber;
 
 CREATE TABLE ErrorLog(
     ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -642,6 +642,7 @@ CREATE TABLE AccessLog (
     ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     UserName VARCHAR(200) NOT NULL,
     AccessGranted BOOLEAN NOT NULL,	
+    NodeID NCHAR(36) NOT NULL,
     CreatedOn DATETIME NOT NULL DEFAULT ''
 );
 
