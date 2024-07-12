@@ -331,7 +331,7 @@ namespace GSF.Security
                 return;
 
             using AdoDataConnection connection = new(SettingsCategory);
-            connection.ExecuteNonQuery("INSERT INTO AccessLog (UserName, AccessGranted) VALUES ({0}, {1})", UserData.Username, loginSuccess ? 1 : 0);
+            connection.ExecuteNonQuery("INSERT INTO AccessLog (UserName, AccessGranted, NodeID) VALUES ({0}, {1}, {2})", UserData.Username, loginSuccess ? 1 : 0, Guid.Empty);
         }
 
         /// <summary>

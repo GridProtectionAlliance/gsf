@@ -1055,7 +1055,7 @@ namespace GSF.Security
                 {
                     using AdoDataConnection connection = new(SettingsCategory);
 
-                    connection.ExecuteNonQuery("INSERT INTO AccessLog (UserName, AccessGranted) VALUES ({0}, {1})", UserData.Username, loginSuccess);
+                    connection.ExecuteNonQuery("INSERT INTO AccessLog (UserName, AccessGranted, NodeID) VALUES ({0}, {1}, {2})", UserData.Username, loginSuccess, DefaultNodeID);
                 }
             }
 
