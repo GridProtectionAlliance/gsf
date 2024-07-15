@@ -29,58 +29,48 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace GSF.CodeGenerators;
 
-public class AttributeFinder<TSyntaxNode> : ISyntaxReceiver where TSyntaxNode : BaseTypeDeclarationSyntax
+public sealed class AttributeFinder<TDeclarationSyntax>(string attributeFullName) : ISyntaxContextReceiver where TDeclarationSyntax : BaseTypeDeclarationSyntax
 {
-    private readonly string m_attributeName;
-    private readonly string m_attributeFullName;
+    public List<AttributeSyntax> Attributes = [];
 
-    public AttributeFinder(string attributeName)
+    public bool HasAttributes => Attributes.Count > 0;
+
+    public void OnVisitSyntaxNode(GeneratorSyntaxContext context)
     {
-        m_attributeName = attributeName.Split('.').Last();
-
-        if (m_attributeName.EndsWith("Attribute", StringComparison.Ordinal))
-            m_attributeName = m_attributeName[..^9];
-
-        m_attributeFullName = attributeName;
+        if (DeclarationHasAttributes(context.Node))
+            Attributes.AddRange(GetSemanticTargetForGeneration(context));
     }
 
-    public List<AttributeSyntax> CandidateAttributes = [];
-
-    public bool HasCandidateAttributes => CandidateAttributes.Count > 0;
-
-    public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
+    private static bool DeclarationHasAttributes(SyntaxNode node)
     {
-        if (syntaxNode is not TSyntaxNode declaration)
-            return;
+        return node is TDeclarationSyntax { AttributeLists.Count: > 0 };
+    }
 
-        if (declaration.AttributeLists.Count == 0)
-            return;
+    private IEnumerable<AttributeSyntax> GetSemanticTargetForGeneration(GeneratorSyntaxContext context)
+    {
+        List<AttributeSyntax> attributes = [];
+        TDeclarationSyntax declarationSyntax = (TDeclarationSyntax)context.Node;
 
-        bool isCandidateMatch(string attributeCodeName)
+        foreach (AttributeSyntax attributeSyntax in declarationSyntax.AttributeLists.SelectMany(attributeListSyntax => attributeListSyntax.Attributes))
         {
-            return attributeCodeName.EndsWith(m_attributeName, StringComparison.Ordinal) ||
-                   attributeCodeName.EndsWith($"{m_attributeName}Attribute", StringComparison.Ordinal);
+            if (context.SemanticModel.GetSymbolInfo(attributeSyntax).Symbol is not IMethodSymbol attributeSymbol)
+                continue;
+
+            INamedTypeSymbol attributeContainingTypeSymbol = attributeSymbol.ContainingType;
+
+            if (string.Equals(attributeFullName, attributeContainingTypeSymbol.ToDisplayString(), StringComparison.Ordinal))
+                attributes.Add(attributeSyntax);
         }
 
-        CandidateAttributes.AddRange(declaration.AttributeLists
-            .SelectMany(syntax => syntax.Attributes)
-            .Where(syntax => isCandidateMatch(syntax.Name.NormalizeWhitespace().ToFullString()))
-            .ToArray());
+        return attributes;
     }
+}
 
-    // Check if attribute matches the fully qualified name of the attribute, only then is candidate considered an exact match
-    public bool IsMatch(Compilation compilation)
+public static class AttributeSyntaxExtensions
+{
+    public static string[] GetArgumentValues(this AttributeSyntax attribute)
     {
-        INamedTypeSymbol? attributeSymbol = compilation.GetTypeByMetadataName(m_attributeFullName);
-
-        if (attributeSymbol == null)
-            return false;
-
-        string attributeSymbolFullName = attributeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-
-        if (attributeSymbolFullName.StartsWith("global::") && !m_attributeFullName.StartsWith("global::"))
-            attributeSymbolFullName = attributeSymbolFullName[8..];
-
-        return string.Equals(m_attributeFullName, attributeSymbolFullName, StringComparison.Ordinal);
+        SeparatedSyntaxList<AttributeArgumentSyntax> arguments = attribute.ArgumentList?.Arguments ?? default;
+        return arguments.Select(argument => argument.Expression.NormalizeWhitespace().ToFullString()).ToArray();
     }
 }

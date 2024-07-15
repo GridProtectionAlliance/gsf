@@ -86,27 +86,22 @@ public class VoltageLevelEnumGenerator : ISourceGenerator
 
     public void Execute(GeneratorExecutionContext context)
     {
-        if (context.SyntaxReceiver is not AttributeFinder<ClassDeclarationSyntax> { HasCandidateAttributes: true } attributeFinder)
+        if (context.SyntaxContextReceiver is not AttributeFinder<ClassDeclarationSyntax> { HasAttributes: true } attributeFinder)
             return;
 
-        foreach (AttributeSyntax attribute in attributeFinder.CandidateAttributes)
+        foreach (AttributeSyntax attribute in attributeFinder.Attributes)
         {
-            // Make sure candidate attribute is a match for the fully qualified attribute name
-            if (!attributeFinder.IsMatch(context.Compilation))
-                continue;
+            // Get the attribute's argument values
+            string[] arguments = attribute.GetArgumentValues();
 
-            // Get the attribute's constructor arguments
-            SeparatedSyntaxList<AttributeArgumentSyntax> arguments = attribute.ArgumentList?.Arguments ?? default;
-
-            if (arguments.Count < 2)
+            if (arguments.Length < 2)
                 continue;
 
             // Get the attribute's first constructor argument value, enum name
-            string enumName = arguments[0].Expression.NormalizeWhitespace().ToFullString()[1..^1];
+            string enumName = arguments[0][1..^1];
 
             // Get remaining param array arguments, voltage levels
-            string[] voltageLevels = arguments.Skip(1).Select(argument =>
-                argument.Expression.NormalizeWhitespace().ToFullString()).ToArray();
+            string[] voltageLevels = arguments.Skip(1).ToArray();
 
             // Generate enum and values based on attribute arguments
             StringBuilder enumItems = new();
