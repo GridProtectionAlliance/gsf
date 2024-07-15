@@ -110,7 +110,7 @@
     <Message Text="SkipVersioning = --$(SkipVersioning)--"/>
     <Message Text="SkipNuGetPackages = --$(SkipNuGetPackages)--"/>
     <ItemGroup>
-      <!--List of files to be versioned.-->
+      <!--List of AssemblyInfo.cs files to be versioned.-->
       <FilesToVersion Include="$(LocalFolder)\Source\**\AssemblyInfo.*" Exclude="$(LocalFolder)\Source\OldCode\**\*.*">
         <VersionRegex>(?'BeforeVersion'AssemblyVersion\(%22)(?'CoreVersion'(\*|\d+)\.)+(\*|\d+)(?'AfterVersion'%22\))</VersionRegex>
         <VersionPrecision>4</VersionPrecision>
@@ -121,6 +121,21 @@
       </FilesToVersion>
       <FilesToVersion Include="$(LocalFolder)\Source\**\AssemblyInfo.*" Exclude="$(LocalFolder)\Source\OldCode\**\*.*">
         <VersionRegex>(?'BeforeVersion'AssemblyInformationalVersion\(%22)(?'CoreVersion'(\*|\d+)\.)+(\*|\d+)(-beta)?(?'AfterVersion'%22\))</VersionRegex>
+        <VersionPrecision>3</VersionPrecision>
+        <VersionTag Condition="'$(PreRelease)' == 'true'">-beta</VersionTag>
+      </FilesToVersion>
+
+      <!--List of *.csproj files to be versioned.-->
+      <FilesToVersion Include="$(LocalFolder)\Source\**\csproj.*" Exclude="$(LocalFolder)\Source\OldCode\**\*.*">
+        <VersionRegex>(?'BeforeVersion'%3CAssemblyVersion%3E)(?'CoreVersion'(\*|\d+)\.)+(\*|\d+)(?'AfterVersion'%3C/AssemblyVersion%3E)</VersionRegex>
+        <VersionPrecision>4</VersionPrecision>
+      </FilesToVersion>
+      <FilesToVersion Include="$(LocalFolder)\Source\**\csproj.*" Exclude="$(LocalFolder)\Source\OldCode\**\*.*">
+        <VersionRegex>(?'BeforeVersion'%3CFileVersion%3E)(?'CoreVersion'(\*|\d+)\.)+(\*|\d+)(?'AfterVersion'%3C/FileVersion%3E)</VersionRegex>
+        <VersionPrecision>4</VersionPrecision>
+      </FilesToVersion>
+      <FilesToVersion Include="$(LocalFolder)\Source\**\csproj.*" Exclude="$(LocalFolder)\Source\OldCode\**\*.*">
+        <VersionRegex>(?'BeforeVersion'%3CVersion%3E)(?'CoreVersion'(\*|\d+)\.)+(\*|\d+)(-beta)?(?'AfterVersion'%3C/Version%3E)</VersionRegex>
         <VersionPrecision>3</VersionPrecision>
         <VersionTag Condition="'$(PreRelease)' == 'true'">-beta</VersionTag>
       </FilesToVersion>
