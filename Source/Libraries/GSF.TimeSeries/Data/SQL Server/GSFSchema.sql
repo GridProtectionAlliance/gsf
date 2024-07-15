@@ -116,7 +116,7 @@ GO
 -- IMPORTANT NOTE: When making updates to this schema, please increment the version number!
 -- *******************************************************************************************
 CREATE VIEW [dbo].[SchemaVersion] AS
-SELECT 15 AS VersionNumber
+SELECT 16 AS VersionNumber
 GO
 
 SET ANSI_NULLS ON
@@ -1606,6 +1606,7 @@ CREATE TABLE [dbo].[AccessLog](
     [ID] [int] IDENTITY(1,1) NOT NULL,
     [UserName] [varchar](200) NOT NULL,
     [AccessGranted] [bit] NOT NULL,
+    [NodeID] [uniqueidentifier] NOT NULL,
     [CreatedOn] [datetime] NOT NULL CONSTRAINT [DF_AccessLog_Timestamp]  DEFAULT (getutcdate()),
  CONSTRAINT [PK_AccessLog] PRIMARY KEY CLUSTERED 
 (

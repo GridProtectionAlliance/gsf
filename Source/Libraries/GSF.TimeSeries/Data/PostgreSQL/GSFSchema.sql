@@ -36,7 +36,7 @@
 -- IMPORTANT NOTE: When making updates to this schema, please increment the version number!
 -- *******************************************************************************************
 CREATE VIEW SchemaVersion AS
-SELECT 15 AS VersionNumber;
+SELECT 16 AS VersionNumber;
 
 CREATE EXTENSION "uuid-ossp";
 
@@ -651,6 +651,7 @@ CREATE TABLE AccessLog (
     ID SERIAL NOT NULL PRIMARY KEY,
     UserName VARCHAR(200) NOT NULL,
     AccessGranted SMALLINT NOT NULL,	
+    NodeID NCHAR(36) NOT NULL,
     CreatedOn TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 

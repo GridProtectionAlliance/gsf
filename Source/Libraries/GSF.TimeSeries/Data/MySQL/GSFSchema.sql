@@ -38,7 +38,7 @@ USE GSFSchema;
 -- IMPORTANT NOTE: When making updates to this schema, please increment the version number!
 -- *******************************************************************************************
 CREATE VIEW SchemaVersion AS
-SELECT 15 AS VersionNumber;
+SELECT 16 AS VersionNumber;
 
 CREATE TABLE ErrorLog(
     ID INT AUTO_INCREMENT NOT NULL,
@@ -628,6 +628,7 @@ CREATE TABLE AccessLog (
     ID INT(11) NOT NULL AUTO_INCREMENT,
     UserName VARCHAR(200) NOT NULL,
     AccessGranted TINYINT NOT NULL,
+    NodeID NCHAR(36) NOT NULL,
     CreatedOn DATETIME NULL,
     CONSTRAINT PK_AccessLog PRIMARY KEY (ID ASC)
 );
