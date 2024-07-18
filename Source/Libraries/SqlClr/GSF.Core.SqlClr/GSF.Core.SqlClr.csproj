@@ -24,10 +24,7 @@
     <DefineConstants>TRACE;SQLCLR</DefineConstants>
   </PropertyGroup>
   <Import Project="..\..\GSF.Core.Shared\GSF.Core.Shared.projitems" Label="Shared" />
-  <Target Name="AfterBuildMigrated">
-    <CallTarget Targets="SignBuild" />
-  </Target>
-  <Target Name="SignBuild" Condition="'$(SIGNTOOL)' != ''">
+  <Target Name="SignBuild" Condition="'$(SIGNTOOL)' != ''" AfterTargets="Build">
     <Exec Command="$(SIGNTOOL) $(TargetPath)" />
   </Target>
   <ItemGroup>
