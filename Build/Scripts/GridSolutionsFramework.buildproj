@@ -126,15 +126,15 @@
       </FilesToVersion>
 
       <!--List of *.csproj files to be versioned.-->
-      <FilesToVersion Include="$(LocalFolder)\Source\**\csproj.*" Exclude="$(LocalFolder)\Source\OldCode\**\*.*">
+      <FilesToVersion Include="$(LocalFolder)\Source\**\*.csproj" Exclude="$(LocalFolder)\Source\OldCode\**\*.*">
         <VersionRegex>(?'BeforeVersion'%3CAssemblyVersion%3E)(?'CoreVersion'(\*|\d+)\.)+(\*|\d+)(?'AfterVersion'%3C/AssemblyVersion%3E)</VersionRegex>
         <VersionPrecision>4</VersionPrecision>
       </FilesToVersion>
-      <FilesToVersion Include="$(LocalFolder)\Source\**\csproj.*" Exclude="$(LocalFolder)\Source\OldCode\**\*.*">
+      <FilesToVersion Include="$(LocalFolder)\Source\**\*.csproj" Exclude="$(LocalFolder)\Source\OldCode\**\*.*">
         <VersionRegex>(?'BeforeVersion'%3CFileVersion%3E)(?'CoreVersion'(\*|\d+)\.)+(\*|\d+)(?'AfterVersion'%3C/FileVersion%3E)</VersionRegex>
         <VersionPrecision>4</VersionPrecision>
       </FilesToVersion>
-      <FilesToVersion Include="$(LocalFolder)\Source\**\csproj.*" Exclude="$(LocalFolder)\Source\OldCode\**\*.*">
+      <FilesToVersion Include="$(LocalFolder)\Source\**\*.csproj" Exclude="$(LocalFolder)\Source\OldCode\**\*.*">
         <VersionRegex>(?'BeforeVersion'%3CVersion%3E)(?'CoreVersion'(\*|\d+)\.)+(\*|\d+)(-beta)?(?'AfterVersion'%3C/Version%3E)</VersionRegex>
         <VersionPrecision>3</VersionPrecision>
         <VersionTag Condition="'$(PreRelease)' == 'true'">-beta</VersionTag>
