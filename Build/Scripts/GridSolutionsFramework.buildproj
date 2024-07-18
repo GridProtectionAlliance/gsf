@@ -225,9 +225,14 @@
     <!-- Create NuGet packages. -->
     <Message Text="Creating NuGet library packages..."/>
     <ItemGroup>
+      <!-- Manually add SDK projects targeted for NuGet packaging -->
+      <NuGetLibraries Include="$(LocalFolder)\Source\Libraries\GSF.Core\GSF.Core.csproj"/>
+      <NuGetLibraries Include="$(LocalFolder)\Source\Libraries\SqlClr\GSF.Core.SqlClr\GSF.Core.SqlClr.csproj"/>
+      <!-- Add nuspec definitions for NuGet packaging -->
       <NuGetLibraries Include="$(LocalFolder)\Source\Libraries\**\*.nuspec"/>
     </ItemGroup>
     <Exec Command="%22$(NuGet)%22 pack %22%(NuGetLibraries.RootDir)%(NuGetLibraries.Directory)%(NuGetLibraries.Filename).csproj%22 /Properties Configuration=$(BuildFlavor) /OutputDirectory %22$(NuGetPackagesFolder)%22" ContinueOnError="true"/>
+    
     <Message Text="Creating NuGet template packages..."/>
     <ItemGroup>
       <NuGetTemplates Include="$(LocalFolder)\Source\Templates\NuGet\**\*.nuspec"/>
