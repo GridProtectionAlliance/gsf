@@ -164,7 +164,7 @@ public class DNP3InputAdapter : InputAdapterBase
     public bool MapQualityToStateFlags { get; set; }
 
     /// <summary>
-    /// Gets or sets flag that determines if DNP3 quality flags should be added to measurement outputs.
+    /// Gets or sets flag that determines if DNP3 quality flags should be added as separate measurement outputs.
     /// </summary>
     // NOTE: Like value measurements, quality measurements are expected to be pre-defined outside the adapter, i.e., the
     // adapter does not currently auto-create tags. There is an external Python script that exists for this purpose.
@@ -174,7 +174,7 @@ public class DNP3InputAdapter : InputAdapterBase
     // be a variation of the value tag format with a suffix appended to the tag name, e.g., "<TagName><SignalType>!FLAGS".
     // In this current implementation, quality flags measurements are expected to be an analog signal type, i.e.: "ALOG".
     [ConnectionStringParameter]
-    [Description("Define flag that determines if DNP3 quality flags should be added to measurement outputs.")]
+    [Description("Define flag that determines if DNP3 quality flags should be added as separate measurement outputs.")]
     [DefaultValue(DefaultAddQualityToMeasurementOutputs)]
     public bool AddQualityToMeasurementOutputs { get; set; }
 
