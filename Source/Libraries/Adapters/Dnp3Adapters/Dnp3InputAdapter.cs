@@ -30,6 +30,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using Automatak.DNP3.Adapter;
 using Automatak.DNP3.Interface;
@@ -112,6 +113,9 @@ public class DNP3InputAdapter : InputAdapterBase
     private const double DefaultPollingInterval = 2.0D;
     private const double DefaultTimestampDifferentiation = 1.0D;
     private const bool DefaultMapQualityToStateFlags = true;
+    private const bool DefaultAddQualityToMeasurementOutputs = false;
+    private const string DefaultTagMatchPattern = @"(?<TagName>.+)(?<SignalType>\:(ALOG|DIGI))\d+";
+    private const string DefaultQualityTagSuffix = "!FLAGS";
 
     // Fields
     private TimeSpan m_pollingInterval;         // Interval, in seconds, at which the adapter will poll the DNP3 device
@@ -158,6 +162,37 @@ public class DNP3InputAdapter : InputAdapterBase
     [Description("Define flag that determines if DNP3 quality flags should be mapped to measurement state flags.")]
     [DefaultValue(DefaultMapQualityToStateFlags)]
     public bool MapQualityToStateFlags { get; set; }
+
+    /// <summary>
+    /// Gets or sets flag that determines if DNP3 quality flags should be added to measurement outputs.
+    /// </summary>
+    // NOTE: Like value measurements, quality measurements are expected to be pre-defined outside the adapter, i.e., the
+    // adapter does not currently auto-create tags. There is an external Python script that exists for this purpose.
+    // This flag is used to determine if the adapter should include DNP3 quality flags as part of the measurement outputs.
+    // The "TagMatchPattern" and "QualityTagSuffix" properties are used to determine the tag name for the quality flags.
+    // Generally, the value tag format is assumed to be "<TagName><SignalType>" and the quality tag format is assumed to
+    // be a variation of the value tag format with a suffix appended to the tag name, e.g., "<TagName><SignalType>!FLAGS".
+    // In this current implementation, quality flags measurements are expected to be an analog signal type, i.e.: "ALOG".
+    [ConnectionStringParameter]
+    [Description("Define flag that determines if DNP3 quality flags should be added to measurement outputs.")]
+    [DefaultValue(DefaultAddQualityToMeasurementOutputs)]
+    public bool AddQualityToMeasurementOutputs { get; set; }
+
+    /// <summary>
+    /// Gets or sets the regular expression pattern used to match tag names for quality flag outputs.
+    /// </summary>
+    [ConnectionStringParameter]
+    [Description("Define the regular expression pattern used to match tag names for quality flag outputs. Expects capture groups: \"TagName\" and \"SignalType\".")]
+    [DefaultValue(DefaultTagMatchPattern)]
+    public string TagMatchPattern { get; set; }
+
+    /// <summary>
+    /// Gets or sets the suffix to append to the tag name for DNP3 quality flag measurement outputs.
+    /// </summary>
+    [ConnectionStringParameter]
+    [Description("Define the suffix to append to the tag name for DNP3 quality flag measurement outputs.")]
+    [DefaultValue(DefaultQualityTagSuffix)]
+    public string QualityTagSuffix { get; set; }
 
     /// <summary>
     /// Gets or sets the time interval, in milliseconds, to insert between consecutive
@@ -288,8 +323,22 @@ public class DNP3InputAdapter : InputAdapterBase
         MeasurementMap measurementMap = ReadConfig<MeasurementMap>(MappingFilePath);
 
         MapQualityToStateFlags = !settings.TryGetValue(nameof(MapQualityToStateFlags), out setting) || setting.ParseBoolean();
+        AddQualityToMeasurementOutputs = settings.TryGetValue(nameof(AddQualityToMeasurementOutputs), out setting) && setting.ParseBoolean();
+        TagMatchPattern = settings.TryGetValue(nameof(TagMatchPattern), out setting) ? setting : DefaultTagMatchPattern;
 
-        MeasurementLookup measurementLookup = new(measurementMap) { MapQualityToStateFlags = MapQualityToStateFlags };
+        if (!TagMatchPattern.Contains("<TagName>") || !TagMatchPattern.Contains("<SignalType>"))
+            throw new ArgumentException($"The {nameof(TagMatchPattern)} must contain capture groups for \"TagName\" and \"SignalType\"");
+
+        QualityTagSuffix = settings.TryGetValue(nameof(QualityTagSuffix), out setting) ? setting : DefaultQualityTagSuffix;
+
+        MeasurementLookup measurementLookup = new(measurementMap)
+        {
+            GetDataSource = () => DataSource,
+            MapQualityToStateFlags = MapQualityToStateFlags,
+            AddQualityToMeasurementOutputs = AddQualityToMeasurementOutputs,
+            TagMatchRegex = new Regex(TagMatchPattern, RegexOptions.Compiled),
+            QualityTagSuffix = QualityTagSuffix
+        };
 
         m_soeHandler = new TimeSeriesSOEHandler(measurementLookup);
         m_soeHandler.NewMeasurements += OnNewMeasurements;

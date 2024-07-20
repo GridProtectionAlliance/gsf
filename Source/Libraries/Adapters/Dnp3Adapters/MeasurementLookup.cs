@@ -26,9 +26,16 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Text.RegularExpressions;
 using Automatak.DNP3.Interface;
 using GSF;
+using GSF.Collections;
+using GSF.Diagnostics;
 using GSF.TimeSeries;
+using GSF.TimeSeries.Data;
+using Measurement = GSF.TimeSeries.Measurement;
 
 namespace DNP3Adapters;
 
@@ -37,15 +44,24 @@ namespace DNP3Adapters;
 /// </summary>
 internal class MeasurementLookup
 {
-    private readonly Dictionary<uint, Mapping> m_binaryMap = new();
-    private readonly Dictionary<uint, Mapping> m_analogMap = new();
-    private readonly Dictionary<uint, Mapping> m_counterMap = new();
-    private readonly Dictionary<uint, Mapping> m_frozenCounterMap = new();
-    private readonly Dictionary<uint, Mapping> m_controlStatusMap = new();
-    private readonly Dictionary<uint, Mapping> m_setpointStatusMap = new();
-    private readonly Dictionary<uint, Mapping> m_doubleBitBinaryMap = new();
+    private readonly Dictionary<uint, Mapping> m_binaryMap = [];
+    private readonly Dictionary<uint, Mapping> m_analogMap = [];
+    private readonly Dictionary<uint, Mapping> m_counterMap = [];
+    private readonly Dictionary<uint, Mapping> m_frozenCounterMap = [];
+    private readonly Dictionary<uint, Mapping> m_controlStatusMap = [];
+    private readonly Dictionary<uint, Mapping> m_setpointStatusMap = [];
+    private readonly Dictionary<uint, Mapping> m_doubleBitBinaryMap = [];
+    private readonly Dictionary<MeasurementKey, MeasurementKey> m_tagQualityMap = [];
+
+    public Func<DataSet> GetDataSource { get; init; }
 
     public bool MapQualityToStateFlags { get; init; }
+
+    public bool AddQualityToMeasurementOutputs { get; init; }
+
+    public Regex TagMatchRegex { get; init; }
+
+    public string QualityTagSuffix { get; init; }
 
     public MeasurementLookup(MeasurementMap map)
     {
@@ -318,6 +334,95 @@ internal class MeasurementLookup
         }
     }
 
+    private void GenericLookup<T>
+    (
+        T typedMeasurement, 
+        uint index, 
+        Dictionary<uint, Mapping> map, 
+        Func<T, uint, string, Measurement> converter, 
+        Action<IMeasurement> action
+    )
+    where T : MeasurementBase
+    {
+        if (!map.TryGetValue(index, out Mapping id))
+            return;
+        
+        Measurement measurement = converter(typedMeasurement, id.tsfId, id.tsfSource);
+        action(measurement);
+
+        MeasurementKey valueKey = measurement.Key;
+
+        if (valueKey is null || !AddQualityToMeasurementOutputs)
+            return;
+
+        // Process quality flags as an output measurement - we cache these results since
+        // metadata lookups can be expensive, and we don't want to repeat this process
+        MeasurementKey qualityKey = m_tagQualityMap.GetOrAdd(valueKey, _ =>
+        {
+            // The goal here is to look up the associated quality measurement metadata based on the
+            // DNP3 value measurement tag name. This assumes that the quality measurement tag name
+            // format is a variation of the value measurement tag name with a suffix appended to it.
+            //
+            // For example:
+            //       Value Tag Name: DEVICEA!DNP3-BAJO-ACME_500KV_MVAR#1:ALOG2
+            //     Quality Tag Name: DEVICEA!DNP3-BAJO-ACME_500KV_MVAR#1!FLAGS:ALOG3
+            // 
+            //       Value Tag Name: DEVICEB!DNP3-BUS2_BREAKER_STATE#10:DIGI1
+            //     Quality Tag Name: DEVICEB!DNP3-BUS2_BREAKER_STATE#10!FLAGS:ALOG4
+            try
+            {
+                DataSet dataSource = GetDataSource();
+
+                // Look up metadata for the DNP3 measurement value
+                DataRow record = dataSource?.LookupMetadata(valueKey.SignalID);
+
+                if (record is null)
+                    return MeasurementKey.Undefined;
+
+                // Verify point tag matches expected format
+                string pointTag = record["PointTag"].ToString();
+                Match match = TagMatchRegex.Match(pointTag);
+
+                if (!match.Success)
+                    return MeasurementKey.Undefined;
+
+                // Get root tag name from DNP3 measurement value point tag
+                string rootTagName = match.Groups["TagName"].Value;
+
+                // All flag measurements should be analog, so replace DIGI with ALOG
+                string signalType = match.Groups["SignalType"].Value.Replace("DIGI", "ALOG");
+
+                // Generate point tag lookup expression for DNP3 quality measurement (can't predict index)
+                string qualityTagName = $"{rootTagName}{QualityTagSuffix}{signalType}%";
+
+                // Attempt to look up quality measurement metadata
+                record = dataSource.Tables["ActiveMeasurements"].Select($"PointTag LIKE '{qualityTagName}'").FirstOrDefault();
+
+                if (record is not null && Guid.TryParse(record["SignalID"].ToNonNullString(), out Guid signalID))
+                    return MeasurementKey.LookUpBySignalID(signalID);
+            }
+            catch (Exception ex)
+            {
+                Logger.SwallowException(ex);
+            }
+
+            return MeasurementKey.Undefined;
+        });
+
+        // Undefined response indicates that the quality key was not found - also verify that
+        // quality key is not the same as the original measurement value key as a safety check
+        if (qualityKey == MeasurementKey.Undefined || qualityKey == valueKey)
+            return;
+
+        action(new Measurement
+        {
+            Metadata = qualityKey.Metadata,
+            Value = typedMeasurement.Quality.Value,
+            Timestamp = measurement.Timestamp,
+            StateFlags = MeasurementStateFlags.Normal
+        });
+    }
+
     private static MeasurementStateFlags MapCommonStateFlags(byte qualityFlags)
     {
         const byte ONLINE = (byte)Bits.Bit00;
@@ -345,11 +450,5 @@ internal class MeasurementLookup
             stateFlags |= MeasurementStateFlags.WarningLow;
 
         return stateFlags;
-    }
-
-    private static void GenericLookup<T>(T measurement, uint index, Dictionary<uint, Mapping> map, Func<T, uint, string, Measurement> converter, Action<IMeasurement> action)
-    {
-        if (map.TryGetValue(index, out Mapping id))
-            action(converter(measurement, id.tsfId, id.tsfSource));
     }
 }
