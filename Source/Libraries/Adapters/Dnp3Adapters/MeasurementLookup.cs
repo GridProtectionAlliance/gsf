@@ -22,166 +22,334 @@
 //       Modified Header.
 //
 //******************************************************************************************************
+// ReSharper disable InconsistentNaming
 
 using System;
 using System.Collections.Generic;
 using Automatak.DNP3.Interface;
+using GSF;
 using GSF.TimeSeries;
 
-namespace DNP3Adapters
+namespace DNP3Adapters;
+
+/// <summary>
+/// Helper class that converts measurements and provides a lookup capability.
+/// </summary>
+internal class MeasurementLookup
 {
-    /// <summary>
-    /// Helper class that converts measurements and provides a lookup capability.
-    /// </summary>
-    class MeasurementLookup
+    private readonly Dictionary<uint, Mapping> m_binaryMap = new();
+    private readonly Dictionary<uint, Mapping> m_analogMap = new();
+    private readonly Dictionary<uint, Mapping> m_counterMap = new();
+    private readonly Dictionary<uint, Mapping> m_frozenCounterMap = new();
+    private readonly Dictionary<uint, Mapping> m_controlStatusMap = new();
+    private readonly Dictionary<uint, Mapping> m_setpointStatusMap = new();
+    private readonly Dictionary<uint, Mapping> m_doubleBitBinaryMap = new();
+
+    public bool MapQualityToStateFlags { get; init; }
+
+    public MeasurementLookup(MeasurementMap map)
     {
-        public MeasurementLookup(MeasurementMap map)
-        {
-            map.binaryMap.ForEach(mapping => binaryMap.Add(mapping.dnpIndex, mapping));
-            map.analogMap.ForEach(mapping => analogMap.Add(mapping.dnpIndex, mapping));
-            map.counterMap.ForEach(mapping => counterMap.Add(mapping.dnpIndex, mapping));
-            map.frozenCounterMap.ForEach(mapping => frozenCounterMap.Add(mapping.dnpIndex, mapping));
-            map.controlStatusMap.ForEach(mapping => controlStatusMap.Add(mapping.dnpIndex, mapping));
-            map.setpointStatusMap.ForEach(mapping => setpointStatusMap.Add(mapping.dnpIndex, mapping));
-            map.doubleBitBinaryMap.ForEach(mapping => doubleBitBinaryMap.Add(mapping.dnpIndex, mapping));
-        }
+        map.binaryMap.ForEach(mapping => m_binaryMap.Add(mapping.dnpIndex, mapping));
+        map.analogMap.ForEach(mapping => m_analogMap.Add(mapping.dnpIndex, mapping));
+        map.counterMap.ForEach(mapping => m_counterMap.Add(mapping.dnpIndex, mapping));
+        map.frozenCounterMap.ForEach(mapping => m_frozenCounterMap.Add(mapping.dnpIndex, mapping));
+        map.controlStatusMap.ForEach(mapping => m_controlStatusMap.Add(mapping.dnpIndex, mapping));
+        map.setpointStatusMap.ForEach(mapping => m_setpointStatusMap.Add(mapping.dnpIndex, mapping));
+        map.doubleBitBinaryMap.ForEach(mapping => m_doubleBitBinaryMap.Add(mapping.dnpIndex, mapping));
+    }
 
-        public void Lookup(Binary measurement, ushort index, Action<IMeasurement> action)
-        {
-            GenericLookup(measurement, index, binaryMap, ConvertBinary, action);
-        }
+    public void Lookup(Binary measurement, ushort index, Action<IMeasurement> action)
+    {
+        GenericLookup(measurement, index, m_binaryMap, ConvertBinary, action);
+    }
 
-        public void Lookup(DoubleBitBinary measurement, ushort index, Action<IMeasurement> action)
-        {
-            GenericLookup(measurement, index, doubleBitBinaryMap, ConvertDoubleBinary, action);
-        }
+    public void Lookup(DoubleBitBinary measurement, ushort index, Action<IMeasurement> action)
+    {
+        GenericLookup(measurement, index, m_doubleBitBinaryMap, ConvertDoubleBitBinary, action);
+    }
 
-        public void Lookup(Analog measurement, ushort index, Action<IMeasurement> action)
-        {
-            GenericLookup(measurement, index, analogMap, ConvertAnalog, action);
-        }
+    public void Lookup(Analog measurement, ushort index, Action<IMeasurement> action)
+    {
+        GenericLookup(measurement, index, m_analogMap, ConvertAnalog, action);
+    }
 
-        public void Lookup(Counter measurement, ushort index, Action<IMeasurement> action)
-        {
-            GenericLookup(measurement, index, counterMap, ConvertCounter, action);
-        }
+    public void Lookup(Counter measurement, ushort index, Action<IMeasurement> action)
+    {
+        GenericLookup(measurement, index, m_counterMap, ConvertCounter, action);
+    }
 
-        public void Lookup(FrozenCounter measurement, ushort index, Action<IMeasurement> action)
-        {
-            GenericLookup(measurement, index, frozenCounterMap, ConvertFrozenCounter, action);
-        }
+    public void Lookup(FrozenCounter measurement, ushort index, Action<IMeasurement> action)
+    {
+        GenericLookup(measurement, index, m_frozenCounterMap, ConvertFrozenCounter, action);
+    }
 
-        public void Lookup(BinaryOutputStatus measurement, ushort index, Action<IMeasurement> action)
-        {
-            GenericLookup(measurement, index, controlStatusMap, ConvertBinaryOutputStatus, action);
-        }
+    public void Lookup(BinaryOutputStatus measurement, ushort index, Action<IMeasurement> action)
+    {
+        GenericLookup(measurement, index, m_controlStatusMap, ConvertBinaryOutputStatus, action);
+    }
 
-        public void Lookup(AnalogOutputStatus measurement, ushort index, Action<IMeasurement> action)
-        {
-            GenericLookup(measurement, index, setpointStatusMap, ConvertAnalogOutputStatus, action);
-        }
+    public void Lookup(AnalogOutputStatus measurement, ushort index, Action<IMeasurement> action)
+    {
+        GenericLookup(measurement, index, m_setpointStatusMap, ConvertAnalogOutputStatus, action);
+    }
 
-        private Measurement ConvertBinary(Binary measurement, uint id, string source)
+    private Measurement ConvertBinary(Binary measurement, uint id, string source)
+    {
+        return new Measurement
         {
-            return new Measurement
+            Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata,
+            Value = measurement.Value ? 1.0 : 0.0,
+            Timestamp = measurement.Timestamp.Value,
+            StateFlags = deriveStateFlags()
+        };
+
+        MeasurementStateFlags deriveStateFlags()
+        {
+            if (!MapQualityToStateFlags)
+                return MeasurementStateFlags.Normal;
+
+            Flags qualityFlags = measurement.Quality;
+            MeasurementStateFlags stateFlags = MapCommonStateFlags(qualityFlags.Value);
+
+            if (qualityFlags.IsSet(BinaryQuality.CHATTER_FILTER))
+                stateFlags |= MeasurementStateFlags.SuspectData;
+
+            if (qualityFlags.IsSet(BinaryQuality.RESERVED))
+                stateFlags |= MeasurementStateFlags.UserDefinedFlag1;
+
+            if (qualityFlags.IsSet(BinaryQuality.STATE))
+                stateFlags |= MeasurementStateFlags.AlarmHigh;
+
+            return stateFlags;
+        }
+    }
+
+    private Measurement ConvertDoubleBitBinary(DoubleBitBinary measurement, uint id, string source)
+    {
+        Measurement convertedMeasurement = new()
+        {
+            Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata,
+            Timestamp = measurement.Timestamp.Value,
+            StateFlags = deriveStateFlags(),
+            Value = measurement.Value switch
             {
-                Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata,
-                Value = measurement.Value ? 1.0 : 0.0,
-                Timestamp = measurement.Timestamp.Value
-            };
-        }
-
-        private Measurement ConvertDoubleBinary(DoubleBitBinary measurement, uint id, string source)
-        {
-            Measurement convertedMeasurement = new Measurement
-            {
-                Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata,
-                Timestamp = measurement.Timestamp.Value
-            };
-            
-            switch (measurement.Value)
-            {
-                case DoubleBit.INDETERMINATE:
-                    convertedMeasurement.Value = 0.0D;
-                    break;
-                case DoubleBit.DETERMINED_OFF:
-                    convertedMeasurement.Value = 1.0D;
-                    break;
-                case DoubleBit.DETERMINED_ON:
-                    convertedMeasurement.Value = 2.0D;
-                    break;
-                default:
-                    convertedMeasurement.Value = 3.0D;
-                    break;
+                DoubleBit.INDETERMINATE => 0.0D,
+                DoubleBit.DETERMINED_OFF => 1.0D,
+                DoubleBit.DETERMINED_ON => 2.0D,
+                _ => 3.0D
             }
-            
-            return convertedMeasurement;
-        }
+        };
 
-        private Measurement ConvertAnalog(Analog measurement, uint id, string source)
+        return convertedMeasurement;
+
+        MeasurementStateFlags deriveStateFlags()
         {
-            return new Measurement
-            {
-                Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata,
-                Value = measurement.Value,
-                Timestamp = measurement.Timestamp.Value
-            };
-        }
+            if (!MapQualityToStateFlags)
+                return MeasurementStateFlags.Normal;
 
-        private Measurement ConvertCounter(Counter measurement, uint id, string source)
+            Flags qualityFlags = measurement.Quality;
+            MeasurementStateFlags stateFlags = MapCommonStateFlags(qualityFlags.Value);
+
+            if (qualityFlags.IsSet(DoubleBitBinaryQuality.CHATTER_FILTER))
+                stateFlags |= MeasurementStateFlags.SuspectData;
+
+            if (qualityFlags.IsSet(DoubleBitBinaryQuality.STATE1))
+                stateFlags |= MeasurementStateFlags.AlarmHigh;
+
+            if (!qualityFlags.IsSet(DoubleBitBinaryQuality.STATE2))
+                stateFlags |= MeasurementStateFlags.AlarmLow;
+
+            return stateFlags;
+        }
+    }
+
+    private Measurement ConvertAnalog(Analog measurement, uint id, string source)
+    {
+        return new Measurement
         {
-            return new Measurement
-            {
-               Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata,
-               Value = measurement.Value,
-               Timestamp = measurement.Timestamp.Value
-            };
-        }
+            Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata,
+            Value = measurement.Value,
+            Timestamp = measurement.Timestamp.Value,
+            StateFlags = deriveStateFlags()
+        };
 
-        private Measurement ConvertFrozenCounter(FrozenCounter measurement, uint id, string source)
+        MeasurementStateFlags deriveStateFlags()
         {
-            return new Measurement
-            {
-                Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata,
-                Value = measurement.Value,
-                Timestamp = measurement.Timestamp.Value
-            };
-        }
+            if (!MapQualityToStateFlags)
+                return MeasurementStateFlags.Normal;
 
-        private Measurement ConvertBinaryOutputStatus(BinaryOutputStatus measurement, uint id, string source)
+            Flags qualityFlags = measurement.Quality;
+            MeasurementStateFlags stateFlags = MapCommonStateFlags(qualityFlags.Value);
+
+            if (qualityFlags.IsSet(AnalogQuality.OVERRANGE))
+                stateFlags |= MeasurementStateFlags.OverRangeError;
+
+            if (qualityFlags.IsSet(AnalogQuality.REFERENCE_ERR))
+                stateFlags |= MeasurementStateFlags.MeasurementError;
+
+            if (qualityFlags.IsSet(AnalogQuality.RESERVED))
+                stateFlags |= MeasurementStateFlags.UserDefinedFlag1;
+
+            return stateFlags;
+        }
+    }
+
+    private Measurement ConvertCounter(Counter measurement, uint id, string source)
+    {
+        return new Measurement
         {
-            return new Measurement 
-            {
-                Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata,
-                Value = measurement.Value ? 1.0D : 0.0D,
-                Timestamp = measurement.Timestamp.Value
-            };
-        }
+            Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata,
+            Value = measurement.Value,
+            Timestamp = measurement.Timestamp.Value,
+            StateFlags = deriveStateFlags()
+        };
 
-        private Measurement ConvertAnalogOutputStatus(AnalogOutputStatus measurement, uint id, string source)
+        MeasurementStateFlags deriveStateFlags()
         {
-            return new Measurement
-            {
-                Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata,
-                Value = measurement.Value,
-                Timestamp = measurement.Timestamp.Value
-            };
-        }
+            if (!MapQualityToStateFlags)
+                return MeasurementStateFlags.Normal;
 
-        private static void GenericLookup<T>(T measurement, uint index, Dictionary<uint, Mapping> map, Func<T, uint, string, Measurement> converter, Action<IMeasurement> action)
+            Flags qualityFlags = measurement.Quality;
+            MeasurementStateFlags stateFlags = MapCommonStateFlags(qualityFlags.Value);
+
+            if (qualityFlags.IsSet(CounterQuality.ROLLOVER))
+                stateFlags |= MeasurementStateFlags.OverRangeError;
+
+            if (qualityFlags.IsSet(CounterQuality.DISCONTINUITY))
+                stateFlags |= MeasurementStateFlags.DiscardedValue;
+
+            if (qualityFlags.IsSet(CounterQuality.RESERVED))
+                stateFlags |= MeasurementStateFlags.UserDefinedFlag1;
+
+            return stateFlags;
+        }
+    }
+
+    private Measurement ConvertFrozenCounter(FrozenCounter measurement, uint id, string source)
+    {
+        return new Measurement
         {
-            if (map.TryGetValue(index, out Mapping id))
-            {
-                action(converter(measurement, id.tsfId, id.tsfSource));
-            }
-        }
+            Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata,
+            Value = measurement.Value,
+            Timestamp = measurement.Timestamp.Value,
+            StateFlags = deriveStateFlags()
+        };
 
-        private readonly Dictionary<uint, Mapping> binaryMap = new Dictionary<uint, Mapping>();
-        private readonly Dictionary<uint, Mapping> analogMap = new Dictionary<uint, Mapping>();
-        private readonly Dictionary<uint, Mapping> counterMap = new Dictionary<uint, Mapping>();
-        private readonly Dictionary<uint, Mapping> frozenCounterMap = new Dictionary<uint, Mapping>();
-        private readonly Dictionary<uint, Mapping> controlStatusMap = new Dictionary<uint, Mapping>();
-        private readonly Dictionary<uint, Mapping> setpointStatusMap = new Dictionary<uint, Mapping>();
-        private readonly Dictionary<uint, Mapping> doubleBitBinaryMap = new Dictionary<uint, Mapping>();
+        MeasurementStateFlags deriveStateFlags()
+        {
+            if (!MapQualityToStateFlags)
+                return MeasurementStateFlags.Normal;
+
+            Flags qualityFlags = measurement.Quality;
+            MeasurementStateFlags stateFlags = MapCommonStateFlags(qualityFlags.Value);
+
+            if (qualityFlags.IsSet(FrozenCounterQuality.ROLLOVER))
+                stateFlags |= MeasurementStateFlags.OverRangeError;
+
+            if (qualityFlags.IsSet(FrozenCounterQuality.DISCONTINUITY))
+                stateFlags |= MeasurementStateFlags.DiscardedValue;
+
+            if (qualityFlags.IsSet(FrozenCounterQuality.RESERVED))
+                stateFlags |= MeasurementStateFlags.UserDefinedFlag1;
+
+            return stateFlags;
+        }
+    }
+
+    private Measurement ConvertBinaryOutputStatus(BinaryOutputStatus measurement, uint id, string source)
+    {
+        return new Measurement 
+        {
+            Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata,
+            Value = measurement.Value ? 1.0D : 0.0D,
+            Timestamp = measurement.Timestamp.Value,
+            StateFlags = deriveStateFlags()
+        };
+
+        MeasurementStateFlags deriveStateFlags()
+        {
+            if (!MapQualityToStateFlags)
+                return MeasurementStateFlags.Normal;
+
+            Flags qualityFlags = measurement.Quality;
+            MeasurementStateFlags stateFlags = MapCommonStateFlags(qualityFlags.Value);
+
+            if (qualityFlags.IsSet(BinaryOutputStatusQuality.RESERVED1))
+                stateFlags |= MeasurementStateFlags.UserDefinedFlag1;
+
+            if (qualityFlags.IsSet(BinaryOutputStatusQuality.RESERVED2))
+                stateFlags |= MeasurementStateFlags.UserDefinedFlag2;
+
+            if (qualityFlags.IsSet(BinaryOutputStatusQuality.STATE))
+                stateFlags |= MeasurementStateFlags.AlarmHigh;
+
+            return stateFlags;
+        }
+    }
+
+    private Measurement ConvertAnalogOutputStatus(AnalogOutputStatus measurement, uint id, string source)
+    {
+        return new Measurement
+        {
+            Metadata = MeasurementKey.LookUpOrCreate(source, id).Metadata,
+            Value = measurement.Value,
+            Timestamp = measurement.Timestamp.Value,
+            StateFlags = deriveStateFlags()
+        };
+
+        MeasurementStateFlags deriveStateFlags()
+        {
+            if (!MapQualityToStateFlags)
+                return MeasurementStateFlags.Normal;
+
+            Flags qualityFlags = measurement.Quality;
+            MeasurementStateFlags stateFlags = MapCommonStateFlags(qualityFlags.Value);
+
+            if (qualityFlags.IsSet(AnalogOutputStatusQuality.OVERRANGE))
+                stateFlags |= MeasurementStateFlags.OverRangeError;
+
+            if (qualityFlags.IsSet(AnalogOutputStatusQuality.REFERENCE_ERR))
+                stateFlags |= MeasurementStateFlags.MeasurementError;
+
+            if (qualityFlags.IsSet(AnalogOutputStatusQuality.RESERVED))
+                stateFlags |= MeasurementStateFlags.UserDefinedFlag1;
+
+            return stateFlags;
+        }
+    }
+
+    private static MeasurementStateFlags MapCommonStateFlags(byte qualityFlags)
+    {
+        const byte ONLINE = (byte)Bits.Bit00;
+        const byte RESTART = (byte)Bits.Bit01;
+        const byte COMM_LOST = (byte)Bits.Bit02;
+        const byte REMOTE_FORCED = (byte)Bits.Bit03;
+        const byte LOCAL_FORCED = (byte)Bits.Bit04;
+
+        MeasurementStateFlags stateFlags = MeasurementStateFlags.Normal;
+
+        // The following bit flags are shared by all DNP3 quality flags
+        if ((qualityFlags & ONLINE) == 0) // 0 == NOT ONLINE
+            stateFlags |= MeasurementStateFlags.BadData;
+
+        if ((qualityFlags & RESTART) > 0)
+            stateFlags |= MeasurementStateFlags.FlatlineAlarm;
+
+        if ((qualityFlags & COMM_LOST) > 0)
+            stateFlags |= MeasurementStateFlags.ReceivedAsBad;
+
+        if ((qualityFlags & REMOTE_FORCED) > 0)
+            stateFlags |= MeasurementStateFlags.WarningHigh;
+
+        if ((qualityFlags & LOCAL_FORCED) > 0)
+            stateFlags |= MeasurementStateFlags.WarningLow;
+
+        return stateFlags;
+    }
+
+    private static void GenericLookup<T>(T measurement, uint index, Dictionary<uint, Mapping> map, Func<T, uint, string, Measurement> converter, Action<IMeasurement> action)
+    {
+        if (map.TryGetValue(index, out Mapping id))
+            action(converter(measurement, id.tsfId, id.tsfSource));
     }
 }

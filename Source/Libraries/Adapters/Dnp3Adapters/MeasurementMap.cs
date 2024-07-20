@@ -22,92 +22,92 @@
 //       Modified Header. 
 //
 //******************************************************************************************************
+// ReSharper disable InconsistentNaming
 
 using System.Collections.Generic;
 
-namespace DNP3Adapters
+namespace DNP3Adapters;
+
+/// <summary>
+/// Mapping
+/// </summary>
+public class Mapping
 {
     /// <summary>
-    /// Mapping
+    /// Creates a new <see cref="Mapping"/>.
     /// </summary>
-    public class Mapping
+    public Mapping()
     {
-        /// <summary>
-        /// Creates a new <see cref="Mapping"/>.
-        /// </summary>
-        public Mapping()
-        {
-            tsfId = 0;
-            dnpIndex = 0;
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="Mapping"/> with the specified parameters.
-        /// </summary>
-        /// <param name="id">ID</param>
-        /// <param name="source">Source</param>
-        /// <param name="index">Index</param>
-        public Mapping(uint id, string source, uint index)
-        {
-            tsfId = id;
-            tsfSource = source;
-            dnpIndex = index;
-        }
-
-        /// <summary>
-        /// TSF ID
-        /// </summary>
-        public uint tsfId;
-
-        /// <summary>
-        /// TSF Source
-        /// </summary>
-        public string tsfSource;        
-        
-        /// <summary>
-        /// DNP Index
-        /// </summary>
-        public uint dnpIndex;
+        tsfId = 0;
+        dnpIndex = 0;
     }
 
     /// <summary>
-    /// Measurement Map
+    /// Creates a new <see cref="Mapping"/> with the specified parameters.
     /// </summary>
-    public class MeasurementMap
+    /// <param name="id">ID</param>
+    /// <param name="source">Source</param>
+    /// <param name="index">Index</param>
+    public Mapping(uint id, string source, uint index)
     {
-        /// <summary>
-        /// Binary Map
-        /// </summary>
-        public List<Mapping> binaryMap = new List<Mapping>();
-        
-        /// <summary>
-        /// Analog Map
-        /// </summary>
-        public List<Mapping> analogMap = new List<Mapping>();
-        
-        /// <summary>
-        /// Counter Map
-        /// </summary>
-        public List<Mapping> counterMap = new List<Mapping>();
-
-        /// <summary>
-        /// Frozen Counter Map
-        /// </summary>
-        public List<Mapping> frozenCounterMap = new List<Mapping>();
-
-        /// <summary>
-        /// double bit binary map
-        /// </summary>
-        public List<Mapping> doubleBitBinaryMap = new List<Mapping>();
-        
-        /// <summary>
-        /// Control Status Map
-        /// </summary>
-        public List<Mapping> controlStatusMap = new List<Mapping>();
-        
-        /// <summary>
-        /// Set Point Status Map
-        /// </summary>
-        public List<Mapping> setpointStatusMap = new List<Mapping>();
+        tsfId = id;
+        tsfSource = source;
+        dnpIndex = index;
     }
+
+    /// <summary>
+    /// TSF ID
+    /// </summary>
+    public uint tsfId;
+
+    /// <summary>
+    /// TSF Source
+    /// </summary>
+    public string tsfSource;        
+        
+    /// <summary>
+    /// DNP Index
+    /// </summary>
+    public uint dnpIndex;
+}
+
+/// <summary>
+/// Measurement Map
+/// </summary>
+public class MeasurementMap
+{
+    /// <summary>
+    /// Binary Map
+    /// </summary>
+    public List<Mapping> binaryMap = [];
+        
+    /// <summary>
+    /// Analog Map
+    /// </summary>
+    public List<Mapping> analogMap = [];
+        
+    /// <summary>
+    /// Counter Map
+    /// </summary>
+    public List<Mapping> counterMap = [];
+
+    /// <summary>
+    /// Frozen Counter Map
+    /// </summary>
+    public List<Mapping> frozenCounterMap = [];
+
+    /// <summary>
+    /// double bit binary map
+    /// </summary>
+    public List<Mapping> doubleBitBinaryMap = [];
+        
+    /// <summary>
+    /// Control Status Map
+    /// </summary>
+    public List<Mapping> controlStatusMap = [];
+        
+    /// <summary>
+    /// Set Point Status Map
+    /// </summary>
+    public List<Mapping> setpointStatusMap = [];
 }
