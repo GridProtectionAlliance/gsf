@@ -57,7 +57,7 @@ internal class MeasurementLookup
 
     public bool MapQualityToStateFlags { get; init; }
 
-    public bool AddQualityToMeasurementOutputs { get; init; }
+    public bool PublishFlagsAsSeparateMeasurements { get; init; }
 
     public Regex TagMatchRegex { get; init; }
 
@@ -352,7 +352,7 @@ internal class MeasurementLookup
 
         MeasurementKey valueKey = measurement.Key;
 
-        if (valueKey is null || !AddQualityToMeasurementOutputs)
+        if (valueKey is null || !PublishFlagsAsSeparateMeasurements)
             return;
 
         // Process quality flags as an output measurement - we cache these results since

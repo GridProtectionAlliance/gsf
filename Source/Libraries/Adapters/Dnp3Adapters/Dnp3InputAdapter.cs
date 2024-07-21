@@ -113,7 +113,7 @@ public class DNP3InputAdapter : InputAdapterBase
     private const double DefaultPollingInterval = 2.0D;
     private const double DefaultTimestampDifferentiation = 1.0D;
     private const bool DefaultMapQualityToStateFlags = true;
-    private const bool DefaultAddQualityToMeasurementOutputs = false;
+    private const bool DefaultPublishFlagsAsSeparateMeasurements = false;
     private const string DefaultTagMatchPattern = @"(?<TagName>.+)(?<SignalType>\:(ALOG|DIGI))\d+";
     private const string DefaultQualityTagSuffix = "!FLAGS";
 
@@ -164,7 +164,7 @@ public class DNP3InputAdapter : InputAdapterBase
     public bool MapQualityToStateFlags { get; set; }
 
     /// <summary>
-    /// Gets or sets flag that determines if DNP3 quality flags should be added as separate measurement outputs.
+    /// Gets or sets flag that determines if DNP3 quality flags should be published as separate measurement outputs.
     /// </summary>
     // NOTE: Like value measurements, quality measurements are expected to be pre-defined outside the adapter, i.e., the
     // adapter does not currently auto-create tags. There is an external Python script that exists for this purpose.
@@ -174,9 +174,9 @@ public class DNP3InputAdapter : InputAdapterBase
     // be a variation of the value tag format with a suffix appended to the tag name, e.g., "<TagName><SignalType>!FLAGS".
     // In this current implementation, quality flags measurements are expected to be an analog signal type, i.e.: "ALOG".
     [ConnectionStringParameter]
-    [Description("Define flag that determines if DNP3 quality flags should be added as separate measurement outputs.")]
-    [DefaultValue(DefaultAddQualityToMeasurementOutputs)]
-    public bool AddQualityToMeasurementOutputs { get; set; }
+    [Description("Define flag that determines if DNP3 quality flags should be published as separate measurement outputs.")]
+    [DefaultValue(DefaultPublishFlagsAsSeparateMeasurements)]
+    public bool PublishFlagsAsSeparateMeasurements { get; set; }
 
     /// <summary>
     /// Gets or sets the regular expression pattern used to match tag names for quality flag outputs.
@@ -323,7 +323,7 @@ public class DNP3InputAdapter : InputAdapterBase
         MeasurementMap measurementMap = ReadConfig<MeasurementMap>(MappingFilePath);
 
         MapQualityToStateFlags = !settings.TryGetValue(nameof(MapQualityToStateFlags), out setting) || setting.ParseBoolean();
-        AddQualityToMeasurementOutputs = settings.TryGetValue(nameof(AddQualityToMeasurementOutputs), out setting) && setting.ParseBoolean();
+        PublishFlagsAsSeparateMeasurements = settings.TryGetValue(nameof(PublishFlagsAsSeparateMeasurements), out setting) && setting.ParseBoolean();
         TagMatchPattern = settings.TryGetValue(nameof(TagMatchPattern), out setting) ? setting : DefaultTagMatchPattern;
 
         if (!TagMatchPattern.Contains("<TagName>") || !TagMatchPattern.Contains("<SignalType>"))
@@ -335,7 +335,7 @@ public class DNP3InputAdapter : InputAdapterBase
         {
             GetDataSource = () => DataSource,
             MapQualityToStateFlags = MapQualityToStateFlags,
-            AddQualityToMeasurementOutputs = AddQualityToMeasurementOutputs,
+            PublishFlagsAsSeparateMeasurements = PublishFlagsAsSeparateMeasurements,
             TagMatchRegex = new Regex(TagMatchPattern, RegexOptions.Compiled),
             QualityTagSuffix = QualityTagSuffix
         };
