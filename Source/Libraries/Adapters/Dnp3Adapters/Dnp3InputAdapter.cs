@@ -118,11 +118,11 @@ public class DNP3InputAdapter : InputAdapterBase
     private const string DefaultQualityTagSuffix = "!FLAGS";
 
     // Fields
-    private TimeSpan m_pollingInterval;         // Interval, in seconds, at which the adapter will poll the DNP3 device
+    private TimeSpan m_pollingInterval; // Interval, in seconds, at which the adapter will poll the DNP3 device
     private MasterConfiguration m_masterConfig; // Configuration for the master set during the Initialize call
-    private TimeSeriesSOEHandler m_soeHandler;  // Time-series sequence of events handler
-    private IChannel m_channel;                 // Communications channel set during the AttemptConnection call and used in AttemptDisconnect
-    private bool m_active;                      // Flag that determines if the port/master has been added so that the resource can be cleaned up
+    private TimeSeriesSOEHandler m_soeHandler; // Time-series sequence of events handler
+    private IChannel m_channel; // Communications channel set during the AttemptConnection call and used in AttemptDisconnect
+    private bool m_active; // Flag that determines if the port/master has been added so that the resource can be cleaned up
     private bool m_disposed;
 
     #endregion
@@ -288,8 +288,8 @@ public class DNP3InputAdapter : InputAdapterBase
         }
         finally
         {
-            m_disposed = true;          // Prevent duplicate dispose.
-            base.Dispose(disposing);    // Call base class Dispose().
+            m_disposed = true; // Prevent duplicate dispose.
+            base.Dispose(disposing); // Call base class Dispose().
         }
     }
 
@@ -356,7 +356,7 @@ public class DNP3InputAdapter : InputAdapterBase
             PollingInterval = pollingInterval;
 
         // Attach to output measurements for DNP3 device - just informs routing engine of expected measurements
-        if (OutputMeasurements?.Length == 0)
+        if (OutputMeasurements is null || OutputMeasurements.Length == 0)
             OutputMeasurements = ParseOutputMeasurements(DataSource, false, $"FILTER ActiveMeasurements WHERE Device = '{Name}'");
 
         lock (s_adapters)
