@@ -356,7 +356,8 @@ public class DNP3InputAdapter : InputAdapterBase
             PollingInterval = pollingInterval;
 
         // Attach to output measurements for DNP3 device - just informs routing engine of expected measurements
-        OutputMeasurements = ParseOutputMeasurements(DataSource, false, $"FILTER ActiveMeasurements WHERE Device = '{Name}'");
+        if (OutputMeasurements?.Length == 0)
+            OutputMeasurements = ParseOutputMeasurements(DataSource, false, $"FILTER ActiveMeasurements WHERE Device = '{Name}'");
 
         lock (s_adapters)
         {
