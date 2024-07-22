@@ -22,60 +22,60 @@
 //       Modified Header. 
 //
 //******************************************************************************************************
+// ReSharper disable InconsistentNaming
 
 using Automatak.DNP3.Interface;
 
-namespace DNP3Adapters
+namespace DNP3Adapters;
+
+/// <summary>
+/// Master Configuration
+/// </summary>
+public class MasterConfiguration
 {
     /// <summary>
-    /// Master Configuration
+    /// All the settings for the connection
     /// </summary>
-    public class MasterConfiguration
-    {
-        /// <summary>
-        /// All of the settings for the connection
-        /// </summary>
-        public TcpClientConfig client = new TcpClientConfig();
-
-        /// <summary>
-        /// All of the settings for the master
-        /// </summary>
-        public MasterStackConfig master = new MasterStackConfig();
-    }
+    public TcpClientConfig client = new();
 
     /// <summary>
-    /// TCP Client Configuration class.
+    /// All the settings for the master
     /// </summary>
-    public class TcpClientConfig
-    {
-        /// <summary>
-        /// IP address of host
-        /// </summary>
-        public string address = "127.0.0.1";
+    public MasterStackConfig master = new();
+}
 
-        /// <summary>
-        /// TCP port for connection
-        /// </summary>
-        public ushort port = 20000;
+/// <summary>
+/// TCP Client Configuration class.
+/// </summary>
+public class TcpClientConfig
+{
+    /// <summary>
+    /// IP address of host
+    /// </summary>
+    public string address = "127.0.0.1";
 
-        /// <summary>
-        /// Minimum connection retry interval in milliseconds
-        /// </summary>
-        public ulong minRetryMs = 5000;
+    /// <summary>
+    /// TCP port for connection
+    /// </summary>
+    public ushort port = 20000;
 
-        /// <summary>
-        /// Maximum connection retry interval in milliseconds
-        /// </summary>
-        public ulong maxRetryMs = 60000;
+    /// <summary>
+    /// Minimum connection retry interval in milliseconds
+    /// </summary>
+    public ulong minRetryMs = 5000;
 
-        /// <summary>
-        /// Reconnect delay interval in milliseconds
-        /// </summary>
-        public ulong reconnectDelayMs = 2000;
+    /// <summary>
+    /// Maximum connection retry interval in milliseconds
+    /// </summary>
+    public ulong maxRetryMs = 60000;
 
-        /// <summary>
-        /// DNP3 filter level for port messages
-        /// </summary>
-        public uint level = LogLevels.NORMAL;
-    }
+    /// <summary>
+    /// Reconnect delay interval in milliseconds
+    /// </summary>
+    public ulong reconnectDelayMs = 2000;
+
+    /// <summary>
+    /// DNP3 filter level for port messages
+    /// </summary>
+    public uint level = LogLevels.NORMAL;
 }

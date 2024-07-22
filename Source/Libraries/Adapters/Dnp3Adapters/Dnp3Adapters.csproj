@@ -15,8 +15,6 @@
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -75,6 +73,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Dnp3InputAdapter.cs" />
+    <Compile Include="IsExternalInit.cs" />
     <Compile Include="MasterConfiguration.cs" />
     <Compile Include="MeasurementLookup.cs" />
     <Compile Include="MeasurementMap.cs" />

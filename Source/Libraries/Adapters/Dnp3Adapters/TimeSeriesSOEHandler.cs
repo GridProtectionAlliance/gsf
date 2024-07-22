@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  TsfDataAdapter.cs - Gbtc
+//  TimeSeriesSOEHandler.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -33,145 +33,135 @@ using System.Linq;
 using Automatak.DNP3.Interface;
 using GSF.TimeSeries;
 
-namespace DNP3Adapters
+namespace DNP3Adapters;
+
+/// <summary>
+/// This is the data adapter that converts data from the dnp3 world to the Time Series Framework.
+/// </summary>
+internal class TimeSeriesSOEHandler(MeasurementLookup lookup) : ISOEHandler
 {
-    /// <summary>
-    /// This is the data adapter that converts data from the dnp3 world to the Time Series Framework.
-    /// </summary>
-    internal class TimeSeriesSOEHandler : ISOEHandler
+    public delegate void OnNewMeasurements(ICollection<IMeasurement> measurements);
+    public event OnNewMeasurements NewMeasurements;
+
+    private readonly List<IMeasurement> m_measurements = [];
+
+    public TimeSpan TimestampDifferentiation { get; set; } = TimeSpan.FromMilliseconds(1.0D);
+
+    private void PutTimestamps<T>(IEnumerable<IndexedValue<T>> values) where T : MeasurementBase
     {
-        public delegate void OnNewMeasurements(ICollection<IMeasurement> measurements);
-        public event OnNewMeasurements NewMeasurements;
+        DateTime now = DateTime.UtcNow;
 
-        private readonly MeasurementLookup m_lookup;
-        private readonly List<IMeasurement> m_measurements = new List<IMeasurement>();
-
-        public TimeSeriesSOEHandler(MeasurementLookup lookup)
+        foreach (IGrouping<ushort, IndexedValue<T>> grouping in values.GroupBy(indexedValue => indexedValue.Index))
         {
-            TimestampDifferentiation = TimeSpan.FromMilliseconds(1.0D);
-            m_lookup = lookup;
-        }
+            int count = grouping.Count();
 
-        public TimeSpan TimestampDifferentiation { get; set; }
-
-        private void PutTimestamps<T>(IEnumerable<IndexedValue<T>> values) where T : MeasurementBase
-        {
-            DateTime now = DateTime.UtcNow;
-
-            foreach (IGrouping<ushort, IndexedValue<T>> grouping in values.GroupBy(indexedValue => indexedValue.Index))
+            foreach (IndexedValue<T> indexedValue in grouping)
             {
-                int count = grouping.Count();
-
-                foreach (IndexedValue<T> indexedValue in grouping)
-                {
-                    TimeSpan offset = TimeSpan.FromTicks(count * TimestampDifferentiation.Ticks);
-                    indexedValue.Value.Timestamp = new DNPTime(now - offset);
-                    count--;
-                }
+                TimeSpan offset = TimeSpan.FromTicks(count * TimestampDifferentiation.Ticks);
+                indexedValue.Value.Timestamp = new DNPTime(now - offset);
+                count--;
             }
         }
+    }
 
-        void ISOEHandler.BeginFragment(ResponseInfo info)
-        {
-            m_measurements.Clear();
-        }
+    void ISOEHandler.BeginFragment(ResponseInfo info)
+    {
+        m_measurements.Clear();
+    }
 
-        void ISOEHandler.EndFragment(ResponseInfo info)
-        {
-            if (m_measurements.Count > 0 && NewMeasurements != null)
-            {
-                NewMeasurements(m_measurements);
-            }
-        }
+    void ISOEHandler.EndFragment(ResponseInfo info)
+    {
+        if (m_measurements.Count > 0)
+            NewMeasurements?.Invoke(m_measurements);
+    }
 
-        void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<Binary>> values)
-        {
-            IEnumerable<IndexedValue<Binary>> indexedValues = values.ToArray();
+    void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<Binary>> values)
+    {
+        IEnumerable<IndexedValue<Binary>> indexedValues = values.ToArray();
 
-            PutTimestamps(indexedValues);
+        PutTimestamps(indexedValues);
 
-            foreach (IndexedValue<Binary> indexedValue in indexedValues)
-                m_lookup.Lookup(indexedValue.Value, indexedValue.Index, m_measurements.Add);
-        }
+        foreach (IndexedValue<Binary> indexedValue in indexedValues)
+            lookup.Lookup(indexedValue.Value, indexedValue.Index, m_measurements.Add);
+    }
 
-        void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<DoubleBitBinary>> values)
-        {
-            IEnumerable<IndexedValue<DoubleBitBinary>> indexedValues = values.ToArray();
+    void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<DoubleBitBinary>> values)
+    {
+        IEnumerable<IndexedValue<DoubleBitBinary>> indexedValues = values.ToArray();
 
-            PutTimestamps(indexedValues);
+        PutTimestamps(indexedValues);
 
-            foreach (IndexedValue<DoubleBitBinary> indexedValue in indexedValues)
-                m_lookup.Lookup(indexedValue.Value, indexedValue.Index, m_measurements.Add);
-        }
+        foreach (IndexedValue<DoubleBitBinary> indexedValue in indexedValues)
+            lookup.Lookup(indexedValue.Value, indexedValue.Index, m_measurements.Add);
+    }
 
-        void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<Analog>> values)
-        {
-            IEnumerable<IndexedValue<Analog>> indexedValues = values.ToArray();
+    void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<Analog>> values)
+    {
+        IEnumerable<IndexedValue<Analog>> indexedValues = values.ToArray();
 
-            PutTimestamps(indexedValues);
+        PutTimestamps(indexedValues);
 
-            foreach (IndexedValue<Analog> indexedValue in indexedValues)
-                m_lookup.Lookup(indexedValue.Value, indexedValue.Index, m_measurements.Add);
-        }
+        foreach (IndexedValue<Analog> indexedValue in indexedValues)
+            lookup.Lookup(indexedValue.Value, indexedValue.Index, m_measurements.Add);
+    }
 
-        void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<Counter>> values)
-        {
-            IEnumerable<IndexedValue<Counter>> indexedValues = values.ToArray();
+    void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<Counter>> values)
+    {
+        IEnumerable<IndexedValue<Counter>> indexedValues = values.ToArray();
 
-            PutTimestamps(indexedValues);
+        PutTimestamps(indexedValues);
 
-            foreach (IndexedValue<Counter> indexedValue in indexedValues)
-                m_lookup.Lookup(indexedValue.Value, indexedValue.Index, m_measurements.Add);
-        }
+        foreach (IndexedValue<Counter> indexedValue in indexedValues)
+            lookup.Lookup(indexedValue.Value, indexedValue.Index, m_measurements.Add);
+    }
 
-        void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<FrozenCounter>> values)
-        {
-            IEnumerable<IndexedValue<FrozenCounter>> indexedValues = values.ToArray();
+    void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<FrozenCounter>> values)
+    {
+        IEnumerable<IndexedValue<FrozenCounter>> indexedValues = values.ToArray();
 
-            PutTimestamps(indexedValues);
+        PutTimestamps(indexedValues);
 
-            foreach (IndexedValue<FrozenCounter> indexedValue in indexedValues)
-                m_lookup.Lookup(indexedValue.Value, indexedValue.Index, m_measurements.Add);
-        }
+        foreach (IndexedValue<FrozenCounter> indexedValue in indexedValues)
+            lookup.Lookup(indexedValue.Value, indexedValue.Index, m_measurements.Add);
+    }
 
-        void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<BinaryOutputStatus>> values)
-        {
-            IEnumerable<IndexedValue<BinaryOutputStatus>> indexedValues = values.ToArray();
+    void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<BinaryOutputStatus>> values)
+    {
+        IEnumerable<IndexedValue<BinaryOutputStatus>> indexedValues = values.ToArray();
 
-            PutTimestamps(indexedValues);
+        PutTimestamps(indexedValues);
 
-            foreach (IndexedValue<BinaryOutputStatus> indexedValue in indexedValues)
-                m_lookup.Lookup(indexedValue.Value, indexedValue.Index, m_measurements.Add);
-        }
+        foreach (IndexedValue<BinaryOutputStatus> indexedValue in indexedValues)
+            lookup.Lookup(indexedValue.Value, indexedValue.Index, m_measurements.Add);
+    }
 
-        void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<AnalogOutputStatus>> values)
-        {
-            IEnumerable<IndexedValue<AnalogOutputStatus>> indexedValues = values.ToArray();
+    void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<AnalogOutputStatus>> values)
+    {
+        IEnumerable<IndexedValue<AnalogOutputStatus>> indexedValues = values.ToArray();
 
-            PutTimestamps(indexedValues);
+        PutTimestamps(indexedValues);
 
-            foreach (IndexedValue<AnalogOutputStatus> indexedValue in indexedValues)
-                m_lookup.Lookup(indexedValue.Value, indexedValue.Index, m_measurements.Add);
-        }
+        foreach (IndexedValue<AnalogOutputStatus> indexedValue in indexedValues)
+            lookup.Lookup(indexedValue.Value, indexedValue.Index, m_measurements.Add);
+    }
 
-        void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<OctetString>> values)
-        {
-        }
+    void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<OctetString>> values)
+    {
+    }
 
-        void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<TimeAndInterval>> values)
-        {
-        }
+    void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<TimeAndInterval>> values)
+    {
+    }
 
-        void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<BinaryCommandEvent>> values)
-        {
-        }
+    void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<BinaryCommandEvent>> values)
+    {
+    }
 
-        void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<AnalogCommandEvent>> values)
-        {
-        }
+    void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<AnalogCommandEvent>> values)
+    {
+    }
 
-        void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<SecurityStat>> values)
-        {
-        }
+    void ISOEHandler.Process(HeaderInfo info, IEnumerable<IndexedValue<SecurityStat>> values)
+    {
     }
 }
