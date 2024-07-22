@@ -171,7 +171,7 @@ public class DNP3InputAdapter : InputAdapterBase
     // This flag is used to determine if the adapter should include DNP3 quality flags as part of the measurement outputs.
     // The "TagMatchPattern" and "QualityTagSuffix" properties are used to determine the tag name for the quality flags.
     // Generally, the value tag format is assumed to be "<TagName><SignalType>" and the quality tag format is assumed to
-    // be a variation of the value tag format with a suffix appended to the tag name, e.g., "<TagName><SignalType>!FLAGS".
+    // be a variation of the value tag format with a suffix appended to the tag name, e.g., "<TagName>!FLAGS<SignalType>".
     // In this current implementation, quality flags measurements are expected to be an analog signal type, i.e.: "ALOG".
     [ConnectionStringParameter]
     [Description("Define flag that determines if DNP3 quality flags should be published as separate measurement outputs.")]
