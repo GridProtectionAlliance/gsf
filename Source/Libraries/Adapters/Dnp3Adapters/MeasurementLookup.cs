@@ -172,7 +172,7 @@ internal class MeasurementLookup
             if (qualityFlags.IsSet(DoubleBitBinaryQuality.STATE1))
                 stateFlags |= MeasurementStateFlags.AlarmHigh;
 
-            if (!qualityFlags.IsSet(DoubleBitBinaryQuality.STATE2))
+            if (qualityFlags.IsSet(DoubleBitBinaryQuality.STATE2))
                 stateFlags |= MeasurementStateFlags.AlarmLow;
 
             return stateFlags;
