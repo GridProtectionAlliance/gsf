@@ -335,7 +335,7 @@ namespace GSF.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets a alpha-numeric name for the <see cref="HistorianID"/>.
+        /// Gets or sets an alphanumeric name for the <see cref="HistorianID"/>.
         /// </summary>
         /// <remarks>
         /// Maximum length for <see cref="Name"/> is 40 characters.
@@ -470,7 +470,7 @@ namespace GSF.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets the alpha-numeric system identifier for the <see cref="HistorianID"/>.
+        /// Gets or sets the alphanumeric system identifier for the <see cref="HistorianID"/>.
         /// </summary>
         /// <remarks>
         /// Maximum length for <see cref="SystemName"/> is 24 characters.
@@ -630,7 +630,7 @@ namespace GSF.Historian.Files
         /// <summary>
         /// Gets the <see cref="MetadataRecordSummary"/> object for <see cref="MetadataRecord"/>.
         /// </summary>
-        public MetadataRecordSummary Summary => new MetadataRecordSummary(this);
+        public MetadataRecordSummary Summary => new(this);
 
         /// <summary>
         /// Gets the length of the <see cref="MetadataRecord"/>.
@@ -650,53 +650,52 @@ namespace GSF.Historian.Files
         /// <returns>Number of bytes used from the <paramref name="buffer"/> for initializing <see cref="MetadataRecord"/>.</returns>
         public int ParseBinaryImage(byte[] buffer, int startIndex, int length)
         {
-            if (length >= FixedLength)
+            if (length < FixedLength)
+                return 0;
+
+            // Binary image has sufficient data.
+            Remarks = Encoding.ASCII.GetString(buffer, startIndex, 512).Trim();
+            HardwareInfo = Encoding.ASCII.GetString(buffer, startIndex + 512, 512).Trim();
+            AlarmEmails = Encoding.ASCII.GetString(buffer, startIndex + 1024, 512).Trim();
+            Description = Encoding.ASCII.GetString(buffer, startIndex + 1536, 80).Trim();
+            CurrentData = Encoding.ASCII.GetString(buffer, startIndex + 1616, 80).Trim();
+            Name = Encoding.ASCII.GetString(buffer, startIndex + 1696, 40).Trim();
+            Synonym1 = Encoding.ASCII.GetString(buffer, startIndex + 1736, 40).Trim();
+            Synonym2 = Encoding.ASCII.GetString(buffer, startIndex + 1776, 40).Trim();
+            Synonym3 = Encoding.ASCII.GetString(buffer, startIndex + 1816, 40).Trim();
+            AlarmPagers = Encoding.ASCII.GetString(buffer, startIndex + 1856, 40).Trim();
+            AlarmPhones = Encoding.ASCII.GetString(buffer, startIndex + 1896, 40).Trim();
+            PlantCode = Encoding.ASCII.GetString(buffer, startIndex + 1936, 24).Trim();
+            SystemName = Encoding.ASCII.GetString(buffer, startIndex + 1960, 24).Trim();
+            EmailTime = Encoding.ASCII.GetString(buffer, startIndex + 1984, 40).Trim();
+            ScanRate = LittleEndian.ToSingle(buffer, startIndex + 2104);
+            UnitNumber = LittleEndian.ToInt32(buffer, startIndex + 2108);
+            SecurityFlags.Value = LittleEndian.ToInt32(buffer, startIndex + 2112);
+            GeneralFlags.Value = LittleEndian.ToInt32(buffer, startIndex + 2116);
+            AlarmFlags.Value = LittleEndian.ToInt32(buffer, startIndex + 2120);
+            CompressionMinTime = LittleEndian.ToInt32(buffer, startIndex + 2124);
+            CompressionMaxTime = LittleEndian.ToInt32(buffer, startIndex + 2128);
+            SourceID = LittleEndian.ToInt32(buffer, startIndex + 2132);
+
+            switch (GeneralFlags.DataType)
             {
-                // Binary image has sufficient data.
-                Remarks = Encoding.ASCII.GetString(buffer, startIndex, 512).Trim();
-                HardwareInfo = Encoding.ASCII.GetString(buffer, startIndex + 512, 512).Trim();
-                AlarmEmails = Encoding.ASCII.GetString(buffer, startIndex + 1024, 512).Trim();
-                Description = Encoding.ASCII.GetString(buffer, startIndex + 1536, 80).Trim();
-                CurrentData = Encoding.ASCII.GetString(buffer, startIndex + 1616, 80).Trim();
-                Name = Encoding.ASCII.GetString(buffer, startIndex + 1696, 40).Trim();
-                Synonym1 = Encoding.ASCII.GetString(buffer, startIndex + 1736, 40).Trim();
-                Synonym2 = Encoding.ASCII.GetString(buffer, startIndex + 1776, 40).Trim();
-                Synonym3 = Encoding.ASCII.GetString(buffer, startIndex + 1816, 40).Trim();
-                AlarmPagers = Encoding.ASCII.GetString(buffer, startIndex + 1856, 40).Trim();
-                AlarmPhones = Encoding.ASCII.GetString(buffer, startIndex + 1896, 40).Trim();
-                PlantCode = Encoding.ASCII.GetString(buffer, startIndex + 1936, 24).Trim();
-                SystemName = Encoding.ASCII.GetString(buffer, startIndex + 1960, 24).Trim();
-                EmailTime = Encoding.ASCII.GetString(buffer, startIndex + 1984, 40).Trim();
-                ScanRate = LittleEndian.ToSingle(buffer, startIndex + 2104);
-                UnitNumber = LittleEndian.ToInt32(buffer, startIndex + 2108);
-                SecurityFlags.Value = LittleEndian.ToInt32(buffer, startIndex + 2112);
-                GeneralFlags.Value = LittleEndian.ToInt32(buffer, startIndex + 2116);
-                AlarmFlags.Value = LittleEndian.ToInt32(buffer, startIndex + 2120);
-                CompressionMinTime = LittleEndian.ToInt32(buffer, startIndex + 2124);
-                CompressionMaxTime = LittleEndian.ToInt32(buffer, startIndex + 2128);
-                SourceID = LittleEndian.ToInt32(buffer, startIndex + 2132);
-
-                switch (GeneralFlags.DataType)
-                {
-                    case DataType.Analog:
-                        m_analogFields.ParseBinaryImage(buffer, startIndex + 2152, length - 2152);
-                        break;
-                    case DataType.Digital:
-                        m_digitalFields.ParseBinaryImage(buffer, startIndex + 2152, length - 2152);
-                        break;
-                    case DataType.Composed:
-                        m_composedFields.ParseBinaryImage(buffer, startIndex + 2152, length - 2152);
-                        break;
-                    case DataType.Constant:
-                        m_constantFields.ParseBinaryImage(buffer, startIndex + 2152, length - 2152);
-                        break;
-                }
-
-                return FixedLength;
+                case DataType.Analog:
+                    m_analogFields.ParseBinaryImage(buffer, startIndex + 2152, length - 2152);
+                    break;
+                case DataType.Digital:
+                    m_digitalFields.ParseBinaryImage(buffer, startIndex + 2152, length - 2152);
+                    break;
+                case DataType.Composed:
+                    m_composedFields.ParseBinaryImage(buffer, startIndex + 2152, length - 2152);
+                    break;
+                case DataType.Constant:
+                    m_constantFields.ParseBinaryImage(buffer, startIndex + 2152, length - 2152);
+                    break;
             }
 
+            return FixedLength;
+
             // Binary image does not have sufficient data.
-            return 0;
         }
 
         /// <summary>
@@ -768,30 +767,38 @@ namespace GSF.Historian.Files
         /// Zero if the current <see cref="MetadataRecord"/> object is equal to <paramref name="obj"/>, 
         /// Positive value if the current <see cref="MetadataRecord"/> object is greater than <paramref name="obj"/>.
         /// </returns>
-        public virtual int CompareTo(object obj) => 
-            !(obj is MetadataRecord other) ? 1 : HistorianID.CompareTo(other.HistorianID);
+        public virtual int CompareTo(object obj)
+        {
+            return obj is MetadataRecord other ? HistorianID.CompareTo(other.HistorianID) : 1;
+        }
 
         /// <summary>
         /// Determines whether the current <see cref="MetadataRecord"/> object is equal to <paramref name="obj"/>.
         /// </summary>
         /// <param name="obj">Object against which the current <see cref="MetadataRecord"/> object is to be compared for equality.</param>
         /// <returns>true if the current <see cref="MetadataRecord"/> object is equal to <paramref name="obj"/>; otherwise false.</returns>
-        public override bool Equals(object obj) => 
-            CompareTo(obj) == 0;
+        public override bool Equals(object obj)
+        {
+            return CompareTo(obj) == 0;
+        }
 
         /// <summary>
         /// Returns the text representation of <see cref="MetadataRecord"/> object.
         /// </summary>
         /// <returns>A <see cref="string"/> value.</returns>
-        public override string ToString() => 
-            $"ID={HistorianID}; Name={m_name}";
+        public override string ToString()
+        {
+            return $"ID={HistorianID}; Name={m_name}";
+        }
 
         /// <summary>
         /// Returns the hash code for the current <see cref="MetadataRecord"/> object.
         /// </summary>
         /// <returns>A 32-bit signed integer value.</returns>
-        public override int GetHashCode() => 
-            HistorianID.GetHashCode();
+        public override int GetHashCode()
+        {
+            return HistorianID.GetHashCode();
+        }
 
         internal void WriteImage(BinaryWriter writer)
         {
