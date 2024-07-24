@@ -535,6 +535,9 @@ public class LocalOutputAdapter : OutputAdapterBase
         {
             Thread.Sleep(100);
             waitCount++;
+
+            if (m_disposed)
+                return;
         }
 
         // Kick off a meta-data refresh...
