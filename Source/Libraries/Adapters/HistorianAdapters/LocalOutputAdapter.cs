@@ -515,8 +515,38 @@ public class LocalOutputAdapter : OutputAdapterBase
     {
         m_attemptingConnection = true;
 
-        // Open archive files
-        m_archive.MetadataFile.Open();
+        // Open archive metadata file monitoring for checksum mismatch
+        try
+        {
+            m_archive.MetadataFile.Open();
+        }
+        catch (InvalidDataException)
+        {
+            if (AutoRefreshMetadata)
+            {
+                OnStatusMessage(MessageLevel.Warning, "Detected corrupted metadata file, attempting regeneration...");
+
+                // Force a manual refresh of metadata providers - this will regenerate metadata file
+                lock (m_metadataProviders.Adapters)
+                {
+                    foreach (IMetadataProvider provider in m_metadataProviders.Adapters)
+                    {
+                        if (provider.Enabled)
+                            provider.Refresh();
+                    }
+                }
+            }
+            else
+            {
+                OnStatusMessage(MessageLevel.Error, $"Detected corrupted metadata file and {nameof(AutoRefreshMetadata)} is not enabled - cancelling connection.");
+                Stop();
+            }
+
+            // Report exception, this will reattempt connection if adapter remains enabled
+            throw;
+        }
+
+        // Open remaining archive files
         m_archive.StateFile.Open();
         m_archive.IntercomFile.Open();
         m_archive.Open();
