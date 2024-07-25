@@ -965,13 +965,18 @@ namespace PhasorProtocolAdapters
                     string[] parts = server.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
 
                     if (parts.Length == 0)
-                        continue;
+                    {
+                        serverList.Add(server);
+                        accessIDList.Add(defaultAccessID);
+                    }
+                    else
+                    {
+                        if (parts.Length < 2 || !ushort.TryParse(parts[1], out ushort accessID))
+                            accessID = defaultAccessID;
 
-                    if (parts.Length < 2 || !ushort.TryParse(parts[1], out ushort accessID))
-                        accessID = defaultAccessID;
-
-                    serverList.Add(parts[0].Trim());
-                    accessIDList.Add(accessID);
+                        serverList.Add(parts[0].Trim());
+                        accessIDList.Add(accessID);
+                    }
                 }
 
                 settings["server"] = string.Join(",", serverList);
