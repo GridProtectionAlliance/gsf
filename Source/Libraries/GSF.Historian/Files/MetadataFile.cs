@@ -39,6 +39,7 @@ using System.Configuration;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using GSF.Configuration;
 using GSF.IO;
@@ -358,6 +359,41 @@ public class MetadataFile : IsamDataFileBase<MetadataRecord>
             {
                 if (FileData.Length > 0)
                 {
+                    // Get the length of data excluding the MD5 hash
+                    long dataLength = FileData.Length - 16;
+
+                    // Rewind to the start of the file
+                    FileData.Seek(0, SeekOrigin.Begin);
+
+                    using (MD5 md5 = MD5.Create())
+                    {
+                        byte[] buffer = new byte[8192];
+                        int bytesRead;
+                        long totalBytesRead = 0;
+
+                        // Calculate MD5 hash for metadata in chunks up to but not including the stored hash
+                        while (totalBytesRead < dataLength && (bytesRead = FileData.Read(buffer, 0, buffer.Length)) > 0)
+                        {
+                            // Verify that we don't include the stored hash in calculation
+                            int bytesToHash = (int)Math.Min(bytesRead, dataLength - totalBytesRead);
+                            md5.TransformBlock(buffer, 0, bytesToHash, buffer, 0);
+                            totalBytesRead += bytesToHash;
+                        }
+
+                        // Complete hash calculation
+                        md5.TransformFinalBlock([], 0, 0);
+                        byte[] calculatedHash = md5.Hash;
+
+                        // Read stored hash
+                        byte[] storedHash = new byte[16];
+                        FileData.Seek(-16, SeekOrigin.End);
+                        bytesRead = FileData.Read(storedHash, 0, 16);
+
+                        if (bytesRead != 16 || !calculatedHash.SequenceEqual(storedHash))
+                            throw new InvalidDataException($"{nameof(MetadataFile)} data integrity check failed.");
+                    }
+
+                    // Rewind the stream to start of file and process metadata
                     FileData.Seek(0, SeekOrigin.Begin);
                     BinaryReader reader = new(FileData);
                     int count = reader.ReadInt32();
@@ -479,6 +515,16 @@ public class MetadataFile : IsamDataFileBase<MetadataRecord>
 
                 foreach (MetadataRecord record in records)
                     record.WriteImage(writer);
+
+                FileData.Flush();
+                FileData.Seek(0, SeekOrigin.Begin);
+
+                // Add a hash of the data to the end of the file
+                using (MD5 md5 = MD5.Create())
+                {
+                    byte[] hash = md5.ComputeHash(FileData);
+                    writer.Write(hash);
+                }
 
                 FileData.Flush();
                 File.SetLastWriteTime(FileName, DateTime.Now);
