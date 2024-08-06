@@ -936,6 +936,9 @@
         }
 
         function saveDeviceConfiguration(acronym, configuration) {
+            if (@saveOnLoad)
+                return $.Deferred().resolve().promise();
+
             return $.ajax({
                 url: "/api/PhasorConfig/SaveDeviceConfiguration/" + acronym,
                 method: "POST",
@@ -3588,7 +3591,7 @@
             const configFrame = viewModel.configFrame();
 
             // Warn user to export config when phasors are tagged for deletion before save removes them permanently
-            if (!viewModel.configExported()) {
+            if (!viewModel.configExported() && !@saveOnLoad) {
                 let anyTaggedForDelete = false;
 
                 const cells = configFrame.Cells;
