@@ -3901,6 +3901,22 @@
             });
         }
 
+    @{if (saveOnLoad.ParseBoolean()) {
+    <text>
+        // Override showErrorMessage to set saveError flag
+        var baseShowErrorMessage;
+
+        var showErrorMessage = (function () {
+            baseShowErrorMessage = showErrorMessage;
+
+            return function (message, timeout, highEmphasis) {
+                viewModel.saveError(true);
+                baseShowErrorMessage(message, timeout, highEmphasis);
+            }
+        })();
+    </text>
+    }}
+
         // Page initialization function
         $(function () {
             $("#tabs").tabs({
@@ -4187,26 +4203,35 @@
                             loadDeviceConnection(deviceID).then(function () {
                                 if (@saveOnLoad) {
                                     setTimeout(function () {
-                                        viewModel.saveComplete(false);
                                         viewModel.saveError(false);
+                                        viewModel.saveComplete(false);
+
                                         function checkForCompletion()
                                         {
-                                            if (viewModel.working())
+                                            if (viewModel.working()) {
                                                 setTimeout(checkForCompletion, 100);
-                                            else
-                                                viewModel.saveComplete(true);
+                                            }
+                                            else {
+                                                // Wait for any final messages to be displayed
+                                                // before setting save complete flag
+                                                setTimeout(function () {
+                                                    viewModel.saveComplete(true);
+                                                }, 200);
+                                            }
                                         }
+
                                         hideInfoMessage({ closeFloatingPanels: true });
+
                                         saveDeviceConnection().done(checkForCompletion).fail(function () {
-                                            viewModel.saveComplete(true);
                                             viewModel.saveError(true);
+                                            viewModel.saveComplete(true);
                                         });
                                     }, 200);
                                 }
                             })
                             .fail(function () {
-                                viewModel.saveComplete(true);
                                 viewModel.saveError(true);
+                                viewModel.saveComplete(true);
                             });
                         }
                     });
