@@ -3694,7 +3694,7 @@
 
                                     return phasorHub.markConfigurationAsSynchronized(device.Acronym).then(function () {
                                         return serviceHub.sendCommand("initialize " + deviceID).done(function () {
-                                        window.location = "GraphMeasurements.cshtml?showMenu=@showMenu";
+                                            window.location = "GraphMeasurements.cshtml?showMenu=@showMenu";
                                         });
                                     });
                                 });
@@ -3720,7 +3720,7 @@
                                     const connectionID = device.ParentID ? device.ParentID : device.ID;
 
                                     return serviceHub.sendCommand("initialize " + connectionID).done(function () {
-                                    window.location = "GraphMeasurements.cshtml?showMenu=@showMenu";
+                                        window.location = "GraphMeasurements.cshtml?showMenu=@showMenu";
                                     });
                                 });
                             });
