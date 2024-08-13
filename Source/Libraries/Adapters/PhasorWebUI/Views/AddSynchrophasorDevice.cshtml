@@ -73,7 +73,9 @@
     if (!parameters.TryGetValue("DeviceID", out parameter) || !int.TryParse(parameter, out deviceID)) {
         deviceID = 0;
     }
+
     parameters.TryGetValue("templateID", out tagTemplate);
+
     if (parameters.TryGetValue("showMenu", out parameter)) {
         showMenu = parameter.ParseBoolean();
         ViewBag.ShowMenu = showMenu;
