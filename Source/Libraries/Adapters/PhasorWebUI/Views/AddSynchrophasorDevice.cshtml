@@ -66,19 +66,20 @@
     Dictionary<string, string> parameters = request.QueryParameters();
     string parameter;
     int deviceID;
-    bool showMenu = true;
     string tagTemplate = "";
+    bool showMenu = true;
     string saveOnLoad = "false";
 
     if (!parameters.TryGetValue("DeviceID", out parameter) || !int.TryParse(parameter, out deviceID)) {
         deviceID = 0;
     }
+    parameters.TryGetValue("templateID", out tagTemplate);
     if (parameters.TryGetValue("showMenu", out parameter)) {
         showMenu = parameter.ParseBoolean();
         ViewBag.ShowMenu = showMenu;
         ViewBag.BackgroundUnset = true;
     }
-    parameters.TryGetValue("templateID", out tagTemplate);
+
     if (parameters.TryGetValue("saveOnLoad", out parameter)) {
         saveOnLoad = parameter.ParseBoolean() ? "true" : "false";
     }
