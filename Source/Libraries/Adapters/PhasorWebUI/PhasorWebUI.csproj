@@ -158,6 +158,8 @@
     <EmbeddedResource Include="Single Phase Power Calculations.TagTemplate" />
     <EmbeddedResource Include="Three Phase Power Calculations with Time Sync.TagTemplate" />
     <EmbeddedResource Include="Three Phase Power Calculations.TagTemplate" />
+    <EmbeddedResource Include="Views\BulkTagTemplate.cshtml" />
+    <EmbeddedResource Include="Views\SelectGroupDevices.cshtml" />
     <None Include="Web.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
