@@ -1443,7 +1443,7 @@ public class PIOutputAdapter : OutputAdapterBase
         {
             MeasurementKey statusWordKey = item.Key;
             MeasurementKey[] statusBitKeys = item.Value;
-            status.AppendLine($"{statusWordKey} [{string.Join(",", statusBitKeys.Select(key => key.ToString()))}]");
+            status.AppendLine($"{statusWordKey} [{string.Join(",", statusBitKeys.Select(key => key.ToNonNullNorWhiteSpace("null")))}]");
         }
 
         OnStatusMessage(MessageLevel.Info, status.ToString());
@@ -1470,7 +1470,7 @@ public class PIOutputAdapter : OutputAdapterBase
         {
             MeasurementKey qualityWordKey = item.Key;
             MeasurementKey[] qualityBitKeys = item.Value;
-            status.AppendLine($"{qualityWordKey} [{string.Join(",", qualityBitKeys.Select(key => key.ToString()))}]");
+            status.AppendLine($"{qualityWordKey} [{string.Join(",", qualityBitKeys.Select(key => key.ToNonNullNorWhiteSpace("null")))}]");
         }
 
         OnStatusMessage(MessageLevel.Info, status.ToString());
@@ -1826,7 +1826,7 @@ public class PIOutputAdapter : OutputAdapterBase
             // For the following logic, the measurement can only be one (or none) of a status, quality or digital word, but not more than one:
             bool isExpandedStatusWord = ExpandStatusBitsToTags && m_statusWordMeasurements.TryGetValue(key, out bitKeys);
             bool isExpandedQualityWord = ExpandQualityBitsToTags && !isExpandedStatusWord && m_qualityWordMeasurements.TryGetValue(key, out bitKeys);
-            bool isExpandedDigitalWord = ExpandDigitalBitsToTags && !isExpandedQualityWord && m_digitalWordMeasurements.TryGetValue(key, out bitKeys);
+            bool isExpandedDigitalWord = ExpandDigitalBitsToTags && !isExpandedStatusWord && !isExpandedQualityWord && m_digitalWordMeasurements.TryGetValue(key, out bitKeys);
             bool isExpandedWord = isExpandedStatusWord || isExpandedQualityWord || isExpandedDigitalWord;
 
             // Lookup connection point mapping for this measurement, if it wasn't found - go ahead and exit
