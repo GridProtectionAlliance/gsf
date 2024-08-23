@@ -2373,7 +2373,7 @@ public class PIOutputAdapter : OutputAdapterBase
                             bool isWordType = signalType is SignalType.FLAG or SignalType.QUAL or SignalType.DIGI;
                             string digitalSetName = null;
 
-                            Debug.Assert(isWordType && isDigitalType, "Word type and digital type should not be the same");
+                            Debug.Assert(!(isWordType && isDigitalType), "Word type and digital type should not be the same");
 
                             if (isDigitalType)
                             {
