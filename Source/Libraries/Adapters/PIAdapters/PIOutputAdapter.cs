@@ -481,6 +481,10 @@ public class PIOutputAdapter : OutputAdapterBase
     /// <summary>
     /// Gets or sets primary keys of input measurements the <see cref="PIOutputAdapter"/> expects.
     /// </summary>
+    [ConnectionStringParameter]
+    [DefaultValue(null)]
+    [Description("Defines primary keys of input measurements the adapter expects; can be one of a filter expression, measurement key, point tag or Guid.")]
+    [CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.MeasurementEditor")]
     public override MeasurementKey[] InputMeasurementKeys
     {
         get => base.InputMeasurementKeys;
