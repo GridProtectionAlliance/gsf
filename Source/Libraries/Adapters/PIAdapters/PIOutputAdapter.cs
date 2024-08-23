@@ -2373,7 +2373,7 @@ public class PIOutputAdapter : OutputAdapterBase
                             bool isWordType = signalType is SignalType.FLAG or SignalType.QUAL or SignalType.DIGI;
                             string digitalSetName = null;
 
-                            Debug.Assert(isWordType != isDigitalType, "Word type and digital type should not be the same");
+                            Debug.Assert(!(isWordType && isDigitalType), "Word type and digital type should not be the same");
 
                             if (isDigitalType)
                             {
@@ -2721,17 +2721,16 @@ public class PIOutputAdapter : OutputAdapterBase
                 string signalReference = SignalReference.ToString(sourceSignalReference, SignalKind.Calculation, j + 1);
                 ulong pointID = ulong.MaxValue;
 
-                // Check if measurement already exists in active configuration, create it if it does not
-                if (!this.SignalReferenceExists(signalReference, out Guid signalID))
+                // Create point tag for digital state based on configured tag name generator
+                TagGenerator tagGenerator = m_c37118TagNameGenerators[j];
+                string pointTag = CreatePointTag(tagGenerator, deviceAcronym, state, j + 1);
+
+                // Check if measurement already exists in active configuration, creating it if it does not; or, if tag name has changed because of updated naming expression
+                if (!this.SignalReferenceExists(signalReference, out Guid signalID) || !this.LookupPointTag(signalID).Equals(pointTag))
                 {
-                    OnStatusMessage(MessageLevel.Info, $"Creating {(targetSignalType == SignalType.FLAG ? "status" : "quality")} bit input measurement \"{signalReference}\" for digital state '{state}'...");
+                    OnStatusMessage(MessageLevel.Info, $"{(signalID == Guid.Empty ? "Creating" : "Updating")} {(targetSignalType == SignalType.FLAG ? "status" : "quality")} bit input measurement \"{signalReference}\" for digital state '{state}'...");
 
-                    TagGenerator tagGenerator = m_c37118TagNameGenerators[j];
-
-                    // Create point tag for digital state based on configured tag name generator
-                    string pointTag = CreatePointTag(tagGenerator, deviceAcronym, state, j + 1);
-
-                    // Create new measurement record for digital bit
+                    // Create new, or update existing, measurement record for digital state
                     MeasurementRecord record = this.GetMeasurementRecord(deviceID, pointTag, null, signalReference, $"{deviceAcronym}: {state}");
                     signalID = record.SignalID;
                     pointID = (ulong)record.PointID;
@@ -3017,18 +3016,17 @@ public class PIOutputAdapter : OutputAdapterBase
 
                     string signalReference = SignalReference.ToString(sourceSignalReference, SignalKind.Calculation, bit + 1);
                     ulong pointID = ulong.MaxValue;
+                    string label = digitalLabels[bit];
 
-                    // Check if measurement already exists in active configuration, create it if it does not
-                    if (!this.SignalReferenceExists(signalReference, out Guid signalID))
+                    // Create point tag for digital bit based on configured tag name generator
+                    string pointTag = CreatePointTag(tagGenerator, deviceAcronym, label, bit + 1);
+
+                    // Check if measurement already exists in active configuration, creating it if it does not; or, if tag name has changed because of updated naming expression
+                    if (!this.SignalReferenceExists(signalReference, out Guid signalID) || !this.LookupPointTag(signalID).Equals(pointTag))
                     {
-                        OnStatusMessage(MessageLevel.Info, $"Creating digital bit {bit} input measurement \"{signalReference}\" for digital state '{state}'...");
+                        OnStatusMessage(MessageLevel.Info, $"{(signalID == Guid.Empty ? "Creating" : "Updating")} digital bit {bit} input measurement \"{signalReference}\" for digital state '{state}'...");
 
-                        string label = digitalLabels[bit];
-
-                        // Create point tag for digital bit based on configured tag name generator
-                        string pointTag = CreatePointTag(tagGenerator, deviceAcronym, label, bit + 1);
-
-                        // Create new measurement record for digital bit
+                        // Create new, or update existing, measurement record for digital bit
                         MeasurementRecord record = this.GetMeasurementRecord(deviceID, pointTag, null, signalReference, $"{deviceAcronym}: {label.Trim()} {state}");
                         signalID = record.SignalID;
                         pointID = (ulong)record.PointID;

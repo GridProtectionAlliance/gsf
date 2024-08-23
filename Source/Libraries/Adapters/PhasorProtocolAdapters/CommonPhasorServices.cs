@@ -948,7 +948,7 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
         s_signalTypes ??= InitializeSignalTypes();
 
         if (!s_signalTypes.TryGetValue(signalTypeAcronym, out DataRow signalTypeValues))
-            throw new ArgumentOutOfRangeException(nameof(signalTypeAcronym), "No database definition was found for signal type \"" + signalTypeAcronym + "\"");
+            throw new ArgumentOutOfRangeException(nameof(signalTypeAcronym), $"No database definition was found for signal type \"{signalTypeAcronym}\"");
 
         // Validate key acronyms
         companyAcronym ??= "";
@@ -961,7 +961,7 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
         vendorAcronym = vendorAcronym.Trim();
 
         if (baseKV == 0)
-            baseKV = GuessBaseKV(label, deviceAcronym);
+            baseKV = GuessBaseKV(label, deviceAcronym, signalTypeAcronym);
 
         // Define fixed parameter replacements
         Dictionary<string, string> substitutions = new()
@@ -985,15 +985,15 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
         return s_pointTagExpressionParser.Execute(substitutions);
     }
 
-    private static int GuessBaseKV(string phasorLabel, string deviceAcronym)
+    private static int GuessBaseKV(string label, string deviceAcronym, string signalTypeAcronym)
     {
-        if (string.IsNullOrWhiteSpace(phasorLabel))
+        if (string.IsNullOrWhiteSpace(label))
         {
             // Calls to CreatePointTag are commonly made in sequence for all measurements, then calls stop, so
             // we create an expiring memory cache with a map of first phasor tags associated with each device
             Dictionary<string, string> firstPhasorPointTagCache = MemoryCache<Dictionary<string, string>>.GetOrAdd(nameof(GuessBaseKV), () => new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase));
             
-            phasorLabel = firstPhasorPointTagCache.GetOrAdd(deviceAcronym, _ =>
+            label = firstPhasorPointTagCache.GetOrAdd(deviceAcronym, _ =>
             {
                 try
                 {
@@ -1012,13 +1012,17 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
         }
         
         // Check phasor label for voltage level as a priority over device acronym for better base KV guess
-        if (!string.IsNullOrWhiteSpace(phasorLabel))
+        if (!string.IsNullOrWhiteSpace(label))
         {
             foreach (string voltageLevel in s_commonVoltageLevels)
             {
-                if (phasorLabel.IndexOf(voltageLevel, StringComparison.Ordinal) > -1)
+                if (label.IndexOf(voltageLevel, StringComparison.Ordinal) > -1)
                     return int.Parse(voltageLevel);
             }
+
+            // If label did not contain voltage level and signal type is an analog or digital, try lookup of first phasor tag
+            if (signalTypeAcronym.Equals("ALOG", StringComparison.OrdinalIgnoreCase) || signalTypeAcronym.Equals("DIGI", StringComparison.OrdinalIgnoreCase))
+                return GuessBaseKV(null, deviceAcronym, "CALC");
         }
 
         foreach (string voltageLevel in s_commonVoltageLevels)
