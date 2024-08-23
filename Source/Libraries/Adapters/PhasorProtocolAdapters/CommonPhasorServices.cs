@@ -948,7 +948,7 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
         s_signalTypes ??= InitializeSignalTypes();
 
         if (!s_signalTypes.TryGetValue(signalTypeAcronym, out DataRow signalTypeValues))
-            throw new ArgumentOutOfRangeException(nameof(signalTypeAcronym), "No database definition was found for signal type \"" + signalTypeAcronym + "\"");
+            throw new ArgumentOutOfRangeException(nameof(signalTypeAcronym), $"No database definition was found for signal type \"{signalTypeAcronym}\"");
 
         // Validate key acronyms
         companyAcronym ??= "";
@@ -961,7 +961,7 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
         vendorAcronym = vendorAcronym.Trim();
 
         if (baseKV == 0)
-            baseKV = GuessBaseKV(label, deviceAcronym);
+            baseKV = GuessBaseKV(label, deviceAcronym, signalTypeAcronym);
 
         // Define fixed parameter replacements
         Dictionary<string, string> substitutions = new()
@@ -985,7 +985,7 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
         return s_pointTagExpressionParser.Execute(substitutions);
     }
 
-    private static int GuessBaseKV(string phasorLabel, string deviceAcronym)
+    private static int GuessBaseKV(string phasorLabel, string deviceAcronym, string signalTypeAcronym)
     {
         if (string.IsNullOrWhiteSpace(phasorLabel))
         {
@@ -1019,6 +1019,10 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
                 if (phasorLabel.IndexOf(voltageLevel, StringComparison.Ordinal) > -1)
                     return int.Parse(voltageLevel);
             }
+
+            // If label did not contain voltage level and signal type is an analog or digital, try lookup of first phasor tag
+            if (signalTypeAcronym.Equals("ALOG", StringComparison.OrdinalIgnoreCase) || signalTypeAcronym.Equals("DIGI", StringComparison.OrdinalIgnoreCase))
+                return GuessBaseKV(null, deviceAcronym, "CALC");
         }
 
         foreach (string voltageLevel in s_commonVoltageLevels)
