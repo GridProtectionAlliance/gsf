@@ -985,15 +985,15 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
         return s_pointTagExpressionParser.Execute(substitutions);
     }
 
-    private static int GuessBaseKV(string phasorLabel, string deviceAcronym, string signalTypeAcronym)
+    private static int GuessBaseKV(string label, string deviceAcronym, string signalTypeAcronym)
     {
-        if (string.IsNullOrWhiteSpace(phasorLabel))
+        if (string.IsNullOrWhiteSpace(label))
         {
             // Calls to CreatePointTag are commonly made in sequence for all measurements, then calls stop, so
             // we create an expiring memory cache with a map of first phasor tags associated with each device
             Dictionary<string, string> firstPhasorPointTagCache = MemoryCache<Dictionary<string, string>>.GetOrAdd(nameof(GuessBaseKV), () => new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase));
             
-            phasorLabel = firstPhasorPointTagCache.GetOrAdd(deviceAcronym, _ =>
+            label = firstPhasorPointTagCache.GetOrAdd(deviceAcronym, _ =>
             {
                 try
                 {
@@ -1012,11 +1012,11 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
         }
         
         // Check phasor label for voltage level as a priority over device acronym for better base KV guess
-        if (!string.IsNullOrWhiteSpace(phasorLabel))
+        if (!string.IsNullOrWhiteSpace(label))
         {
             foreach (string voltageLevel in s_commonVoltageLevels)
             {
-                if (phasorLabel.IndexOf(voltageLevel, StringComparison.Ordinal) > -1)
+                if (label.IndexOf(voltageLevel, StringComparison.Ordinal) > -1)
                     return int.Parse(voltageLevel);
             }
 
