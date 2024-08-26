@@ -1102,7 +1102,8 @@ public class PIOutputAdapter : OutputAdapterBase
     [ConnectionStringParameter]
     [Description(
         "Defines the semicolon separated pre-existing digital bit state set names mapped to a regular expression for matching digital labels.\r\n" +
-        "Use format \"DigitalStateName=Expression;DigitalStateName=Expression;...\". Use \"*\" for default expression.")
+        "Use format \"DigitalStateName1=RegEx1; DigitalStateName2=RegEx2;...\". Use \"*\" for default regular expression (maps to \".*\").\r\n" +
+        "Specification of default regular expression should only be for only one state and defined last.")
     ]
     [DefaultValue(DefaultDigitalBitStateExpressionMap)]
     public string DigitalBitStateExpressionMap
@@ -1129,6 +1130,9 @@ public class PIOutputAdapter : OutputAdapterBase
                 string key = setting.Substring(0, equalIndex).Trim();
                 string expression = setting.Substring(equalIndex + 1).Trim();
 
+                if (expression == "*")
+                    expression = ".*";
+
                 digitalStateSetExpressionMap[key] = new Regex(expression, RegexOptions.Compiled | RegexOptions.IgnoreCase);
             }
 
@@ -1144,7 +1148,7 @@ public class PIOutputAdapter : OutputAdapterBase
     [ConnectionStringParameter]
     [Description(
         $"Defines the semicolon separated digital state set name to tag name expression map. One expression should exist for each state defined in '{nameof(DigitalBitStateExpressionMap)}'.\r\n" +
-        "Use format \"DigitalStateName=Expression;DigitalStateName=Expression;...\". Use \"*\" for default expression.")
+        "Use format \"DigitalStateName1=TagNameExpression1; DigitalStateName2=TagNameExpression2;...\".")
     ]
     [DefaultValue(DefaultDigitalBitTagNameExpressionMap)]
     public string DigitalBitTagNameExpressionMap
@@ -2901,8 +2905,8 @@ public class PIOutputAdapter : OutputAdapterBase
             // digital label defined in the IEEE C37.118 configuration. Certain naming conventions are expected to have a pattern that can
             // be used to determine which digital state is associated with each bit. For example, a digital label of "BREAKER_101" might
             // have a PI digital state of "Breaker" with elements "Open" and "Closed" and be at bit 3 (of 0-15) in the 16-bit digital word.
-            (string state, Regex expression)[] stateExpressions = m_digitalBitStateExpressionMap.Where(item => !item.Value.ToString().Equals("*") && validDigitalStateNames.Contains(item.Key)).Select(item => (item.Key, item.Value)).ToArray();
-            string defaultState = m_digitalBitStateExpressionMap.Where(item => item.Value.ToString().Equals("*") && validDigitalStateNames.Contains(item.Key)).Select(item => item.Key).FirstOrDefault();
+            (string state, Regex expression)[] stateExpressions = m_digitalBitStateExpressionMap.Where(item => !item.Value.ToString().Equals(".*") && validDigitalStateNames.Contains(item.Key)).Select(item => (item.Key, item.Value)).ToArray();
+            string defaultState = m_digitalBitStateExpressionMap.Where(item => item.Value.ToString().Equals(".*") && validDigitalStateNames.Contains(item.Key)).Select(item => item.Key).FirstOrDefault();
             Dictionary<MeasurementKey, (string[] digitalLabels, (string state, int bit)[])> digitalWordLabelBitStateMap = [];
 
             // Create map of digital states to be used for tag expansion
