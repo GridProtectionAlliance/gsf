@@ -163,7 +163,7 @@ namespace GSF.Web.Model
         protected string PatchRoles { get; } = "Administrator";
         protected string DeleteRoles { get; } = "Administrator";
         protected RecordRestriction RootQueryRestriction { get; } = null;
-        private int? Take { get; } = null;
+        protected int? Take { get; } = null;
 
         private string SecurityType = "";
         protected Dictionary<string, List<Claim>> Claims { get; } = new Dictionary<string, List<Claim>>();
