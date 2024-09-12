@@ -48,6 +48,7 @@
 @using System.Net.Http
 @using System.Text.RegularExpressions
 @using System.Threading
+@using GSF
 @using GSF.ComponentModel
 @using GSF.ComponentModel.DataAnnotations
 @using GSF.Identity
@@ -65,9 +66,24 @@
     Dictionary<string, string> parameters = request.QueryParameters();
     string parameter;
     int deviceID;
+    string tagTemplate = "";
+    bool showMenu = true;
+    string saveOnLoad = "false";
 
     if (!parameters.TryGetValue("DeviceID", out parameter) || !int.TryParse(parameter, out deviceID)) {
         deviceID = 0;
+    }
+
+    parameters.TryGetValue("templateID", out tagTemplate);
+
+    if (parameters.TryGetValue("showMenu", out parameter)) {
+        showMenu = parameter.ParseBoolean();
+        ViewBag.ShowMenu = showMenu;
+        ViewBag.BackgroundUnset = true;
+    }
+
+    if (parameters.TryGetValue("saveOnLoad", out parameter)) {
+        saveOnLoad = parameter.ParseBoolean() ? "true" : "false";
     }
 
     bool userIsEditor = UserIsEditor();
@@ -923,6 +939,9 @@
         }
 
         function saveDeviceConfiguration(acronym, configuration) {
+            if (@saveOnLoad)
+                return $.Deferred().resolve().promise();
+
             return $.ajax({
                 url: "/api/PhasorConfig/SaveDeviceConfiguration/" + acronym,
                 method: "POST",
@@ -955,6 +974,8 @@
             self.readOnly = ko.observable(false);
             self.errors = ko.validation.group(self);
             self.working = ko.observable(false);
+            self.saveComplete = ko.observable(false);
+            self.saveError = ko.observable(false);
 
             // Internal fields
             self._connectionString = ko.observable("");
@@ -1444,7 +1465,7 @@
 
             self.loadExisting = function () {
                 if (!self.phasorHubIsConnected())
-                    return;
+                    return $.Deferred().resolve().promise();
 
                 self.voltages.removeAll();
                 self.currents.removeAll();
@@ -1457,7 +1478,7 @@
 
                 self.configFrameDetails("Analyzing...");
 
-                phasorHub.extractConfigurationFrame(deviceID).done(self.loadConfigFrame).fail(function (error) {
+                return phasorHub.extractConfigurationFrame(deviceID).done(self.loadConfigFrame).fail(function (error) {
                     showErrorMessage(String.format("Failed to extract config file from existing device: {0}", error), null, true);
 
                     self.configFrameDetails("Unavailable");
@@ -1893,6 +1914,7 @@
                 };
 
                 reader.readAsText(fileBlob);
+                return $.Deferred().resolve().promise();
             };
 
             // Validations
@@ -3572,7 +3594,7 @@
             const configFrame = viewModel.configFrame();
 
             // Warn user to export config when phasors are tagged for deletion before save removes them permanently
-            if (!viewModel.configExported()) {
+            if (!viewModel.configExported() && !@saveOnLoad) {
                 let anyTaggedForDelete = false;
 
                 const cells = configFrame.Cells;
@@ -3672,7 +3694,7 @@
 
                                     return phasorHub.markConfigurationAsSynchronized(device.Acronym).then(function () {
                                         return serviceHub.sendCommand("initialize " + deviceID).done(function () {
-                                            window.location = "GraphMeasurements.cshtml";
+                                            window.location = "GraphMeasurements.cshtml?showMenu=@showMenu";
                                         });
                                     });
                                 });
@@ -3698,7 +3720,7 @@
                                     const connectionID = device.ParentID ? device.ParentID : device.ID;
 
                                     return serviceHub.sendCommand("initialize " + connectionID).done(function () {
-                                        window.location = "GraphMeasurements.cshtml";
+                                        window.location = "GraphMeasurements.cshtml?showMenu=@showMenu";
                                     });
                                 });
                             });
@@ -3723,25 +3745,23 @@
         // Load existing device data
         function loadDeviceConnection(id) {
             if (!hubIsConnected)
-                return;
+                return $.Deferred().reject().promise();
 
-            phasorHub.queryDeviceByID(id).done(function (device) {
+            return phasorHub.queryDeviceByID(id).then(function (device) {
                 $("#editDeviceName").html("Editing&nbsp;" + device.Acronym);
                 viewModel.deviceAcronym(device.Acronym);
                 viewModel.longitude(device.Longitude);
                 viewModel.latitude(device.Latitude);
 
-                setTimeout(function () {
                     showInfoMessage("Loading existing configuration...");
-                    loadDeviceConfiguration(device.Acronym).done(function (mapping) {
+                return loadDeviceConfiguration(device.Acronym).then(function (mapping) {
                         // TODO: If loading from a mapping, need to determine which information from database should be
                         // used to override the mapping - e.g., device name, longitude, latitude, etc.
                         if (mapping && mapping.length > 0)
-                            viewModel.loadConfiguration(new Blob([mapping], { type: "application/json" }), false);
-                        else
-                            viewModel.loadExisting();
-                    });
-                }, 100);
+                        return viewModel.loadConfiguration(new Blob([mapping], { type: "application/json" }), false);
+
+                    return viewModel.loadExisting();
+                });
             })
             .fail(function (error) {
                 showErrorMessage(String.format("Failed to load existing device \"{0}\": {1}", id, error), null, true);
@@ -3883,6 +3903,22 @@
                 showErrorMessage(String.format("Failed to load record for existing device \"{0}\": {1}", deviceID, error), null, true);
             });
         }
+
+    @{if (saveOnLoad.ParseBoolean()) {
+    <text>
+        // Override showErrorMessage to set saveError flag
+        var baseShowErrorMessage;
+
+        var showErrorMessage = (function () {
+            baseShowErrorMessage = showErrorMessage;
+
+            return function (message, timeout, highEmphasis) {
+                viewModel.saveError(true);
+                baseShowErrorMessage(message, timeout, highEmphasis);
+            }
+        })();
+    </text>
+    }}
 
         // Page initialization function
         $(function () {
@@ -4142,10 +4178,14 @@
                             templateTypeSelect.append($("<option>", { value: value, text: value }));
                         }
 
-                        // Select last value
-                        var lastTemplateType = Cookies.get("templateType");
+                        // Pick up any template type from URL parameters
+                        var lastTemplateType = "@tagTemplate";
 
-                        if (lastTemplateType === undefined)
+                        // Select last value
+                        if (isEmpty(lastTemplateType))
+                            lastTemplateType = Cookies.get("templateType");
+
+                        if (isEmpty(lastTemplateType))
                             lastTemplateType = templateTypeSelect.eq(0).val();
 
                         if (!isEmpty(lastTemplateType))
@@ -4163,8 +4203,41 @@
                     return phasorHub.loadSignalTypes("Phasor").then(function (result) {
                         phasorSignalTypes = result;
 
-                        if (deviceID > 0)
-                            loadDeviceConnection(deviceID);
+                        if (deviceID > 0) {
+                            loadDeviceConnection(deviceID).then(function () {
+                                if (@saveOnLoad) {
+                                    setTimeout(function () {
+                                        viewModel.saveError(false);
+                                        viewModel.saveComplete(false);
+
+                                        function checkForCompletion()
+                                        {
+                                            if (viewModel.working()) {
+                                                setTimeout(checkForCompletion, 100);
+                                            }
+                                            else {
+                                                // Wait for any final messages to be displayed
+                                                // before setting save complete flag
+                                                setTimeout(function () {
+                                                    viewModel.saveComplete(true);
+                                                }, 200);
+                                            }
+                                        }
+
+                                        hideInfoMessage({ closeFloatingPanels: true });
+
+                                        saveDeviceConnection().done(checkForCompletion).fail(function () {
+                                            viewModel.saveError(true);
+                                            viewModel.saveComplete(true);
+                                        });
+                                    }, 200);
+                                }
+                            })
+                            .fail(function () {
+                                viewModel.saveError(true);
+                                viewModel.saveComplete(true);
+                            });
+                        }
                     });
                 });
             });

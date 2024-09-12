@@ -1,43 +1,43 @@
 ﻿@*******************************************************************************************************
-//  GraphMeasurements.cshtml - Gbtc
-//
-//  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
-//
-//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
-//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
-//  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
-//  file except in compliance with the License. You may obtain a copy of the License at:
-//
-//      http://opensource.org/licenses/MIT
-//
-//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
-//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
-//  License for the specific language governing permissions and limitations.
-//
-//  Code Modification History:
-//  ----------------------------------------------------------------------------------------------------
-//  01/15/2016 - J. Ritchie Carroll
-//       Generated original version of source code.
-//
-//******************************************************************************************************
-//  To use in an ASP.NET project, include a GraphMeasurements.cshtml view with following content:
-//
-//  @using GSF.Web
-//  @section StyleSheets{@Html.Raw(ViewBag.StyleSheetsSection?.ToString())}
-//  @Html.RenderResource("GSF.Web.Shared.Views.GraphMeasurements.cshtml")
-//  @section Scripts{@Html.Raw(ViewBag.ScriptsSection?.ToString())}
-//
-//******************************************************************************************************
-//  To use in a self-hosted web project, include a GraphMeasurements.cshtml view with following content:
-//
-//  @using GSF.Web.Model
-//  @using <MyAppNameSpace>.Model
-//  @inherits ExtendedTemplateBase<AppModel>
-//  @section StyleSheets{@Html.Raw(ViewBag.StyleSheetsSection.ToString())}
-//  @{Layout = "Layout.cshtml";}
-//  @Html.RenderResource("GSF.Web.Shared.Views.GraphMeasurements.cshtml")
-//  @section Scripts{@Html.Raw(ViewBag.ScriptsSection.ToString())}
-//*****************************************************************************************************@
+    //  GraphMeasurements.cshtml - Gbtc
+    //
+    //  Copyright © 2016, Grid Protection Alliance.  All Rights Reserved.
+    //
+    //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+    //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+    //  The GPA licenses this file to you under the MIT License (MIT), the "License"; you may not use this
+    //  file except in compliance with the License. You may obtain a copy of the License at:
+    //
+    //      http://opensource.org/licenses/MIT
+    //
+    //  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+    //  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+    //  License for the specific language governing permissions and limitations.
+    //
+    //  Code Modification History:
+    //  ----------------------------------------------------------------------------------------------------
+    //  01/15/2016 - J. Ritchie Carroll
+    //       Generated original version of source code.
+    //
+    //******************************************************************************************************
+    //  To use in an ASP.NET project, include a GraphMeasurements.cshtml view with following content:
+    //
+    //  @using GSF.Web
+    //  @section StyleSheets{@Html.Raw(ViewBag.StyleSheetsSection?.ToString())}
+    //  @Html.RenderResource("GSF.Web.Shared.Views.GraphMeasurements.cshtml")
+    //  @section Scripts{@Html.Raw(ViewBag.ScriptsSection?.ToString())}
+    //
+    //******************************************************************************************************
+    //  To use in a self-hosted web project, include a GraphMeasurements.cshtml view with following content:
+    //
+    //  @using GSF.Web.Model
+    //  @using <MyAppNameSpace>.Model
+    //  @inherits ExtendedTemplateBase<AppModel>
+    //  @section StyleSheets{@Html.Raw(ViewBag.StyleSheetsSection.ToString())}
+    //  @{Layout = "Layout.cshtml";}
+    //  @Html.RenderResource("GSF.Web.Shared.Views.GraphMeasurements.cshtml")
+    //  @section Scripts{@Html.Raw(ViewBag.ScriptsSection.ToString())}
+    //*****************************************************************************************************@
 @* ReSharper disable RedundantUsingDirective *@
 @* ReSharper disable Html.PathError *@
 @* ReSharper disable InlineOutVariableDeclaration *@
@@ -57,16 +57,13 @@
 
     HttpRequestMessage request = ViewBag.Request;
     Dictionary<string, string> parameters = request.QueryParameters();
+    string parameter;
 
-    string showMenu;
-    parameters.TryGetValue("ShowMenu", out showMenu);
-
-    if (string.IsNullOrEmpty(showMenu))
+    if (parameters.TryGetValue("showMenu", out parameter))
     {
-        showMenu = "true";
+        ViewBag.ShowMenu = parameter.ParseBoolean();
+        ViewBag.BackgroundUnset = true;
     }
-
-    ViewBag.ShowMenu = showMenu.ParseBoolean();
 }
 @section StyleSheets {
     <link href="@Resources.Root/Shared/Content/jquery-ui.css" rel="stylesheet">
@@ -136,15 +133,15 @@
             height: 22px;
         }
 
-        /* Collapsible button icon when content is shown - arrow down */
-        .btn-collapsible.btn:after {
-            content: "\e114";
-        }
+            /* Collapsible button icon when content is shown - arrow down */
+            .btn-collapsible.btn:after {
+                content: "\e114";
+            }
 
-        /* Collapsible button icon when content is hidden - arrow right */
-        .btn-collapsible.btn.collapsed:after {
-            content: "\e080";
-        }
+            /* Collapsible button icon when content is hidden - arrow right */
+            .btn-collapsible.btn.collapsed:after {
+                content: "\e080";
+            }
 
         .glyphicon-spin {
             -webkit-animation: spin 1.25s infinite linear;
