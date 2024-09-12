@@ -23,6 +23,7 @@
 
 using GrafanaAdapters.DataSourceValueTypes;
 using GrafanaAdapters.Functions;
+using GrafanaAdapters.Functions.BuiltIn;
 using GrafanaAdapters.Model.Common;
 using GSF;
 using GSF.Drawing;
@@ -195,6 +196,111 @@ partial class GrafanaDataSourceBase
         if (!settings.TryGetValue("tolerance", out setting) || !double.TryParse(setting, out double tolerance) || tolerance <= double.Epsilon)
             tolerance = 0.000275;
 
+        Point Translate(Point point, int index, int count)
+        {
+            double interval = 2.0D * Math.PI / (count - 1);
+            double theta = interval * index;
+            double x = point.X + radius * Math.Cos(theta);
+            double y = point.Y + radius * Math.Sin(theta);
+            return new Point(x, y);
+        }
+
+        return ProcessDistribution(queryValueGroups, Translate, zoom, tolerance, cancellationToken);
+    }
+
+    private static Task ProcessSquareDistributionAsync<T>(List<DataSourceValueGroup<T>> queryValueGroups, QueryParameters queryParameters, CancellationToken cancellationToken) where T : struct, IDataSourceValueType<T>
+    {
+        Dictionary<string, string> settings = queryParameters.SquareDistribution.ParseKeyValuePairs();
+
+        // Gets offset for overlapping coordinate distribution
+        if (!settings.TryGetValue("xOffset", out string setting))
+            setting = "0";
+
+        if (!double.TryParse(setting, out double xOffset) || xOffset < 0.0D)
+            throw new SyntaxErrorException("Square distribution \"xOffset\" setting is negative or not a valid number.");
+
+        if (!settings.TryGetValue("yOffset", out setting))
+            setting = "0";
+
+        if (!double.TryParse(setting, out double yOffset) || yOffset < 0.0D)
+            throw new SyntaxErrorException("Square distribution \"yOffset\" setting is negative or not a valid number.");
+
+        // Get zoom level
+        if (!settings.TryGetValue("zoom", out setting))
+            throw new SyntaxErrorException("Square distribution \"zoom\" setting is missing.");
+
+        if (!double.TryParse(setting, out double zoom) || zoom <= 0.0D)
+            throw new SyntaxErrorException("Square distribution \"zoom\" setting is negative, zero or not a valid number.");
+
+        // For this use case, we consider coordinates to be the "same" if they are within 100 feet.
+        //
+        // As long as coordinates are not near the poles, the following formula works to calculate
+        // the degree of difference to use for a default coordinate tolerance of roughly 100 feet:
+        //
+        //   1 degree of latitude (or longitude) at equator ≈ 111 kilometers, and
+        //   1 foot ≈ 0.0003048 kilometers, so 100 feet ≈ 0.03048 kilometers, which means
+        //   the degree of difference = 0.03048 kilometers / 111 kilometers/degree, or
+        //   for 100 feet, the degree of difference is about 0.000275 degrees
+
+        // Get optional tolerance, or use default (see above)
+        if (!settings.TryGetValue("tolerance", out setting) || !double.TryParse(setting, out double tolerance) || tolerance <= double.Epsilon)
+            tolerance = 0.000275;
+
+        Point TranslateSquare(Point point, int index, int count)
+        {
+            if (index == 0)
+                return point;
+
+            int ringIndex = ((int)Math.Sqrt(index) - 1) | 1;
+            int ringDistance = (ringIndex + 1) / 2;
+            int ringOffset = index - ringIndex * ringIndex;
+
+            int[] xySignSequence = { 1, -1, -1, 1, -1, 1, 1, -1 };
+            int xySign = xySignSequence[ringOffset % 8];
+            int xyOffset = xySign * (ringOffset + 4) / 8;
+
+            int yxSign = (ringOffset % 2 == 0) ? 1 : -1;
+            int yxOffset = yxSign * ringDistance;
+
+            int xTranslation = (ringOffset % 4) < 2 ? xyOffset : yxOffset;
+            int yTranslation = (ringOffset % 4) < 2 ? yxOffset : xyOffset;
+            double x = point.X + xOffset * xTranslation;
+            double y = point.Y + yOffset * yTranslation;
+            return new Point(x, y);
+        }
+
+        Point TranslateHorizontal(Point point, int index, int count)
+        {
+            double x = point.X;
+            double y = point.Y;
+            int distance = (index + 1) / 2;
+            int direction = (index % 2) * 2 - 1;
+            x += xOffset * distance * direction;
+            return new Point(x, y);
+        }
+
+        Point TranslateVertical(Point point, int index, int count)
+        {
+            double x = point.X;
+            double y = point.Y;
+            int distance = (index + 1) / 2;
+            int direction = (index % 2) * 2 - 1;
+            y += yOffset * distance * direction;
+            return new Point(x, y);
+        }
+
+        if (xOffset != 0 && yOffset != 0)
+            return ProcessDistribution(queryValueGroups, TranslateSquare, zoom, tolerance, cancellationToken);
+        else if (yOffset == 0)
+            return ProcessDistribution(queryValueGroups, TranslateHorizontal, zoom, tolerance, cancellationToken);
+        else if (xOffset == 0)
+            return ProcessDistribution(queryValueGroups, TranslateVertical, zoom, tolerance, cancellationToken);
+        else
+            throw new SyntaxErrorException("Square distribution either \"xOffset\" or \"yOffset\" needs to be specified.");
+    }
+
+    private static Task ProcessDistribution<T>(List<DataSourceValueGroup<T>> queryValueGroups, Func<Point, int, int, Point> translate, double zoom, double tolerance, CancellationToken cancellationToken) where T : struct, IDataSourceValueType<T>
+    {
         // Get metadata maps that contain valid longitude and latitude coordinates and are sorted by them
         MetadataMap[] metadataMaps = queryValueGroups
             .Select(group => group.MetadataMap)
@@ -236,28 +342,25 @@ partial class GrafanaDataSourceBase
             if (matchingMaps.Count > 1)
                 groupedMaps.Add(matchingMaps.ToArray());
 
-            // Create radial distribution for overlapped coordinates, leaving one item at center
+            // Create rectangular distribution for overlapped coordinates, leaving one item at center
             EPSG3857 coordinateReference = new();
 
             foreach (MetadataMap[] maps in groupedMaps)
             {
                 int count = maps.Length;
-                double interval = 2.0D * Math.PI / (count - 1);
 
                 // Skip first map since it is the center
                 for (int i = 1; i < count; i++)
                 {
                     MetadataMap map = maps[i];
-                    Point point = coordinateReference.Translate(new GeoCoordinate(double.Parse(map["Latitude"]), double.Parse(map["Longitude"])), zoom);
-
-                    double theta = interval * i;
-                    double x = point.X + radius * Math.Cos(theta);
-                    double y = point.Y + radius * Math.Sin(theta);
-
-                    GeoCoordinate coordinate = coordinateReference.Translate(new Point(x, y), zoom);
-
-                    map["Longitude"] = $"{coordinate.Longitude}";
-                    map["Latitude"] = $"{coordinate.Latitude}";
+                    double latitude = double.Parse(map["Latitude"]);
+                    double longitude = double.Parse(map["Longitude"]);
+                    GeoCoordinate location = new GeoCoordinate(latitude, longitude);
+                    Point point = coordinateReference.Translate(location, zoom);
+                    Point translation = translate(point, i, count);
+                    GeoCoordinate newCoordinate = coordinateReference.Translate(translation, zoom);
+                    map["Longitude"] = $"{newCoordinate.Longitude}";
+                    map["Latitude"] = $"{newCoordinate.Latitude}";
                 }
             }
         }, cancellationToken);

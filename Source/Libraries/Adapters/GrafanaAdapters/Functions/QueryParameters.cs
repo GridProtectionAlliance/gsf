@@ -72,6 +72,11 @@ public class QueryParameters
     public string RadialDistribution { get; set; }
 
     /// <summary>
+    /// Gets or sets any defined rectangular distribution request parameters defined in the query
+    /// </summary>
+    public string SquareDistribution { get; set; }
+
+    /// <summary>
     /// Gets or sets metadata selections for the query.
     /// </summary>
     public (string tableName, string[] fieldNames)[] MetadataSelections { get; set; }
