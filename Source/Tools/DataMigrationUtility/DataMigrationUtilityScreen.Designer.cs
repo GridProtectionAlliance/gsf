@@ -386,9 +386,11 @@ namespace DataMigrationUtility
             this.Messages.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.Messages.BackColor = System.Drawing.SystemColors.Window;
             this.Messages.Location = new System.Drawing.Point(9, 368);
             this.Messages.Multiline = true;
             this.Messages.Name = "Messages";
+            this.Messages.ReadOnly = true;
             this.Messages.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.Messages.Size = new System.Drawing.Size(621, 133);
             this.Messages.TabIndex = 5;
