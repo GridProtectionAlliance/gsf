@@ -395,6 +395,8 @@ namespace DataMigrationUtility
             this.Messages.Size = new System.Drawing.Size(621, 133);
             this.Messages.TabIndex = 5;
             this.Messages.Text = "Messages:";
+            this.Messages.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Messages_KeyDown);
+            this.Messages.MouseDown += new System.Windows.Forms.MouseEventHandler(this.Messages_MouseDown);
             // 
             // OverallProgress
             // 

@@ -57,6 +57,11 @@ namespace DataMigrationUtility
         private long m_yieldIndex;
         private bool m_screenLoaded;
 
+        private int m_trackedSelectionStart;
+
+        private bool IsSelectionReversed =>
+            m_trackedSelectionStart != Messages.SelectionStart;
+
         public DataMigrationUtilityScreen()
         {
             InitializeComponent();
@@ -104,9 +109,38 @@ namespace DataMigrationUtility
 
         private void AddMessage(string MessageText)
         {
-            Messages.Text += "\n" + MessageText;
-            Messages.SelectionStart = Messages.Text.Length;
-            Messages.ScrollToCaret();
+            int selectionStart = Messages.SelectionStart;
+            int selectionLength = Messages.SelectionLength;
+            int textLength = Messages.TextLength;
+            bool isFocused = Messages.Focused;
+            bool isScrolledToEnd = selectionStart == textLength;
+
+            if (IsSelectionReversed)
+            {
+                selectionStart += selectionLength;
+                selectionLength = -selectionLength;
+            }
+
+            SuspendLayout();
+
+            // TextBox scroll position does not
+            // change when the control is not visible
+            if (!isScrolledToEnd)
+                Messages.Visible = false;
+
+            Messages.AppendText("\r\n" + MessageText);
+
+            // Selection is lost when text is appended
+            if (!isScrolledToEnd)
+                Messages.Select(selectionStart, selectionLength);
+
+            Messages.Visible = true;
+
+            // Focus is lost when the control is hidden
+            if (isFocused)
+                Messages.Focus();
+
+            ResumeLayout();
         }
 
         private void AddSQLErrorMessage(string SQL, string ErrorText)
@@ -276,6 +310,7 @@ namespace DataMigrationUtility
 
                 // Reset message text
                 Messages.Text = "Messages:";
+                Messages.Select(Messages.TextLength, 0);
 
                 UpdateProgress("Analyzing data structures, please wait...");
 
@@ -415,6 +450,18 @@ namespace DataMigrationUtility
 
             if (ClearDestinationTables.Checked && PreserveAutoIncValues.Checked && !(type == DatabaseType.SQLServer || type == DatabaseType.MySQL || type == DatabaseType.SQLite))
                 MessageBox.Show("WARNING: If there is existing data, some databases may not be able to properly preserve auto-increment values.", "Configuration Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+
+        private void Messages_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (Messages.SelectionLength == 0)
+                m_trackedSelectionStart = Messages.SelectionStart;
+        }
+
+        private void Messages_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (Messages.SelectionLength == 0)
+                m_trackedSelectionStart = Messages.SelectionStart;
         }
 
         private void DataInserter_OverallProgress(object sender, EventArgs<int, int> e) // Current, Total
