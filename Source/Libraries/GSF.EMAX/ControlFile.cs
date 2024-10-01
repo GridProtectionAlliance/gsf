@@ -114,7 +114,7 @@ namespace GSF.EMAX
         {
             get
             {
-                return EventGroupCount * 8;
+                return EventGroupCount * 16;
             }
         }
 
