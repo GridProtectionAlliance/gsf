@@ -43,18 +43,19 @@ public abstract class Median<T> : GrafanaFunctionBase<T> where T : struct, IData
         public override async IAsyncEnumerable<MeasurementValue> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             // Median uses immediate in-memory array load
-            MeasurementValue[] values = (await GetDataSourceValues(parameters).OrderBy(dataValue => dataValue.Value).ToArrayAsync(cancellationToken).ConfigureAwait(false)).Median();
-            int length = values.Length;
+            List<MeasurementValue> values = await GetDataSourceValues(parameters)
+                .OrderBy(dataValue => dataValue.Value)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
 
-            if (length == 0)
+            // Avoid multiple enumeration warnings; memory usage is small anyway
+            List<MeasurementValue> median = values.Middle().ToList();
+
+            if (median.Count == 0)
                 yield break;
 
-            // Median can return two values if there is an even number of values
-            MeasurementValue result = values.Last();
-
-            if (length > 1)
-                result.Value = values[0].Value + (values[1].Value - values[0].Value) / 2.0D;
-
+            MeasurementValue result = median.Last();
+            result.Value = median.Average(mv => mv.Value);
             yield return result;
         }
     }
@@ -80,18 +81,9 @@ public abstract class Median<T> : GrafanaFunctionBase<T> where T : struct, IData
             if (magnitudes.Count == 0)
                 yield break;
 
-            double[] magnitudeMedians = magnitudes.OrderBy(value => value).Median();
-            double[] angleMedians = angles.OrderBy(value => value).Median();
-
-            double magnitudeMedian = magnitudeMedians.Last();
-            double angleMedian = angleMedians.Last();
-
             // Median can return two values if there is an even number of values
-            if (magnitudeMedians.Length > 1)
-                magnitudeMedian = magnitudeMedians[0] + (magnitudeMedians[1] - magnitudeMedians[0]) / 2.0D;
-
-            if (angleMedians.Length > 1)
-                angleMedian = angleMedians[0] + (angleMedians[1] - angleMedians[0]) / 2.0D;
+            double magnitudeMedian = magnitudes.Median().Average();
+            double angleMedian = angles.Median().Average();
 
             // Return computed results
             if (lastValue.Time > 0.0D)
