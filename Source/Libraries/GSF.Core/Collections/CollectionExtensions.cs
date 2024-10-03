@@ -422,27 +422,69 @@ namespace GSF.Collections
         /// <typeparam name="T"><see cref="Type"/> of elements in the <paramref name="source"/></typeparam>
         /// <param name="source">An enumeration over which to find the median element(s).</param>
         /// <returns>The median item(s) from an enumeration, or <c>null</c> if <paramref name="source"/> is <c>null</c>.</returns>
-        public static T[] Median<T>(this IEnumerable<T> source)
+        public static IEnumerable<T> Median<T>(this IEnumerable<T> source)
         {
             if (source == null)
                 return null;
 
-            T[] values = source as T[] ?? source.ToArray();
+            return source
+                .OrderBy(t => t)
+                .Middle();
+        }
 
-            if (values.Length < 3)
-                return values;
+        /// <summary>
+        /// Gets the middle item(s) from an enumeration, i.e., one return item for odd lengths, two for even lengths.
+        /// </summary>
+        /// <remarks>
+        /// If enumeration length is even, two items will be returned representing the items in the middle of the set;
+        /// otherwise, if the enumeration length is odd, one item will be returned from exactly the middle of the set.
+        /// </remarks>
+        /// <typeparam name="T"><see cref="Type"/> of elements in the <paramref name="source"/></typeparam>
+        /// <param name="source">An enumeration over which to find the middle element(s).</param>
+        /// <returns>The middle item(s) from an enumeration, or <c>null</c> if <paramref name="source"/> is <c>null</c>.</returns>
+        public static IEnumerable<T> Middle<T>(this IEnumerable<T> source)
+        {
+            if (source == null)
+                return null;
 
-            List<T> results = new List<T>();
+            // Instead of source.ToList(), we could use source.Count()
+            // followed by source.Skip(...).Take(...) to avoid memory overhead
+            // but at the cost of enumerating twice
+            if (source is IList<T> list)
+                return MiddleList(list);
+            if (source is ICollection<T> collection)
+                return MiddleCollection(collection);
+            else
+                return MiddleList(source.ToList());
 
-            bool isEven = values.Length % 2 == 0;
-            int midIndex = values.Length / 2;
+            IEnumerable<T> MiddleList(IList<T> list)
+            {
+                if (list.Count == 0)
+                    yield break;
 
-            if (isEven)
-                results.Add(values[midIndex - 1]);
+                int midIndex = list.Count / 2;
 
-            results.Add(values[midIndex]);
+                if (list.Count % 2 == 0)
+                    yield return list[midIndex - 1];
 
-            return results.ToArray();
+                yield return list[midIndex];
+            }
+
+            IEnumerable<T> MiddleCollection(ICollection<T> collection)
+            {
+                int midIndex = collection.Count / 2;
+                int takeCount = 1;
+
+                if (collection.Count % 2 == 0)
+                {
+                    midIndex--;
+                    takeCount++;
+                }
+
+                return collection
+                    .Skip(midIndex)
+                    .Take(takeCount);
+            }
         }
 
         /// <summary>
