@@ -424,7 +424,7 @@ namespace GSF.Collections
         /// <returns>The median item(s) from an enumeration, or <c>null</c> if <paramref name="source"/> is <c>null</c>.</returns>
         public static IEnumerable<T> Median<T>(this IEnumerable<T> source)
         {
-            if (source == null)
+            if (source is null)
                 return null;
 
             return source
@@ -444,20 +444,21 @@ namespace GSF.Collections
         /// <returns>The middle item(s) from an enumeration, or <c>null</c> if <paramref name="source"/> is <c>null</c>.</returns>
         public static IEnumerable<T> Middle<T>(this IEnumerable<T> source)
         {
-            if (source == null)
+            if (source is null)
                 return null;
+
+            if (source is IList<T> sourceAsList)
+                return middleList(sourceAsList);
+
+            if (source is ICollection<T> sourceAsCollection)
+                return middleCollection(sourceAsCollection);
 
             // Instead of source.ToList(), we could use source.Count()
             // followed by source.Skip(...).Take(...) to avoid memory overhead
             // but at the cost of enumerating twice
-            if (source is IList<T> list)
-                return MiddleList(list);
-            if (source is ICollection<T> collection)
-                return MiddleCollection(collection);
-            else
-                return MiddleList(source.ToList());
+            return middleList(source.ToList());
 
-            IEnumerable<T> MiddleList(IList<T> list)
+            IEnumerable<T> middleList(IList<T> list)
             {
                 if (list.Count == 0)
                     yield break;
@@ -470,7 +471,7 @@ namespace GSF.Collections
                 yield return list[midIndex];
             }
 
-            IEnumerable<T> MiddleCollection(ICollection<T> collection)
+            IEnumerable<T> middleCollection(ICollection<T> collection)
             {
                 int midIndex = collection.Count / 2;
                 int takeCount = 1;

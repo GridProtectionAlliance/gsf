@@ -48,9 +48,10 @@ public abstract class Median<T> : GrafanaFunctionBase<T> where T : struct, IData
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
 
-            IEnumerable<MeasurementValue> median = values.Middle();
+            // Avoid multiple enumeration warnings; memory usage is small anyway
+            List<MeasurementValue> median = values.Middle().ToList();
 
-            if (!median.Any())
+            if (median.Count == 0)
                 yield break;
 
             MeasurementValue result = median.Last();
