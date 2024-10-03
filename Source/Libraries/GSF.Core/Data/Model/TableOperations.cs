@@ -1155,7 +1155,7 @@ namespace GSF.Data.Model
         {
             try
             {
-                return LoadRecord(Connection.RetrieveRow(m_selectRowSql, GetInterpretedPrimaryKeys(primaryKeys)));
+                return Connection.TryRetrieveRow(m_selectRowSql, out DataRow row, GetInterpretedPrimaryKeys(primaryKeys)) ? LoadRecord(row) : default;
             }
             catch (Exception ex)
             {
@@ -1177,7 +1177,7 @@ namespace GSF.Data.Model
         {
             try
             {
-                return LoadRecord(Connection.RetrieveRow(m_selectRowSql, GetInterpretedPrimaryKeys(primaryKeys, true)), properties ?? s_properties.Values);
+                return Connection.TryRetrieveRow(m_selectRowSql, out DataRow row, GetInterpretedPrimaryKeys(primaryKeys, true)) ? LoadRecord(row, properties ?? s_properties.Values) : default;
             }
             catch (Exception ex)
             {
@@ -1205,10 +1205,6 @@ namespace GSF.Data.Model
             try
             {
                 T record = new T();
-
-                // Make sure record exists, if not return null instead of a blank record
-                if (s_hasPrimaryKeyIdentityField && GetPrimaryKeys(row).All(Common.IsDefaultValue))
-                    return null;
 
                 foreach (PropertyInfo property in properties)
                 {

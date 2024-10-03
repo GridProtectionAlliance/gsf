@@ -766,6 +766,32 @@ namespace GSF.Data
         }
 
         /// <summary>
+        /// Tries to retrieve the first <see cref="DataRow"/> in the result set of the SQL statement using <see cref="Connection"/>.
+        /// </summary>
+        /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
+        /// <param name="row">The first <see cref="DataRow"/> in the result set, or <c>null</c>.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
+        /// <returns>The first <see cref="DataRow"/> in the result set.</returns>
+        public bool TryRetrieveRow(string sqlFormat, out DataRow row, params object[] parameters)
+        {
+            return TryRetrieveRow(DefaultTimeout, sqlFormat, out row, parameters);
+        }
+
+        /// <summary>
+        /// Tries to retrieve the first <see cref="DataRow"/> in the result set of the SQL statement using <see cref="Connection"/>.
+        /// </summary>
+        /// <param name="sqlFormat">Format string for the SQL statement to be executed.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="row">The first <see cref="DataRow"/> in the result set, or <c>null</c>.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters.</param>
+        /// <returns>The first <see cref="DataRow"/> in the result set.</returns>
+        public bool TryRetrieveRow(int timeout, string sqlFormat, out DataRow row, params object[] parameters)
+        {
+            string sql = GenericParameterizedQueryString(sqlFormat, parameters);
+            return Connection.TryRetrieveRow(AdapterType, sql, timeout, out row, ResolveParameters(parameters));
+        }
+
+        /// <summary>
         /// Executes the SQL statement using <see cref="Connection"/>, and returns the first <see cref="DataTable"/> 
         /// of result set, if the result set contains at least one table.
         /// </summary>
