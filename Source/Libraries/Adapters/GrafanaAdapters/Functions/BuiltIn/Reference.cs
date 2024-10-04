@@ -83,4 +83,34 @@ public abstract class Reference<T> : GrafanaFunctionBase<T> where T : struct, ID
             }
         }
     }
+
+    /// <inheritdoc />
+    public class ComputeMeasurementValue : Reference<MeasurementValue>
+    {
+        /// <inheritdoc />
+        public override async IAsyncEnumerable<MeasurementValue> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            await using IAsyncEnumerator<MeasurementValue> enumerator = GetDataSourceValues(parameters).GetAsyncEnumerator(cancellationToken);
+
+            // Get reference from first series
+            if (!await enumerator.MoveNextAsync().ConfigureAwait(false))
+                yield break;
+
+            double reference = enumerator.Current.Value;
+
+            // Return First Series
+            yield return enumerator.Current with
+            {
+                Value = enumerator.Current.Value - reference
+            };
+
+            while (await enumerator.MoveNextAsync().ConfigureAwait(false))
+            {
+                yield return enumerator.Current with
+                {
+                    Value = enumerator.Current.Value - reference
+                };
+            }
+        }
+    }
 }
