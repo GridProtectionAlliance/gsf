@@ -320,6 +320,22 @@ namespace DynamicCalculator
         public TimestampSource TimestampSource { get; set; }
 
         /// <summary>
+        /// Gets or sets the operation used to handle measurements which have timestamps that fall outside
+        /// the <see cref="ActionAdapterBase.LagTime"/>/<see cref="ActionAdapterBase.LeadTime"/> bounds.
+        /// </summary>
+        /// <remarks>
+        /// This parameter only applies when <see cref="UseLatestValues"/> is set to <c>true</c>.
+        /// The recommendation is to use <see cref="TemporalOutlierOperation.PublishValueAsNan"/>
+        /// when mixing framerates and <see cref="TemporalOutlierOperation.PublishWithBadState"/>
+        /// when using event-based data such as alarms. If you are not mixing framerates, consider
+        /// changing <see cref="UseLatestValues"/> to <c>false</c>.
+        /// </remarks>
+        [ConnectionStringParameter]
+        [Description("Defines the operation used to handle measurements with out-of-bounds timestamps.")]
+        [DefaultValue(TemporalOutlierOperation.PublishValueAsNan)]
+        public TemporalOutlierOperation OutlierOperation { get; set; }
+
+        /// <summary>
         /// Gets flag that determines if the implementation of the <see cref="DynamicCalculator"/> requires an output measurement.
         /// </summary>
         protected virtual bool ExpectsOutputMeasurement => true;
@@ -374,6 +390,7 @@ namespace DynamicCalculator
                 status.AppendLine($"         Use Latest Values: {UseLatestValues}");
                 status.AppendLine($"      Calculation Interval: {(CalculationInterval == 0.0D ? "At received data rate" : $"{CalculationInterval:N3} seconds")}");
                 status.AppendLine($"          Timestamp Source: {TimestampSource}");
+                status.AppendLine($"         Outlier Operation: {OutlierOperation}");
                 status.AppendLine($"           Skip NaN Values: {SkipNaNOutput}");
                 status.AppendLine($"            Sentinel Value: {SentinelValue}");
 
@@ -449,9 +466,11 @@ namespace DynamicCalculator
             CalculationInterval = settings.TryGetValue(nameof(CalculationInterval), out setting) ? double.Parse(setting) : 0.0D;
             UseLatestValues = !settings.TryGetValue(nameof(UseLatestValues), out setting) || setting.ParseBoolean();
             SentinelValue = settings.TryGetValue(nameof(SentinelValue), out setting) ? double.Parse(setting) : double.NaN;
+            OutlierOperation = settings.TryGetValue(nameof(OutlierOperation), out setting) && Enum.TryParse(setting, out TemporalOutlierOperation outlierOperation) ? outlierOperation : TemporalOutlierOperation.PublishValueAsNan;
 
             m_latestMeasurements.LagTime = LagTime;
             m_latestMeasurements.LeadTime = LeadTime;
+            m_latestMeasurements.OutlierOperation = OutlierOperation;
         }
 
         /// <summary>
@@ -510,12 +529,7 @@ namespace DynamicCalculator
         private void ProcessMeasurements(IEnumerable<IMeasurement> measurements)
         {
             foreach (IMeasurement measurement in measurements)
-            {
                 m_latestMeasurements.UpdateMeasurementValue(measurement);
-
-                if (measurement.Timestamp > m_latestTimestamp && measurement.Timestamp.UtcTimeIsValid(LagTime, LeadTime))
-                    m_latestTimestamp = measurement.Timestamp;
-            }
 
             if (m_timerOperation.Delay == 0)
                 ProcessLatestMeasurements();
