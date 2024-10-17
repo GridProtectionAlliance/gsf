@@ -32,6 +32,17 @@
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>..\..\..\..\Build\Output\Release\Libraries\MetadataAdapters.xml</DocumentationFile>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Mono|AnyCPU'">
+    <OutputPath>bin\Mono\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <DocumentationFile>..\..\..\..\Build\Output\Release\Libraries\MetadataAdapters.xml</DocumentationFile>
+    <Optimize>true</Optimize>
+    <NoWarn>;NU5128</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <LangVersion>latest</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
