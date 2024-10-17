@@ -37,6 +37,17 @@
   <PropertyGroup>
     <ApplicationIcon>DataExtractor.ico</ApplicationIcon>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Mono|AnyCPU'">
+    <OutputPath>bin\Mono\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <NoWarn>;NU5128</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <LangVersion>latest</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Libraries\GSF.Communication\GSF.Communication.csproj">
       <Project>{2b2eb9be-e6a9-406f-bfe6-ff46dd6bd264}</Project>
