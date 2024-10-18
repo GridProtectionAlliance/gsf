@@ -1,7 +1,7 @@
 ::*******************************************************************************************************
 ::  BuildRelease.bat - Gbtc
 ::
-::  Copyright © 2013, Grid Protection Alliance.  All Rights Reserved.
+::  Copyright Â© 2013, Grid Protection Alliance.  All Rights Reserved.
 ::
 ::  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 ::  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -31,5 +31,5 @@ SetLocal
 
 IF NOT "%1" == "" SET logflag=/l:FileLogger,Microsoft.Build.Engine;logfile=%1
 
-ECHO BuildMono: C:\Program Files\Microsoft Visual Studio\2022\Community\Msbuild\Current\Bin\MSBuild.exe GridSolutionsFramework.buildproj /p:Configuration=Mono;ForceBuild=true;PreRelease=false;SkipVersioning=true;SkipNuGetPackages=true %logflag%
-"C:\Program Files\Microsoft Visual Studio\2022\Community\Msbuild\Current\Bin\MSBuild.exe" GridSolutionsFramework.buildproj /p:Configuration=Mono;ForceBuild=true;PreRelease=false;SkipVersioning=true;SkipNuGetPackages=true %logFlag%
+ECHO BuildMono: C:\Program Files\Microsoft Visual Studio\2022\Community\Msbuild\Current\Bin\MSBuild.exe GridSolutionsFramework.buildproj /p:BuildFlavor=Mono;ForceBuild=true;PreRelease=false;SkipVersioning=true;SkipNuGetPackages=true %logflag%
+"C:\Program Files\Microsoft Visual Studio\2022\Community\Msbuild\Current\Bin\MSBuild.exe" GridSolutionsFramework.buildproj /p:BuildFlavor=Mono;ForceBuild=true;PreRelease=false;SkipVersioning=true;SkipNuGetPackages=true %logFlag%
