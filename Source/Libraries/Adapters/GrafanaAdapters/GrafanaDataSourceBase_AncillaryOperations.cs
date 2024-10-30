@@ -196,7 +196,7 @@ partial class GrafanaDataSourceBase
         if (!settings.TryGetValue("tolerance", out setting) || !double.TryParse(setting, out double tolerance) || tolerance <= double.Epsilon)
             tolerance = 0.000275;
 
-        Point Translate(Point point, int index, int count)
+        Point translate(Point point, int index, int count)
         {
             double interval = 2.0D * Math.PI / (count - 1);
             double theta = interval * index;
@@ -205,7 +205,7 @@ partial class GrafanaDataSourceBase
             return new Point(x, y);
         }
 
-        return ProcessDistribution(queryValueGroups, Translate, zoom, tolerance, cancellationToken);
+        return ProcessDistribution(queryValueGroups, translate, zoom, tolerance, cancellationToken);
     }
 
     private static Task ProcessSquareDistributionAsync<T>(List<DataSourceValueGroup<T>> queryValueGroups, QueryParameters queryParameters, CancellationToken cancellationToken) where T : struct, IDataSourceValueType<T>
@@ -246,7 +246,7 @@ partial class GrafanaDataSourceBase
         if (!settings.TryGetValue("tolerance", out setting) || !double.TryParse(setting, out double tolerance) || tolerance <= double.Epsilon)
             tolerance = 0.000275;
 
-        Point TranslateSquare(Point point, int index, int count)
+        Point translateSquare(Point point, int index, int count)
         {
             if (index == 0)
                 return point;
@@ -269,7 +269,7 @@ partial class GrafanaDataSourceBase
             return new Point(x, y);
         }
 
-        Point TranslateHorizontal(Point point, int index, int count)
+        Point translateHorizontal(Point point, int index, int count)
         {
             double x = point.X;
             double y = point.Y;
@@ -279,7 +279,7 @@ partial class GrafanaDataSourceBase
             return new Point(x, y);
         }
 
-        Point TranslateVertical(Point point, int index, int count)
+        Point translateVertical(Point point, int index, int count)
         {
             double x = point.X;
             double y = point.Y;
@@ -290,13 +290,15 @@ partial class GrafanaDataSourceBase
         }
 
         if (xOffset != 0 && yOffset != 0)
-            return ProcessDistribution(queryValueGroups, TranslateSquare, zoom, tolerance, cancellationToken);
-        else if (yOffset == 0)
-            return ProcessDistribution(queryValueGroups, TranslateHorizontal, zoom, tolerance, cancellationToken);
-        else if (xOffset == 0)
-            return ProcessDistribution(queryValueGroups, TranslateVertical, zoom, tolerance, cancellationToken);
-        else
-            throw new SyntaxErrorException("Square distribution either \"xOffset\" or \"yOffset\" needs to be specified.");
+            return ProcessDistribution(queryValueGroups, translateSquare, zoom, tolerance, cancellationToken);
+        
+        if (yOffset == 0)
+            return ProcessDistribution(queryValueGroups, translateHorizontal, zoom, tolerance, cancellationToken);
+        
+        if (xOffset == 0)
+            return ProcessDistribution(queryValueGroups, translateVertical, zoom, tolerance, cancellationToken);
+        
+        throw new SyntaxErrorException("Square distribution either \"xOffset\" or \"yOffset\" needs to be specified.");
     }
 
     private static Task ProcessDistribution<T>(List<DataSourceValueGroup<T>> queryValueGroups, Func<Point, int, int, Point> translate, double zoom, double tolerance, CancellationToken cancellationToken) where T : struct, IDataSourceValueType<T>
