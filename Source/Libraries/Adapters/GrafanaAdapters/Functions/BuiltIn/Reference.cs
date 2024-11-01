@@ -60,9 +60,6 @@ public abstract class Reference<T> : GrafanaFunctionBase<T> where T : struct, ID
     // Only non-group operation "Reference" is published instead of requiring "SliceReference".
     public override GroupOperations PublishedGroupOperations => GroupOperations.None;
 
-    // No parameters other than slice tolerance are required for this function. Note that
-    // required slice tolerance parameter added automatically by Grafana function handling.
-
     /// <inheritdoc />
     public override GroupOperations CheckAllowedGroupOperation(GroupOperations requestedOperation)
     {
