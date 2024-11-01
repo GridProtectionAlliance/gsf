@@ -18,7 +18,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// <remarks>
 /// Signature: <c>Reference(sliceTolerance, [adjustCoordinateMidPoint = false], expression)</c><br/>
 /// Returns: Single value.<br/>
-/// Example 1: <c>Reference(true, BROWNS_FERRY:BUS1.ANG; FILTER ActiveMeasurements WHERE SignalType='IPHM')</c><br/>
+/// Example 1: <c>Reference(true, BROWNS_FERRY:BUS1.ANG; FILTER ActiveMeasurements WHERE SignalType='IPHA')</c><br/>
 /// Example 2: <c>Reference(BROWNS_FERRY:BUS1; FILTER PhasorValues WHERE SignalType='IPHM')</c><br/>
 /// Variants: Reference, Ref<br/>
 /// Execution: Immediate enumeration.
