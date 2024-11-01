@@ -102,6 +102,15 @@ public class Parameters : IList<IMutableParameter>
     }
 
     /// <summary>
+    /// Gets or sets collection of target user selected metadata associated with the data source values.
+    /// </summary>
+    /// <remarks>
+    /// This property provides access to the set of outgoing metadata for each query result so that a
+    /// function can adjust or augment the metadata sets if needed.
+    /// </remarks>
+    public Dictionary<string, MetadataMap> MetadataMaps { get; set; }
+
+    /// <summary>
     /// Gets value of parameter at specified index, if the index is valid.
     /// </summary>
     /// <param name="index">Index of parameter to get.</param>

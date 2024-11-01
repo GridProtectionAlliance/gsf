@@ -67,7 +67,7 @@ public class DataSourceValueGroup<T> where T : struct, IDataSourceValueType
     public string RefID { get; init; }
 
     /// <summary>
-    /// Gets user selected metadata associated with the query.
+    /// Gets or sets user selected metadata associated with the query.
     /// </summary>
     public MetadataMap MetadataMap { get; set; }
 

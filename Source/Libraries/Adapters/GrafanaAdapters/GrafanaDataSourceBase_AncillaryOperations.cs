@@ -23,7 +23,6 @@
 
 using GrafanaAdapters.DataSourceValueTypes;
 using GrafanaAdapters.Functions;
-using GrafanaAdapters.Functions.BuiltIn;
 using GrafanaAdapters.Model.Common;
 using GSF;
 using GSF.Drawing;
@@ -255,7 +254,7 @@ partial class GrafanaDataSourceBase
             int ringDistance = (ringIndex + 1) / 2;
             int ringOffset = index - ringIndex * ringIndex;
 
-            int[] xySignSequence = { 1, -1, -1, 1, -1, 1, 1, -1 };
+            int[] xySignSequence = [1, -1, -1, 1, -1, 1, 1, -1];
             int xySign = xySignSequence[ringOffset % 8];
             int xyOffset = xySign * (ringOffset + 4) / 8;
 
@@ -357,7 +356,7 @@ partial class GrafanaDataSourceBase
                     MetadataMap map = maps[i];
                     double latitude = double.Parse(map["Latitude"]);
                     double longitude = double.Parse(map["Longitude"]);
-                    GeoCoordinate location = new GeoCoordinate(latitude, longitude);
+                    GeoCoordinate location = new(latitude, longitude);
                     Point point = coordinateReference.Translate(location, zoom);
                     Point translation = translate(point, i, count);
                     GeoCoordinate newCoordinate = coordinateReference.Translate(translation, zoom);
