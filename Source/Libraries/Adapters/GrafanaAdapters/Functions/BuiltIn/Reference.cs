@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using GSF;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
 
@@ -88,7 +89,14 @@ public abstract class Reference<T> : GrafanaFunctionBase<T> where T : struct, ID
 
         // Store reference coordinates for later adjustment
         if (adjustCoordinateMidPoint)
-            adjustCoordinateMidPoint = metadataMaps.TryGetValue(enumerator.Current.Target, out firstCoordinates) && firstCoordinates is not null;
+        {
+            if (adjustCoordinateMidPoint = metadataMaps.TryGetValue(enumerator.Current.Target, out firstCoordinates) && firstCoordinates is not null)
+            {
+                // Only need to adjust mid-point only for the series
+                if (firstCoordinates.TryGetValue("MidPointApplied", out string applied) && applied.ParseBoolean())
+                    adjustCoordinateMidPoint = false;
+            }
+        }
 
         // Return First Series
         yield return enumerator.Current with
@@ -112,6 +120,7 @@ public abstract class Reference<T> : GrafanaFunctionBase<T> where T : struct, ID
                         // between geographic locations are small enough that linear mid-point is sufficient
                         firstCoordinates["Longitude"] = ((firstLongitude + secondLongitude) / 2.0D).ToString();
                         firstCoordinates["Latitude"] = ((firstLatitude + secondLatitude) / 2.0D).ToString();
+                        firstCoordinates["MidPointApplied"] = "true";
                     }
                 }
                 else
