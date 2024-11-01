@@ -92,7 +92,7 @@ public abstract class Reference<T> : GrafanaFunctionBase<T> where T : struct, ID
         {
             if (adjustCoordinateMidPoint = metadataMaps.TryGetValue(enumerator.Current.Target, out firstCoordinates) && firstCoordinates is not null)
             {
-                // Only need to adjust mid-point only for the series
+                // Only need to adjust mid-point once for the series
                 if (firstCoordinates.TryGetValue("MidPointApplied", out string applied) && applied.ParseBoolean())
                     adjustCoordinateMidPoint = false;
             }
