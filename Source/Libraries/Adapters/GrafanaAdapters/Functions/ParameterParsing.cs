@@ -116,7 +116,7 @@ internal static class ParameterParsing
                     {
                         index = queryExpression.IndexOf(',', index + 1);
 
-                        if (index > -1 && hasSubExpression(queryExpression.Substring(lastIndex + 1, index - lastIndex - 1).Trim()))
+                        if (index == -1 || hasSubExpression(queryExpression.Substring(lastIndex + 1, index - lastIndex - 1).Trim()))
                         {
                             index = lastIndex;
                             break;
