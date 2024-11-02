@@ -20,7 +20,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// or AngularMil - defaults to Degrees.
 /// </summary>
 /// <remarks>
-/// Signature: <c>Reference(sliceTolerance, [applyUnwrap = true], [adjustCoordinateMidPoint = false], expression)</c><br/>
+/// Signature: <c>Reference(sliceTolerance, [adjustCoordinateMidPoint = false], [applyWrapOps = true], [units = Degrees], expression)</c><br/>
 /// Returns: Single value.<br/>
 /// Example 1: <c>Reference(true, false, BROWNS_FERRY:BUS1.ANG; FILTER ActiveMeasurements WHERE SignalType='IPHA')</c><br/>
 /// Example 2: <c>Reference(BROWNS_FERRY:BUS1; FILTER PhasorValues WHERE SignalType='IPHM')</c><br/>
