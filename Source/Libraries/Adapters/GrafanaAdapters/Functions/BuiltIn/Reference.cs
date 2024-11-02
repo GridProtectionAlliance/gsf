@@ -1,10 +1,11 @@
-﻿using GrafanaAdapters.DataSourceValueTypes;
-using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using GSF;
+using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
+using GSF.Units;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
 
@@ -12,13 +13,16 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Returns a slice of angle differences to the first angle (i.e., the reference) for a series of angles. The <c>sliceTolerance</c>
 /// parameter is a floating-point value that must be greater than or equal to 0.001 that represents the desired time tolerance,
 /// in seconds, for the time slice. Parameter <c>adjustCoordinateMidPoint</c>, optional, is a boolean flag that determines if the
-/// metadata of the coordinate system, i.e., longitude/latitude values, should be adjusted to the midpoint between the first and
-/// second values in the slice, storing the updated result in the metadata of the first value - defaults to false.
+/// metadata of the coordinate system, i.e., longitude/latitude values, should be adjusted to the midpoint between reference and
+/// the angle values in the slice - defaults to false. Parameter <c>applyWrapOps</c>, optional, is a boolean flag that determines
+/// if angles should be unwrapped before computing differences then rewrapped - defaults to true. The <c>units</c>parameter,
+/// optional, specifies the type of angle units and must be one of the following: Degrees, Radians, Grads, ArcMinutes, ArcSeconds
+/// or AngularMil - defaults to Degrees.
 /// </summary>
 /// <remarks>
-/// Signature: <c>Reference(sliceTolerance, [adjustCoordinateMidPoint = false], expression)</c><br/>
+/// Signature: <c>Reference(sliceTolerance, [applyUnwrap = true], [adjustCoordinateMidPoint = false], expression)</c><br/>
 /// Returns: Single value.<br/>
-/// Example 1: <c>Reference(true, BROWNS_FERRY:BUS1.ANG; FILTER ActiveMeasurements WHERE SignalType='IPHA')</c><br/>
+/// Example 1: <c>Reference(true, false, BROWNS_FERRY:BUS1.ANG; FILTER ActiveMeasurements WHERE SignalType='IPHA')</c><br/>
 /// Example 2: <c>Reference(BROWNS_FERRY:BUS1; FILTER PhasorValues WHERE SignalType='IPHM')</c><br/>
 /// Variants: Reference, Ref<br/>
 /// Execution: Immediate enumeration.
@@ -44,7 +48,21 @@ public abstract class Reference<T> : GrafanaFunctionBase<T> where T : struct, ID
         {
             Name = "adjustCoordinateMidPoint",
             Default = false,
-            Description = "A boolean flag that determines if the metadata for the first value of the coordinate system should be adjusted to the midpoint between the first and second values in the slice.",
+            Description = "A boolean flag that determines if the metadata for angles of the coordinate system should be adjusted to the midpoint between the angle and the reference.",
+            Required = false
+        },
+        new ParameterDefinition<bool>
+        {
+            Name = "applyWrapOps",
+            Default = true,
+            Description = "A boolean flag that determines if angles should be unwrapped before computing differences then rewrapped.",
+            Required = false
+        },
+        new ParameterDefinition<AngleUnit>
+        {
+            Name = "units",
+            Default = AngleUnit.Degrees,
+            Description = "Specifies the type of angle units and must be one of the following: Degrees, Radians, Grads, ArcMinutes, ArcSeconds or AngularMil.",
             Required = false
         }
     };
@@ -71,10 +89,9 @@ public abstract class Reference<T> : GrafanaFunctionBase<T> where T : struct, ID
     /// <inheritdoc />
     public override async IAsyncEnumerable<T> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        // Each data source value in a slice is part of different series that will have their own metadata maps
-        Dictionary<string, MetadataMap> metadataMaps = parameters.MetadataMaps;
-        MetadataMap firstCoordinates = null, secondCoordinates = null;
         bool adjustCoordinateMidPoint = parameters.Value<bool>(0);
+        bool applyWrapOps = parameters.Value<bool>(1);
+        AngleUnit units = parameters.Value<AngleUnit>(2);
 
         await using IAsyncEnumerator<T> enumerator = GetDataSourceValues(parameters).GetAsyncEnumerator(cancellationToken);
 
@@ -84,53 +101,78 @@ public abstract class Reference<T> : GrafanaFunctionBase<T> where T : struct, ID
 
         double reference = enumerator.Current.Value;
 
-        // Store reference coordinates for later adjustment
+        // Each data source value in a slice is part of different series that will have their own metadata maps
+        Dictionary<string, MetadataMap> metadataMaps = parameters.MetadataMaps;
+        MetadataMap refCoordinates = null;
+        double refLongitude = default, refLatitude = default;
+
         if (adjustCoordinateMidPoint)
         {
-            if (adjustCoordinateMidPoint = metadataMaps.TryGetValue(enumerator.Current.Target, out firstCoordinates) && firstCoordinates is not null)
+            // Store reference coordinates for later adjustment
+            if (adjustCoordinateMidPoint = metadataMaps.TryGetValue(enumerator.Current.Target, out refCoordinates) && refCoordinates is not null)
             {
-                // Only need to adjust mid-point once for the series
-                if (firstCoordinates.TryGetValue("MidPointApplied", out string applied) && applied.ParseBoolean())
+                adjustCoordinateMidPoint = tryParseCoordinates(refCoordinates, out refLongitude, out refLatitude);
+
+                // Only need to adjust mid-point once for the series metadata, if key exists, mid-point has already been applied
+                if (adjustCoordinateMidPoint && refCoordinates.ContainsKey("MidPointApplied"))
                     adjustCoordinateMidPoint = false;
             }
         }
 
-        // Return First Series
+        // Return first series, the reference, always zero
         yield return enumerator.Current with
         {
-            Value = enumerator.Current.Value - reference
+            Value = 0.0D
         };
 
         while (await enumerator.MoveNextAsync().ConfigureAwait(false))
         {
-            if (adjustCoordinateMidPoint && secondCoordinates is null)
+            if (adjustCoordinateMidPoint)
             {
-                // It's OK to adjust coordinate metadata for first value here after having already yielded its value
-                // above as result set will be serialized together and thus resynchronized before return to Grafana
-                if (metadataMaps.TryGetValue(enumerator.Current.Target, out secondCoordinates) && secondCoordinates is not null)
+                if (metadataMaps.TryGetValue(enumerator.Current.Target, out MetadataMap currentCoordinates) && currentCoordinates is not null)
                 {
-                    // Adjust coordinate metadata for first value to midpoint between first and second values
-                    if (tryParseCoordinates(firstCoordinates, out double firstLongitude, out double firstLatitude) && 
-                        tryParseCoordinates(secondCoordinates, out double secondLongitude, out double secondLatitude))
+                    // Adjust coordinate metadata for current value to midpoint between itself and the reference
+                    if (tryParseCoordinates(currentCoordinates, out double currentLongitude, out double currentLatitude))
                     {
                         // NOTE: This initial implementation assumes geodesics are not required, i.e., distances
                         // between geographic locations are small enough that linear mid-point is sufficient
-                        firstCoordinates["Longitude"] = ((firstLongitude + secondLongitude) / 2.0D).ToString();
-                        firstCoordinates["Latitude"] = ((firstLatitude + secondLatitude) / 2.0D).ToString();
-                        firstCoordinates["MidPointApplied"] = "true";
+                        currentCoordinates["Longitude"] = ((refLongitude + currentLongitude) / 2.0D).ToString();
+                        currentCoordinates["Latitude"] = ((refLatitude + currentLatitude) / 2.0D).ToString();
+                        currentCoordinates["MidPointApplied"] = "true";
                     }
-                }
-                else
-                {
-                    adjustCoordinateMidPoint = false;
+                    else
+                    {
+                        currentCoordinates["MidPointApplied"] = "false";
+                    }
                 }
             }
 
-            yield return enumerator.Current with
+            if (applyWrapOps)
             {
-                Value = enumerator.Current.Value - reference
-            };
+                // Apply unwrap operations to angles converted to radians
+                Angle[] angles = Angle.Unwrap([
+                    Angle.ConvertFrom(enumerator.Current.Value, units), 
+                    Angle.ConvertFrom(reference, units)
+                ]).ToArray();
+
+                yield return enumerator.Current with
+                {
+                    // Return difference between unwrapped angles, rewrapped and converted to original units
+                    Value = (angles[0] - angles[1]).ToRange(-Math.PI, false).ConvertTo(units)
+                };
+            }
+            else
+            {
+                yield return enumerator.Current with
+                {
+                    Value = enumerator.Current.Value - reference
+                };
+            }
         }
+
+        // Track that mid-point calculations been applied to metadata using reference coordinates as a marker
+        if (adjustCoordinateMidPoint)
+            refCoordinates["MidPointApplied"] = "false"; // False because reference coordinates were not adjusted
 
         static bool tryParseCoordinate(MetadataMap metadataMap, string coordinate, out double value)
         {
