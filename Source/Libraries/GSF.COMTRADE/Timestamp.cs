@@ -66,7 +66,7 @@ namespace GSF.COMTRADE
 
             seconds += milliseconds;
 
-            parts[parts.Length - 1] = seconds.ToString("00.000000");
+            parts[parts.Length - 1] = seconds.ToString("00.000000", CultureInfo.InvariantCulture);
 
             lineImage = string.Join(":", parts).RemoveWhiteSpace();
 
