@@ -407,7 +407,8 @@ public abstract partial class GrafanaDataSourceBase
                 await foreach (DataSourceValueGroup<T> valueGroup in valueGroups.ConfigureAwait(false))
                 {
                     string rootTarget = valueGroup.RootTarget ?? valueGroup.Target;
-                    Parameters parameters = await function.GenerateParametersAsync(parsedParameters, valueGroup.Source, rootTarget, metadata, cancellationToken).ConfigureAwait(false);
+                    Dictionary<string, MetadataMap> metadataMaps = new() { [rootTarget] = valueGroup.MetadataMap };
+                    Parameters parameters = await function.GenerateParametersAsync(parsedParameters, valueGroup.Source, rootTarget, metadata, metadataMaps, cancellationToken).ConfigureAwait(false);
 
                     yield return new DataSourceValueGroup<T>
                     {
@@ -432,6 +433,7 @@ public abstract partial class GrafanaDataSourceBase
 
                 DataSourceValueGroup<T>[] dataSources = await valueGroups.ToArrayAsync(cancellationToken).ConfigureAwait(false);
                 TimeSliceScannerAsync<T> scanner = await TimeSliceScannerAsync<T>.Create(dataSources, tolerance / SI.Milli, cancellationToken).ConfigureAwait(false);
+                Dictionary<string, MetadataMap> metadataMaps = dataSources.ToDictionary(dataSource => dataSource.RootTarget, dataSource => dataSource.MetadataMap);
 
                 async IAsyncEnumerable<T> computeSliceAsync()
                 {
@@ -440,7 +442,7 @@ public abstract partial class GrafanaDataSourceBase
                     while (!scanner.DataReadComplete)
                     {
                         IAsyncEnumerable<T> dataSourceValues = await scanner.ReadNextTimeSliceAsync().ConfigureAwait(false);
-                        Parameters parameters = await function.GenerateParametersAsync(normalizedParameters, dataSourceValues, null, metadata, cancellationToken).ConfigureAwait(false);
+                        Parameters parameters = await function.GenerateParametersAsync(normalizedParameters, dataSourceValues, null, metadata, metadataMaps, cancellationToken).ConfigureAwait(false);
 
                         await foreach (T dataValue in function.ComputeSliceAsync(parameters, cancellationToken).ConfigureAwait(false))
                             yield return dataValue;
@@ -468,12 +470,14 @@ public abstract partial class GrafanaDataSourceBase
                     {
                         await foreach (IAsyncGrouping<string, T> valueGroup in computeSliceAsync().GroupBy(dataValue => dataValue.Target).WithCancellation(cancellationToken).ConfigureAwait(false))
                         {
+                            metadataMaps.TryGetValue(valueGroup.Key.FirstTarget(), out MetadataMap metadataMap);
+
                             yield return new DataSourceValueGroup<T>
                             {
                                 Target = valueGroup.Key,
                                 RootTarget = valueGroup.Key,
                                 Source = valueGroup,
-                                MetadataMap = dataSources.FirstOrDefault(dataSource => dataSource.RootTarget.Equals(valueGroup.Key.FirstTarget()))?.MetadataMap
+                                MetadataMap = metadataMap
                             };
                         }
                     }
@@ -501,7 +505,8 @@ public abstract partial class GrafanaDataSourceBase
             {
                 // Flatten all series into a single enumerable
                 IAsyncEnumerable<T> dataSourceValues = valueGroups.SelectMany(source => source.Source);
-                Parameters parameters = await function.GenerateParametersAsync(parsedParameters, dataSourceValues, null, metadata, cancellationToken).ConfigureAwait(false);
+                Dictionary<string, MetadataMap> metadataMaps = await valueGroups.ToDictionaryAsync(dataSource => dataSource.RootTarget, dataSource => dataSource.MetadataMap, cancellationToken).ConfigureAwait(false);
+                Parameters parameters = await function.GenerateParametersAsync(parsedParameters, dataSourceValues, null, metadata, metadataMaps, cancellationToken).ConfigureAwait(false);
 
                 DataSourceValueGroup<T> valueGroup = new()
                 {
@@ -522,13 +527,13 @@ public abstract partial class GrafanaDataSourceBase
                     valueGroup.RootTarget = dataValue.Target;
 
                     // Set metadata map for matching result set target
-                    valueGroup.MetadataMap = (await valueGroups.FirstOrDefaultAsync(dataSource => 
-                        dataSource.RootTarget.Equals(dataValue.Target.FirstTarget()), cancellationToken).ConfigureAwait(false))?.MetadataMap;
+                    metadataMaps.TryGetValue(dataValue.Target.FirstTarget(), out MetadataMap metadataMap);
+                    valueGroup.MetadataMap = metadataMap;
                 }
                 else
                 {
                     // Otherwise, just select first metadata map for the first value group
-                    valueGroup.MetadataMap = (await valueGroups.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false))?.MetadataMap;
+                    valueGroup.MetadataMap = metadataMaps.FirstOrDefault().Value;
                 }
 
                 yield return valueGroup;

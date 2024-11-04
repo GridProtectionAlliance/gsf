@@ -116,7 +116,7 @@ internal static class ParameterParsing
                     {
                         index = queryExpression.IndexOf(',', index + 1);
 
-                        if (index > -1 && hasSubExpression(queryExpression.Substring(lastIndex + 1, index - lastIndex - 1).Trim()))
+                        if (index == -1 || hasSubExpression(queryExpression.Substring(lastIndex + 1, index - lastIndex - 1).Trim()))
                         {
                             index = lastIndex;
                             break;
@@ -143,19 +143,30 @@ internal static class ParameterParsing
     /// <summary>
     /// Generates a typed list of value mutable parameters from parsed parameters.
     /// </summary>
-    /// <typeparam name="TDataSourceValue">The type of the data source value.</typeparam>
     /// <param name="function">Target function.</param>
     /// <param name="parsedParameters">Parsed parameters.</param>
     /// <param name="dataSourceValues">Data source values.</param>
     /// <param name="rootTarget">Root target.</param>
-    /// <param name="metadata">Metadata.</param>
+    /// <param name="metadata">Source metadata.</param>
+    /// <param name="metadataMaps">Set of target user selected metadata associated with the data source values.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>List of value mutable parameters from parsed parameters.</returns>
+    /// <typeparam name="TDataSourceValue">The type of the data source value.</typeparam>
     /// <remarks>
-    /// In case user has requested metadata as a parameter, pass in the root target
-    /// which has a higher chance of being resolved for associated metadata.
+    /// <para>
+    /// In case user has requested metadata as a parameter, pass in the root target which has a higher chance of being
+    /// resolved for associated metadata.
+    /// </para>
+    /// <para>
+    /// The <paramref name="metadataMaps"/> parameter provides access to the set of outgoing metadata for each query result
+    /// so that a function can adjust or augment the metadata sets if needed. The set will normally only contain a single
+    /// map that corresponds to the single root target of the associated <paramref name="dataSourceValues"/>, however, for
+    /// <see cref="GroupOperations.Slice"/> or <see cref="GroupOperations.Set"/> operations, each data source value can
+    /// represent a separate series that contains its own metadata map, so the <paramref name="metadataMaps"/> parameter
+    /// will contain multiple maps in these cases.
+    /// </para>
     /// </remarks>
-    public static async ValueTask<Parameters> GenerateParametersAsync<TDataSourceValue>(this IGrafanaFunction<TDataSourceValue> function, string[] parsedParameters, IAsyncEnumerable<TDataSourceValue> dataSourceValues, string rootTarget, DataSet metadata, CancellationToken cancellationToken) where TDataSourceValue : struct, IDataSourceValueType<TDataSourceValue>
+    public static async ValueTask<Parameters> GenerateParametersAsync<TDataSourceValue>(this IGrafanaFunction<TDataSourceValue> function, string[] parsedParameters, IAsyncEnumerable<TDataSourceValue> dataSourceValues, string rootTarget, DataSet metadata, Dictionary<string, MetadataMap> metadataMaps, CancellationToken cancellationToken) where TDataSourceValue : struct, IDataSourceValueType<TDataSourceValue>
     {
         // Generate a list of value mutable parameters
         Parameters parameters = function.ParameterDefinitions.CreateParameters();
@@ -166,6 +177,7 @@ internal static class ParameterParsing
         Debug.Assert(parsedParameters.Length == 0 || parsedParameters.All(parameter => !string.IsNullOrWhiteSpace(parameter)) || function.Name.Equals(nameof(Evaluate<TDataSourceValue>)), $"Expected all parameters to be non-empty in: {function.Name}({string.Join(",", parsedParameters)})");
 
         parameters.ParsedCount = parsedParameters.Length;
+        parameters.MetadataMaps = metadataMaps;
 
         for (int i = 0; i < parameters.Count; i++)
         {
