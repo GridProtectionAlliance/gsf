@@ -31,6 +31,7 @@ using GrafanaAdapters.Metadata;
 using GrafanaAdapters.Model.Common;
 using GSF.Collections;
 using GSF.Diagnostics;
+using GSF.Drawing;
 using GSF.TimeSeries;
 using GSF.Units;
 using GSF.Web;
@@ -151,6 +152,10 @@ public abstract partial class GrafanaDataSourceBase
 
         // Query each target -- each returned value group has a 'Source' value enumerable that may contain deferred
         // enumerations that need evaluation before the final result can be serialized and returned to Grafana
+
+        // For QueryWide changes we need a sepperate Dictionary of Lat/Long per Group.
+        Dictionary<string, Point> queryWideLocationAdjustment = new Dictionary<string, Point>();
+
         foreach (QueryParameters queryParameters in targetQueryParameters)
         {
             // Organize value groups by given Grafana target data source query, i.e., all results with the same RefID
@@ -166,10 +171,10 @@ public abstract partial class GrafanaDataSourceBase
                 if (queryParameters.MetadataSelections.Length > 0)
                 {
                     if (queryParameters.RadialDistribution.Length > 0)
-                        await ProcessRadialDistributionAsync(queryValueGroups, queryParameters, cancellationToken).ConfigureAwait(false);
+                        await ProcessRadialDistributionAsync(queryValueGroups, queryParameters, queryWideLocationAdjustment, metadata, cancellationToken).ConfigureAwait(false);
 
                     if (queryParameters.SquareDistribution.Length > 0)
-                        await ProcessSquareDistributionAsync(queryValueGroups, queryParameters, cancellationToken).ConfigureAwait(false);
+                        await ProcessSquareDistributionAsync(queryValueGroups, queryParameters, queryWideLocationAdjustment, metadata, cancellationToken).ConfigureAwait(false);
                 }
             }
             catch (SyntaxErrorException ex)

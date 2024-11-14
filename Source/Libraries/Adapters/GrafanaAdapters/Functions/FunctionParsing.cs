@@ -35,6 +35,7 @@ using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
@@ -260,71 +261,15 @@ internal static class FunctionParsing
 
             string seriesLabel = TargetCache<string>.GetOrAdd($"{default(T).DataTypeIndex}:{labelExpression}@{rootTarget}", () =>
             {
-                // If label expression does not contain any substitutions, just return the expression
-                if (labelExpression.IndexOf('{') < 0)
-                    return labelExpression;
-
-                Dictionary<string, string> substitutions = new(StringComparer.OrdinalIgnoreCase);
-                Regex fieldExpression = new(@"\{(?<Field>[^}]+)\}", RegexOptions.Compiled);
-
-                // Handle substitutions for each tag defined in the rootTarget
-                foreach (string item in rootTarget.Split(';'))
-                {
-                    // Load {alias} substitutions - alias values are for tags that have been assigned an alias, e.g.:
-                    // for 'x=TAGNAME', the alias would be 'x' and the target would be 'TAGNAME'
-                    string target = item.SplitAlias(out string alias);
-
-                    if (substitutions.TryGetValue("alias", out string substitution))
-                    {
-                        // Pattern for multiple alias substitutions is: {alias}, {alias}, {alias}, ...
-                        // This handles the case where multiple tags exist in the single root target
-                        // and each one has am assigned alias
-                        if (!string.IsNullOrWhiteSpace(alias))
-                            substitutions["alias"] = string.IsNullOrWhiteSpace(substitution) ? alias : $"{substitution}, {alias}";
-                    }
-                    else
-                    {
-                        substitutions.Add("alias", alias ?? "");
-                    }
-
-                    // Check all substitution fields for table name specifications (ActiveMeasurements assumed)
-                    HashSet<string> tableNames = new(new[] { MeasurementValue.MetadataTableName }, StringComparer.OrdinalIgnoreCase);
-                    MatchCollection fields = fieldExpression.Matches(labelExpression);
-
-                    foreach (Match match in fields)
-                    {
-                        string field = match.Result("${Field}");
-
-                        // Check if specified field substitution has a table name prefix
-                        string[] components = field.Split('.');
-
-                        if (components.Length == 2)
-                            tableNames.Add(components[0]);
-                    }
-
-                    // Load field substitutions for each table name from metadata
-                    foreach (string tableName in tableNames)
-                    {
-                        // ActiveMeasurements view fields are added as non-prefixed field name substitutions
-                        if (tableName.Equals(MeasurementValue.MetadataTableName, StringComparison.OrdinalIgnoreCase))
-                            LoadFieldSubstitutions(metadata, substitutions, target, tableName, false);
-
-                        // All other table fields are added with table name as the prefix {table.field}
-                        LoadFieldSubstitutions(metadata, substitutions, target, tableName, true);
-                    }
-                }
-
-                string derivedLabel = labelExpression;
-
-                foreach (KeyValuePair<string, string> substitution in substitutions)
-                    derivedLabel = derivedLabel.ReplaceCaseInsensitive($"{{{substitution.Key}}}", substitution.Value);
-
+                string derivedLabel = ParseLabel(labelExpression, metadata, rootTarget);
+               
                 if (derivedLabel.Equals(labelExpression, StringComparison.Ordinal))
                     derivedLabel = $"{labelExpression}{(index > 1 ? $" {index}" : "")}";
-
+                
                 index++;
                 return derivedLabel;
-            });
+            }
+            );
 
             // Verify that series label is unique
             while (uniqueLabelSet.Contains(seriesLabel))
@@ -405,6 +350,71 @@ internal static class FunctionParsing
             }
         }
     }
+
+    public static string ParseLabel(string labelExpression, DataSet metadata,string rootTarget="")
+    {
+        // If label expression does not contain any substitutions, just return the expression
+        if (labelExpression.IndexOf('{') < 0)
+            return labelExpression;
+
+        Dictionary<string, string> substitutions = new(StringComparer.OrdinalIgnoreCase);
+        Regex fieldExpression = new(@"\{(?<Field>[^}]+)\}", RegexOptions.Compiled);
+
+        // Handle substitutions for each tag defined in the rootTarget
+        foreach (string item in rootTarget.Split(';'))
+        {
+            // Load {alias} substitutions - alias values are for tags that have been assigned an alias, e.g.:
+            // for 'x=TAGNAME', the alias would be 'x' and the target would be 'TAGNAME'
+            string target = item.SplitAlias(out string alias);
+
+            if (substitutions.TryGetValue("alias", out string substitution))
+            {
+                // Pattern for multiple alias substitutions is: {alias}, {alias}, {alias}, ...
+                // This handles the case where multiple tags exist in the single root target
+                // and each one has am assigned alias
+                if (!string.IsNullOrWhiteSpace(alias))
+                    substitutions["alias"] = string.IsNullOrWhiteSpace(substitution) ? alias : $"{substitution}, {alias}";
+            }
+            else
+            {
+                substitutions.Add("alias", alias ?? "");
+            }
+
+            // Check all substitution fields for table name specifications (ActiveMeasurements assumed)
+            HashSet<string> tableNames = new(new[] { MeasurementValue.MetadataTableName }, StringComparer.OrdinalIgnoreCase);
+            MatchCollection fields = fieldExpression.Matches(labelExpression);
+
+            foreach (Match match in fields)
+            {
+                string field = match.Result("${Field}");
+
+                // Check if specified field substitution has a table name prefix
+                string[] components = field.Split('.');
+
+                if (components.Length == 2)
+                    tableNames.Add(components[0]);
+            }
+
+            // Load field substitutions for each table name from metadata
+            foreach (string tableName in tableNames)
+            {
+                // ActiveMeasurements view fields are added as non-prefixed field name substitutions
+                if (tableName.Equals(MeasurementValue.MetadataTableName, StringComparison.OrdinalIgnoreCase))
+                    LoadFieldSubstitutions(metadata, substitutions, target, tableName, false);
+
+                // All other table fields are added with table name as the prefix {table.field}
+                LoadFieldSubstitutions(metadata, substitutions, target, tableName, true);
+            }
+        }
+
+        string derivedLabel = labelExpression;
+
+        foreach (KeyValuePair<string, string> substitution in substitutions)
+            derivedLabel = derivedLabel.ReplaceCaseInsensitive($"{{{substitution.Key}}}", substitution.Value);
+
+       return derivedLabel;
+    }
+    
 
     private static readonly Regex s_uniqueSeriesRegex = new(@"(?<Label>.+) (?<Count>\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 }
