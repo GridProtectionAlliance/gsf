@@ -15,10 +15,10 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Example: <c>AddMetaData('Company', 'GPA', FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
 /// Execution: Deferred enumeration.
 /// </remarks>
-public abstract class AddMetaData<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
+public abstract class AddMetadata<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {
     /// <inheritdoc />
-    public override string Name => nameof(AddMetaData<T>);
+    public override string Name => nameof(AddMetadata<T>);
 
     /// <inheritdoc />
     public override string Description => "Returns a series of values with an extra metadata field.";
