@@ -1,7 +1,7 @@
 ﻿using GrafanaAdapters.DataSourceValueTypes;
 using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 using System.Collections.Generic;
-using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
@@ -46,7 +46,7 @@ public abstract class AddMetaData<T> : GrafanaFunctionBase<T> where T : struct, 
     };
 
     /// <inheritdoc />
-    public override async IAsyncEnumerable<T> ComputeAsync(Parameters parameters, CancellationToken cancellationToken)
+    public override async IAsyncEnumerable<T> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         Dictionary<string, MetadataMap> metadataMaps = parameters.MetadataMaps;
         string field = parameters.Value<string>(0);
@@ -56,8 +56,8 @@ public abstract class AddMetaData<T> : GrafanaFunctionBase<T> where T : struct, 
 
         while (await enumerator.MoveNextAsync().ConfigureAwait(false))
         {
-            if (metadataMaps.TryGetValue(enumerator.Current.Target, out MetadataMap currentCoordinates))
-                currentCoordinates[field] = value;
+            if (metadataMaps.TryGetValue(enumerator.Current.Target, out MetadataMap currentMetadata) && !currentMetadata.ContainsKey(field))
+                currentMetadata[field] = value;
 
             yield return enumerator.Current;
         }
