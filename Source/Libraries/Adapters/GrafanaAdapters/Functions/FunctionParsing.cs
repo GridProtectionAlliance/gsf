@@ -266,8 +266,7 @@ internal static class FunctionParsing
                 
                 index++;
                 return derivedLabel;
-            }
-            );
+            });
 
             // Verify that series label is unique
             while (uniqueLabelSet.Contains(seriesLabel))
@@ -349,7 +348,7 @@ internal static class FunctionParsing
         }
     }
 
-    public static string ParseLabel(string labelExpression, DataSet metadata,string rootTarget="")
+    public static string ParseLabel(string labelExpression, DataSet metadata, string rootTarget = "")
     {
         // If label expression does not contain any substitutions, just return the expression
         if (labelExpression.IndexOf('{') < 0)
@@ -410,9 +409,8 @@ internal static class FunctionParsing
         foreach (KeyValuePair<string, string> substitution in substitutions)
             derivedLabel = derivedLabel.ReplaceCaseInsensitive($"{{{substitution.Key}}}", substitution.Value);
 
-       return derivedLabel;
+        return derivedLabel;
     }
-    
 
     private static readonly Regex s_uniqueSeriesRegex = new(@"(?<Label>.+) (?<Count>\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 }

@@ -153,8 +153,8 @@ public abstract partial class GrafanaDataSourceBase
         // Query each target -- each returned value group has a 'Source' value enumerable that may contain deferred
         // enumerations that need evaluation before the final result can be serialized and returned to Grafana
 
-        // For QueryWide changes we need a sepperate Dictionary of Lat/Long per Group.
-        Dictionary<string, Point> queryWideLocationAdjustment = new Dictionary<string, Point>();
+        // For query wide changes, we need a separate map of Lat/Long per group
+        Dictionary<string, Point> queryWideLocationAdjustment = [];
 
         foreach (QueryParameters queryParameters in targetQueryParameters)
         {

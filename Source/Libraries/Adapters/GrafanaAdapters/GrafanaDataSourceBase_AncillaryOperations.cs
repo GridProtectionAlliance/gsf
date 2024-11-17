@@ -181,7 +181,7 @@ partial class GrafanaDataSourceBase
         if (!double.TryParse(setting, out double zoom) || zoom <= 0.0D)
             throw new SyntaxErrorException("Radial distribution \"zoom\" setting is negative, zero or not a valid number.");
 
-        if (!settings.TryGetValue("", out setting))
+        if (!settings.TryGetValue("groupBy", out setting))
             setting = "";
 
         string groupBy = setting;
@@ -212,7 +212,7 @@ partial class GrafanaDataSourceBase
         return ProcessDistribution(queryValueGroups, translate, zoom, tolerance, groupBy, queryWideLocationAdjustment, metadata, cancellationToken);
     }
 
-    private static Task ProcessSquareDistributionAsync<T>(List<DataSourceValueGroup<T>> queryValueGroups, QueryParameters queryParameters, Dictionary<string, Point> queryWideLocationAdjustment,DataSet metadata, CancellationToken cancellationToken) where T : struct, IDataSourceValueType<T>
+    private static Task ProcessSquareDistributionAsync<T>(List<DataSourceValueGroup<T>> queryValueGroups, QueryParameters queryParameters, Dictionary<string, Point> queryWideLocationAdjustment, DataSet metadata, CancellationToken cancellationToken) where T : struct, IDataSourceValueType<T>
     {
         Dictionary<string, string> settings = queryParameters.SquareDistribution.ParseKeyValuePairs();
 
@@ -236,12 +236,11 @@ partial class GrafanaDataSourceBase
         if (!double.TryParse(setting, out double zoom) || zoom <= 0.0D)
             throw new SyntaxErrorException("Square distribution \"zoom\" setting is negative, zero or not a valid number.");
 
-        if (!settings.TryGetValue("", out setting))
+        if (!settings.TryGetValue("groupBy", out setting))
             setting = "";
 
         string groupBy = setting;
 
-        
         // For this use case, we consider coordinates to be the "same" if they are within 100 feet.
         //
         // As long as coordinates are not near the poles, the following formula works to calculate
@@ -327,20 +326,19 @@ partial class GrafanaDataSourceBase
 
         return Task.Factory.StartNew(() =>
         {
-
-
             List<MetadataMap[]> groupedMaps = [];
             List<MetadataMap> matchingMaps = [metadataMaps[0]];
             List<MetadataMap> mapsWithGroupBy = [];
             MetadataMap firstGroupMap = metadataMaps[0];
+
             // Organize metadata maps with overlapped coordinates into groups, this code
             // assumes that metadata maps are already sorted by longitude and latitude:
             for (int i = 1; i < metadataMaps.Length; i++)
             {
                 MetadataMap currentMap = metadataMaps[i];
 
-                // If there is a group By use that Lat/Long instead of calculating a new one
-                if (!string.IsNullOrEmpty(groupBy) && groupMap.ContainsKey(FunctionParsing.ParseLabel(groupBy,metadata)))
+                // Don't use current map for distribution if it already exists in group-by map
+                if (!string.IsNullOrEmpty(groupBy) && groupMap.ContainsKey(FunctionParsing.ParseLabel(groupBy, metadata)))
                 {
                     //Don't use this one for distribution if it is in an existing Group
                     mapsWithGroupBy.Add(currentMap);
@@ -383,14 +381,16 @@ partial class GrafanaDataSourceBase
                     GeoCoordinate newCoordinate = coordinateReference.Translate(translation, zoom);
                     map["Longitude"] = $"{newCoordinate.Longitude}";
                     map["Latitude"] = $"{newCoordinate.Latitude}";
+
                     if (!string.IsNullOrEmpty(groupBy))
-                    groupMap.Add(FunctionParsing.ParseLabel(groupBy, metadata), new Point(newCoordinate.Longitude,newCoordinate.Latitude));
+                        groupMap.Add(FunctionParsing.ParseLabel(groupBy, metadata), new Point(newCoordinate.Longitude, newCoordinate.Latitude));
                 }
             }
 
             foreach (MetadataMap map in mapsWithGroupBy)
             {
                 string group = FunctionParsing.ParseLabel(groupBy, metadata);
+
                 if (!groupMap.TryGetValue(group, out Point location))
                     location = new Point(0,0);
                 
