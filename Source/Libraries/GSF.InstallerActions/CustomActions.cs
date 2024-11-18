@@ -32,6 +32,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -544,6 +545,26 @@ namespace GSF.InstallerActions
         }
 
         /// <summary>
+        /// Custom action to overwrite permissions on a folder to make it read-only.
+        /// </summary>
+        /// <param name="session">Session object containing data from the installer.</param>
+        /// <returns>Result of the custom action.</returns>
+        [CustomAction]
+        public static ActionResult ReadOnlyFolderAction(Session session)
+        {
+            Logger logger = new(session);
+
+            logger.Log("Begin ReadOnlyFolderAction");
+
+            string folderPath = GetPropertyValue(session, "FOLDERPATH");
+            SetFolderReadOnly(folderPath);
+
+            logger.Log("End ReadOnlyFolderAction");
+
+            return ActionResult.Success;
+        }
+
+        /// <summary>
         /// Prompts the user to select a file via the open file dialog.
         /// </summary>
         /// <param name="session">Session object containing data from the installer.</param>
@@ -929,6 +950,68 @@ namespace GSF.InstallerActions
 
             if (shell != null && !shell.WaitForExit(5000))
                 shell.Kill();
+        }
+
+        // Overwrite all permissions with a read-only permission set
+        private static void SetFolderReadOnly(string folderPath)
+        {
+            try
+            {
+                // Get the directory info
+                DirectoryInfo dirInfo = new DirectoryInfo(folderPath);
+
+                // Get the current ACL
+                DirectorySecurity dirSecurity = dirInfo.GetAccessControl();
+
+                // Disable inheritance and remove inherited permissions
+                dirSecurity.SetAccessRuleProtection(true, false);
+
+                // Create a new rule for the current user (read-only)
+                SecurityIdentifier currentUser = new SecurityIdentifier(WellKnownSidType.BuiltinUsersSid, null);
+                FileSystemAccessRule readOnlyRule = new FileSystemAccessRule(
+                    currentUser,
+                    FileSystemRights.ReadAndExecute | FileSystemRights.ListDirectory,
+                    InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit,
+                    PropagationFlags.None,
+                    AccessControlType.Allow);
+
+                // Create a rule for SYSTEM account
+                SecurityIdentifier systemSid = new SecurityIdentifier(WellKnownSidType.LocalSystemSid, null);
+                FileSystemAccessRule systemRule = new FileSystemAccessRule(
+                    systemSid,
+                    FileSystemRights.FullControl,
+                    InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit,
+                    PropagationFlags.None,
+                    AccessControlType.Allow);
+
+                // Create a rule for Administrators
+                SecurityIdentifier adminSid = new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null);
+                FileSystemAccessRule adminRule = new FileSystemAccessRule(
+                    adminSid,
+                    FileSystemRights.FullControl,
+                    InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit,
+                    PropagationFlags.None,
+                    AccessControlType.Allow);
+
+                // Remove all existing rules
+                AuthorizationRuleCollection rules = dirSecurity.GetAccessRules(true, true, typeof(SecurityIdentifier));
+                foreach (FileSystemAccessRule rule in rules)
+                {
+                    dirSecurity.RemoveAccessRule(rule);
+                }
+
+                // Add the new rules
+                dirSecurity.AddAccessRule(readOnlyRule);
+                dirSecurity.AddAccessRule(systemRule);
+                dirSecurity.AddAccessRule(adminRule);
+
+                // Apply the new security settings
+                dirInfo.SetAccessControl(dirSecurity);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Failed to set folder permissions: {ex.Message}", ex);
+            }
         }
 
         // Method to get the value of a property
