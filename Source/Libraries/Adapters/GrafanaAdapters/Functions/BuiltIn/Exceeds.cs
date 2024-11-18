@@ -4,6 +4,7 @@ using GSF;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -29,9 +30,6 @@ public abstract class Exceeds<T> : GrafanaFunctionBase<T> where T : struct, IDat
     public override string Description => "Returns a series of values that represent The points at which the input series exceds the given threshold..";
 
     /// <inheritdoc />
-    public override string[] Aliases => [];
-
-    /// <inheritdoc />
     public override ReturnType ReturnType => ReturnType.Series;
 
     /// <inheritdoc />
@@ -46,15 +44,15 @@ public abstract class Exceeds<T> : GrafanaFunctionBase<T> where T : struct, IDat
         },
         new ParameterDefinition<bool>
         {
-            Name = "includeDuration",
+            Name = "returnDurations",
             Default = false,
-            Description = "A boolean flag which determines if duration is included as value (in seconds).",
+            Description = "A boolean flag that indicates that the duration (in seconds) a value exceeded threshold be returned instead of the original value.",
             Required = false
         }
     };
 
     /// <inheritdoc />
-    public override async IAsyncEnumerable<T> ComputeAsync(Parameters parameters, CancellationToken cancellationToken)
+    public override async IAsyncEnumerable<T> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         double threshold = parameters.Value<double>(0);
         bool includeDuration = parameters.Value<bool>(1);
