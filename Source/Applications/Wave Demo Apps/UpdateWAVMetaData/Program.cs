@@ -48,23 +48,8 @@ namespace UpdateWAVMetaData
             Guid nodeID = systemSettings["NodeID"].ValueAs<Guid>();
             bool useMemoryCache = systemSettings["UseMemoryCache"].ValueAsBoolean(false);
             string connectionString = systemSettings["ConnectionString"].Value;
-            string nodeIDQueryString = null;
             string parameterizedQuery;
             int protocolID, signalTypePMID, signalTypePAID;
-
-            // Define guid with query string delimiters according to database needs
-            Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
-            string setting;
-
-            if (settings.TryGetValue("Provider", out setting))
-            {
-                // Check if provider is for Access since it uses braces as Guid delimiters
-                if (setting.StartsWith("Microsoft.Jet.OLEDB", StringComparison.OrdinalIgnoreCase))
-                    nodeIDQueryString = "{" + nodeID + "}";
-            }
-
-            if (string.IsNullOrWhiteSpace(nodeIDQueryString))
-                nodeIDQueryString = "'" + nodeID + "'";
 
             using (AdoDataConnection database = new AdoDataConnection("systemSettings"))
             {
@@ -109,12 +94,12 @@ namespace UpdateWAVMetaData
                     if (Convert.ToInt32(connection.ExecuteScalar(database.ParameterizedQueryString("SELECT COUNT(*) FROM Device WHERE Acronym = {0}", "acronym"), acronym)) == 0)
                     {
                         parameterizedQuery = database.ParameterizedQueryString("INSERT INTO Device(NodeID, Acronym, Name, ProtocolID, FramesPerSecond, " +
-                            "MeasurementReportingInterval, ConnectionString, Enabled) VALUES(" + nodeIDQueryString + ", {0}, {1}, {2}, {3}, {4}, {5}, {6})",
+                            "MeasurementReportingInterval, ConnectionString, Enabled) VALUES({7}, {0}, {1}, {2}, {3}, {4}, {5}, {6})",
                             "acronym", "name", "protocolID", "framesPerSecond", "measurementReportingInterval",
                             "connectionString", "enabled");
 
                         // Insert new device record
-                        connection.ExecuteNonQuery(parameterizedQuery, acronym, name, protocolID, sourceWave.SampleRate, 1000000, $"wavFileName={FilePath.GetAbsolutePath(sourceFileName)}; connectOnDemand=true; outputSourceIDs={acronym}; memoryCache={useMemoryCache}", database.Bool(true));
+                        connection.ExecuteNonQuery(parameterizedQuery, acronym, name, protocolID, sourceWave.SampleRate, 1000000, $"wavFileName={FilePath.GetAbsolutePath(sourceFileName)}; connectOnDemand=true; outputSourceIDs={acronym}; memoryCache={useMemoryCache}", database.Bool(true), nodeID);
                         int deviceID = Convert.ToInt32(connection.ExecuteScalar(database.ParameterizedQueryString("SELECT ID FROM Device WHERE Acronym = {0}", "acronym"), acronym));
                         string pointTag;
                         int lastPhasorIndex = 0;
