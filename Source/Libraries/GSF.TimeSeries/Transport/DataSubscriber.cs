@@ -3456,7 +3456,7 @@ namespace GSF.TimeSeries.Transport
                             command.Transaction = transaction;
 
                         // Query the actual record ID based on the known run-time ID for this subscriber device
-                        object sourceID = command.ExecuteScalar($"SELECT SourceID FROM Runtime WHERE ID = {ID} AND SourceTable='Device'", MetadataSynchronizationTimeout);
+                        object sourceID = command.ExecuteScalar("SELECT SourceID FROM Runtime WHERE ID = {0} AND SourceTable='Device'", MetadataSynchronizationTimeout, ID);
 
                         if (sourceID is null || sourceID == DBNull.Value)
                             return;
@@ -3464,15 +3464,15 @@ namespace GSF.TimeSeries.Transport
                         int parentID = Convert.ToInt32(sourceID);
 
                         // Validate that the subscriber device is marked as a concentrator (we are about to associate children devices with it)
-                        if (!command.ExecuteScalar($"SELECT IsConcentrator FROM Device WHERE ID = {parentID}", MetadataSynchronizationTimeout).ToString().ParseBoolean())
-                            command.ExecuteNonQuery($"UPDATE Device SET IsConcentrator = 1 WHERE ID = {parentID}", MetadataSynchronizationTimeout);
+                        if (!command.ExecuteScalar("SELECT IsConcentrator FROM Device WHERE ID = {0}", MetadataSynchronizationTimeout, parentID).ToString().ParseBoolean())
+                            command.ExecuteNonQuery("UPDATE Device SET IsConcentrator = 1 WHERE ID = {0}", MetadataSynchronizationTimeout, parentID);
 
                         // Get any historian associated with the subscriber device
-                        object historianID = command.ExecuteScalar($"SELECT HistorianID FROM Device WHERE ID = {parentID}", MetadataSynchronizationTimeout);
+                        object historianID = command.ExecuteScalar("SELECT HistorianID FROM Device WHERE ID = {0}", MetadataSynchronizationTimeout, parentID);
 
                         // Determine the active node ID - we cache this since this value won't change for the lifetime of this class
                         if (m_nodeID == Guid.Empty)
-                            m_nodeID = Guid.Parse(command.ExecuteScalar($"SELECT NodeID FROM IaonInputAdapter WHERE ID = {(int)ID}", MetadataSynchronizationTimeout).ToString());
+                            m_nodeID = Guid.Parse(command.ExecuteScalar("SELECT NodeID FROM IaonInputAdapter WHERE ID = {0}", MetadataSynchronizationTimeout, ID).ToString());
 
                         // Determine the protocol record auto-inc ID value for the gateway transport protocol (GEP) - this value is also cached since it shouldn't change for the lifetime of this class
                         if (m_gatewayProtocolID == 0)
