@@ -330,7 +330,7 @@ namespace GSF.TimeSeries.Configuration
 
                 try
                 {
-                    database.Connection.ExecuteNonQuery($"DELETE FROM TrackedChange WHERE ID <= {latestVersion}");
+                    database.Connection.ExecuteNonQuery("DELETE FROM TrackedChange WHERE ID <= {0}",latestVersion);
                 }
                 catch (Exception ex)
                 {
