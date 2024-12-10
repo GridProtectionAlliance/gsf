@@ -340,7 +340,7 @@ partial class GrafanaDataSourceBase
                 // Don't use current map for distribution if it already exists in group-by map
                 if (!string.IsNullOrEmpty(groupBy) && groupMap.ContainsKey(FunctionParsing.ParseLabel(groupBy, metadata)))
                 {
-                    //Don't use this one for distribution if it is in an existing Group
+                    // Add map to list of maps with group-by
                     mapsWithGroupBy.Add(currentMap);
                     continue;
                 }
@@ -362,7 +362,7 @@ partial class GrafanaDataSourceBase
             if (matchingMaps.Count > 1)
                 groupedMaps.Add(matchingMaps.ToArray());
 
-            // Create rectangular distribution for overlapped coordinates, leaving one item at center
+            // Create translated distribution for overlapped coordinates, leaving one item at center
             EPSG3857 coordinateReference = new();
 
             foreach (MetadataMap[] maps in groupedMaps)

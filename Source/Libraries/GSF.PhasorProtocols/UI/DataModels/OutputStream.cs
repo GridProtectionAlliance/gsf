@@ -188,6 +188,22 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 if (leadTimeValue is not null && double.TryParse(leadTimeValue.ToString(), out double leadTime) && leadTime > 0.0D)
                     m_leadTime = leadTime;
+
+                // Set default use local clock as real-time and perform timestamp reasonability setting to that used by manager screens
+                object useRemoteTimeValue = IsolatedStorageManager.ReadFromIsolatedStorage("UseRemoteTime");
+
+                if (useRemoteTimeValue is not null && bool.TryParse(useRemoteTimeValue.ToString(), out bool useRemoteTime))
+                {
+                    if (useRemoteTime)
+                        m_useLocalClockAsRealTime = false;
+
+                    m_performTimestampReasonabilityCheck = !useRemoteTime;
+                }
+
+                object useLocalClockAsRealTimeValue = IsolatedStorageManager.ReadFromIsolatedStorage("UseLocalClockAsRealTime");
+
+                if (useLocalClockAsRealTimeValue is not null && bool.TryParse(useLocalClockAsRealTimeValue.ToString(), out bool useLocalClockAsRealTime))
+                    m_useLocalClockAsRealTime = useLocalClockAsRealTime;
             }
             catch (Exception ex)
             {
