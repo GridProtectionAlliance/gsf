@@ -163,7 +163,7 @@ partial class GrafanaDataSourceBase
         return processQueryRequestFunctions;
     }
 
-    private static Task ProcessRadialDistributionAsync<T>(List<DataSourceValueGroup<T>> queryValueGroups, QueryParameters queryParameters, CancellationToken cancellationToken) where T : struct, IDataSourceValueType<T>
+    private static Task ProcessRadialDistributionAsync<T>(List<DataSourceValueGroup<T>> queryValueGroups, QueryParameters queryParameters, Dictionary<string, Point> queryWideLocationAdjustment, DataSet metadata, CancellationToken cancellationToken) where T : struct, IDataSourceValueType<T>
     {
         Dictionary<string, string> settings = queryParameters.RadialDistribution.ParseKeyValuePairs();
 
@@ -180,6 +180,11 @@ partial class GrafanaDataSourceBase
 
         if (!double.TryParse(setting, out double zoom) || zoom <= 0.0D)
             throw new SyntaxErrorException("Radial distribution \"zoom\" setting is negative, zero or not a valid number.");
+
+        if (!settings.TryGetValue("groupBy", out setting))
+            setting = "";
+
+        string groupBy = setting;
 
         // For this use case, we consider coordinates to be the "same" if they are within 100 feet.
         //
@@ -204,10 +209,10 @@ partial class GrafanaDataSourceBase
             return new Point(x, y);
         }
 
-        return ProcessDistribution(queryValueGroups, translate, zoom, tolerance, cancellationToken);
+        return ProcessDistribution(queryValueGroups, translate, zoom, tolerance, groupBy, queryWideLocationAdjustment, metadata, cancellationToken);
     }
 
-    private static Task ProcessSquareDistributionAsync<T>(List<DataSourceValueGroup<T>> queryValueGroups, QueryParameters queryParameters, CancellationToken cancellationToken) where T : struct, IDataSourceValueType<T>
+    private static Task ProcessSquareDistributionAsync<T>(List<DataSourceValueGroup<T>> queryValueGroups, QueryParameters queryParameters, Dictionary<string, Point> queryWideLocationAdjustment, DataSet metadata, CancellationToken cancellationToken) where T : struct, IDataSourceValueType<T>
     {
         Dictionary<string, string> settings = queryParameters.SquareDistribution.ParseKeyValuePairs();
 
@@ -230,6 +235,11 @@ partial class GrafanaDataSourceBase
 
         if (!double.TryParse(setting, out double zoom) || zoom <= 0.0D)
             throw new SyntaxErrorException("Square distribution \"zoom\" setting is negative, zero or not a valid number.");
+
+        if (!settings.TryGetValue("groupBy", out setting))
+            setting = "";
+
+        string groupBy = setting;
 
         // For this use case, we consider coordinates to be the "same" if they are within 100 feet.
         //
@@ -289,18 +299,18 @@ partial class GrafanaDataSourceBase
         }
 
         if (xOffset != 0 && yOffset != 0)
-            return ProcessDistribution(queryValueGroups, translateSquare, zoom, tolerance, cancellationToken);
+            return ProcessDistribution(queryValueGroups, translateSquare, zoom, tolerance, groupBy, queryWideLocationAdjustment, metadata, cancellationToken);
         
         if (yOffset == 0)
-            return ProcessDistribution(queryValueGroups, translateHorizontal, zoom, tolerance, cancellationToken);
+            return ProcessDistribution(queryValueGroups, translateHorizontal, zoom, tolerance, groupBy, queryWideLocationAdjustment, metadata, cancellationToken);
         
         if (xOffset == 0)
-            return ProcessDistribution(queryValueGroups, translateVertical, zoom, tolerance, cancellationToken);
+            return ProcessDistribution(queryValueGroups, translateVertical, zoom, tolerance, groupBy, queryWideLocationAdjustment, metadata, cancellationToken);
         
         throw new SyntaxErrorException("Square distribution either \"xOffset\" or \"yOffset\" needs to be specified.");
     }
 
-    private static Task ProcessDistribution<T>(List<DataSourceValueGroup<T>> queryValueGroups, Func<Point, int, int, Point> translate, double zoom, double tolerance, CancellationToken cancellationToken) where T : struct, IDataSourceValueType<T>
+    private static Task ProcessDistribution<T>(List<DataSourceValueGroup<T>> queryValueGroups, Func<Point, int, int, Point> translate, double zoom, double tolerance, string groupBy, Dictionary<string, Point> groupMap, DataSet metadata, CancellationToken cancellationToken) where T : struct, IDataSourceValueType<T>
     {
         // Get metadata maps that contain valid longitude and latitude coordinates and are sorted by them
         MetadataMap[] metadataMaps = queryValueGroups
@@ -318,6 +328,7 @@ partial class GrafanaDataSourceBase
         {
             List<MetadataMap[]> groupedMaps = [];
             List<MetadataMap> matchingMaps = [metadataMaps[0]];
+            List<MetadataMap> mapsWithGroupBy = [];
             MetadataMap firstGroupMap = metadataMaps[0];
 
             // Organize metadata maps with overlapped coordinates into groups, this code
@@ -325,6 +336,14 @@ partial class GrafanaDataSourceBase
             for (int i = 1; i < metadataMaps.Length; i++)
             {
                 MetadataMap currentMap = metadataMaps[i];
+
+                // Don't use current map for distribution if it already exists in group-by map
+                if (!string.IsNullOrEmpty(groupBy) && groupMap.ContainsKey(FunctionParsing.ParseLabel(groupBy, metadata)))
+                {
+                    //Don't use this one for distribution if it is in an existing Group
+                    mapsWithGroupBy.Add(currentMap);
+                    continue;
+                }
 
                 if (coordinatesMatch(firstGroupMap, currentMap))
                 {
@@ -362,7 +381,21 @@ partial class GrafanaDataSourceBase
                     GeoCoordinate newCoordinate = coordinateReference.Translate(translation, zoom);
                     map["Longitude"] = $"{newCoordinate.Longitude}";
                     map["Latitude"] = $"{newCoordinate.Latitude}";
+
+                    if (!string.IsNullOrEmpty(groupBy))
+                        groupMap.Add(FunctionParsing.ParseLabel(groupBy, metadata), new Point(newCoordinate.Longitude, newCoordinate.Latitude));
                 }
+            }
+
+            foreach (MetadataMap map in mapsWithGroupBy)
+            {
+                string group = FunctionParsing.ParseLabel(groupBy, metadata);
+
+                if (!groupMap.TryGetValue(group, out Point location))
+                    location = new Point(0,0);
+                
+                map["Longitude"] = $"{location.X}";
+                map["Latitude"] = $"{location.Y}";
             }
         }, cancellationToken);
 
