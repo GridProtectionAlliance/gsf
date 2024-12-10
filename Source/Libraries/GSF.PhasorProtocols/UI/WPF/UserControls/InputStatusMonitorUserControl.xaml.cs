@@ -389,7 +389,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
             m_displayPhaseAngleYAxis = IsolatedStorageManager.ReadFromIsolatedStorage("DisplayPhaseAngleYAxis").ToString().ParseBoolean();
             m_displayCurrentYAxis = IsolatedStorageManager.ReadFromIsolatedStorage("DisplayCurrentYAxis").ToString().ParseBoolean();
             m_displayVoltageYAxis = IsolatedStorageManager.ReadFromIsolatedStorage("DisplayVoltageYAxis").ToString().ParseBoolean();
-            m_useLocalClockAsRealtime = IsolatedStorageManager.ReadFromIsolatedStorage("UseLocalClockAsRealtime").ToString().ParseBoolean();
+            m_useLocalClockAsRealtime = IsolatedStorageManager.ReadFromIsolatedStorage("UseLocalClockAsRealTime").ToString().ParseBoolean();
             m_ignoreBadTimestamps = IsolatedStorageManager.ReadFromIsolatedStorage("IgnoreBadTimestamps").ToString().ParseBoolean();
             ValidateSettingsAfterRead();
 

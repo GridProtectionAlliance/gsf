@@ -590,6 +590,10 @@ namespace GSF.PhasorProtocols.UI.UserControls
 
         private void LocalTimeLabel_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
+            UseRemoteTime.IsChecked = Convert.ToString(IsolatedStorageManager.ReadFromIsolatedStorage("UseRemoteTime") ?? "false").ParseBoolean();
+            CurrentLagTime.Text = $"{Convert.ToDouble(IsolatedStorageManager.ReadFromIsolatedStorage("LagTime") ?? "0"):0.00}";
+            CurrentLeadTime.Text = $"{Convert.ToDouble(IsolatedStorageManager.ReadFromIsolatedStorage("LeadTime") ?? "0"):0.00}";
+
             double timeDeviation = m_lastLocalTimeDeviation;
 
             if (double.IsNaN(timeDeviation) || double.IsInfinity(timeDeviation) || timeDeviation == default)
@@ -598,8 +602,8 @@ namespace GSF.PhasorProtocols.UI.UserControls
             double lagTime = Math.Ceiling(timeDeviation * 1.2D);
             double leadTime = Math.Ceiling(lagTime * 1.2D);
 
-            LagTime.Text = lagTime.ToString("N2");
-            LeadTime.Text = leadTime.ToString("N2");
+            LagTime.Text = lagTime.ToString("0.00");
+            LeadTime.Text = leadTime.ToString("0.00");
             RecommendedValues.Visibility = Visibility.Visible;
 
             TimeReasonabilityGroupBox.Header = "Change Local Time Reasonability Parameters";
@@ -727,6 +731,8 @@ namespace GSF.PhasorProtocols.UI.UserControls
                 string lagTimeText = lagTime.ToString(CultureInfo.InvariantCulture);
                 string leadTimeText = leadTime.ToString(CultureInfo.InvariantCulture);
 
+                bool useRemoteTime = UseRemoteTime.IsChecked.GetValueOrDefault();
+
                 if (m_timeReasonabilityPopupIsForLocalTime && ApplyToManager.IsChecked.GetValueOrDefault())
                 {
                     try
@@ -758,8 +764,12 @@ namespace GSF.PhasorProtocols.UI.UserControls
                     try
                     {
                         // Update internal lead/lag time settings used by manager screens
+                        IsolatedStorageManager.WriteToIsolatedStorage("UseRemoteTime", useRemoteTime.ToString());
                         IsolatedStorageManager.WriteToIsolatedStorage("LagTime", lagTimeText);
                         IsolatedStorageManager.WriteToIsolatedStorage("LeadTime", leadTimeText);
+
+                        if (useRemoteTime)
+                            IsolatedStorageManager.WriteToIsolatedStorage("UseLocalClockAsRealtime", "false");
                     }
                     catch (Exception ex)
                     {
@@ -797,7 +807,17 @@ namespace GSF.PhasorProtocols.UI.UserControls
                                     continue;
 
                                 Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
-                                
+
+                                if (useRemoteTime)
+                                {
+                                    settings["PerformTimestampReasonabilityCheck"] = "false";
+                                    settings["UseLocalClockAsRealTime"] = "false";
+                                }
+                                else
+                                {
+                                    settings["PerformTimestampReasonabilityCheck"] = "true";
+                                }
+
                                 settings["LagTime"] = lagTimeText;
                                 settings["LeadTime"] = leadTimeText;
 
@@ -922,11 +942,21 @@ namespace GSF.PhasorProtocols.UI.UserControls
             DiskValue.Text = "...%";
             UpdateHighlighting(DiskLabel, DiskValue, s_defaultBrush, null, null);
 
+            bool useRemoteTime = Convert.ToString(IsolatedStorageManager.ReadFromIsolatedStorage("UseRemoteTime") ?? "false").ParseBoolean();
+
             LocalTimeValue.Text = $"... {(m_serverIsLocal ? "seconds" : "secs")}";
-            UpdateHighlighting(LocalTimeLabel, LocalTimeValue, s_defaultBrush, s_underlineStyle, null);
+
+            if (useRemoteTime)
+                UpdateHighlighting(LocalTimeLabel, LocalTimeValue, s_grayBrush, s_underlineShadowStyle, s_shadowStyle);
+            else
+                UpdateHighlighting(LocalTimeLabel, LocalTimeValue, s_defaultBrush, s_underlineStyle, null);
 
             ServerTimeValue.Text = $"... {(m_serverIsLocal ? "seconds" : "secs")}";
-            UpdateHighlighting(ServerTimeLabel, ServerTimeValue, s_defaultBrush, ApplyToServer.IsEnabled ? s_underlineStyle : null, null);
+
+            if (useRemoteTime)
+                UpdateHighlighting(ServerTimeLabel, ServerTimeValue, s_grayBrush, ApplyToServer.IsEnabled ? s_underlineShadowStyle : s_shadowStyle, s_shadowStyle);
+            else
+                UpdateHighlighting(ServerTimeLabel, ServerTimeValue, s_defaultBrush, ApplyToServer.IsEnabled ? s_underlineStyle : null, null);
         }
 
         private void InitializeTimeReasonabilitySettings()
@@ -1212,15 +1242,24 @@ namespace GSF.PhasorProtocols.UI.UserControls
                     }
                     else if (signalID == m_statSignalIDs[2])
                     {
+                        bool useRemoteTime = Convert.ToString(IsolatedStorageManager.ReadFromIsolatedStorage("UseRemoteTime") ?? "false").ParseBoolean();
+
                         ServerTimeValue.Text = $"{formattedValue} {(m_serverIsLocal ? "seconds" : "secs")}";
                         m_lastServerTimeDeviation = Math.Abs(value);
 
-                        if (m_lastServerTimeDeviation > s_timeAlarm)
-                            UpdateHighlighting(ServerTimeLabel, ServerTimeValue, s_alarmBrush, ApplyToServer.IsEnabled ? s_underlineShadowStyle : s_shadowStyle, s_shadowStyle);
-                        else if (m_lastServerTimeDeviation > s_timeWarning)
-                            UpdateHighlighting(ServerTimeLabel, ServerTimeValue, s_warningBrush, ApplyToServer.IsEnabled ? s_underlineShadowStyle : s_shadowStyle, s_shadowStyle);
+                        if (useRemoteTime)
+                        {
+                            UpdateHighlighting(ServerTimeLabel, ServerTimeValue, s_grayBrush, ApplyToServer.IsEnabled ? s_underlineShadowStyle : s_shadowStyle, s_shadowStyle);
+                        }
                         else
-                            UpdateHighlighting(ServerTimeLabel, ServerTimeValue, s_defaultBrush, ApplyToServer.IsEnabled ? s_underlineStyle : null, null);
+                        {
+                            if (m_lastServerTimeDeviation > s_timeAlarm)
+                                UpdateHighlighting(ServerTimeLabel, ServerTimeValue, s_alarmBrush, ApplyToServer.IsEnabled ? s_underlineShadowStyle : s_shadowStyle, s_shadowStyle);
+                            else if (m_lastServerTimeDeviation > s_timeWarning)
+                                UpdateHighlighting(ServerTimeLabel, ServerTimeValue, s_warningBrush, ApplyToServer.IsEnabled ? s_underlineShadowStyle : s_shadowStyle, s_shadowStyle);
+                            else
+                                UpdateHighlighting(ServerTimeLabel, ServerTimeValue, s_defaultBrush, ApplyToServer.IsEnabled ? s_underlineStyle : null, null);
+                        }
 
                         // Calculate local time deviation
                         value += m_lastLocalToServerTimeDeviation;
@@ -1228,12 +1267,19 @@ namespace GSF.PhasorProtocols.UI.UserControls
                         formattedValue = double.IsNaN(value) ? "..." : $"{value:N2}";
                         LocalTimeValue.Text = $"{formattedValue} {(m_serverIsLocal ? "seconds" : "secs")}";
 
-                        if (m_lastLocalTimeDeviation > s_timeAlarm)
-                            UpdateHighlighting(LocalTimeLabel, LocalTimeValue, s_alarmBrush, s_underlineShadowStyle, s_shadowStyle);
-                        else if (m_lastLocalTimeDeviation > s_timeWarning)
-                            UpdateHighlighting(LocalTimeLabel, LocalTimeValue, s_warningBrush, s_underlineShadowStyle, s_shadowStyle);
+                        if (useRemoteTime)
+                        {
+                            UpdateHighlighting(LocalTimeLabel, LocalTimeValue, s_grayBrush, s_underlineShadowStyle, s_shadowStyle);
+                        }
                         else
-                            UpdateHighlighting(LocalTimeLabel, LocalTimeValue, s_defaultBrush, s_underlineStyle, null);
+                        {
+                            if (m_lastLocalTimeDeviation > s_timeAlarm)
+                                UpdateHighlighting(LocalTimeLabel, LocalTimeValue, s_alarmBrush, s_underlineShadowStyle, s_shadowStyle);
+                            else if (m_lastLocalTimeDeviation > s_timeWarning)
+                                UpdateHighlighting(LocalTimeLabel, LocalTimeValue, s_warningBrush, s_underlineShadowStyle, s_shadowStyle);
+                            else
+                                UpdateHighlighting(LocalTimeLabel, LocalTimeValue, s_defaultBrush, s_underlineStyle, null);
+                        }
                     }
                     else if (signalID == m_statSignalIDs[3])
                     {
@@ -1283,6 +1329,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
         private static double s_timeAlarm = 5.0D;
         private static readonly SolidColorBrush s_warningBrush;
         private static readonly SolidColorBrush s_alarmBrush;
+        private static readonly SolidColorBrush s_grayBrush;
         private static Brush s_defaultBrush;
         private static Style s_underlineStyle;
         private static Style s_shadowStyle;
@@ -1320,6 +1367,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
                 s_timeAlarm = settings["TimeAlarm"].ValueAs(s_timeAlarm);
                 s_warningBrush = new SolidColorBrush((Color)(ColorConverter.ConvertFromString(settings["WarningColor"].ValueAs(DefaultWarningBrush)) ?? Colors.Yellow));
                 s_alarmBrush = new SolidColorBrush((Color)(ColorConverter.ConvertFromString(settings["AlarmColor"].ValueAs(DefaultAlarmBrush)) ?? Colors.Red));
+                s_grayBrush = new SolidColorBrush(Colors.LightGray);
 
                 // Save changes, if any
                 config.Save();
