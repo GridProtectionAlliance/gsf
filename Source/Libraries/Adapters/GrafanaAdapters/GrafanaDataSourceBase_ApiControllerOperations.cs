@@ -255,8 +255,8 @@ partial class GrafanaDataSourceBase
                     return descriptions;
                 })
                 .OrderBy(function => // Order functions grouped with their "Slice" and "Set" functions
-                    function.name.StartsWith("Slice") ? $"{function.name.Substring(5)}1" : 
-                    function.name.StartsWith("Set") ? $"{function.name.Substring(3)}2" : 
+                    function.name.StartsWith("Slice") ? $"{function.name.Substring(5)}1" :
+                    function.name.StartsWith("Set") ? $"{function.name.Substring(3)}2" :
                     $"{function.name}0");
             });
         },
@@ -300,14 +300,13 @@ partial class GrafanaDataSourceBase
                         .ToArray();
                 }
 
-                // Search target is a 'SELECT' statement, this operates as a filter for in memory metadata (not a database query)
-                List<string> results = [];
+                // Search target successfully parsed as a 'SELECT' statement, this operates as a filter for in memory metadata (not a database query)
 
                 // Provided unrestricted metadata table field names if data type index is -1, otherwise if
                 // meta-data table does not contain the field names required by the data source value type,
                 // return empty results as this is not a table supported by the data source value type:
                 if (dataTypeIndex > -1 && !dataSourceValueType.MetadataTableIsValid(metadata, tableName))
-                    return results.ToArray();
+                    return [];
 
                 // If table name is not in meta-data for unrestricted search, we have no choice but to attempt
                 // meta-data augmentation for each default data source value instance - this is expensive, but
@@ -339,20 +338,16 @@ partial class GrafanaDataSourceBase
                 if (takeCount == int.MaxValue && string.IsNullOrWhiteSpace(expression))
                     takeCount = MaximumSearchTargetsPerRequest;
 
-                void executeSelect(IEnumerable<DataRow> queryOperation)
-                {
-                    results.AddRange(queryOperation.Take(takeCount).Select(row =>
-                        string.Join(",", fieldNames.Select(fieldName => row[fieldName].ToString()))));
-                }
+                // Query metadata table applying optional filter expression and sort field
+                DataRow[] filterResult = string.IsNullOrWhiteSpace(expression) ? // No expression returns all rows
+                        string.IsNullOrWhiteSpace(sortField) ? table.Select() : table.Select("true", sortField) :
+                        table.Select(expression, sortField);
 
-                if (string.IsNullOrWhiteSpace(expression))
-                    executeSelect(string.IsNullOrWhiteSpace(sortField) ? table.Select() : table.Select("true", sortField));
-                else
-                    executeSelect(table.Select(expression, sortField));
+                // Execute transformation on query result to return selected field values as a CSV-type string
+                IEnumerable<string> transform = filterResult.Select(row => string.Join(",", fieldNames.Select(fieldName => row[fieldName].ToString())));
 
-                return distinct ?
-                    results.Distinct(StringComparer.OrdinalIgnoreCase).ToArray() :
-                    results.ToArray();
+                // Apply optional distinct operation and apply take count row limit
+                return (distinct ? transform.Distinct(StringComparer.OrdinalIgnoreCase) : transform).Take(takeCount).ToArray();
             });
         },
         cancellationToken);
