@@ -87,13 +87,16 @@ public abstract class Exceeds<T> : GrafanaFunctionBase<T> where T : struct, IDat
             
         }
 
-        if (includeDuration)
-            yield return (T)start with
-            {
-                Value = (enumerator.Current.Time - ((T)start).Time) / GSF.Ticks.PerSecond
-            };
-        else
-            yield return (T)start;
+        if (start is not null)
+        {
+            if (includeDuration)
+                yield return (T)start with
+                {
+                    Value = (enumerator.Current.Time - ((T)start).Time) / GSF.Ticks.PerSecond
+                };
+            else
+                yield return (T)start;
+        }
     }
 
     /// <inheritdoc />
