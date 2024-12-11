@@ -62,7 +62,7 @@ public abstract class Exceeds<T> : GrafanaFunctionBase<T> where T : struct, IDat
 
         await using IAsyncEnumerator<T> enumerator = GetDataSourceValues(parameters).GetAsyncEnumerator(cancellationToken);
 
-        if (enumerator.Current.Value > threshold)
+        if (!double.IsNaN(enumerator.Current.Value) && enumerator.Current.Value > threshold)
         {
             start = enumerator.Current;
             
@@ -70,11 +70,14 @@ public abstract class Exceeds<T> : GrafanaFunctionBase<T> where T : struct, IDat
 
         while (await enumerator.MoveNextAsync().ConfigureAwait(false))
         {
+            if (double.IsNaN(enumerator.Current.Value))
+                continue;
+                
             if (start is null && enumerator.Current.Value > threshold)
             {
                 start = enumerator.Current;
             }
-            else if (start is not null && enumerator.Current.Value < threshold)
+            else if (start is not null && enumerator.Current.Value =< threshold)
             {
                 if (includeDuration)
                     yield return (T)start with { 
@@ -92,7 +95,7 @@ public abstract class Exceeds<T> : GrafanaFunctionBase<T> where T : struct, IDat
             if (includeDuration)
                 yield return (T)start with
                 {
-                    Value = (enumerator.Current.Time - ((T)start).Time) / GSF.Ticks.PerSecond
+                    Value = (((T)start).Time - enumerator.Current.Time) / GSF.Ticks.PerSecond
                 };
             else
                 yield return (T)start;
