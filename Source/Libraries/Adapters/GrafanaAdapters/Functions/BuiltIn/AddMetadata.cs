@@ -65,12 +65,12 @@ public abstract class AddMetadata<T> : GrafanaFunctionBase<T> where T : struct, 
     }
 
     /// <inheritdoc />
-    public class ComputeMeasurementValue : IncludeRange<MeasurementValue>
+    public class ComputeMeasurementValue : AddMetadata<MeasurementValue>
     {
     }
 
     /// <inheritdoc />
-    public class ComputePhasorValue : IncludeRange<PhasorValue>
+    public class ComputePhasorValue : AddMetadata<PhasorValue>
     {
         // Operating on magnitude only
     }

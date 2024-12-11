@@ -97,12 +97,12 @@ public abstract class Exceeds<T> : GrafanaFunctionBase<T> where T : struct, IDat
     }
 
     /// <inheritdoc />
-    public class ComputeMeasurementValue : ExcludeRange<MeasurementValue>
+    public class ComputeMeasurementValue : Exceeds<MeasurementValue>
     {
     }
 
     /// <inheritdoc />
-    public class ComputePhasorValue : ExcludeRange<PhasorValue>
+    public class ComputePhasorValue : Exceeds<PhasorValue>
     {
         // Operating on magnitude only
     }
