@@ -67,6 +67,16 @@ namespace GSF.TimeSeries.Adapters
         /// </summary>
         public const double DefaultLeadTime = 5.0D;
 
+        /// <summary>
+        /// Defines the default value for the <see cref="PerformTimestampReasonabilityCheck"/>.
+        /// </summary>
+        public const bool DefaultPerformTimestampReasonabilityCheck = true;
+
+        /// <summary>
+        /// Defines the default value for the <see cref="UseLocalClockAsRealTime"/>.
+        /// </summary>
+        public const bool DefaultUseLocalClockAsRealTime = false;
+
         // Fields
         private readonly LongSynchronizedOperation m_parseConnectionString;
         private readonly LongSynchronizedOperation m_initializeChildAdapters;
@@ -172,6 +182,34 @@ namespace GSF.TimeSeries.Adapters
         [Description("Defines the allowed future time deviation tolerance, in seconds (can be sub-second) applied to each adapter.")]
         [DefaultValue(DefaultLeadTime)]
         public virtual double LeadTime { get; set; } = DefaultLeadTime;
+
+        /// <summary>
+        /// Gets or sets flag that determines if timestamp reasonability checks should be performed on incoming
+        /// measurements (i.e., measurement timestamps are compared to system clock for reasonability using
+        /// <see cref="LeadTime"/> tolerance).
+        /// </summary>
+        /// <remarks>
+        /// Setting this value to <c>false</c> will make the concentrator use the latest value received as "real-time"
+        /// without validation; this is not recommended in production since time reported by source devices may
+        /// be grossly incorrect. For non-production configurations, setting this value to false will allow
+        /// concentration of historical data.
+        /// </remarks>
+        [ConnectionStringParameter]
+        [Description("Defines flag that determines if timestamp reasonability checks should be performed on incoming measurements.")]
+        [DefaultValue(DefaultPerformTimestampReasonabilityCheck)]
+        public bool PerformTimestampReasonabilityCheck { get; set; } = DefaultPerformTimestampReasonabilityCheck;
+
+        /// <summary>
+        /// Gets or sets flag that determines whether or not to use the local clock time as real-time.
+        /// </summary>
+        /// <remarks>
+        /// Use your local system clock as real-time only if the time is locally GPS-synchronized,
+        /// or if the measurement values being sorted were not measured relative to a GPS-synchronized clock.
+        /// </remarks>
+        [ConnectionStringParameter]
+        [Description("Defines flag that determines whether or not to use the local clock time as real-time.")]
+        [DefaultValue(DefaultUseLocalClockAsRealTime)]
+        public bool UseLocalClockAsRealTime { get; set; } = DefaultUseLocalClockAsRealTime;
 
         /// <summary>
         /// Gets or sets the wait timeout, in milliseconds, that system wait for system configuration reload to complete.
