@@ -14,7 +14,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Returns a series of <c>N</c>, or <c>N%</c> of total, values that are a random sample of the values in the source series.
 /// <c>N</c> is either a positive integer value, representing a total, that is greater than zero - or - a floating point value,
 /// suffixed with '%' representing a percentage, that must range from greater than 0 to less than or equal to 100.
-/// Third parameter, optional, is a boolean flag representing if time in dataset should be normalized - defaults to true.
+/// Second parameter, optional, is a boolean flag representing if time in dataset should be normalized - defaults to true.
 /// <c>N</c> can either be constant value or a named target available from the expression. Any target values that fall between 0
 /// and 1 will be treated as a percentage.
 /// </summary>
@@ -83,7 +83,7 @@ public abstract class Random<T> : GrafanaFunctionBase<T> where T : struct, IData
         if (length == 0)
             yield break;
 
-        int valueN = ParseTotal(parameters.Value<string>(0), length);
+        int valueN = ParseTotal("N", parameters.Value<string>(0), length);
 
         if (valueN > length)
             valueN = length;
