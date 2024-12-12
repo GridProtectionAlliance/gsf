@@ -69,7 +69,7 @@ public abstract class ExceedsAt<T> : GrafanaFunctionBase<T> where T : struct, ID
 
         await foreach (T dataValue in GetDataSourceValues(parameters).WithCancellation(cancellationToken).ConfigureAwait(false))
         {
-            if (double.IsNaN(dataValue.Value))
+            if (double.IsNaN(dataValue.Value) || dataValue.Time == 0.0D)
                 continue;
 
             // While start value has a time, we are tracking time for threshold exceeded
@@ -79,16 +79,13 @@ public abstract class ExceedsAt<T> : GrafanaFunctionBase<T> where T : struct, ID
                 if (dataValue.Value > threshold)
                     continue;
 
-                // If value drops below threshold, return duration
+                // If value drops below threshold, produce report (duration or start value)
                 if (returnDurations)
                 {
-                    if (lastValue.Time > 0.0D)
+                    yield return startValue with
                     {
-                        yield return startValue with
-                        {
-                            Value = TimeSpan.FromMilliseconds(lastValue.Time - startValue.Time).Seconds
-                        };
-                    }
+                        Value = (dataValue.Time - startValue.Time) * 1000.0D
+                    };
                 }
                 else
                 {
@@ -119,7 +116,7 @@ public abstract class ExceedsAt<T> : GrafanaFunctionBase<T> where T : struct, ID
             {
                 yield return startValue with
                 {
-                    Value = TimeSpan.FromMilliseconds(lastValue.Time - startValue.Time).Seconds
+                    Value = (lastValue.Time - startValue.Time) * 1000.0D
                 };
             }
         }
