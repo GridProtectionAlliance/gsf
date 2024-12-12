@@ -9,23 +9,32 @@ using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 namespace GrafanaAdapters.Functions.BuiltIn;
 
 /// <summary>
-/// Returns a series of values which exceed the given threshold. The <c>threhsold</c> parameter value is a
-/// floating-point numbers that represent the threshold to be exceeded. Second parameter optional, is a
-/// boolean flag that determines if the time duration, in seconds, the value exceeds threshold.
+/// Returns a series of values at which a value exceed the given threshold. The <c>threhsold</c> parameter
+/// value is a floating-point numbers that represents the threshold to be exceeded. Second parameter optional,
+/// is a boolean flag that determines if the time duration, in seconds, the value exceeds threshold should be
+/// returned instead.
 /// </summary>
 /// <remarks>
 /// Signature: <c>Exceeds(threshold, [includeDuration = false], expression)</c> -<br/>
 /// Returns: Series of values.<br/>
 /// Example: <c>Exceeds(60.05, true, FILTER ActiveMeasurements WHERE SignalType LIKE '%FREQ')</c><br/>
+/// Variants: ExceedsAt, Exceeds<br/>
 /// Execution: Deferred enumeration.
 /// </remarks>
-public abstract class Exceeds<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
+public abstract class ExceedsAt<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {
     /// <inheritdoc />
-    public override string Name => nameof(Exceeds<T>);
+    public override string Name => nameof(ExceedsAt<T>);
 
     /// <inheritdoc />
-    public override string Description => "Returns a series of values which exceed the given threshold.";
+    public override string Description => "Returns a series of values at which a value exceed the given threshold.";
+
+    /// <inheritdoc />
+    public override string[] Aliases => ["Exceeds"];
+
+    /// <inheritdoc />
+    //  Function only operates on series data - slices and sets are not sensible for function usage.
+    public override GroupOperations AllowedGroupOperations => GroupOperations.None;
 
     /// <inheritdoc />
     public override ReturnType ReturnType => ReturnType.Series;
@@ -44,7 +53,7 @@ public abstract class Exceeds<T> : GrafanaFunctionBase<T> where T : struct, IDat
         {
             Name = "returnDurations",
             Default = false,
-            Description = "A boolean flag that determines if the duration (in seconds) a value exceeded threshold should be returned instead of the original value.",
+            Description = "A boolean flag that determines if the duration (in seconds) from where value exceeded threshold should be returned instead of the original value.",
             Required = false
         }
     };
@@ -100,10 +109,10 @@ public abstract class Exceeds<T> : GrafanaFunctionBase<T> where T : struct, IDat
             lastValue = dataValue;
         }
 
-        // Handle edge case where value exceeds threshold through end of series
         if (startValue.Time == 0.0D)
             yield break;
 
+        // Handle edge case where value exceeds threshold through end of series
         if (returnDurations)
         {
             if (lastValue.Time > 0.0D)
@@ -121,12 +130,12 @@ public abstract class Exceeds<T> : GrafanaFunctionBase<T> where T : struct, IDat
     }
 
     /// <inheritdoc />
-    public class ComputeMeasurementValue : Exceeds<MeasurementValue>
+    public class ComputeMeasurementValue : ExceedsAt<MeasurementValue>
     {
     }
 
     /// <inheritdoc />
-    public class ComputePhasorValue : Exceeds<PhasorValue>
+    public class ComputePhasorValue : ExceedsAt<PhasorValue>
     {
         // Operating on magnitude only
     }
