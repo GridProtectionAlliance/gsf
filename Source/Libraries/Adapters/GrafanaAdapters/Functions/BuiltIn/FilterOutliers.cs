@@ -6,7 +6,6 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using GrafanaAdapters.DataSourceValueTypes;
 using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
-using GSF.NumericalAnalysis;
 using static GrafanaAdapters.Functions.Common;
 // ReSharper disable InconsistentNaming
 
@@ -113,10 +112,9 @@ public abstract class FilterOutliers<T> : GrafanaFunctionBase<T> where T : struc
         double zThreshold = InverseNormalCDF(tailProbability);
 
         // Calculate mean and standard deviation
-        double[] data = values.Select(value => value.Value).ToArray();
-        double mean = data.Average();
-        double totalVariance = data.Select(item => item - mean).Select(deviation => deviation * deviation).Sum();
-        double stdDev = Math.Sqrt(totalVariance / data.Length);
+        double mean = values.Average(item => item.Value);
+        double totalVariance = values.Select(item => item.Value - mean).Select(deviation => deviation * deviation).Sum();
+        double stdDev = Math.Sqrt(totalVariance / values.Length);
 
         // Handle zero standard deviation edge case
         if (Math.Abs(stdDev) < double.Epsilon)
