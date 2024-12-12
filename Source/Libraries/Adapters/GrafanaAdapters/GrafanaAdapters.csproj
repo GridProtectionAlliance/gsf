@@ -77,7 +77,7 @@
   <ItemGroup>
     <Compile Include="DataSourceValueTypes\DataSourceValueTypeCache.cs" />
     <Compile Include="Functions\BuiltIn\AddMetadata.cs" />
-    <Compile Include="Functions\BuiltIn\Exceeds.cs" />
+    <Compile Include="Functions\BuiltIn\ExceedsAt.cs" />
     <Compile Include="Functions\BuiltIn\KalmanFilter.cs" />
     <Compile Include="Functions\BuiltIn\Clamp.cs" />
     <Compile Include="Functions\BuiltIn\Reference.cs" />
