@@ -78,6 +78,7 @@
     <Compile Include="DataSourceValueTypes\DataSourceValueTypeCache.cs" />
     <Compile Include="Functions\BuiltIn\AddMetadata.cs" />
     <Compile Include="Functions\BuiltIn\Exceeds.cs" />
+    <Compile Include="Functions\BuiltIn\FilterOutliers.cs" />
     <Compile Include="Functions\BuiltIn\KalmanFilter.cs" />
     <Compile Include="Functions\BuiltIn\Clamp.cs" />
     <Compile Include="Functions\BuiltIn\Reference.cs" />
