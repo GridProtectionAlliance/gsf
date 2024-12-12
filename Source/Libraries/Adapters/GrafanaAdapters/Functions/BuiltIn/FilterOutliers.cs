@@ -115,7 +115,8 @@ public abstract class FilterOutliers<T> : GrafanaFunctionBase<T> where T : struc
         // Calculate mean and standard deviation
         double[] data = values.Select(value => value.Value).ToArray();
         double mean = data.Average();
-        double stdDev = data.StandardDeviation();
+        double totalVariance = data.Select(item => item - mean).Select(deviation => deviation * deviation).Sum();
+        double stdDev = Math.Sqrt(totalVariance / data.Length);
 
         // Handle zero standard deviation edge case
         if (Math.Abs(stdDev) < double.Epsilon)
