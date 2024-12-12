@@ -1,19 +1,17 @@
-﻿using GrafanaAdapters.DataSourceValueTypes;
-using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
-using GSF;
-using Newtonsoft.Json.Linq;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using GrafanaAdapters.DataSourceValueTypes;
+using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 
 namespace GrafanaAdapters.Functions.BuiltIn;
 
 /// <summary>
-/// Returns a series of values that represent The points at which the input series exceds the given threshold.
-/// The <c>threhsold</c> parameter value is a floating-point numbers that represent the threshold to be exceedd.
-/// Second parameter optional, is a boolean flag that determines if the Duration of exceeding is returned as value
+/// Returns a series of values which exceed the given threshold. The <c>threhsold</c> parameter value is a
+/// floating-point numbers that represent the threshold to be exceeded. Second parameter optional, is a
+/// boolean flag that determines if the time duration, in seconds, the value exceeds threshold.
 /// </summary>
 /// <remarks>
 /// Signature: <c>Exceeds(threshold, [includeDuration = false], expression)</c> -<br/>
@@ -27,7 +25,7 @@ public abstract class Exceeds<T> : GrafanaFunctionBase<T> where T : struct, IDat
     public override string Name => nameof(Exceeds<T>);
 
     /// <inheritdoc />
-    public override string Description => "Returns a series of values that represent The points at which the input series exceds the given threshold..";
+    public override string Description => "Returns a series of values which exceed the given threshold.";
 
     /// <inheritdoc />
     public override ReturnType ReturnType => ReturnType.Series;
@@ -46,7 +44,7 @@ public abstract class Exceeds<T> : GrafanaFunctionBase<T> where T : struct, IDat
         {
             Name = "returnDurations",
             Default = false,
-            Description = "A boolean flag that indicates that the duration (in seconds) a value exceeded threshold be returned instead of the original value.",
+            Description = "A boolean flag that determines if the duration (in seconds) a value exceeded threshold should be returned instead of the original value.",
             Required = false
         }
     };
@@ -55,45 +53,71 @@ public abstract class Exceeds<T> : GrafanaFunctionBase<T> where T : struct, IDat
     public override async IAsyncEnumerable<T> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         double threshold = parameters.Value<double>(0);
-        bool includeDuration = parameters.Value<bool>(1);
-        Dictionary<string, MetadataMap> metadataMaps = parameters.MetadataMaps;
+        bool returnDurations = parameters.Value<bool>(1);
 
-        T? start = null;
+        T startValue = default;
+        T lastValue = default;
 
-        await using IAsyncEnumerator<T> enumerator = GetDataSourceValues(parameters).GetAsyncEnumerator(cancellationToken);
-
-        if (enumerator.Current.Value > threshold)
+        await foreach (T dataValue in GetDataSourceValues(parameters).WithCancellation(cancellationToken).ConfigureAwait(false))
         {
-            start = enumerator.Current;
-            
-        }
+            if (double.IsNaN(dataValue.Value))
+                continue;
 
-        while (await enumerator.MoveNextAsync().ConfigureAwait(false))
-        {
-            if (start is null && enumerator.Current.Value > threshold)
+            // While start value has a time, we are tracking time for threshold exceeded
+            if (startValue.Time > 0.0D)
             {
-                start = enumerator.Current;
-            }
-            else if (start is not null && enumerator.Current.Value < threshold)
-            {
-                if (includeDuration)
-                    yield return (T)start with { 
-                        Value = (enumerator.Current.Time - ((T)start).Time) /GSF.Ticks.PerSecond
-                    };
+                // If value continues to exceed threshold, keep tracking
+                if (dataValue.Value > threshold)
+                    continue;
+
+                // If value drops below threshold, return duration
+                if (returnDurations)
+                {
+                    if (lastValue.Time > 0.0D)
+                    {
+                        yield return startValue with
+                        {
+                            Value = TimeSpan.FromMilliseconds(lastValue.Time - startValue.Time).Seconds
+                        };
+                    }
+                }
                 else
-                    yield return (T)start;
-                start = null;
+                {
+                    yield return startValue;
+                }
+
+                startValue = default;
             }
-            
+            else
+            {
+                if (dataValue.Value <= threshold)
+                    continue;
+
+                // If value exceeds threshold, start tracking time
+                startValue = dataValue;
+            }
+
+            lastValue = dataValue;
         }
 
-        if (includeDuration)
-            yield return (T)start with
+        // Handle edge case where value exceeds threshold through end of series
+        if (startValue.Time == 0.0D)
+            yield break;
+
+        if (returnDurations)
+        {
+            if (lastValue.Time > 0.0D)
             {
-                Value = (enumerator.Current.Time - ((T)start).Time) / GSF.Ticks.PerSecond
-            };
+                yield return startValue with
+                {
+                    Value = TimeSpan.FromMilliseconds(lastValue.Time - startValue.Time).Seconds
+                };
+            }
+        }
         else
-            yield return (T)start;
+        {
+            yield return startValue;
+        }
     }
 
     /// <inheritdoc />
