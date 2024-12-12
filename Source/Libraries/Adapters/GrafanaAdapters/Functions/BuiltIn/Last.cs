@@ -58,7 +58,7 @@ public abstract class Last<T> : GrafanaFunctionBase<T> where T : struct, IDataSo
         if (length == 0)
             yield break;
 
-        int valueN = ParseTotal(parameters.Value<string>(0), length);
+        int valueN = ParseTotal("N", parameters.Value<string>(0), length);
 
         if (valueN > length)
             valueN = length;

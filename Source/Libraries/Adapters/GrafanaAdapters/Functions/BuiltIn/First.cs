@@ -70,7 +70,7 @@ public abstract class First<T> : GrafanaFunctionBase<T> where T : struct, IDataS
             if (length == 0)
                 yield break;
 
-            int valueN = ParseTotal(parameters.Value<string>(0), length);
+            int valueN = ParseTotal("N", parameters.Value<string>(0), length);
 
             if (valueN > length)
                 valueN = length;

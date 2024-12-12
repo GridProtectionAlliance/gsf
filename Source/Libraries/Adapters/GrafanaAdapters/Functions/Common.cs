@@ -45,21 +45,27 @@ internal static class Common
         return parameters;
     }
 
-    // Parses a sting as positive (> 0) integer or a percentage value of total
-    public static int ParseTotal(string parameter, int total)
+    /// <summary>
+    /// Parses a string as a positive (> 0) integer or a percentage value of total.
+    /// </summary>
+    /// <param name="parameterName">Parameter name for error reporting.</param>
+    /// <param name="value">Value to parse as a specific total or a percentage of total.</param>
+    /// <param name="total">Total value to use for percentage calculations.</param>
+    /// <returns>Integer total value as parsed from <paramref name="value"/>.</returns>
+    public static int ParseTotal(string parameterName, string value, int total)
     {
         int count;
 
         if (total == 0)
             return 0;
 
-        parameter = parameter.Trim();
+        value = value.Trim();
 
-        if (parameter.EndsWith("%"))
+        if (value.EndsWith("%"))
         {
             try
             {
-                double percent = ParsePercentage(parameter, false);
+                double percent = ParsePercentage(parameterName, value, false);
                 count = (int)(total * (percent / 100.0D));
 
                 if (count == 0)
@@ -67,12 +73,12 @@ internal static class Common
             }
             catch
             {
-                throw new SyntaxErrorException($"Could not parse '{parameter}' as a floating-point value or percentage is outside range of greater than 0 and less than or equal to 100.");
+                throw new SyntaxErrorException($"Could not parse parameter '{parameterName}' total value '{value}' as a floating-point number or percentage is outside range of greater than 0 and less than or equal to 100.");
             }
         }
         else
         {
-            if (parameter.Contains(".") && double.TryParse(parameter, out double result))
+            if (value.Contains(".") && double.TryParse(value, out double result))
             {
                 // Treat fractional numbers as a percentage of length
                 if (result is > 0.0D and < 1.0D)
@@ -82,35 +88,67 @@ internal static class Common
             }
             else
             {
-                int.TryParse(parameter, out count);
+                int.TryParse(value, out count);
             }
         }
 
         if (count < 1)
-            throw new SyntaxErrorException($"Count '{count}' is less than one.");
+            throw new SyntaxErrorException($"Parameter '{parameterName}' total value '{count}' is less than one.");
 
         return count;
     }
 
-    public static double ParsePercentage(string parameter, bool includeZero = true)
+    /// <summary>
+    /// Parses a string as a percentage value. If value is suffixed with '%' it is treated as a percentage expected to be in
+    /// the range of 0 to 100, otherwise as a floating-point number expected to be in the range of 0 to 1. Inclusivity for
+    /// extremes is controlled by <paramref name="include0"/> and <paramref name="include100"/>. Return value is always in
+    /// the range of 0 to 100.
+    /// </summary>
+    /// <param name="parameterName">Parameter name for error reporting.</param>
+    /// <param name="value">Value to parse as a percentage.</param>
+    /// <param name="include0">Boolean flag to include 0 in range.</param>
+    /// <param name="include100">Boolean flag to include 100 in range.</param>
+    /// <returns>Parsed percentage value in the range of 0 to 100.</returns>
+    public static double ParsePercentage(string parameterName, string value, bool include0 = true, bool include100 = true)
     {
-        parameter = parameter.Trim();
+        double multiplier = 1.0D;
+        value = value.Trim();
 
-        if (parameter.EndsWith("%"))
-            parameter = parameter.Substring(0, parameter.Length - 1);
+        if (value.EndsWith("%"))
+            value = value.Substring(0, value.Length - 1);
+        else
+            multiplier = 100.0D;
 
-        if (!double.TryParse(parameter, out double percent))
-            throw new SyntaxErrorException($"Could not parse '{parameter}' as a floating-point value.");
+        if (!double.TryParse(value, out double percent))
+            throw new SyntaxErrorException($"Could not parse parameter '{parameterName}' value '{value}' as a floating-point number.");
 
-        if (includeZero)
+        percent *= multiplier;
+
+        if (include100)
         {
-            if (percent is < 0.0D or > 100.0D)
-                throw new SyntaxErrorException($"Percentage '{parameter}' is outside range of 0 to 100, inclusive.");
+            if (include0)
+            {
+                if (percent is < 0.0D or > 100.0D)
+                    throw new SyntaxErrorException($"Parameter '{parameterName}' percentage '{value}' is outside range of 0 to 100, inclusive.");
+            }
+            else
+            {
+                if (percent is <= 0.0D or > 100.0D)
+                    throw new SyntaxErrorException($"Parameter '{parameterName}' percentage '{value}' is outside range of greater than 0 and less than or equal to 100.");
+            }
         }
         else
         {
-            if (percent is <= 0.0D or > 100.0D)
-                throw new SyntaxErrorException($"Percentage '{parameter}' is outside range of greater than 0 and less than or equal to 100.");
+            if (include0)
+            {
+                if (percent is < 0.0D or >= 100.0D)
+                    throw new SyntaxErrorException($"Parameter '{parameterName}' percentage '{value}' is outside range of greater than or equal to 0 and less than 100.");
+            }
+            else
+            {
+                if (percent is <= 0.0D or >= 100.0D)
+                    throw new SyntaxErrorException($"Parameter '{parameterName}' percentage '{value}' is outside range of 0 to 100, exclusive.");
+            }
         }
 
         return percent;

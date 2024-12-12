@@ -40,6 +40,10 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+#if DEBUG
+using System.Diagnostics;
+#endif
+
 namespace GrafanaAdapters.Functions;
 
 internal static class FunctionParsing
