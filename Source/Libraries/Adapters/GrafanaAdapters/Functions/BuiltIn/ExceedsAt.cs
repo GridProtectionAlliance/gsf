@@ -82,13 +82,10 @@ public abstract class ExceedsAt<T> : GrafanaFunctionBase<T> where T : struct, ID
                 // If value drops below threshold, return duration
                 if (returnDurations)
                 {
-                    if (lastValue.Time > 0.0D)
+                    yield return startValue with
                     {
-                        yield return startValue with
-                        {
-                            Value = TimeSpan.FromMilliseconds(lastValue.Time - startValue.Time).Seconds
-                        };
-                    }
+                        Value = TimeSpan.FromMilliseconds(dataValue.Time - startValue.Time).Seconds
+                    };
                 }
                 else
                 {

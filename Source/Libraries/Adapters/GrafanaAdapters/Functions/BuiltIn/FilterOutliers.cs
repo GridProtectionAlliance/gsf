@@ -29,7 +29,7 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// </summary>
 /// <remarks>
 /// Signature: <c>FilterOutliers([confidence = 95%], [invertFilter = false], [minSamples = 20 or 3 for slice], expression)</c><br/>
-/// Returns: Single value.<br/>
+/// Returns: Series of values.<br/>
 /// Example 1: <c>FilterOutliers(85%, BROWNS_FERRY:FREQ)</c><br/>
 /// Example 2: <c>SliceFilterOutliers(0.033, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
 /// Variants: FilterOutliers, ZScoreFilter, GaussianFilter<br/>
