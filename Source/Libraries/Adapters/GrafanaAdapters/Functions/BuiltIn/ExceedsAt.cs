@@ -30,6 +30,9 @@ public abstract class ExceedsAt<T> : GrafanaFunctionBase<T> where T : struct, ID
     public override string Description => "Returns a series of values at which a value exceed the given threshold.";
 
     /// <inheritdoc />
+    public override string[] Aliases => ["Exceeds"];
+
+    /// <inheritdoc />
     //  Function only operates on series data - slices and sets are not sensible for function usage.
     public override GroupOperations AllowedGroupOperations => GroupOperations.None;
 
