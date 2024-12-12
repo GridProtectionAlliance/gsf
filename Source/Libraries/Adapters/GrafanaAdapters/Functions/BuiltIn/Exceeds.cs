@@ -77,7 +77,7 @@ public abstract class Exceeds<T> : GrafanaFunctionBase<T> where T : struct, IDat
             {
                 start = enumerator.Current;
             }
-            else if (start is not null && enumerator.Current.Value =< threshold)
+            else if (start is not null && enumerator.Current.Value <= threshold)
             {
                 if (includeDuration)
                     yield return (T)start with { 
