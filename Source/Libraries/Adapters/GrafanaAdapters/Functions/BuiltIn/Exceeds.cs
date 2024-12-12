@@ -61,11 +61,16 @@ public abstract class Exceeds<T> : GrafanaFunctionBase<T> where T : struct, IDat
         T? start = null;
 
         await using IAsyncEnumerator<T> enumerator = GetDataSourceValues(parameters).GetAsyncEnumerator(cancellationToken);
+        
+        // JRC: I think this may be issue - basically not validating first enumeration if empty
+        // First ensure we have a valid first element
+        if (!await enumerator.MoveNextAsync().ConfigureAwait(false))
+            yield break;
 
+        // Check if the first value exceeds threshold
         if (!double.IsNaN(enumerator.Current.Value) && enumerator.Current.Value > threshold)
         {
             start = enumerator.Current;
-            
         }
 
         while (await enumerator.MoveNextAsync().ConfigureAwait(false))
@@ -80,25 +85,36 @@ public abstract class Exceeds<T> : GrafanaFunctionBase<T> where T : struct, IDat
             else if (start is not null && enumerator.Current.Value <= threshold)
             {
                 if (includeDuration)
-                    yield return (T)start with { 
-                        Value = (enumerator.Current.Time - ((T)start).Time) /GSF.Ticks.PerSecond
+                {
+                    yield return (T)start with
+                    {
+                        Value = (enumerator.Current.Time - ((T)start).Time) / (double)Ticks.PerSecond
                     };
+                }
                 else
+                {
                     yield return (T)start;
+                }
+
                 start = null;
             }
-            
         }
 
+        // Handle the case where the series ends while still exceeding threshold
         if (start is not null)
         {
             if (includeDuration)
+            {
                 yield return (T)start with
                 {
-                    Value = (((T)start).Time - enumerator.Current.Time) / GSF.Ticks.PerSecond
+                    // TODO: (JRC) I swapped this as it appeared reverse normal - was prior intentional?
+                    Value = (enumerator.Current.Time - ((T)start).Time) / (double)Ticks.PerSecond
                 };
+            }
             else
+            {
                 yield return (T)start;
+            }
         }
     }
 
