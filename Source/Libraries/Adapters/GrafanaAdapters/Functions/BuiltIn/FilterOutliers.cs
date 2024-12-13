@@ -178,12 +178,12 @@ public abstract class FilterOutliers<T> : GrafanaFunctionBase<T> where T : struc
     }
 
     /// <inheritdoc />
-    public class ComputeMeasurementValue : Reference<MeasurementValue>
+    public class ComputeMeasurementValue : FilterOutliers<MeasurementValue>
     {
     }
 
     /// <inheritdoc />
-    public class ComputePhasorValue : Reference<PhasorValue>
+    public class ComputePhasorValue : FilterOutliers<PhasorValue>
     {
         // Operating on magnitude only
     }

@@ -9,13 +9,15 @@ using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 namespace GrafanaAdapters.Functions.BuiltIn;
 
 /// <summary>
-/// Returns a series of values at which a value exceed the given threshold. The <c>threhsold</c> parameter
-/// value is a floating-point numbers that represents the threshold to be exceeded. Second parameter optional,
-/// is a boolean flag that determines if the time duration, in seconds, the value exceeds threshold should be
-/// returned instead.
+/// Returns a series of values at which a value exceed the given threshold. The <c>threhsold</c> parameter value is
+/// a floating-point numbers that represents the threshold to be exceeded. Second parameter, <c>returnDurations</c>,
+/// optional, is a boolean flag that determines if the time duration, in seconds, the value exceeds threshold should
+/// be returned instead. Third parameter, <c>reportEndMarker</c>, is a boolean flag that determines if a value should
+/// be reported at the point when threshold stops being exceeding.
+/// the threshold.
 /// </summary>
 /// <remarks>
-/// Signature: <c>Exceeds(threshold, [includeDuration = false], expression)</c> -<br/>
+/// Signature: <c>Exceeds(threshold, [returnDurations = false], [reportEndMarker = false], expression)</c> -<br/>
 /// Returns: Series of values.<br/>
 /// Example: <c>Exceeds(60.05, true, FILTER ActiveMeasurements WHERE SignalType LIKE '%FREQ')</c><br/>
 /// Variants: ExceedsAt, Exceeds<br/>
@@ -55,6 +57,13 @@ public abstract class ExceedsAt<T> : GrafanaFunctionBase<T> where T : struct, ID
             Default = false,
             Description = "A boolean flag that determines if the duration (in seconds) from where value exceeded threshold should be returned instead of the original value.",
             Required = false
+        },
+        new ParameterDefinition<bool>
+        {
+            Name = "reportEndMarker",
+            Default = false,
+            Description = "A boolean flag that determines if a value should be reported at the point when threshold stops being exceeding.",
+            Required = false
         }
     };
 
@@ -63,6 +72,7 @@ public abstract class ExceedsAt<T> : GrafanaFunctionBase<T> where T : struct, ID
     {
         double threshold = parameters.Value<double>(0);
         bool returnDurations = parameters.Value<bool>(1);
+        bool reportEndMarker = parameters.Value<bool>(2);
 
         T startValue = default;
         T lastValue = default;
@@ -84,12 +94,23 @@ public abstract class ExceedsAt<T> : GrafanaFunctionBase<T> where T : struct, ID
                 {
                     yield return startValue with
                     {
-                        Value = (dataValue.Time - startValue.Time) * 1000.0D
+                        Value = (dataValue.Time - startValue.Time) / 1000.0D
                     };
+
+                    if (reportEndMarker)
+                    {
+                        yield return dataValue with
+                        {
+                            Value = 0.0D
+                        };
+                    }
                 }
                 else
                 {
                     yield return startValue;
+
+                    if (reportEndMarker)
+                        yield return dataValue;
                 }
 
                 startValue = default;
@@ -112,17 +133,28 @@ public abstract class ExceedsAt<T> : GrafanaFunctionBase<T> where T : struct, ID
         // Handle edge case where value exceeds threshold through end of series
         if (returnDurations)
         {
-            if (lastValue.Time > 0.0D)
+            if (lastValue.Time == 0.0D)
+                yield break;
+
+            yield return startValue with
             {
-                yield return startValue with
+                Value = (lastValue.Time - startValue.Time) / 1000.0D
+            };
+
+            if (reportEndMarker)
+            {
+                yield return lastValue with
                 {
-                    Value = (lastValue.Time - startValue.Time) * 1000.0D
+                    Value = 0.0D
                 };
             }
         }
         else
         {
             yield return startValue;
+
+            if (reportEndMarker)
+                yield return lastValue;
         }
     }
 
