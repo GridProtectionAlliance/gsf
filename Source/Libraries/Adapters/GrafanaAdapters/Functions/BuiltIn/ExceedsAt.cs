@@ -9,11 +9,11 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 
 /// <summary>
 /// Returns a series of values at which a value exceeds the given threshold. The <c>threhsold</c> parameter value is a
-/// floating-point numbers that represents the threshold to be exceeded. Second parameter, <c>fallsBelow</c>, optional,
+/// floating-point number that represents the threshold to be exceeded. Second parameter, <c>fallsBelow</c>, optional,
 /// is a boolean flag that determines if the value should be considered inversely as falling below the threshold instead
 /// of exceeding. <c>returnDurations</c>, optional, is a boolean that determines if the duration (in seconds) from where
 /// value exceeded threshold should be returned instead of the original value. Forth parameter, <c>reportEndMarker</c>,
-/// is a boolean flag that determines if a value should be reported at the point when threshold stops being exceeding.
+/// is a boolean flag that determines if a value should be reported at the point when threshold stops being exceeding
 /// the threshold.
 /// </summary>
 /// <remarks>
@@ -29,7 +29,7 @@ public abstract class ExceedsAt<T> : GrafanaFunctionBase<T> where T : struct, ID
     public override string Name => nameof(ExceedsAt<T>);
 
     /// <inheritdoc />
-    public override string Description => "Returns a series of values at which a value exceed the given threshold.";
+    public override string Description => "Returns a series of values at which a value exceeds the given threshold.";
 
     /// <inheritdoc />
     public override string[] Aliases => ["Exceeds"];
@@ -125,7 +125,7 @@ public abstract class ExceedsAt<T> : GrafanaFunctionBase<T> where T : struct, ID
             }
         }
 
-        // Handle edge case for reporting end marker where value exceeds threshold through end of series
+        // Handle edge case for reporting when value continues to exceed threshold through end of series
         if (startValue.Time == 0.0D || lastValue.Time == 0.0D)
             yield break;
 
