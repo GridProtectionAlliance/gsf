@@ -17,9 +17,10 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// the threshold.
 /// </summary>
 /// <remarks>
-/// Signature: <c>Exceeds(threshold, [fallsBelow = false], [returnDurations = false], [reportEndMarker = false], expression)</c> -<br/>
+/// Signature: <c>ExceedsAt(threshold, [fallsBelow = false], [returnDurations = false], [reportEndMarker = false], expression)</c><br/>
 /// Returns: Series of values.<br/>
-/// Example: <c>Exceeds(60.05, true, FILTER ActiveMeasurements WHERE SignalType LIKE '%FREQ')</c><br/>
+/// Example 1: <c>ExceedsAt(60.05, false, FILTER ActiveMeasurements WHERE SignalType LIKE '%FREQ')</c><br/>
+/// Example 2: <c>Exceeds(59.95, true, FILTER ActiveMeasurements WHERE SignalType LIKE '%FREQ')</c><br/>
 /// Variants: ExceedsAt, Exceeds<br/>
 /// Execution: Deferred enumeration.
 /// </remarks>
