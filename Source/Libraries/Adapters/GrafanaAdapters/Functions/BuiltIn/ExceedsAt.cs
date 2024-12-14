@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,11 +8,12 @@ using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 namespace GrafanaAdapters.Functions.BuiltIn;
 
 /// <summary>
-/// Returns a series of values at which a value exceed the given threshold. The <c>threhsold</c> parameter value is
-/// a floating-point numbers that represents the threshold to be exceeded. Second parameter, <c>returnDurations</c>,
-/// optional, is a boolean flag that determines if the time duration, in seconds, the value exceeds threshold should
-/// be returned instead. Third parameter, <c>reportEndMarker</c>, is a boolean flag that determines if a value should
-/// be reported at the point when threshold stops being exceeding.
+/// Returns a series of values at which a value exceeds the given threshold. The <c>threhsold</c> parameter value is a
+/// floating-point numbers that represents the threshold to be exceeded. Second parameter, <c>fallsBelow</c>, optional,
+/// is a boolean flag that determines if the value should be considered inversely as falling below the threshold instead
+/// of exceeding. <c>returnDurations</c>, optional, is a boolean that determines if the duration (in seconds) from where
+/// value exceeded threshold should be returned instead of the original value. Forth parameter, <c>reportEndMarker</c>,
+/// is a boolean flag that determines if a value should be reported at the point when threshold stops being exceeding.
 /// the threshold.
 /// </summary>
 /// <remarks>
@@ -53,6 +53,13 @@ public abstract class ExceedsAt<T> : GrafanaFunctionBase<T> where T : struct, ID
         },
         new ParameterDefinition<bool>
         {
+            Name = "fallsBelow",
+            Default = false,
+            Description = "A boolean flag that determines if the value should be considered inversely as falling below the threshold instead of exceeding.",
+            Required = false
+        },
+        new ParameterDefinition<bool>
+        {
             Name = "returnDurations",
             Default = false,
             Description = "A boolean flag that determines if the duration (in seconds) from where value exceeded threshold should be returned instead of the original value.",
@@ -71,8 +78,9 @@ public abstract class ExceedsAt<T> : GrafanaFunctionBase<T> where T : struct, ID
     public override async IAsyncEnumerable<T> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         double threshold = parameters.Value<double>(0);
-        bool returnDurations = parameters.Value<bool>(1);
-        bool reportEndMarker = parameters.Value<bool>(2);
+        bool fallsBelow = parameters.Value<bool>(1);
+        bool returnDurations = parameters.Value<bool>(2);
+        bool reportEndMarker = parameters.Value<bool>(3);
 
         T startValue = default;
         T lastValue = default;
@@ -82,80 +90,44 @@ public abstract class ExceedsAt<T> : GrafanaFunctionBase<T> where T : struct, ID
             if (double.IsNaN(dataValue.Value) || dataValue.Time == 0.0D)
                 continue;
 
+            lastValue = dataValue;
+
             // While start value has a time, we are tracking time for threshold exceeded
             if (startValue.Time > 0.0D)
             {
                 // If value continues to exceed threshold, keep tracking
-                if (dataValue.Value > threshold)
+                if (fallsBelow ? dataValue.Value < threshold : dataValue.Value > threshold)
                     continue;
 
-                // If value drops below threshold, produce report (duration or start value)
-                if (returnDurations)
-                {
-                    yield return startValue with
-                    {
-                        Value = (dataValue.Time - startValue.Time) / 1000.0D
-                    };
+                // Value dropped below threshold, produce start report
+                yield return returnDurations ? startValue with { Value = (dataValue.Time - startValue.Time) / 1000.0D } : startValue;
 
-                    if (reportEndMarker)
-                    {
-                        yield return dataValue with
-                        {
-                            Value = 0.0D
-                        };
-                    }
-                }
-                else
-                {
-                    yield return startValue;
-
-                    if (reportEndMarker)
-                        yield return dataValue;
-                }
+                // If enabled, produce end report
+                if (reportEndMarker)
+                    yield return returnDurations ? dataValue with { Value = 0.0D } : dataValue;
 
                 startValue = default;
             }
-            else
+            else if (startValue.Time == 0.0D)
             {
-                if (dataValue.Value <= threshold)
+                if (fallsBelow ? dataValue.Value >= threshold : dataValue.Value <= threshold)
                     continue;
 
                 // If value exceeds threshold, start tracking time
                 startValue = dataValue;
             }
-
-            lastValue = dataValue;
         }
 
-        if (startValue.Time == 0.0D)
+        // Handle edge case for reporting end marker where value exceeds threshold through end of series
+        if (startValue.Time == 0.0D || lastValue.Time == 0.0D)
             yield break;
 
-        // Handle edge case where value exceeds threshold through end of series
-        if (returnDurations)
-        {
-            if (lastValue.Time == 0.0D)
-                yield break;
+        // Produce start report that exceeds threshold through end of series
+        yield return returnDurations ? startValue with { Value = (lastValue.Time - startValue.Time) / 1000.0D } : startValue;
 
-            yield return startValue with
-            {
-                Value = (lastValue.Time - startValue.Time) / 1000.0D
-            };
-
-            if (reportEndMarker)
-            {
-                yield return lastValue with
-                {
-                    Value = 0.0D
-                };
-            }
-        }
-        else
-        {
-            yield return startValue;
-
-            if (reportEndMarker)
-                yield return lastValue;
-        }
+        // If enabled, produce end report
+        if (reportEndMarker)
+            yield return returnDurations ? lastValue with { Value = 0.0D } : lastValue;
     }
 
     /// <inheritdoc />
