@@ -114,7 +114,7 @@ public abstract class ExceedsAt<T> : GrafanaFunctionBase<T> where T : struct, ID
 
                 startValue = default;
             }
-            else if (startValue.Time == 0.0D)
+            else
             {
                 // If value does not exceed threshold, continue
                 if (!valueExceedsThreshold(dataValue))
