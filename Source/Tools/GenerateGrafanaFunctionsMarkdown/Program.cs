@@ -48,7 +48,7 @@ public class MarkdownGenerator
 
             // Extract the members from the BuiltIn namespace
             var members = xmlDoc.Descendants("member")
-                .Where(m => ((string)m.Attribute("name")!).StartsWith("T:GrafanaAdapters.Functions.BuiltIn"))
+                .Where(m => m.Attribute("name")?.Value.StartsWith("T:GrafanaAdapters.Functions.BuiltIn") ?? false)
                 .Where(m => m.Attribute("name")?.Value.Split(['.']).Length == 4)
                 .Select(m => new
                 {
@@ -62,7 +62,10 @@ public class MarkdownGenerator
             // Build the markdown content
             StringBuilder markdownBuilder = new();
 
+            // Include the forward section
             markdownBuilder.AppendLine(File.ReadAllText(FilePath.GetAbsolutePath("ForwardText.md")));
+
+            // Build the table of contents section
             markdownBuilder.AppendLine("## Available Functions");
             markdownBuilder.AppendLine();
 
@@ -76,6 +79,7 @@ public class MarkdownGenerator
                 markdownBuilder.AppendLine($"* [`{functionName}`](#{functionName.ToLower()})");
             }
 
+            // Build the function details section
             foreach (var member in members)
             {
                 string functionName = member.Name?.Split('.').LastOrDefault()?.Split('`').FirstOrDefault()!;
