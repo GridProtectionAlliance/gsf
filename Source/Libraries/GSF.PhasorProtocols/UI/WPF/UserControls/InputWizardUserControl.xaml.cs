@@ -52,7 +52,7 @@ namespace GSF.PhasorProtocols.UI.UserControls
         public InputWizardUserControl()
         {
             InitializeComponent();
-            this.Unloaded += InputWizardUserControl_Unloaded;
+            Unloaded += InputWizardUserControl_Unloaded;
             m_dataContext = new InputWizardDevices(1);
             StackPanelRoot.DataContext = m_dataContext;
         }
@@ -75,6 +75,9 @@ namespace GSF.PhasorProtocols.UI.UserControls
             m_dataContext.CompanyID = device.CompanyID ?? 0;
             m_dataContext.HistorianID = device.HistorianID ?? 0;
             m_dataContext.InterconnectionID = device.InterconnectionID ?? 0;
+
+            if (m_dataContext.AccessID == 0)
+                m_dataContext.AccessID = 1;
 
             if (device.IsConcentrator)
             {
