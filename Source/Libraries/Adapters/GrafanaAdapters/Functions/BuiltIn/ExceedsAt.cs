@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,15 +8,19 @@ using GrafanaAdapters.DataSourceValueTypes.BuiltIn;
 namespace GrafanaAdapters.Functions.BuiltIn;
 
 /// <summary>
-/// Returns a series of values at which a value exceed the given threshold. The <c>threhsold</c> parameter
-/// value is a floating-point numbers that represents the threshold to be exceeded. Second parameter optional,
-/// is a boolean flag that determines if the time duration, in seconds, the value exceeds threshold should be
-/// returned instead.
+/// Returns a series of values at which a value exceeds the given threshold. The <c>threhsold</c> parameter value is a
+/// floating-point number that represents the threshold to be exceeded. Second parameter, <c>fallsBelow</c>, optional,
+/// is a boolean flag that determines if the value should be considered inversely as falling below the threshold instead
+/// of exceeding. <c>returnDurations</c>, optional, is a boolean that determines if the duration (in seconds) from where
+/// value exceeded threshold should be returned instead of the original value. Forth parameter, <c>reportEndMarker</c>,
+/// is a boolean flag that determines if a value should be reported at the point when threshold stops being exceeding
+/// the threshold.
 /// </summary>
 /// <remarks>
-/// Signature: <c>Exceeds(threshold, [includeDuration = false], expression)</c> -<br/>
+/// Signature: <c>ExceedsAt(threshold, [fallsBelow = false], [returnDurations = false], [reportEndMarker = false], expression)</c><br/>
 /// Returns: Series of values.<br/>
-/// Example: <c>Exceeds(60.05, true, FILTER ActiveMeasurements WHERE SignalType LIKE '%FREQ')</c><br/>
+/// Example 1: <c>ExceedsAt(60.05, false, FILTER ActiveMeasurements WHERE SignalType LIKE '%FREQ')</c><br/>
+/// Example 2: <c>Exceeds(59.95, true, FILTER ActiveMeasurements WHERE SignalType LIKE '%FREQ')</c><br/>
 /// Variants: ExceedsAt, Exceeds<br/>
 /// Execution: Deferred enumeration.
 /// </remarks>
@@ -27,7 +30,7 @@ public abstract class ExceedsAt<T> : GrafanaFunctionBase<T> where T : struct, ID
     public override string Name => nameof(ExceedsAt<T>);
 
     /// <inheritdoc />
-    public override string Description => "Returns a series of values at which a value exceed the given threshold.";
+    public override string Description => "Returns a series of values at which a value exceeds the given threshold.";
 
     /// <inheritdoc />
     public override string[] Aliases => ["Exceeds"];
@@ -51,9 +54,23 @@ public abstract class ExceedsAt<T> : GrafanaFunctionBase<T> where T : struct, ID
         },
         new ParameterDefinition<bool>
         {
+            Name = "fallsBelow",
+            Default = false,
+            Description = "A boolean flag that determines if the value should be considered inversely as falling below the threshold instead of exceeding.",
+            Required = false
+        },
+        new ParameterDefinition<bool>
+        {
             Name = "returnDurations",
             Default = false,
             Description = "A boolean flag that determines if the duration (in seconds) from where value exceeded threshold should be returned instead of the original value.",
+            Required = false
+        },
+        new ParameterDefinition<bool>
+        {
+            Name = "reportEndMarker",
+            Default = false,
+            Description = "A boolean flag that determines if a value should be reported at the point when threshold stops being exceeding.",
             Required = false
         }
     };
@@ -62,68 +79,63 @@ public abstract class ExceedsAt<T> : GrafanaFunctionBase<T> where T : struct, ID
     public override async IAsyncEnumerable<T> ComputeAsync(Parameters parameters, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         double threshold = parameters.Value<double>(0);
-        bool returnDurations = parameters.Value<bool>(1);
+        bool fallsBelow = parameters.Value<bool>(1);
+        bool returnDurations = parameters.Value<bool>(2);
+        bool reportEndMarker = parameters.Value<bool>(3);
 
         T startValue = default;
         T lastValue = default;
+
+        bool valueExceedsThreshold(T value)
+        {
+            // Invert threshold check when fallsBelow is true
+            return fallsBelow ? value.Value < threshold : value.Value > threshold;
+        }
 
         await foreach (T dataValue in GetDataSourceValues(parameters).WithCancellation(cancellationToken).ConfigureAwait(false))
         {
             if (double.IsNaN(dataValue.Value) || dataValue.Time == 0.0D)
                 continue;
 
+            lastValue = dataValue;
+
             // While start value has a time, we are tracking time for threshold exceeded
             if (startValue.Time > 0.0D)
             {
                 // If value continues to exceed threshold, keep tracking
-                if (dataValue.Value > threshold)
+                if (valueExceedsThreshold(dataValue))
                     continue;
 
-                // If value drops below threshold, produce report (duration or start value)
-                if (returnDurations)
-                {
-                    yield return startValue with
-                    {
-                        Value = (dataValue.Time - startValue.Time) * 1000.0D
-                    };
-                }
-                else
-                {
-                    yield return startValue;
-                }
+                // Value fell below threshold, produce start report
+                yield return returnDurations ? startValue with { Value = (dataValue.Time - startValue.Time) / 1000.0D } : startValue;
+
+                // If enabled, produce end report
+                if (reportEndMarker)
+                    yield return returnDurations ? dataValue with { Value = 0.0D } : dataValue;
 
                 startValue = default;
             }
             else
             {
-                if (dataValue.Value <= threshold)
+                // If value does not exceed threshold, continue
+                if (!valueExceedsThreshold(dataValue))
                     continue;
 
-                // If value exceeds threshold, start tracking time
+                // Value exceeded threshold, start tracking time
                 startValue = dataValue;
             }
-
-            lastValue = dataValue;
         }
 
-        if (startValue.Time == 0.0D)
+        // Handle edge case for reporting when value continues to exceed threshold through end of series
+        if (startValue.Time == 0.0D || lastValue.Time == 0.0D)
             yield break;
 
-        // Handle edge case where value exceeds threshold through end of series
-        if (returnDurations)
-        {
-            if (lastValue.Time > 0.0D)
-            {
-                yield return startValue with
-                {
-                    Value = (lastValue.Time - startValue.Time) * 1000.0D
-                };
-            }
-        }
-        else
-        {
-            yield return startValue;
-        }
+        // Produce start report that exceeds threshold through end of series
+        yield return returnDurations ? startValue with { Value = (lastValue.Time - startValue.Time) / 1000.0D } : startValue;
+
+        // If enabled, produce end report
+        if (reportEndMarker)
+            yield return returnDurations ? lastValue with { Value = 0.0D } : lastValue;
     }
 
     /// <inheritdoc />
