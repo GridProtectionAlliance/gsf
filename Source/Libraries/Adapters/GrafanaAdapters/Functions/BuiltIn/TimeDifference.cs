@@ -22,7 +22,8 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Returns: Series of values.<br/>
 /// Example: <c>TimeDifference(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
 /// Variants: TimeDifference, TimeDiff, Elapsed<br/>
-/// Execution: Deferred enumeration.
+/// Execution: Deferred enumeration.<br/>
+/// Group Operations: Set
 /// </remarks>
 public abstract class TimeDifference<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {

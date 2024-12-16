@@ -19,7 +19,8 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Returns: Single value.<br/>
 /// Example: <c>StandardDeviation(FILTER ActiveMeasurements WHERE SignalType='VPHM')</c><br/>
 /// Variants: StandardDeviation, StdDev<br/>
-/// Execution: Immediate in-memory array load.
+/// Execution: Immediate in-memory array load.<br/>
+/// Group Operations: Slice, Set
 /// </remarks>
 public abstract class StandardDeviation<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {

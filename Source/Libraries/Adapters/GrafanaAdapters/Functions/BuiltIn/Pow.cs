@@ -16,7 +16,8 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Returns: Series of values.<br/>
 /// Example: <c>Pow(2, FILTER ActiveMeasurements WHERE SignalType='CALC')</c><br/>
 /// Variants: Pow<br/>
-/// Execution: Deferred enumeration.
+/// Execution: Deferred enumeration.<br/>
+/// Group Operations: Slice, Set
 /// </remarks>
 public abstract class Pow<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {

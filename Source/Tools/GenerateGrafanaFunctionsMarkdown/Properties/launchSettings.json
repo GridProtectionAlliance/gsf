@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "GenerateGrafanaFunctionsMarkdown": {
+      "commandName": "Project",
+      "commandLineArgs": "..\\..\\..\\..\\..\\..\\Build\\Output\\Debug\\Libraries\\GrafanaAdapters.XML GrafanaFunctions.md"
+    }
+  }
+}

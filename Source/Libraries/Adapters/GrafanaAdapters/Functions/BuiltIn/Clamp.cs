@@ -20,7 +20,8 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Returns: Series of values.<br/>
 /// Example: <c>Clamp(49.95, 50.05, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
 /// Variants: Clamp, Limit<br/>
-/// Execution: Deferred enumeration.
+/// Execution: Deferred enumeration.<br/>
+/// Group Operations: Slice, Set
 /// </remarks>
 public abstract class Clamp<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {

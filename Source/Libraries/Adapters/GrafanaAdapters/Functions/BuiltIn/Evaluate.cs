@@ -26,8 +26,8 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// also available as index suffixed variables named <c>_v</c>, for example, first and second target values are available as
 /// <c>_v0</c> and <c>_v1</c>. The <c>Evaluate</c> function is always evaluated as a slice, any specified group operation
 /// prefix will be ignored. Default system types available to expressions are <c>System.Math</c> and <c>System.DateTime</c>.
-/// See <see href="https://www.codeproject.com/Articles/19768/Flee-Fast-Lightweight-Expression-Evaluator">details</see> on
-/// valid expressions. Use the <c>Imports</c> command to define more types for <c>evalExpression</c>.
+/// See <see href="https://www.codeproject.com/Articles/19768/Flee-Fast-Lightweight-Expression-Evaluator">details on valid
+/// expressions</see>. Use the <c>Imports</c> command to define more types for <c>evalExpression</c>.
 /// </summary>
 /// <remarks>
 /// Signature: <c>Evaluate(sliceTolerance, evalExpression, filterExpression)</c><br/>
@@ -37,7 +37,8 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Example 3: <c>eval(0.5, { (if (_v0 &gt; 62, _v2, if (_v0 &lt; 57, _v2, _v0)) + if (_v1 &gt; 62, _v2, if (_v1 &lt; 57, _v2, _v1))) / 2 }, FILTER TOP 3 ActiveMeasurements WHERE SignalType = 'FREQ')</c><br/>
 /// Example 4: <c>evaluate(0.0333, { if (abs(b - a) &gt; 180, if (sign(b - a) &lt; 0, b - a + 360, b - a - 360), b - a)}, a=PMU.009-PZR.AV:ANG; b=PMU.008-PZR.AV:ANG)</c><br/>
 /// Variants: Evaluate, Eval<br/>
-/// Execution: Deferred enumeration
+/// Execution: Deferred enumeration<br/>
+/// Group Operations: Slice
 /// <para>
 /// The following special command-level parameter is available to the <c>Evaluate</c> function: <c>Imports={expr}</c><br/>
 /// This command adds custom .NET type imports that can be used with the <c>Evaluate</c> function. <c>expr</c>defines a

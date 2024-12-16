@@ -22,7 +22,8 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Example 1: <c>ExceedsAt(60.05, false, FILTER ActiveMeasurements WHERE SignalType LIKE '%FREQ')</c><br/>
 /// Example 2: <c>Exceeds(59.95, true, FILTER ActiveMeasurements WHERE SignalType LIKE '%FREQ')</c><br/>
 /// Variants: ExceedsAt, Exceeds<br/>
-/// Execution: Deferred enumeration.
+/// Execution: Deferred enumeration.<br/>
+/// Group Operations: None
 /// </remarks>
 public abstract class ExceedsAt<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {

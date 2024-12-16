@@ -19,7 +19,8 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Returns: Series of values.<br/>
 /// Example: <c>UnwrapAngle(FSX_PMU2-PA1:VH; REA_PMU3-PA2:VH)</c><br/>
 /// Variants: UnwrapAngle, Unwrap<br/>
-/// Execution: Immediate in-memory array load.
+/// Execution: Immediate in-memory array load.<br/>
+/// Group Operations: Slice, Set
 /// </remarks>
 public abstract class UnwrapAngle<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {

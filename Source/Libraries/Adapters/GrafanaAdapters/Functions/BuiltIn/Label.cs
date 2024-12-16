@@ -27,7 +27,8 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Example 3: <c>Label({AlternateTag}, FILTER TOP 10 ActiveMeasurements WHERE SignalType LIKE '%PH%')</c>
 /// Example 4: <c>Label('Shelby {ScadaTags.CircuitName} MW', FILTER ScadaTags WHERE SignalType='MW' AND Substation='SHELBY')</c>
 /// Variants: Label, Name<br/>
-/// Execution: Deferred enumeration.
+/// Execution: Deferred enumeration.<br/>
+/// Group Operations: None
 /// </remarks>
 public abstract class Label<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {

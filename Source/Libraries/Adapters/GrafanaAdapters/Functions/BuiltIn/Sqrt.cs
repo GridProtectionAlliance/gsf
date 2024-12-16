@@ -14,7 +14,8 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Returns: Series of values.<br/>
 /// Example: <c>Sqrt(FILTER ActiveMeasurements WHERE SignalType='IPHM')</c><br/>
 /// Variants: Sqrt<br/>
-/// Execution: Deferred enumeration.
+/// Execution: Deferred enumeration.<br/>
+/// Group Operations: Slice, Set
 /// </remarks>
 public abstract class Sqrt<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {

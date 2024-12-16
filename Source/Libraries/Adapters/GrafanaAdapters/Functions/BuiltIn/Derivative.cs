@@ -22,7 +22,8 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Returns: Series of values.<br/>
 /// Example: <c>Derivative(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
 /// Variants: Derivative, Der<br/>
-/// Execution: Deferred enumeration.
+/// Execution: Deferred enumeration.<br/>
+/// Group Operations: Set
 /// </remarks>
 public abstract class Derivative<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {

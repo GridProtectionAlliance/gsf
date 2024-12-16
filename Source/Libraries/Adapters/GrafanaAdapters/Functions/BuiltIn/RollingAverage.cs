@@ -19,7 +19,8 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Returns: Series of values.<br/>
 /// Example: <c>RollingAvg(150, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
 /// Variants: RollingAverage, RollingAvg, RollingMean<br/>
-/// Execution: Immediate in-memory array load.
+/// Execution: Immediate in-memory array load.<br/>
+/// Group Operations: Slice, Set
 /// </remarks>
 public abstract class RollingAverage<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {
