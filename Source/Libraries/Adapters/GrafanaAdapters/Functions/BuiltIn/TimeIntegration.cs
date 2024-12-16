@@ -22,7 +22,8 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Returns: Single value.<br/>
 /// Example: <c>TimeIntegration(FILTER ActiveMeasurements WHERE SignalType='CALC' AND PointTag LIKE '%-MW:%')</c><br/>
 /// Variants: TimeIntegration, TimeInt<br/>
-/// Execution: Immediate enumeration.
+/// Execution: Immediate enumeration.<br/>
+/// Group Operations: Set
 /// </remarks>
 public abstract class TimeIntegration<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {

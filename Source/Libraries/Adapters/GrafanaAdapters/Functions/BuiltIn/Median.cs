@@ -17,7 +17,8 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Returns: Single value.<br/>
 /// Example: <c>Median(FILTER ActiveMeasurements WHERE SignalType='ALOG')</c><br/>
 /// Variants: Median, Med, Mid<br/>
-/// Execution: Immediate in-memory array load.
+/// Execution: Immediate in-memory array load.<br/>
+/// Group Operations: Slice, Set
 /// </remarks>
 public abstract class Median<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {

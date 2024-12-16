@@ -18,7 +18,8 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Returns: Series of values.<br/>
 /// Example: <c>LQE(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
 /// Variants: KalmanFilter, LQE, LinearQuadraticEstimate<br/>
-/// Execution: Deferred enumeration.
+/// Execution: Deferred enumeration.<br/>
+/// Group Operations: Slice, Set
 /// </remarks>
 public abstract class KalmanFilter<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {

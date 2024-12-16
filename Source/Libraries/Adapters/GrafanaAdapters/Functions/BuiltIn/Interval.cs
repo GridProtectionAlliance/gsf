@@ -20,7 +20,8 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Returns: Series of values.<br/>
 /// Example: <c>Sum(Interval(5, FILTER ActiveMeasurements WHERE SignalType LIKE '%PHM'))</c><br/>
 /// Variants: Interval<br/>
-/// Execution: Deferred enumeration.
+/// Execution: Deferred enumeration.<br/>
+/// Group Operations: Set
 /// </remarks>
 public abstract class Interval<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {

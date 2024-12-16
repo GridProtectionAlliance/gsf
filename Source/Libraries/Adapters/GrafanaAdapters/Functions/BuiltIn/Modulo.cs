@@ -15,7 +15,8 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Returns: Series of values.<br/>
 /// Example: <c>Mod(2, FILTER ActiveMeasurements WHERE SignalType='CALC')</c><br/>
 /// Variants: Modulo, Modulus, Mod<br/>
-/// Execution: Deferred enumeration.
+/// Execution: Deferred enumeration.<br/>
+/// Group Operations: Slice, Set
 /// </remarks>
 public abstract class Modulo<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {

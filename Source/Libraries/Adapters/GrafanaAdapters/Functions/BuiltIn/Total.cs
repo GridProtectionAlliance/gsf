@@ -16,7 +16,8 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Returns: Single value.<br/>
 /// Example: <c>Total(FILTER ActiveMeasurements WHERE SignalType='IPHM')</c><br/>
 /// Variants: Total, Add, Sum<br/>
-/// Execution: Immediate enumeration.
+/// Execution: Immediate enumeration.<br/>
+/// Group Operations: Slice, Set
 /// </remarks>
 public abstract class Total<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {

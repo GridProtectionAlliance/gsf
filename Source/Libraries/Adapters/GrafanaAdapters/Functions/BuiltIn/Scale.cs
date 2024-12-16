@@ -19,7 +19,8 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Example 2: <c>Scale(0.5, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
 /// Example 3: <c>Scale(60, true, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
 /// Variants: Scale<br/>
-/// Execution: Deferred enumeration.
+/// Execution: Deferred enumeration.<br/>
+/// Group Operations: Slice, Set
 /// </remarks>
 public abstract class Scale<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {

@@ -23,7 +23,8 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Returns: Series of values.<br/>
 /// Example: <c>Random(25%, FILTER ActiveMeasurements WHERE SignalType='VPHM')</c><br/>
 /// Variants: Random, Rand, Sample<br/>
-/// Execution: Immediate in-memory array load.
+/// Execution: Immediate in-memory array load.<br/>
+/// Group Operations: Slice, Set
 /// </remarks>
 public abstract class Random<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {

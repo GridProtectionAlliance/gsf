@@ -25,7 +25,8 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Example 3: <c>Mode(Round(FILTER ActiveMeasurements WHERE SignalType='FREQ'))</c><br/>
 /// Example 4: <c>Scale(100, true, Mode(0, Floor(Scale(100, FILTER TOP 20 ActiveMeasurements WHERE SignalType='FREQ'))))</c><br/>
 /// Variants: Mode<br/>
-/// Execution: Immediate in-memory array load.
+/// Execution: Immediate in-memory array load.<br/>
+/// Group Operations: Slice, Set
 /// </remarks>
 public abstract class Mode<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {

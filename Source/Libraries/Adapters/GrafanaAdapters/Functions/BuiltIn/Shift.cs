@@ -16,7 +16,8 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Example 1: <c>Shift(2.2, FILTER ActiveMeasurements WHERE SignalType='CALC')</c><br/>
 /// Example 2: <c>Shift(-60, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
 /// Variants: Shift<br/>
-/// Execution: Deferred enumeration.
+/// Execution: Deferred enumeration.<br/>
+/// Group Operations: Slice, Set
 /// </remarks>
 public abstract class Shift<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {

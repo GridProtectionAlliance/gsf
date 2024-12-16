@@ -19,7 +19,8 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Returns: Series of values.<br/>
 /// Example: <c>ExcludeRange(-180.0, 180.0, true, false, FILTER ActiveMeasurements WHERE SignalType LIKE '%PHA')</c><br/>
 /// Variants: ExcludeRange, Exclude<br/>
-/// Execution: Deferred enumeration.
+/// Execution: Deferred enumeration.<br/>
+/// Group Operations: Slice, Set
 /// </remarks>
 public abstract class ExcludeRange<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {

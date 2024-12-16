@@ -18,7 +18,8 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Returns: Single value.<br/>
 /// Example: <c>Percentile(10%, FILTER ActiveMeasurements WHERE SignalType='VPHM')</c><br/>
 /// Variants: Percentile, Pctl<br/>
-/// Execution: Immediate in-memory array load.
+/// Execution: Immediate in-memory array load.<br/>
+/// Group Operations: Slice, Set
 /// </remarks>
 public abstract class Percentile<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {

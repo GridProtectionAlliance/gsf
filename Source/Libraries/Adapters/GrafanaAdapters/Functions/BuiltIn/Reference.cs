@@ -25,7 +25,8 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Example 1: <c>Ref(0.033, true, false, BROWNS_FERRY:BUS1.ANG; FILTER ActiveMeasurements WHERE SignalType='IPHA')</c><br/>
 /// Example 2: <c>Reference(0.25, BROWNS_FERRY:BUS1; FILTER PhasorValues WHERE SignalType='IPHM')</c><br/>
 /// Variants: Reference, Ref<br/>
-/// Execution: Immediate enumeration.
+/// Execution: Immediate enumeration.<br/>
+/// Group Operations: Slice
 /// </remarks>
 public abstract class Reference<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {

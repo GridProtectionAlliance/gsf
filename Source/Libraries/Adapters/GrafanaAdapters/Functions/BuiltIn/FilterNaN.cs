@@ -15,7 +15,8 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Returns: Series of values.<br/>
 /// Example: <c>FilterNaN(FILTER ActiveMeasurements WHERE SignalType='VPHM')</c><br/>
 /// Variants: FilterNaN<br/>
-/// Execution: Deferred enumeration.
+/// Execution: Deferred enumeration.<br/>
+/// Group Operations: Slice, Set
 /// </remarks> 
 public abstract class FilterNaN<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {

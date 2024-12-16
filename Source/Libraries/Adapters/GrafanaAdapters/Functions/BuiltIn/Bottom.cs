@@ -23,7 +23,8 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Returns: Series of values.<br/>
 /// Example: <c>Bottom(100, false, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
 /// Variants: Bottom, Bot, Smallest<br/>
-/// Execution: Immediate in-memory array load.
+/// Execution: Immediate in-memory array load.<br/>
+/// Group Operations: Slice, Set
 /// </remarks>
 public abstract class Bottom<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {

@@ -15,7 +15,8 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Returns: Single value.<br/>
 /// Example: <c>Average(FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
 /// Variants: Average, Avg, Mean<br/>
-/// Execution: Immediate enumeration.
+/// Execution: Immediate enumeration.<br/>
+/// Group Operations: Slice, Set
 /// </remarks>
 public abstract class Average<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {

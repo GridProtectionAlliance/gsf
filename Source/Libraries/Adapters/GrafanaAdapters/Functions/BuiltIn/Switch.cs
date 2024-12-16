@@ -18,7 +18,8 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Returns: Single value.<br/>
 /// Example: <c>Switch(IndexSeriesTag; FILTER ActiveMeasurements WHERE SignalType='IPHM')</c><br/>
 /// Variants: Switch, Select<br/>
-/// Execution: Immediate enumeration.
+/// Execution: Immediate enumeration.<br/>
+/// Group Operations: Slice
 /// </remarks>
 public abstract class Switch<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {

@@ -33,7 +33,8 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Example 1: <c>FilterOutliers(85%, BROWNS_FERRY:FREQ)</c><br/>
 /// Example 2: <c>SliceFilterOutliers(0.033, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
 /// Variants: FilterOutliers, ZScoreFilter, GaussianFilter<br/>
-/// Execution: Immediate in-memory array load.
+/// Execution: Immediate in-memory array load.<br/>
+/// Group Operations: Slice, Set
 /// </remarks>
 public abstract class FilterOutliers<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {

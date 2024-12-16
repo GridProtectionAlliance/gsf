@@ -19,7 +19,8 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Returns: Series of values.<br/>
 /// Example: <c>MovingAvg(150, FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
 /// Variants: MovingAverage, MovingAvg, MovingMean, SimpleMovingAverage, SMA<br/>
-/// Execution: Immediate in-memory array load.
+/// Execution: Immediate in-memory array load.<br/>
+/// Group Operations: Slice, Set
 /// </remarks>
 public abstract class MovingAverage<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {

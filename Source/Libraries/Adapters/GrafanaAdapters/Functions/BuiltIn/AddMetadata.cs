@@ -13,7 +13,8 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Signature: <c>AddMetaData(field, value, expression)</c><br/>
 /// Returns: Series of values.<br/>
 /// Example: <c>AddMetaData('Company', 'GPA', FILTER ActiveMeasurements WHERE SignalType='FREQ')</c><br/>
-/// Execution: Deferred enumeration.
+/// Execution: Deferred enumeration.<br/>
+/// Group Operations: Slice, Set
 /// </remarks>
 public abstract class AddMetadata<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {

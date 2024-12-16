@@ -15,7 +15,8 @@ namespace GrafanaAdapters.Functions.BuiltIn;
 /// Returns: Single value.<br/>
 /// Example: <c>Count(PPA:1; PPA:2; PPA:3)</c><br/>
 /// Variants: Count<br/>
-/// Execution: Immediate enumeration.
+/// Execution: Immediate enumeration.<br/>
+/// Group Operations: Slice, Set
 /// </remarks>
 public abstract class Count<T> : GrafanaFunctionBase<T> where T : struct, IDataSourceValueType<T>
 {
