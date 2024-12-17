@@ -939,11 +939,11 @@ public class LocalOutputAdapter : OutputAdapterBase
         statusMessage("Optimizing settings for local historians...");
 
         // Load the defined local system historians
-        IEnumerable<DataRow> historians = database.Connection.RetrieveData(database.AdapterType, $"SELECT AdapterName FROM RuntimeHistorian WHERE NodeID = {nodeIDQueryString} AND TypeName = 'HistorianAdapters.LocalOutputAdapter'").AsEnumerable();
-        IEnumerable<DataRow> readers = database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM CustomInputAdapter WHERE NodeID = {nodeIDQueryString} AND TypeName = 'HistorianAdapters.LocalInputAdapter'").AsEnumerable();
+        IEnumerable<DataRow> historians = database.Connection.RetrieveData(database.AdapterType, "SELECT AdapterName FROM RuntimeHistorian WHERE NodeID = {0} AND TypeName = 'HistorianAdapters.LocalOutputAdapter'", nodeIDQueryString).AsEnumerable();
+        IEnumerable<DataRow> readers = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM CustomInputAdapter WHERE NodeID = {0} AND TypeName = 'HistorianAdapters.LocalInputAdapter'", nodeIDQueryString).AsEnumerable();
 
         // Also check for local historian adapters loaded into CustomOutputAdapters
-        historians = historians.Concat(database.Connection.RetrieveData(database.AdapterType, $"SELECT AdapterName, ConnectionString FROM RuntimeCustomOutputAdapter WHERE NodeID = {nodeIDQueryString} AND TypeName = 'HistorianAdapters.LocalOutputAdapter'").AsEnumerable());
+        historians = historians.Concat(database.Connection.RetrieveData(database.AdapterType, "SELECT AdapterName, ConnectionString FROM RuntimeCustomOutputAdapter WHERE NodeID = {0} AND TypeName = 'HistorianAdapters.LocalOutputAdapter'", nodeIDQueryString).AsEnumerable());
 
         string name, acronym, instanceName;
 
@@ -1202,11 +1202,11 @@ public class LocalOutputAdapter : OutputAdapterBase
     private static void AddPIHistorianReaders(AdoDataConnection database, string nodeIDQueryString, Action<Exception> processException)
     {
         // Load the defined local PI historians
-        IEnumerable<DataRow> historians = database.Connection.RetrieveData(database.AdapterType, $"SELECT AdapterName, ConnectionString FROM RuntimeHistorian WHERE NodeID = {nodeIDQueryString} AND TypeName = 'PIAdapters.PIOutputAdapter'").AsEnumerable();
-        IEnumerable<DataRow> readers = database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM CustomInputAdapter WHERE NodeID = {nodeIDQueryString} AND TypeName = 'PIAdapters.PIPBInputAdapter'").AsEnumerable();
+        IEnumerable<DataRow> historians = database.Connection.RetrieveData(database.AdapterType, "SELECT AdapterName, ConnectionString FROM RuntimeHistorian WHERE NodeID = {0} AND TypeName = 'PIAdapters.PIOutputAdapter'", nodeIDQueryString).AsEnumerable();
+        IEnumerable<DataRow> readers = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM CustomInputAdapter WHERE NodeID = {0} AND TypeName = 'PIAdapters.PIPBInputAdapter'", nodeIDQueryString).AsEnumerable();
 
         // Also check for PI adapters loaded into CustomOutputAdapters
-        historians = historians.Concat(database.Connection.RetrieveData(database.AdapterType, $"SELECT AdapterName, ConnectionString FROM RuntimeCustomOutputAdapter WHERE NodeID = {nodeIDQueryString} AND TypeName = 'PIAdapters.PIOutputAdapter'").AsEnumerable());
+        historians = historians.Concat(database.Connection.RetrieveData(database.AdapterType, "SELECT AdapterName, ConnectionString FROM RuntimeCustomOutputAdapter WHERE NodeID = {0} AND TypeName = 'PIAdapters.PIOutputAdapter'", nodeIDQueryString).AsEnumerable());
 
         // Make sure a temporal reader is defined for each OSI-PI historian
         foreach (DataRow row in historians)
