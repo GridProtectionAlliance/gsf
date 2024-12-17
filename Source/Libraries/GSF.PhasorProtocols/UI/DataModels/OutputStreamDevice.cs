@@ -359,12 +359,12 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 {
                     string commaSeparatedKeys = keys.Select(key => key.ToString()).Aggregate((str1, str2) => $"{str1},{str2}");
 
-                    string query = $"SELECT NodeID, AdapterID, ID, IDCode, Acronym, BpaAcronym, Name, PhasorDataFormat, FrequencyDataFormat, AnalogDataFormat, CoordinateFormat, LoadOrder, Enabled, Virtual FROM OutputStreamDeviceDetail WHERE ID IN ({commaSeparatedKeys})";
+                    string query = "SELECT NodeID, AdapterID, ID, IDCode, Acronym, BpaAcronym, Name, PhasorDataFormat, FrequencyDataFormat, AnalogDataFormat, CoordinateFormat, LoadOrder, Enabled, Virtual FROM OutputStreamDeviceDetail WHERE ID IN ({0})";
 
                     if (database.IsMySQL)
-                        query = $"SELECT NodeID, AdapterID, ID, IDCode, Acronym, BpaAcronym, Name, PhasorDataFormat, FrequencyDataFormat, AnalogDataFormat, CoordinateFormat, LoadOrder, Enabled, `Virtual` FROM OutputStreamDeviceDetail WHERE ID IN ({commaSeparatedKeys})";
+                        query = "SELECT NodeID, AdapterID, ID, IDCode, Acronym, BpaAcronym, Name, PhasorDataFormat, FrequencyDataFormat, AnalogDataFormat, CoordinateFormat, LoadOrder, Enabled, `Virtual` FROM OutputStreamDeviceDetail WHERE ID IN ({0})";
 
-                    DataTable outputStreamDeviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
+                    DataTable outputStreamDeviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, commaSeparatedKeys);
                     outputStreamDeviceList = new OutputStreamDevice[outputStreamDeviceTable.Rows.Count];
 
                     foreach (DataRow row in outputStreamDeviceTable.Rows)
@@ -698,7 +698,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             try
             {
                 createdConnection = CreateConnection(ref database);
-                DataTable deviceTable = database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM OutputStreamDeviceDetail {whereClause}");
+                DataTable deviceTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM OutputStreamDeviceDetail {0}", whereClause);
 
                 if (deviceTable.Rows.Count == 0)
                     return null;
@@ -748,7 +748,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 ObservableCollection<OutputStreamDevice> outputStreamDeviceList = new();
-                DataTable outputStreamDeviceTable = database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM OutputStreamDeviceDetail {whereClause}");
+                DataTable outputStreamDeviceTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM OutputStreamDeviceDetail {0}", whereClause);
 
                 foreach (DataRow row in outputStreamDeviceTable.Rows)
                 {
