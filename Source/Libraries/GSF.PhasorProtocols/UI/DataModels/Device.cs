@@ -817,36 +817,36 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 {
                     if (string.IsNullOrEmpty(searchText))
                     {
-                        query = database.ParameterizedQueryString($"SELECT ID From DeviceDetail WHERE NodeID = {{0}} AND ParentID = {{1}} {sortClause}", "nodeID", "parentID");
-                        deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID(), parentID);
+                        query = database.ParameterizedQueryString("SELECT ID From DeviceDetail WHERE NodeID = {0} AND ParentID = {1} {2}", "nodeID", "parentID", "sortClause");
+                        deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID(), parentID, sortClause);
                     }
                     else if (!database.IsJetEngine)
                     {
-                        query = database.ParameterizedQueryString($"SELECT ID From DeviceDetail WHERE NodeID = {{0}} AND ParentID = {{1}} AND ({searchText}) {sortClause}", "nodeID", "parentID");
-                        deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID(), parentID, searchParam);
+                        query = database.ParameterizedQueryString("SELECT ID From DeviceDetail WHERE NodeID = {0} AND ParentID = {1} AND ({2}) {3}", "nodeID", "parentID", "searchText", "sortClause");
+                        deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID(), parentID, searchParam, searchText, sortClause);
                     }
                     else
                     {
-                        query = database.ParameterizedQueryString($"SELECT ID From DeviceDetail WHERE NodeID = {{0}} AND ParentID = {{1}} AND ({searchText}) {sortClause}", "nodeID", "parentID");
-                        deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID(), parentID);
+                        query = database.ParameterizedQueryString("SELECT ID From DeviceDetail WHERE NodeID = {0} AND ParentID = {1} AND ({2}) {3}", "nodeID", "parentID", "searchText", "sortClause");
+                        deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID(), parentID, searchText, sortClause);
                     }
                 }
                 else
                 {
                     if (string.IsNullOrEmpty(searchText))
                     {
-                        query = database.ParameterizedQueryString($"SELECT ID From DeviceDetail WHERE NodeID = {{0}} {sortClause}", "nodeID");
-                        deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
+                        query = database.ParameterizedQueryString("SELECT ID From DeviceDetail WHERE NodeID = {0} {1}", "nodeID", "sortClause");
+                        deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID(), sortClause);
                     }
                     else if (!database.IsJetEngine)
                     {
-                        query = database.ParameterizedQueryString($"SELECT ID From DeviceDetail WHERE NodeID = {{0}} AND ({searchQuery}) {sortClause}", "nodeID");
-                        deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID(), searchParam);
+                        query = database.ParameterizedQueryString("SELECT ID From DeviceDetail WHERE NodeID = {0} AND ({1}) {2}", "nodeID", "searchQuery", "sortClause");
+                        deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID(), searchParam, searchQuery, sortClause);
                     }
                     else
                     {
-                        query = database.ParameterizedQueryString($"SELECT ID From DeviceDetail WHERE NodeID = {{0}} AND ({searchQuery}) {sortClause}", "nodeID");
-                        deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
+                        query = database.ParameterizedQueryString("SELECT ID From DeviceDetail WHERE NodeID = {0} AND ({1}) {2}", "nodeID", "searchQuery", "sortClause");
+                        deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID(), searchQuery, sortClause);
                     }
                 }
 
@@ -881,8 +881,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 if (keys is not null && keys.Count > 0)
                 {
                     string commaSeparatedKeys = keys.Select(key => key.ToString()).Aggregate((str1, str2) => $"{str1},{str2}");
-                    string query = $"SELECT * FROM DeviceDetail WHERE ID IN ({commaSeparatedKeys})";
-                    DataTable deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
+                    string query = database.ParameterizedQueryString("SELECT * FROM DeviceDetail WHERE ID IN ({0})", "commaSeparatedKeys");
+                    DataTable deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, commaSeparatedKeys);
                     deviceList = new Device[deviceTable.Rows.Count];
 
                     foreach (DataRow row in deviceTable.Rows)
@@ -1452,7 +1452,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             try
             {
                 createdConnection = CreateConnection(ref database);
-                DataTable deviceTable = database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM DeviceDetail {whereClause}");
+                DataTable deviceTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM DeviceDetail {0}", whereClause);
 
                 if (deviceTable.Rows.Count == 0)
                     return null;
@@ -1537,7 +1537,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             try
             {
                 createdConnection = CreateConnection(ref database);
-                DataTable deviceTable = database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM DeviceDetail {whereClause}");
+                DataTable deviceTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM DeviceDetail {0}", whereClause);
                 ObservableCollection<Device> deviceList = new();
 
                 if (deviceTable.Rows.Count == 0)
@@ -1696,9 +1696,10 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 // Note that OleDB does not support parameterized sub-query.
                 if (database.DatabaseType == DatabaseType.Access)
                 {
-                    query = database.ParameterizedQueryString($"SELECT * FROM DeviceDetail WHERE NodeID = {{0}} AND IsConcentrator = {{1}} AND Acronym NOT IN (SELECT Acronym FROM OutputStreamDevice WHERE AdapterID = {outputStreamID}) ORDER BY Acronym", "nodeID", "isConcentrator");
+                    query = database.ParameterizedQueryString("SELECT * FROM DeviceDetail WHERE NodeID = {0} AND IsConcentrator = {1} " +
+                        "AND Acronym NOT IN (SELECT Acronym FROM OutputStreamDevice WHERE AdapterID = {2}) ORDER BY Acronym", "nodeID", "isConcentrator", "outputStreamID");
 
-                    deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID(), database.Bool(false));
+                    deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID(), database.Bool(false), outputStreamID);
                 }
                 else
                 {
