@@ -1135,7 +1135,7 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
         int deviceID = connection.ExecuteScalar<int>($"SELECT ID FROM Device WHERE NodeID={nodeIDQueryString} AND Acronym={{0}}", deviceAcronym);
 
         // Get measurements that should be associated with device ID but are not currently
-        IEnumerable<DataRow> measurements = connection.RetrieveData($"SELECT PointID FROM Measurement WHERE ({lookupExpression}) AND (DeviceID IS NULL OR DeviceID <> {{0}})", deviceID).AsEnumerable();
+        IEnumerable<DataRow> measurements = connection.RetrieveData("SELECT PointID FROM Measurement WHERE ({0}) AND (DeviceID IS NULL OR DeviceID <> {{1}})", lookupExpression, deviceID).AsEnumerable();
 
         int associatedMeasurements = 0;
 
@@ -1487,7 +1487,8 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
             int qualityFlagsSignalTypeID = Convert.ToInt32(database.Connection.ExecuteScalar("SELECT ID FROM SignalType WHERE Acronym='QUAL'"));
 
             // Make sure one device quality flags measurement exists for each "connection" for devices that support time quality flags
-            foreach (DataRow device in database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM Device WHERE ((IsConcentrator = 0 AND ParentID IS NULL) OR IsConcentrator = 1) AND NodeID = {nodeIDQueryString} AND ProtocolID IN ({timeQualityProtocolIDs})").Rows)
+            foreach (DataRow device in database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM Device WHERE ((IsConcentrator = 0 AND ParentID IS NULL) " +
+                "OR IsConcentrator = 1) AND NodeID = {0} AND ProtocolID IN ({1})", nodeIDQueryString, timeQualityProtocolIDs).Rows)
             {
                 Dictionary<string, string> connectionSettings = device.Field<string>("ConnectionString")?.ParseKeyValuePairs();
 
@@ -1521,7 +1522,7 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
             }
 
             // Make sure needed device statistic measurements exist, currently statistics are only associated with phasor devices so we filter based on protocol
-            foreach (DataRow device in database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM Device WHERE IsConcentrator = 0 AND NodeID = {nodeIDQueryString} AND ProtocolID IN ({protocolIDs})").Rows)
+            foreach (DataRow device in database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM Device WHERE IsConcentrator = 0 AND NodeID = {0} AND ProtocolID IN ({1})", nodeIDQueryString, protocolIDs).Rows)
             {
                 foreach (DataRow statistic in deviceStatistics)
                 {
@@ -1543,7 +1544,7 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
 
             // Make sure devices associated with a concentrator do not have any extraneous input stream statistic measurements - this can happen
             // when a device was once a direct connect device but now is part of a concentrator...
-            foreach (DataRow inputStream in database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM Device WHERE (IsConcentrator = 0 AND ParentID IS NOT NULL) AND NodeID = {nodeIDQueryString} AND ProtocolID IN ({protocolIDs})").Rows)
+            foreach (DataRow inputStream in database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM Device WHERE (IsConcentrator = 0 AND ParentID IS NOT NULL) AND NodeID = {0} AND ProtocolID IN ({1})", nodeIDQueryString, protocolIDs).Rows)
             {
                 firstStatisticExisted = false;
 
@@ -1588,14 +1589,14 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
             statusMessage("Validating output stream measurements...");
 
             // Make sure needed output stream statistic measurements exist
-            foreach (DataRow outputStream in database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM OutputStream WHERE NodeID = {nodeIDQueryString}").Rows)
+            foreach (DataRow outputStream in database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM OutputStream WHERE NodeID = {0}", nodeIDQueryString).Rows)
             {
                 adapterID = outputStream.ConvertField<int>("ID");
 
                 // Load devices acronyms associated with this output stream
                 List<string> deviceAcronyms =
                     database.Connection.RetrieveData(database.AdapterType,
-                            $"SELECT Acronym FROM OutputStreamDevice WHERE AdapterID = {adapterID} AND NodeID = {nodeIDQueryString}")
+                            "SELECT Acronym FROM OutputStreamDevice WHERE AdapterID = {0} AND NodeID = {1}", adapterID, nodeIDQueryString)
                         .AsEnumerable()
                         .Select(row => row.Field<string>("Acronym"))
                         .ToList();
@@ -1607,7 +1608,7 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
                 deviceAcronyms.Sort(StringComparer.OrdinalIgnoreCase);
 
                 // Validate measurements associated with this output stream
-                foreach (DataRow outputStreamMeasurement in database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM OutputStreamMeasurement WHERE AdapterID = {adapterID} AND NodeID = {nodeIDQueryString}").Rows)
+                foreach (DataRow outputStreamMeasurement in database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM OutputStreamMeasurement WHERE AdapterID = {0} AND NodeID = {1}", adapterID, nodeIDQueryString).Rows)
                 {
                     // Parse output stream measurement signal reference
                     deviceSignalReference = new SignalReference(outputStreamMeasurement.Field<string>("SignalReference"));
