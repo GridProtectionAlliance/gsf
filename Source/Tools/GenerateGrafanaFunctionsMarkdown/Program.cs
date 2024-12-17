@@ -24,7 +24,7 @@
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
-using Gemstone.IO;
+using GSF.IO;
 
 namespace GenerateGrafanaFunctionsMarkdown;
 
@@ -93,7 +93,7 @@ public class MarkdownGenerator
 
                 if (!string.IsNullOrEmpty(member.Summary))
                 {
-                    foreach (string line in member.Summary.Split(Environment.NewLine).Where(line => !string.IsNullOrWhiteSpace(line)))
+                    foreach (string line in member.Summary.Split([Environment.NewLine], StringSplitOptions.None).Where(line => !string.IsNullOrWhiteSpace(line)))
                         markdownBuilder.Append($"{line.Trim().Replace("<br/>", $"{Environment.NewLine}{Environment.NewLine}")} ");
 
                     markdownBuilder.AppendLine();
@@ -105,7 +105,7 @@ public class MarkdownGenerator
                     
                     bool breakEncountered = false;
 
-                    foreach (string line in member.Remarks.Split(Environment.NewLine).Where(line => !string.IsNullOrWhiteSpace(line)))
+                    foreach (string line in member.Remarks.Split([Environment.NewLine], StringSplitOptions.None).Where(line => !string.IsNullOrWhiteSpace(line)))
                     {
                         if (breakEncountered)
                         {
@@ -138,10 +138,7 @@ public class MarkdownGenerator
                                         else
                                             markdownBuilder.Append(", ");
 
-                                        if (variant.Trim().StartsWith("`"))
-                                            markdownBuilder.Append(variant.Trim());
-                                        else
-                                            markdownBuilder.Append($"`{variant.Trim()}`");
+                                        markdownBuilder.Append(variant.Trim().StartsWith("`") ? variant.Trim() : $"`{variant.Trim()}`");
                                     }
 
                                     markdownBuilder.AppendLine();
@@ -188,8 +185,8 @@ internal static class HtmlHelpers
     private const string HtmlTemplate = @"<\s*/?\s*{0}\s*>";
     private const string HtmlBreak = @"<\s*br\s*/?\s*>";
     private const string HtmlDoubleBreak = $@"{HtmlBreak}\s*{HtmlBreak}";
-    private const string HtmlSeeHref = @"<\s*see\s+href\s*=\s*""([^""""]*)""\s*>(.*?)<\s*/\s*see\s*>";
-    private const string HtmlSeeCref = @"<\s*see\s+cref\s*=\s*""T:GrafanaAdapters\.Functions\.BuiltIn\.([^`]+)(?:`[0-9]+)?""\s*/?>";
+    private const string HtmlSeeHref = """<\s*see\s+href\s*=\s*"([^""]*)"\s*>(.*?)<\s*/\s*see\s*>""";
+    private const string HtmlSeeCref = """<\s*see\s+cref\s*=\s*"T:GrafanaAdapters\.Functions\.BuiltIn\.([^`]+)(?:`[0-9]+)?"\s*/?>""";
 
     public static string ReplaceTag(this string text, string tag, string replacement = "")
     {

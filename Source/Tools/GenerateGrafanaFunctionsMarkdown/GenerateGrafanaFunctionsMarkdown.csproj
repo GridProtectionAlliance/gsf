@@ -2,13 +2,14 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net48</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Gemstone.Common" Version="1.0.129" />
+    <ProjectReference Include="..\..\Libraries\GSF.Core\GSF.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
