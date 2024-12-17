@@ -211,7 +211,7 @@
     <Exec Command="$(SIGNTOOL) $(TargetPath)" />
   </Target>
   <PropertyGroup>
-    <PostBuildEvent>$(SolutionDir)Tools\GenerateGrafanaFunctionsMarkdown\bin\Debug\net48\\GenerateGrafanaFunctionsMarkdown.exe "$(OutDir)$(TargetName).xml" "$(SolutionDir)Documentation\GrafanaFunctions.md"</PostBuildEvent>
+    <PostBuildEvent>$(SolutionDir)Tools\GenerateGrafanaFunctionsMarkdown\bin\$(ConfigurationName)\net48\GenerateGrafanaFunctionsMarkdown.exe "$(OutDir)$(TargetName).xml" "$(SolutionDir)Documentation\GrafanaFunctions.md"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
