@@ -243,7 +243,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 if (!string.IsNullOrEmpty(sortMember))
                     sortClause = $"ORDER BY {sortMember} {sortDirection}";
 
-                DataTable OutputStreamDevicePhasorTable = database.Connection.RetrieveData(database.AdapterType, $"SELECT ID FROM OutputStreamDevicePhasor WHERE OutputStreamDeviceID = {outputStreamDeviceID} {sortClause}");
+                DataTable OutputStreamDevicePhasorTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID FROM OutputStreamDevicePhasor WHERE OutputStreamDeviceID = {0} {1}", outputStreamDeviceID, sortClause);
 
                 foreach (DataRow row in OutputStreamDevicePhasorTable.Rows)
                     outputStreamDevicePhasorList.Add((row.ConvertField<int>("ID")));
@@ -276,9 +276,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 if (keys is not null && keys.Count > 0)
                 {
                     string commaSeparatedKeys = keys.Select(key => $"{key}").Aggregate((str1, str2) => $"{str1},{str2}");
-                    string query = database.ParameterizedQueryString($"SELECT NodeID, OutputStreamDeviceID, ID, Label, Type, Phase, ScalingValue, LoadOrder FROM OutputStreamDevicePhasor WHERE ID IN ({commaSeparatedKeys})");
 
-                    DataTable outputStreamDevicePhasorTable = database.Connection.RetrieveData(database.AdapterType, query);
+                    DataTable outputStreamDevicePhasorTable = database.Connection.RetrieveData(database.AdapterType, "SELECT NodeID, OutputStreamDeviceID, ID, Label, Type, Phase, ScalingValue, LoadOrder FROM OutputStreamDevicePhasor WHERE ID IN ({0})", commaSeparatedKeys);
                     outputStreamDevicePhasorList = new OutputStreamDevicePhasor[outputStreamDevicePhasorTable.Rows.Count];
 
                     foreach (DataRow row in outputStreamDevicePhasorTable.Rows)
