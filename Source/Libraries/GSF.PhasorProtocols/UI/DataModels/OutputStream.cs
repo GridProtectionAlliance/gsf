@@ -845,13 +845,13 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 if (enabledOnly)
                 {
-                    query = database.ParameterizedQueryString($"SELECT ID FROM OutputStreamDetail WHERE NodeID = {{0}} AND Enabled = {{1}} {sortClause}", "nodeID", "enabled");
-                    outputStreamTable = database.Connection.RetrieveData(database.AdapterType, query, database.CurrentNodeID(), database.Bool(true));
+                    query = database.ParameterizedQueryString("SELECT ID FROM OutputStreamDetail WHERE NodeID = {0} AND Enabled = {1} {2}", "nodeID", "enabled", "sortClause");
+                    outputStreamTable = database.Connection.RetrieveData(database.AdapterType, query, database.CurrentNodeID(), database.Bool(true), sortClause);
                 }
                 else
                 {
-                    query = database.ParameterizedQueryString($"SELECT * FROM OutputStreamDetail WHERE NodeID = {{0}} {sortClause}", "nodeID");
-                    outputStreamTable = database.Connection.RetrieveData(database.AdapterType, query, database.CurrentNodeID());
+                    query = database.ParameterizedQueryString("SELECT * FROM OutputStreamDetail WHERE NodeID = {0} {1}", "nodeID", "sortClause");
+                    outputStreamTable = database.Connection.RetrieveData(database.AdapterType, query, database.CurrentNodeID(), sortClause);
                 }
 
                 foreach (DataRow row in outputStreamTable.Rows)
@@ -887,8 +887,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 if (keys is not null && keys.Count > 0)
                 {
                     string commaSeparatedKeys = keys.Select(key => $"{key}").Aggregate((str1, str2) => $"{str1},{str2}");
-                    string query = $"SELECT * FROM OutputStreamDetail WHERE ID IN ({commaSeparatedKeys})";
-                    DataTable outputStreamTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
+                    DataTable outputStreamTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM OutputStreamDetail WHERE ID IN ({0})", DefaultTimeout, commaSeparatedKeys);
 
                     outputStreamList = new ObservableCollection<OutputStream>(
                         from item in outputStreamTable.AsEnumerable()
@@ -1057,7 +1056,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                         if (qualityType is not null)
                         {
-                            IList<int> keys = database.Connection.RetrieveData(database.AdapterType, $"SELECT ID FROM OutputStreamMeasurement WHERE AdapterID = {outputStream.ID}")
+                            IList<int> keys = database.Connection.RetrieveData(database.AdapterType, "SELECT ID FROM OutputStreamMeasurement WHERE AdapterID = {0}", outputStream.ID)
                                 .Select().Select(row => row.ConvertField<int>("ID")).ToList();
 
                             foreach (OutputStreamMeasurement measurement in OutputStreamMeasurement.Load(database, keys))
@@ -1181,7 +1180,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             try
             {
                 createdConnection = CreateConnection(ref database);
-                DataTable outputStreamTable = database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM OutputStreamDetail {whereClause}");
+                DataTable outputStreamTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM OutputStreamDetail {0}", whereClause);
 
                 if (outputStreamTable.Rows.Count == 0)
                     return null;
