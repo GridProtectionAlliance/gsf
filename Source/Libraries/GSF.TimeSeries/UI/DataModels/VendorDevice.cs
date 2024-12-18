@@ -247,10 +247,11 @@ namespace GSF.TimeSeries.UI.DataModels
                 string sortClause = string.Empty;
 
                 if (!string.IsNullOrEmpty(sortMember))
-                    sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
-
+                    vendorDeviceTable = database.Connection.RetrieveData(database.AdapterType, 
+                        "SELECT ID From VendorDeviceDetail ORDER BY {0} {1}", sortMember, sortDirection);
                 // check the query once again , Does it have to be details or somethng else
-                vendorDeviceTable = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT ID From VendorDeviceDetail {0}", sortClause));
+                else vendorDeviceTable = database.Connection.RetrieveData(database.AdapterType, 
+                    "SELECT ID From VendorDeviceDetail");
 
                 foreach (DataRow row in vendorDeviceTable.Rows)
                 {
@@ -279,7 +280,6 @@ namespace GSF.TimeSeries.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                string query;
                 string commaSeparatedKeys;
 
                 VendorDevice[] vendorDeviceList = null;
@@ -289,8 +289,8 @@ namespace GSF.TimeSeries.UI.DataModels
                 if ((object)keys != null && keys.Count > 0)
                 {
                     commaSeparatedKeys = keys.Select(key => key.ToString()).Aggregate((str1, str2) => str1 + "," + str2);
-                    query = string.Format("SELECT * FROM VendorDeviceDetail WHERE ID IN ({0})", commaSeparatedKeys);
-                    vendorDeviceTable = database.Connection.RetrieveData(database.AdapterType, query);
+                    vendorDeviceTable = database.Connection.RetrieveData(database.AdapterType, 
+                        "SELECT * FROM VendorDeviceDetail WHERE ID IN ({0})", commaSeparatedKeys);
                     vendorDeviceList = new VendorDevice[vendorDeviceTable.Rows.Count];
 
                     foreach (DataRow row in vendorDeviceTable.Rows)
