@@ -571,7 +571,7 @@ namespace GSF.TimeSeries.UI.DataModels
                     query = database.ParameterizedQueryString(string.Format("SELECT NodeID, TagName, ID, SignalID, AssociatedMeasurementID, Description, Severity, Operation, " +
                         "SetPoint, Tolerance, Delay, Hysteresis, LoadOrder, Enabled FROM Alarm WHERE NodeID = {{0}} AND ID IN ({0})", commaSeparatedKeys), "nodeID");
 
-                    alarmTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
+                    alarmTable = database.Connection.   RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
                     alarmList = new Alarm[alarmTable.Rows.Count];
 
                     foreach (DataRow row in alarmTable.Rows)
