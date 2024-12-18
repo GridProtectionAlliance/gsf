@@ -148,6 +148,7 @@
     <EmbeddedResource Include="Device Viability Calculations.TagTemplate" />
     <EmbeddedResource Include="Full Calculations.TagTemplate" />
     <EmbeddedResource Include="Flip Digital Bits.TagTemplate" />
+    <EmbeddedResource Include="Negative Sequence Calculation.TagTemplate" />
     <None Include="packages.config" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -160,7 +161,10 @@
     <EmbeddedResource Include="Three Phase Power Calculations.TagTemplate" />
     <EmbeddedResource Include="Views\BulkTagTemplate.cshtml" />
     <EmbeddedResource Include="Views\SelectGroupDevices.cshtml" />
+    <EmbeddedResource Include="Register Bulk Sequence Calculations.TagTemplate" />
+    <EmbeddedResource Include="Positive Sequence Calculation.TagTemplate" />
     <None Include="Web.config" />
+    <EmbeddedResource Include="Zero Sequence Calculation.TagTemplate" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterBuild">

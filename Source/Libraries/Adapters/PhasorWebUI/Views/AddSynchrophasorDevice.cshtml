@@ -3364,11 +3364,14 @@
 
         function saveCustomActionAdapter(tagTemplate) {
             return phasorHub.newCustomActionAdapter().then(function (adapter) {
+                const deviceTemplate = "{DEVICE}";
+                const deviceAcronym = viewModel.deviceAcronym();
+
                 adapter.NodeID = nodeID;
-                adapter.AdapterName = getCleanAcronym(tagTemplate.TagName);
+                adapter.AdapterName = getCleanAcronym(tagTemplate.TagName.replace(deviceTemplate, deviceAcronym));
                 adapter.AssemblyName = tagTemplate.Equation;
                 adapter.TypeName = tagTemplate.Type;
-                adapter.ConnectionString = tagTemplate.Inputs.join(";");
+                adapter.ConnectionString = tagTemplate.Inputs.join("; ").replace(deviceTemplate, deviceAcronym);
                 adapter.LoadOrder = 1;
                 adapter.Enabled = true;
 
