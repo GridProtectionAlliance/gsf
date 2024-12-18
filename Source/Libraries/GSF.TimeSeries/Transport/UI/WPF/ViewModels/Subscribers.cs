@@ -714,8 +714,6 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             };
 
             DataTable dataTable;
-            string queryFormat;
-            string parameterizedQuery;
 
             m_subscriberPermissionsDataSet = new DataSet();
 
@@ -723,9 +721,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             {
                 foreach (KeyValuePair<string, string> definition in dataTableDefinitions)
                 {
-                    queryFormat = string.Format("SELECT * FROM {0} WHERE NodeID = {{0}}", definition.Key);
-                    parameterizedQuery = database.ParameterizedQueryString(queryFormat, "nodeID");
-                    dataTable = database.Connection.RetrieveData(database.AdapterType, parameterizedQuery, DataExtensions.DefaultTimeoutDuration, database.CurrentNodeID());
+                    dataTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM {0} WHERE NodeID = {1}", DataExtensions.DefaultTimeoutDuration, definition.Key, database.CurrentNodeID());
                     dataTable.TableName = definition.Value;
                     dataTable.DataSet.Tables.Remove(dataTable);
                     m_subscriberPermissionsDataSet.Tables.Add(dataTable);

@@ -523,14 +523,11 @@ namespace GSF.TimeSeries.UI.DataModels
                 IList<int> alarmList = new List<int>();
                 string sortClause = string.Empty;
                 DataTable adapterTable;
-                string query;
 
-                if (!string.IsNullOrEmpty(sortMember))
-                    sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
-
-                query = database.ParameterizedQueryString(string.Format("SELECT ID FROM Alarm WHERE NodeID = {{0}} {0}", sortClause), "nodeID");
-
-                adapterTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
+                if (!string.IsNullOrEmpty(sortMember)) adapterTable = database.Connection.RetrieveData(database.AdapterType, 
+                    "SELECT ID FROM Alarm WHERE NodeID = {0} ORDER BY {1} {2}", DefaultTimeout, database.CurrentNodeID(), sortMember, sortDirection);
+                else adapterTable = database.Connection.RetrieveData(database.AdapterType, 
+                    "SELECT ID FROM Alarm WHERE NodeID = {0}", DefaultTimeout, database.CurrentNodeID());
 
                 foreach (DataRow row in adapterTable.Rows)
                 {
@@ -625,7 +622,7 @@ namespace GSF.TimeSeries.UI.DataModels
             try
             {
                 createdConnection = CreateConnection(ref database);
-                DataTable alarmTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM Alarm " + whereClause);
+                DataTable alarmTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM Alarm {0}", whereClause);
 
                 if (alarmTable.Rows.Count == 0)
                     return null;

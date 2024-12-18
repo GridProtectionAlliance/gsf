@@ -38,6 +38,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Linq;
+using System.Windows.Controls.Primitives;
 using GSF.ComponentModel.DataAnnotations;
 using GSF.Data;
 
@@ -379,14 +380,13 @@ namespace GSF.TimeSeries.UI.DataModels
                 IList<int> adapterList = new List<int>();
                 string sortClause = string.Empty;
                 DataTable adapterTable;
-                string query;
 
                 if (!string.IsNullOrEmpty(sortMember))
-                    sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
-
-                query = database.ParameterizedQueryString(string.Format("SELECT ID FROM {0} WHERE NodeID = {{0}} {1}", viewName, sortClause), "nodeID");
-
-                adapterTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
+                    adapterTable = database.Connection.RetrieveData(database.AdapterType, 
+                        "SELECT ID FROM {0} WHERE NodeID = {1} ORDER BY {2} {3}", 
+                        DefaultTimeout, viewName, database.CurrentNodeID(), sortMember, sortDirection);
+                else adapterTable = database.Connection.RetrieveData(database.AdapterType, 
+                    "SELECT ID FROM {0} WHERE NodeID = {1}", DefaultTimeout, viewName, database.CurrentNodeID());
 
                 foreach (DataRow row in adapterTable.Rows)
                 {
@@ -428,7 +428,6 @@ namespace GSF.TimeSeries.UI.DataModels
                 else
                     viewName = "CustomOutputAdapterDetail";
 
-                string query;
                 string commaSeparatedKeys;
 
                 Adapter[] adapterList = null;
@@ -438,10 +437,11 @@ namespace GSF.TimeSeries.UI.DataModels
                 if ((object)keys != null && keys.Count > 0)
                 {
                     commaSeparatedKeys = keys.Select(key => "" + key.ToString() + "").Aggregate((str1, str2) => str1 + "," + str2);
-                    query = database.ParameterizedQueryString(string.Format("SELECT NodeID, ID, AdapterName, AssemblyName, TypeName, ConnectionString, " +
-                        "LoadOrder, Enabled, NodeName FROM {0} WHERE NodeID = {{0}} AND ID IN ({1})", viewName, commaSeparatedKeys), "nodeID");
 
-                    adapterTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
+                    adapterTable = database.Connection.RetrieveData(database.AdapterType, 
+                        "SELECT NodeID, ID, AdapterName, AssemblyName, TypeName, ConnectionString, " +
+                        "LoadOrder, Enabled, NodeName FROM {0} WHERE NodeID = {2} AND ID IN ({1})", 
+                        DefaultTimeout, viewName, commaSeparatedKeys, database.CurrentNodeID());
                     adapterList = new Adapter[adapterTable.Rows.Count];
 
                     foreach (DataRow row in adapterTable.Rows)
@@ -503,8 +503,8 @@ namespace GSF.TimeSeries.UI.DataModels
                 else
                     tableName = "CustomOutputAdapter";
 
-                string query = database.ParameterizedQueryString("SELECT ID, Name FROM " + tableName + " WHERE Enabled = {0} ORDER BY LoadOrder", "enabled");
-                DataTable adapterTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.Bool(true));
+                DataTable adapterTable = database.Connection.RetrieveData(database.AdapterType, 
+                    "SELECT ID, Name FROM {0} WHERE Enabled = {1} ORDER BY LoadOrder", "enabled", DefaultTimeout, tableName, database.Bool(true));
 
                 foreach (DataRow row in adapterTable.Rows)
                     adapterList[row.ConvertField<int>("ID")] = row.Field<string>("Name");
