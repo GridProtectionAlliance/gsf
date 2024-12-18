@@ -466,9 +466,9 @@ namespace GSF.TimeSeries.UI.DataModels
                 DataTable nodeTable;
 
                 if (!string.IsNullOrEmpty(sortMember))
-                    sortClause = $"ORDER BY {sortMember} {sortDirection}";
-
-                nodeTable = database.Connection.RetrieveData(database.AdapterType, $"Select ID From NodeDetail {sortClause}");
+                     nodeTable = database.Connection.RetrieveData(database.AdapterType, 
+                        "Select ID From NodeDetail ORDER BY {0} {1}", sortMember, sortDirection);
+                else nodeTable = database.Connection.RetrieveData(database.AdapterType, "Select ID From NodeDetail");
 
 
                 foreach (DataRow row in nodeTable.Rows)
@@ -499,7 +499,6 @@ namespace GSF.TimeSeries.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                string query;
                 string commaSeparatedKeys;
 
                 Node[] nodeList = null;
@@ -509,9 +508,10 @@ namespace GSF.TimeSeries.UI.DataModels
                 if ((object)keys != null && keys.Count > 0)
                 {
                     commaSeparatedKeys = keys.Select(key => "'" + key.ToString() + "'").Aggregate((str1, str2) => str1 + "," + str2);
-                    query = "Select ID, Name, CompanyID, Longitude, Latitude, Description, ImagePath, Settings, MenuData, " + $"MenuType, Master, LoadOrder, Enabled, CompanyName From NodeDetail WHERE ID IN ({commaSeparatedKeys})";
 
-                    nodeTable = database.Connection.RetrieveData(database.AdapterType, query);
+                    nodeTable = database.Connection.RetrieveData(database.AdapterType, 
+                        "Select ID, Name, CompanyID, Longitude, Latitude, Description, ImagePath, Settings, MenuData, " + 
+                        "MenuType, Master, LoadOrder, Enabled, CompanyName From NodeDetail WHERE ID IN ({0})", commaSeparatedKeys);
                     nodeList = new Node[nodeTable.Rows.Count];
 
                     foreach (DataRow row in nodeTable.Rows)
@@ -667,8 +667,7 @@ namespace GSF.TimeSeries.UI.DataModels
                 }
                 else
                 {
-                    query = $"SELECT Name FROM NodeDetail WHERE ID IN ('{node.ID}')";
-                    DataTable nodeTable = database.Connection.RetrieveData(database.AdapterType, query);
+                    DataTable nodeTable = database.Connection.RetrieveData(database.AdapterType, "SELECT Name FROM NodeDetail WHERE ID IN ('{0}')", node.ID);
 
                     query = "SELECT SignalIndex FROM Statistic WHERE Source = \'System\'";
                     DataTable systemTable = database.Connection.RetrieveData(database.AdapterType, query);

@@ -260,10 +260,9 @@ namespace GSF.TimeSeries.UI.DataModels
                 string sortClause = string.Empty;
 
                 if (!string.IsNullOrEmpty(sortMember))
-                    sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
-
+                    vendorTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID From VendorDetail ORDER BY {0} {1}", sortMember, sortDirection);
                 // check the query once again , Does it have to be details or somethng else
-                vendorTable = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT ID From VendorDetail {0}", sortClause));
+                else vendorTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID From VendorDetail");
 
                 foreach (DataRow row in vendorTable.Rows)
                 {
@@ -292,8 +291,7 @@ namespace GSF.TimeSeries.UI.DataModels
             try
             {
                 createdConnection = CreateConnection(ref database);
-
-                string query;
+                
                 string commaSeparatedKeys;
 
                 Vendor[] vendorList = null;
@@ -303,8 +301,8 @@ namespace GSF.TimeSeries.UI.DataModels
                 if ((object)keys != null && keys.Count > 0)
                 {
                     commaSeparatedKeys = keys.Select(key => key.ToString()).Aggregate((str1, str2) => str1 + "," + str2);
-                    query = string.Format("SELECT ID, Acronym, Name, PhoneNumber, ContactEmail, URL FROM VendorDetail WHERE ID IN ({0})", commaSeparatedKeys);
-                    vendorTable = database.Connection.RetrieveData(database.AdapterType, query);
+                    vendorTable = database.Connection.RetrieveData(database.AdapterType, 
+                        "SELECT ID, Acronym, Name, PhoneNumber, ContactEmail, URL FROM VendorDetail WHERE ID IN ({0})", commaSeparatedKeys);
                     vendorList = new Vendor[vendorTable.Rows.Count];
 
                     foreach (DataRow row in vendorTable.Rows)
