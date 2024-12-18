@@ -92,7 +92,7 @@ public class BulkSequenceCalculator : IndependentActionAdapterManagerBase<Sequen
     /// </summary>
     public BulkSequenceCalculator()
     {
-        m_adapterDetails = new List<AdapterDetail>();
+        m_adapterDetails = [];
     }
 
     #endregion
@@ -171,63 +171,56 @@ public class BulkSequenceCalculator : IndependentActionAdapterManagerBase<Sequen
             ReadOnlyCollection<string> generatePerAdapterOutputNames()
             {
                 if (IncludePositiveSequence && IncludeNegativeSequence && IncludeZeroSequence)
-                    return Array.AsReadOnly(new[]
-                    {
+                    return Array.AsReadOnly([
                         $"{nameof(PositiveSequenceMagnitude)}",
                         $"{nameof(PositiveSequenceAngle)}",
                         $"{nameof(NegativeSequenceMagnitude)}",
                         $"{nameof(NegativeSequenceAngle)}",
                         $"{nameof(ZeroSequenceMagnitude)}",
                         $"{nameof(ZeroSequenceAngle)}"
-                    });
+                    ]);
 
                 if (IncludePositiveSequence && IncludeNegativeSequence)
-                    return Array.AsReadOnly(new[]
-                    {
+                    return Array.AsReadOnly([
                         $"{nameof(PositiveSequenceMagnitude)}",
                         $"{nameof(PositiveSequenceAngle)}",
                         $"{nameof(NegativeSequenceMagnitude)}",
                         $"{nameof(NegativeSequenceAngle)}"
-                    });
+                    ]);
 
                 if (IncludePositiveSequence && IncludeZeroSequence)
-                    return Array.AsReadOnly(new[]
-                    {
+                    return Array.AsReadOnly([
                         $"{nameof(PositiveSequenceMagnitude)}",
                         $"{nameof(PositiveSequenceAngle)}",
                         $"{nameof(ZeroSequenceMagnitude)}",
                         $"{nameof(ZeroSequenceAngle)}"
-                    });
+                    ]);
 
                 if (IncludeNegativeSequence && IncludeZeroSequence)
-                    return Array.AsReadOnly(new[]
-                    {
+                    return Array.AsReadOnly([
                         $"{nameof(NegativeSequenceMagnitude)}",
                         $"{nameof(NegativeSequenceAngle)}",
                         $"{nameof(ZeroSequenceMagnitude)}",
                         $"{nameof(ZeroSequenceAngle)}"
-                    });
+                    ]);
 
                 if (IncludePositiveSequence)
-                    return Array.AsReadOnly(new[]
-                    {
+                    return Array.AsReadOnly([
                         $"{nameof(PositiveSequenceMagnitude)}",
                         $"{nameof(PositiveSequenceAngle)}"
-                    });
+                    ]);
 
                 if (IncludeNegativeSequence)
-                    return Array.AsReadOnly(new[]
-                    {
+                    return Array.AsReadOnly([
                         $"{nameof(NegativeSequenceMagnitude)}",
                         $"{nameof(NegativeSequenceAngle)}"
-                    });
+                    ]);
 
                 if (IncludeZeroSequence)
-                    return Array.AsReadOnly(new[]
-                    {
+                    return Array.AsReadOnly([
                         $"{nameof(ZeroSequenceMagnitude)}",
                         $"{nameof(ZeroSequenceAngle)}"
-                    });
+                    ]);
 
                 return Array.AsReadOnly(Array.Empty<string>());
             }
@@ -246,30 +239,30 @@ public class BulkSequenceCalculator : IndependentActionAdapterManagerBase<Sequen
         get
         {
             if (CurrentAdapterIndex <= -1 || CurrentAdapterIndex >= m_adapterDetails.Count)
-                return Array.Empty<char>();
+                return [];
 
             if (IncludePositiveSequence && IncludeNegativeSequence && IncludeZeroSequence)
-                return new[] { '+', '+', '-', '-', '0', '0' };
+                return ['+', '+', '-', '-', '0', '0'];
 
             if (IncludePositiveSequence && IncludeNegativeSequence)
-                return new[] { '+', '+', '-', '-' };
+                return ['+', '+', '-', '-'];
 
             if (IncludePositiveSequence && IncludeZeroSequence)
-                return new[] { '+', '+', '0', '0' };
+                return ['+', '+', '0', '0'];
 
             if (IncludeNegativeSequence && IncludeZeroSequence)
-                return new[] { '-', '-', '0', '0' };
+                return ['-', '-', '0', '0'];
 
             if (IncludePositiveSequence)
-                return new[] { '+', '+' };
+                return ['+', '+'];
 
             if (IncludeNegativeSequence)
-                return new[] { '-', '-' };
+                return ['-', '-'];
 
             if (IncludeZeroSequence)
-                return new[] { '0', '0' };
+                return ['0', '0'];
 
-            return Array.Empty<char>();
+            return [];
         }
     }
 
@@ -311,15 +304,15 @@ public class BulkSequenceCalculator : IndependentActionAdapterManagerBase<Sequen
         {
             PhasorType.Voltage => PerAdapterOutputNames.Count switch
             {
-                6 => new[] { SignalType.VPHM, SignalType.VPHA, SignalType.VPHM, SignalType.VPHA, SignalType.VPHM, SignalType.VPHA },
-                4 => new[] { SignalType.VPHM, SignalType.VPHA, SignalType.VPHM, SignalType.VPHA },
-                _ => new[] { SignalType.VPHM, SignalType.VPHA }
+                6 => [SignalType.VPHM, SignalType.VPHA, SignalType.VPHM, SignalType.VPHA, SignalType.VPHM, SignalType.VPHA],
+                4 => [SignalType.VPHM, SignalType.VPHA, SignalType.VPHM, SignalType.VPHA],
+                _ => [SignalType.VPHM, SignalType.VPHA]
             },
             PhasorType.Current => PerAdapterOutputNames.Count switch
             {
-                6 => new[] { SignalType.IPHM, SignalType.IPHA, SignalType.IPHM, SignalType.IPHA, SignalType.IPHM, SignalType.IPHA },
-                4 => new[] { SignalType.IPHM, SignalType.IPHA, SignalType.IPHM, SignalType.IPHA },
-                _ => new[] { SignalType.IPHM, SignalType.IPHA }
+                6 => [SignalType.IPHM, SignalType.IPHA, SignalType.IPHM, SignalType.IPHA, SignalType.IPHM, SignalType.IPHA],
+                4 => [SignalType.IPHM, SignalType.IPHA, SignalType.IPHM, SignalType.IPHA],
+                _ => [SignalType.IPHM, SignalType.IPHA]
             },
             _ => null
         };
@@ -487,8 +480,8 @@ public class BulkSequenceCalculator : IndependentActionAdapterManagerBase<Sequen
         Dictionary<int, List<PhaseDetail>> devicePhaseDetails = new();
 
         // Build proper set of inputs where phases are grouped together
-        List<MeasurementKey> inputs = new();
-        HashSet<int> duplicatedMatches = new();
+        List<MeasurementKey> inputs = [];
+        HashSet<int> duplicatedMatches = [];
         int incompleteCount = 0;
 
         using (AdoDataConnection connection = GetConfiguredConnection())
@@ -529,7 +522,7 @@ public class BulkSequenceCalculator : IndependentActionAdapterManagerBase<Sequen
 
                                 if (phase is 'A' or 'B' or 'C')
                                 {
-                                    List<PhaseDetail> phases = devicePhaseDetails.GetOrAdd(deviceID, _ => new List<PhaseDetail>());
+                                    List<PhaseDetail> phases = devicePhaseDetails.GetOrAdd(deviceID, _ => []);
                                     phases.Add(new PhaseDetail(key, signalType, measurement, phasor));
                                 }
                                 else
@@ -561,12 +554,12 @@ public class BulkSequenceCalculator : IndependentActionAdapterManagerBase<Sequen
 
                 // Extract parallel phase label list and find all phase voltage/current angle indexes
                 string[] labels = new string[phaseDetails.Count];
-                List<int> avPhaseIndexes = new(); // A-phase Voltage Indexes
-                List<int> bvPhaseIndexes = new(); // B-phase Voltage Indexes
-                List<int> cvPhaseIndexes = new(); // C-phase Voltage Indexes
-                List<int> aiPhaseIndexes = new(); // A-phase Current Indexes
-                List<int> biPhaseIndexes = new(); // B-phase Current Indexes
-                List<int> ciPhaseIndexes = new(); // C-phase Current Indexes
+                List<int> avPhaseIndexes = []; // A-phase Voltage Indexes
+                List<int> bvPhaseIndexes = []; // B-phase Voltage Indexes
+                List<int> cvPhaseIndexes = []; // C-phase Voltage Indexes
+                List<int> aiPhaseIndexes = []; // A-phase Current Indexes
+                List<int> biPhaseIndexes = []; // B-phase Current Indexes
+                List<int> ciPhaseIndexes = []; // C-phase Current Indexes
 
                 Dictionary<int, int> phasorSourceIndexCounts = new();
 
@@ -630,7 +623,7 @@ public class BulkSequenceCalculator : IndependentActionAdapterManagerBase<Sequen
                 List<int> matchingLabelIndexes(string aPhaseLabel, IReadOnlyList<int> phaseIndexes, IReadOnlyList<string> phaseLabels)
                 {
                     if (phaseIndexes.Count == 0)
-                        return new List<int>();
+                        return [];
 
                     Debug.Assert(phaseIndexes.Count == phaseLabels.Count, "Target phase index and label list lengths do not match");
 
@@ -638,7 +631,7 @@ public class BulkSequenceCalculator : IndependentActionAdapterManagerBase<Sequen
                     for (int i = 0; i < phaseLabels.Count; i++)
                     {
                         if (aPhaseLabel.Equals(phaseLabels[i]))
-                            return new List<int>(new[] { phaseIndexes[i] });
+                            return [..new[] { phaseIndexes[i] }];
                     }
 
                     // Try fuzzy match for longest common sub-sequence length
@@ -833,6 +826,38 @@ public class BulkSequenceCalculator : IndependentActionAdapterManagerBase<Sequen
 
                             if (count > 0)
                                 sourcePhaseCount = count;
+
+                            // Check for WHERE clause in input measurement keys to determine if device filter was applied
+                            if (Settings.TryGetValue(nameof(InputMeasurementKeys), out string filterExpression) && filterExpression.Contains("WHERE Device"))
+                            {
+                                // When device filter is applied, it is expected that bulk seq instance is being applied to a single sequence calculator
+                                // for the device -- verify this is the case by ensuring only one sequence calculation type is enabled:
+                                int enabledCount = 0;
+
+                                if (IncludePositiveSequence)
+                                    enabledCount++;
+
+                                if (IncludeNegativeSequence)
+                                    enabledCount++;
+
+                                if (IncludeZeroSequence)
+                                    enabledCount++;
+
+                                if (enabledCount > 1)
+                                {
+                                    OnStatusMessage(MessageLevel.Warning, $"Device filter applied to input measurement keys for device \"{deviceAcronym}\" [{deviceID}] but multiple sequence calculation types are enabled, this may cause unexpected results.");
+                                }
+                                else
+                                {
+                                    // Maintain source phasor count consistency by providing each sequence calculation with its own signal index range
+                                    if (IncludePositiveSequence)
+                                        sourcePhaseCount *= 1;
+                                    else if (IncludeNegativeSequence)
+                                        sourcePhaseCount *= 2;
+                                    else
+                                        sourcePhaseCount *= 3;
+                                }
+                            }
                         }
 
                         if (string.IsNullOrWhiteSpace(companyAcronym))

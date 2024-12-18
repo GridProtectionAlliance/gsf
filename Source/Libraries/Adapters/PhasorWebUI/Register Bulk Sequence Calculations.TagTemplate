@@ -1,0 +1,1 @@
+BULK_SEQ	IncludePositiveSequence=True	PowerCalculations.dll	PowerCalculations.BulkSequenceCalculator	Sets up bulk sequence calculations for all devices (only needs to be setup once)

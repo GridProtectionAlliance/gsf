@@ -79,8 +79,10 @@ namespace PhasorWebUI
         /// <summary>
         /// Gets the path to the configuration cache directory.
         /// </summary>
-        public static string GetJsonConfigurationPath() => 
-            JsonConfigurationPath;
+        public static string GetJsonConfigurationPath()
+        {
+            return JsonConfigurationPath;
+        }
 
         #endregion
     }

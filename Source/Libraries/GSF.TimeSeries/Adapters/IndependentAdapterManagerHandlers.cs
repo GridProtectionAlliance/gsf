@@ -171,9 +171,25 @@ namespace GSF.TimeSeries.Adapters
 
             StringBuilder status = new();
 
-            status.AppendLine($"        Point Tag Template: {instance.PointTagTemplate}");
-            status.AppendLine($"    Alternate Tag Template: {instance.AlternateTagTemplate}");
-            status.AppendLine($" Signal Reference Template: {instance.SignalReferenceTemplate}");
+            string safeRead(Func<string> reader)
+            {
+                try
+                {
+                    return reader();
+                }
+                catch (IndexOutOfRangeException)
+                {
+                    return "No sources";
+                }
+                catch (Exception)
+                {
+                    return "Error reading value";
+                }
+            }
+
+            status.AppendLine($"        Point Tag Template: {safeRead(() => instance.PointTagTemplate)}");
+            status.AppendLine($"    Alternate Tag Template: {safeRead(() => instance.AlternateTagTemplate)}");
+            status.AppendLine($" Signal Reference Template: {safeRead(() => instance.SignalReferenceTemplate)}");
             status.AppendLine($"      Description Template: {instance.DescriptionTemplate}");
             status.AppendLine($"   Device Acronym Template: {instance.ParentDeviceAcronymTemplate}");
             status.AppendLine($"        Output Signal Type: {instance.SignalType}");

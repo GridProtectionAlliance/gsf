@@ -196,10 +196,19 @@ public partial class HomeUserControl
         else
         {
             m_windowsServiceClient.Helper.ReceivedServiceResponse += Helper_ReceivedServiceResponse;
-            CommonFunctions.SendCommandToService("Health -actionable");
-            CommonFunctions.SendCommandToService("Version -actionable");
-            CommonFunctions.SendCommandToService("Status -actionable");
-            CommonFunctions.SendCommandToService("Time -actionable");
+
+            try
+            {
+                CommonFunctions.SendCommandToService("Health -actionable");
+                CommonFunctions.SendCommandToService("Version -actionable");
+                CommonFunctions.SendCommandToService("Status -actionable");
+                CommonFunctions.SendCommandToService("Time -actionable");
+            }
+            catch (Exception ex)
+            {
+                Logger.SwallowException(ex);
+            }
+
             m_eventHandlerRegistered = true;
         }
 
@@ -480,8 +489,17 @@ public partial class HomeUserControl
     {
         PopupStatus.IsOpen = true;
 
-        if (m_windowsServiceClient?.Helper?.RemotingClient is not null && m_windowsServiceClient.Helper.RemotingClient.CurrentState == ClientState.Connected)
+        if (m_windowsServiceClient?.Helper?.RemotingClient is null || m_windowsServiceClient.Helper.RemotingClient.CurrentState != ClientState.Connected)
+            return;
+
+        try
+        {
             CommonFunctions.SendCommandToService("Status -actionable");
+        }
+        catch (Exception ex)
+        {
+            Logger.SwallowException(ex);
+        }
     }
 
     private void ButtonClose_Click(object sender, RoutedEventArgs e)
