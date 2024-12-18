@@ -179,10 +179,9 @@ namespace GSF.TimeSeries.UI.DataModels
                 string sortClause = string.Empty;
                 DataTable ErrorLogTable;
 
-                if (!string.IsNullOrEmpty(sortMember))
-                    sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
-
-                ErrorLogTable = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT ID FROM ErrorLog {0} ", sortClause));
+                if (!string.IsNullOrEmpty(sortMember)) 
+                    ErrorLogTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID FROM ErrorLog ORDER BY {0} {1}", sortMember, sortDirection);
+                else ErrorLogTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID FROM ErrorLog");
 
                 foreach (DataRow row in ErrorLogTable.Rows)
                 {
@@ -222,8 +221,8 @@ namespace GSF.TimeSeries.UI.DataModels
                 if ((object)keys != null && keys.Count > 0)
                 {
                     commaSeparatedKeys = keys.Select(key => "" + key.ToString() + "").Aggregate((str1, str2) => str1 + "," + str2);
-                    query = string.Format("SELECT ID, Source, Type, Message, Detail, CreatedOn  FROM ErrorLog WHERE ID IN ({0})", commaSeparatedKeys);
-                    errorLogTable = database.Connection.RetrieveData(database.AdapterType, query);
+                    query = database.ParameterizedQueryString("SELECT ID, Source, Type, Message, Detail, CreatedOn  FROM ErrorLog WHERE ID IN ({0})", "commaSeparatedKeys");
+                    errorLogTable = database.Connection.RetrieveData(database.AdapterType, query, commaSeparatedKeys);
                     errorLogList = new ErrorLog[errorLogTable.Rows.Count];
 
                     foreach (DataRow row in errorLogTable.Rows)

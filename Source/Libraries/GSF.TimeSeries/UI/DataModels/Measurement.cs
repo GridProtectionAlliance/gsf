@@ -643,8 +643,8 @@ namespace GSF.TimeSeries.UI.DataModels
                 if ((object)keys != null && keys.Count > 0)
                 {
                     commaSeparatedKeys = keys.Select(key => "'" + key.ToString() + "'").Aggregate((str1, str2) => str1 + "," + str2);
-                    query = string.Format("SELECT * FROM MeasurementDetail WHERE SignalID IN ({0})", commaSeparatedKeys);
-                    measurementTable = database.Connection.RetrieveData(database.AdapterType, query);
+                    query = database.ParameterizedQueryString("SELECT * FROM MeasurementDetail WHERE SignalID IN ({0})", "commaSeparatedKeys");
+                    measurementTable = database.Connection.RetrieveData(database.AdapterType, query, commaSeparatedKeys);
                     measurementList = new Measurement[measurementTable.Rows.Count];
 
                     foreach (DataRow row in measurementTable.Rows)
@@ -1203,7 +1203,7 @@ namespace GSF.TimeSeries.UI.DataModels
             try
             {
                 createdConnection = CreateConnection(ref database);
-                measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM MeasurementDetail " + whereClause);
+                measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM MeasurementDetail {0}", whereClause);
 
                 if (measurementTable.Rows.Count == 0)
                     return null;
@@ -1261,7 +1261,7 @@ namespace GSF.TimeSeries.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
                 ObservableCollection<Measurement> measurementList = new ObservableCollection<Measurement>();
-                DataTable measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM MeasurementDetail " + whereClause);
+                DataTable measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM MeasurementDetail {0}", whereClause);
                 foreach (DataRow row in measurementTable.Rows)
                 {
                     measurementList.Add(new Measurement
