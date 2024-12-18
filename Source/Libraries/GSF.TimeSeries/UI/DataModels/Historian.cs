@@ -415,7 +415,6 @@ namespace GSF.TimeSeries.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                string query;
                 string commaSeparatedKeys;
 
                 Historian[] historianList = null;
@@ -425,11 +424,11 @@ namespace GSF.TimeSeries.UI.DataModels
                 if ((object)keys != null && keys.Count > 0)
                 {
                     commaSeparatedKeys = keys.Select(key => key.ToString()).Aggregate((str1, str2) => str1 + "," + str2);
-                    query = database.ParameterizedQueryString(string.Format("SELECT NodeID, ID, Acronym, Name, AssemblyName, TypeName, " +
-                        "ConnectionString, IsLocal, Description, LoadOrder, Enabled, MeasurementReportingInterval, NodeName" +
-                        " FROM HistorianDetail WHERE NodeID = {{0}} AND ID IN ({0})", commaSeparatedKeys), "nodeID");
 
-                    historianTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
+                    historianTable = database.Connection.RetrieveData(database.AdapterType, 
+                        "SELECT NodeID, ID, Acronym, Name, AssemblyName, TypeName, " +
+                        "ConnectionString, IsLocal, Description, LoadOrder, Enabled, MeasurementReportingInterval, NodeName" +
+                        " FROM HistorianDetail WHERE NodeID = {0} AND ID IN ({1})", DefaultTimeout, database.CurrentNodeID(), commaSeparatedKeys);
                     historianList = new Historian[historianTable.Rows.Count];
 
                     foreach (DataRow row in historianTable.Rows)

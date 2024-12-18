@@ -592,18 +592,26 @@ namespace GSF.TimeSeries.UI.DataModels
                 List<Guid> signalIDList = new List<Guid>();
                 DataTable measurementTable;
 
-                string query;
-                string sortClause = string.Empty;
-
-                if (!string.IsNullOrEmpty(sortMember))
-                    sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
-
-                if (!string.IsNullOrEmpty(filterExpression))
-                    query = string.Format("SELECT SignalID FROM MeasurementDetail WHERE ({0}) {1}", filterExpression, sortClause);
+                if (!string.IsNullOrEmpty(filterExpression) && !string.IsNullOrEmpty(sortMember))
+                { 
+                    measurementTable = database.Connection.RetrieveData(database.AdapterType,
+                        "SELECT SignalID FROM MeasurementDetail WHERE ({0}) ORDER BY {1} {2}", filterExpression, sortMember, sortDirection);
+                }
+                else if (!string.IsNullOrEmpty(filterExpression) && string.IsNullOrEmpty(sortMember))
+                {
+                    measurementTable = database.Connection.RetrieveData(database.AdapterType,
+                        "SELECT SignalID FROM MeasurementDetail WHERE ({0})", filterExpression);
+                }
+                else if (!string.IsNullOrEmpty(sortMember))
+                {
+                    measurementTable = database.Connection.RetrieveData(database.AdapterType,
+                        "SELECT SignalID FROM MeasurementDetail ORDER BY {0} {1}", sortMember, sortDirection);
+                }
                 else
-                    query = string.Format("SELECT SignalID FROM MeasurementDetail {0}", sortClause);
-
-                measurementTable = database.Connection.RetrieveData(database.AdapterType, query);
+                {
+                    measurementTable = database.Connection.RetrieveData(database.AdapterType,
+                        "SELECT SignalID FROM MeasurementDetail");
+                }
 
                 foreach (DataRow row in measurementTable.Rows)
                 {
