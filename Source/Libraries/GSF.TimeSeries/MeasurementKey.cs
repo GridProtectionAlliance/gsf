@@ -459,7 +459,7 @@ namespace GSF.TimeSeries
         public static void EstablishDefaultCache(IDbConnection connection, Type adapterType, string measurementTable = "ActiveMeasurement")
         {
             // Establish default measurement key cache
-            foreach (DataRow measurement in connection.RetrieveData(adapterType, $"SELECT ID, SignalID FROM {measurementTable}").Rows)
+            foreach (DataRow measurement in connection.RetrieveData(adapterType, "SELECT ID, SignalID FROM {0}", measurementTable).Rows)
             {
                 if (TrySplit(measurement[nameof(ID)].ToString(), out string source, out ulong id))
                     CreateOrUpdate(measurement[nameof(SignalID)].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>(), source, id);
