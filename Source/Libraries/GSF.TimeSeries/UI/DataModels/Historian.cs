@@ -380,13 +380,12 @@ namespace GSF.TimeSeries.UI.DataModels
                 IList<int> historianList = new List<int>();
                 string sortClause = string.Empty;
                 DataTable historianTable;
-                string query;
 
                 if (!string.IsNullOrEmpty(sortMember))
-                    sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
-
-                query = database.ParameterizedQueryString(string.Format("SELECT ID FROM HistorianDetail WHERE NodeID = {{0}} {0}", sortClause), "nodeID");
-                historianTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
+                    historianTable = database.Connection.RetrieveData(database.AdapterType, 
+                        "SELECT ID FROM HistorianDetail WHERE NodeID = {0} ORDER BY {1} {2}", database.CurrentNodeID(), sortMember, sortDirection);
+                else historianTable = database.Connection.RetrieveData(database.AdapterType, 
+                    "SELECT ID FROM HistorianDetail WHERE NodeID = {0}", DefaultTimeout, database.CurrentNodeID());
 
                 foreach (DataRow row in historianTable.Rows)
                 {
@@ -603,7 +602,7 @@ namespace GSF.TimeSeries.UI.DataModels
             try
             {
                 createdConnection = CreateConnection(ref database);
-                DataTable historianTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM HistorianDetail " + whereClause);
+                DataTable historianTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM HistorianDetail {0}", whereClause);
 
                 if (historianTable.Rows.Count == 0)
                     return null;
