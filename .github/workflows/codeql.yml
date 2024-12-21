@@ -42,7 +42,7 @@ jobs:
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v2     
+      uses: github/codeql-action/init@v3    
       with:
         languages: ${{ matrix.language }}
         # If you wish to specify custom queries, you can do so here or in a config file.
@@ -52,17 +52,17 @@ jobs:
         # Details on CodeQL's query packs refer to : https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#using-queries-in-ql-packs
         # queries: security-extended,security-and-quality
  
-    - name: Install .NET Framework 4.8
+    - name: Install .NET Framework 4.6
       # Install all (latest) SDKs which are used by multi framework projects
-      run: choco install dotnet4.8
+      run: choco install dotnet4.6
     
-    - name: Install .NET Framework 4.8 Targeting Pack
+    - name: Install .NET Framework 4.6.1 Targeting Pack
       run: |
         # Install all (latest) SDKs which are used by multi framework projects
         Set-Location "C:\Program Files (x86)\Microsoft Visual Studio\Installer\"
         $InstallPath = "C:\Program Files\Microsoft Visual Studio\2022\Enterprise"
         $componentsToAdd = @(
-          "Microsoft.Net.Component.4.8.TargetingPack"
+          "Microsoft.Net.Component.4.6.1.TargetingPack"
         )
         [string]$workloadArgs = $componentsToAdd | ForEach-Object {" --add " +  $_}
         $Arguments = ('/c', "vs_installer.exe", 'modify', '--installPath', "`"$InstallPath`"",$workloadArgs, '--quiet', '--norestart', '--nocache')
@@ -77,9 +77,9 @@ jobs:
             exit 1
         }  
     
-    - name: Install .NET Framework 4.8
+    - name: Install .NET Framework 4.6.1
       # Install all (latest) SDKs which are used by multi framework projects
-      run: choco install dotnet4.8
+      run: choco install dotnet4.6.1
      
     # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
     # If this step fails, then you should remove it and run the build manually (see below)
@@ -95,9 +95,9 @@ jobs:
     - name: Setup msbuild
       uses: microsoft/setup-msbuild@v1.1
       
-    - name: Build GSF
+    - name: Build openHistorian
       run: |
        msbuild Source/GridSolutionsFramework.sln -t:restore,build -p:Configuration=Debug -p:RestorePackagesConfig=true -p:UseSharedCompilation=false -p:PostBuildEvent=
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v2
+      uses: github/codeql-action/analyze@v3
