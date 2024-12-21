@@ -175,6 +175,7 @@ public class MarkdownGenerator
             .ReplaceTag("para", "<br/>")
             .ReplaceSeeHref()
             .ReplaceSeeCref()
+            .ReplaceGtLtTags()
             .ReplaceExecutionModeLinks()
             ?? string.Empty;
     }
@@ -216,6 +217,13 @@ internal static class HtmlHelpers
             return $"[{functionName}](#{functionName.ToLower()})";
         },
         RegexOptions.IgnoreCase | RegexOptions.Singleline);
+    }
+
+    public static string ReplaceGtLtTags(this string text)
+    {
+        return text
+            .Replace("&lt;", "<")
+            .Replace("&gt;", ">");
     }
 
     public static string ReplaceExecutionModeLinks(this string text)
