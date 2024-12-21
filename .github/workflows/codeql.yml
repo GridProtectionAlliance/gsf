@@ -95,7 +95,7 @@ jobs:
     - name: Setup msbuild
       uses: microsoft/setup-msbuild@v1.1
       
-    - name: Build openHistorian
+    - name: Build Grid Solutions Framework
       run: |
        msbuild Source/GridSolutionsFramework.sln -t:restore,build -p:Configuration=Debug -p:RestorePackagesConfig=true -p:UseSharedCompilation=false -p:PostBuildEvent=
 
