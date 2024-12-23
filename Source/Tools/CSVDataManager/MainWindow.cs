@@ -501,7 +501,7 @@ namespace CSVDataManager
             {
                 writer.WriteLine(csvHeader);
 
-                object result = DBSchema.Connection.ExecuteScalar($"SELECT COUNT(*) FROM {table.SQLEscapedName}");
+                object result = DBSchema.Connection.ExecuteScalar("SELECT COUNT(*) FROM {0}", table.SQLEscapedName);
                 int count = Convert.ToInt32(result);
                 UpdateProgressBar(ExportProgressBar, 0);
 

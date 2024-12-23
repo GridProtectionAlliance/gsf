@@ -501,8 +501,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 string deviceName = outputDeviceRecord.Field<string>("Acronym");
                 adapterID = outputDeviceRecord.ConvertField<int>("AdapterID");
 
-                string analogPointTag = database.Connection.ExecuteScalar(string.Format(measurementDetailFormat, deviceName, labelName)).ToNonNullString();
-                analogSignalReference = database.Connection.ExecuteScalar(string.Format(outputMeasurementDetailFormat, analogPointTag)).ToNonNullString();
+                string analogPointTag = database.Connection.ExecuteScalar(measurementDetailFormat, deviceName, labelName).ToNonNullString();
+                analogSignalReference = database.Connection.ExecuteScalar(outputMeasurementDetailFormat, analogPointTag).ToNonNullString();
             }
             catch (Exception ex)
             {
