@@ -491,8 +491,7 @@ namespace GSF.TimeSeries.Configuration
             {
                 try
                 {
-                    string query = $"SELECT CASE WHEN COUNT(ID) = 0 THEN {currentVersion} ELSE MAX(ID) END FROM TrackedChange";
-                    version = Convert.ToUInt64(database.Connection.ExecuteScalar(query));
+                    version = Convert.ToUInt64(database.Connection.ExecuteScalar("SELECT CASE WHEN COUNT(ID) = 0 THEN {0} ELSE MAX(ID) END FROM TrackedChange", currentVersion));
                 }
                 catch
                 {
@@ -511,8 +510,7 @@ namespace GSF.TimeSeries.Configuration
             {
                 try
                 {
-                    string query = $"SELECT COUNT(ID) FROM TrackedChange WHERE ID < {currentVersion}";
-                    changesAreValid = Convert.ToInt32(database.Connection.ExecuteScalar(query)) == 0;
+                    changesAreValid = Convert.ToInt32(database.Connection.ExecuteScalar("SELECT COUNT(ID) FROM TrackedChange WHERE ID < {0}", currentVersion)) == 0;
                 }
                 catch
                 {

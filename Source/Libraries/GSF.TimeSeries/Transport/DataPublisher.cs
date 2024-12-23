@@ -3069,7 +3069,7 @@ namespace GSF.TimeSeries.Transport
             DataSet metadata = new();
 
             // Initialize active node ID
-            Guid nodeID = Guid.Parse(dbConnection.ExecuteScalar($"SELECT NodeID FROM IaonActionAdapter WHERE ID = {ID}").ToString());
+            Guid nodeID = Guid.Parse(dbConnection.ExecuteScalar("SELECT NodeID FROM IaonActionAdapter WHERE ID = {0}", ID).ToString());
 
             // Determine whether we're sending internal and external meta-data
             bool sendExternalMetadata = connection.OperationalModes.HasFlag(OperationalModes.ReceiveExternalMetadata);

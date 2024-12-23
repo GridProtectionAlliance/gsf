@@ -822,7 +822,7 @@ namespace GSF.Data
                         // Added check to preserve ID number for auto-inc fields
                         if (!usingIdentityInsert && !skipKeyValuePreservation && m_preserveAutoIncValues && (object)autoIncField != null)
                         {
-                            int toTableRowCount = int.Parse(Common.ToNonNullString(toTable.Connection.ExecuteScalar("SELECT MAX(" + autoIncField.SQLEscapedName + ") FROM " + toTable.SQLEscapedName, Timeout), "0")) + 1;
+                            int toTableRowCount = int.Parse(Common.ToNonNullString(toTable.Connection.ExecuteScalar("SELECT MAX({0}) FROM {1}", autoIncField.SQLEscapedName, toTable.SQLEscapedName, Timeout), "0")) + 1;
                             int sourceTablePrimaryFieldValue = int.Parse(Common.ToNonNullString(autoIncField.Value, "0"));
                             int synchronizations = 0;
 
@@ -884,7 +884,7 @@ namespace GSF.Data
             try
             {
                 // If record already exists due to triggers or other means we must update it instead of inserting it
-                if (int.Parse(Common.ToNonNullString(toTable.Connection.ExecuteScalar(countSQL.ToString(), Timeout), "0")) > 0)
+                if (int.Parse(Common.ToNonNullString(toTable.Connection.ExecuteScalar("{0}", countSQL.ToString(), Timeout), "0")) > 0)
                 {
                     // Add where criteria to SQL update statement
                     updateSQL.Append(whereSQL);

@@ -247,11 +247,11 @@ namespace GSF.TimeSeries
                     sttpsDataPublisherEnabled = value.ParseBoolean();
             }
 
-            int internalDataPublisherCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(DataPublisherCountFormat, "INTERNAL", nodeIDQueryString)));
-            int externalDataPublisherCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(DataPublisherCountFormat, "EXTERNAL", nodeIDQueryString)));
-            int tlsDataPublisherCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(DataPublisherCountFormat, "TLS", nodeIDQueryString)));
-            int sttpDataPublisherCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(DataPublisherCountFormat, "STTP", nodeIDQueryString)));
-            int sttpsDataPublisherCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(DataPublisherCountFormat, "STTPS", nodeIDQueryString)));
+            int internalDataPublisherCount = Convert.ToInt32(database.Connection.ExecuteScalar(DataPublisherCountFormat, "INTERNAL", nodeIDQueryString));
+            int externalDataPublisherCount = Convert.ToInt32(database.Connection.ExecuteScalar(DataPublisherCountFormat, "EXTERNAL", nodeIDQueryString));
+            int tlsDataPublisherCount = Convert.ToInt32(database.Connection.ExecuteScalar(DataPublisherCountFormat, "TLS", nodeIDQueryString));
+            int sttpDataPublisherCount = Convert.ToInt32(database.Connection.ExecuteScalar(DataPublisherCountFormat, "STTP", nodeIDQueryString));
+            int sttpsDataPublisherCount = Convert.ToInt32(database.Connection.ExecuteScalar(DataPublisherCountFormat, "STTPS", nodeIDQueryString));
 
             if (internalDataPublisherCount == 0)
                 database.Connection.ExecuteNonQuery(string.Format(GEPDataPublisherInsertFormat, nodeIDQueryString, "INTERNAL", "None", "cacheMeasurementKeys={FILTER ActiveMeasurements WHERE SignalType = ''STAT''}", internalDataPublisherEnabled ? 1 : 0));
@@ -684,8 +684,8 @@ namespace GSF.TimeSeries
             int statConfigEntityCount = Convert.ToInt32(database.Connection.ExecuteScalar(StatConfigEntityCountFormat));
             int statSignalTypeCount = Convert.ToInt32(database.Connection.ExecuteScalar(StatSignalTypeCountFormat));
 
-            int statHistorianCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(StatHistorianCountFormat, nodeIDQueryString)));
-            int statEngineCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(StatEngineCountFormat, nodeIDQueryString)));
+            int statHistorianCount = Convert.ToInt32(database.Connection.ExecuteScalar(StatHistorianCountFormat, nodeIDQueryString));
+            int statEngineCount = Convert.ToInt32(database.Connection.ExecuteScalar(StatEngineCountFormat, nodeIDQueryString));
             int systemStatCount = Convert.ToInt32(database.Connection.ExecuteScalar(SystemStatCountFormat));
             int deviceStatCount = Convert.ToInt32(database.Connection.ExecuteScalar(DeviceStatCountFormat));
             int subscriberStatCount = Convert.ToInt32(database.Connection.ExecuteScalar(SubscriberStatCountFormat));

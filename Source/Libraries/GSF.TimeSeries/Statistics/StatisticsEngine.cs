@@ -996,7 +996,7 @@ namespace GSF.TimeSeries.Statistics
 
             using AdoDataConnection database = new("systemSettings");
 
-            return database.Connection.ExecuteScalar($"SELECT Name FROM Node WHERE ID = '{database.Guid(GetNodeID())}'").ToNonNullString().ToUpper();
+            return database.Connection.ExecuteScalar("SELECT Name FROM Node WHERE ID = '{0}'", database.Guid(GetNodeID())).ToNonNullString().ToUpper();
         }
 
         private void RestartReloadStatisticsTimer()

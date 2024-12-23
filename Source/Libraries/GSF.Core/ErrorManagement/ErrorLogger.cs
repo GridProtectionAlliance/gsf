@@ -1544,8 +1544,8 @@ namespace GSF.ErrorManagement
                         command.Transaction = transaction;
 
                         // Get min and max IDs from error log
-                        int minID = Convert.ToInt32(command.ExecuteScalar(string.Format("SELECT MIN(ID) FROM ErrorLog")));
-                        int maxID = Convert.ToInt32(command.ExecuteScalar(string.Format("SELECT MAX(ID) FROM ErrorLog")));
+                        int minID = Convert.ToInt32(command.ExecuteScalar("SELECT MIN(ID) FROM ErrorLog"));
+                        int maxID = Convert.ToInt32(command.ExecuteScalar("SELECT MAX(ID) FROM ErrorLog"));
                         int errorLogSize = maxID - minID; // Roughly, assuming no manual deletions
 
                         // When exception log is larger than desired size - delete roughly 25% of the records,
