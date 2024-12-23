@@ -1112,7 +1112,7 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
         }
 
         // Make sure device acronym exists
-        if (connection.ExecuteScalar<int>($"SELECT COUNT(*) FROM Device WHERE NodeID={nodeIDQueryString} AND Acronym={{0}}", deviceAcronym) == 0)
+        if (connection.ExecuteScalar<int>("SELECT COUNT(*) FROM Device WHERE NodeID={0} AND Acronym={1}", nodeIDQueryString, deviceAcronym) == 0)
         {
             // Lookup virtual device protocol
             if (connection.ExecuteScalar<int>("SELECT COUNT(*) FROM Protocol WHERE Acronym='VirtualInput'") == 0)
@@ -1132,7 +1132,7 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
         statusMessage($"Validating \"{deviceAcronym}\" virtual device measurement associations...");
 
         // Get device ID
-        int deviceID = connection.ExecuteScalar<int>($"SELECT ID FROM Device WHERE NodeID={nodeIDQueryString} AND Acronym={{0}}", deviceAcronym);
+        int deviceID = connection.ExecuteScalar<int>("SELECT ID FROM Device WHERE NodeID={0} AND Acronym={1}", nodeIDQueryString, deviceAcronym);
 
         // Get measurements that should be associated with device ID but are not currently
         IEnumerable<DataRow> measurements = connection.RetrieveData("SELECT PointID FROM Measurement WHERE ({0}) AND (DeviceID IS NULL OR DeviceID <> {{1}})", lookupExpression, deviceID).AsEnumerable();
@@ -1296,7 +1296,7 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
         statusMessage("Verifying statistics archive exists...");
 
         // Validate that the statistics historian exists
-        if (Convert.ToInt32(database.Connection.ExecuteScalar($"SELECT COUNT(*) FROM Historian WHERE Acronym='STAT' AND NodeID={nodeIDQueryString}")) == 0)
+        if (Convert.ToInt32(database.Connection.ExecuteScalar("SELECT COUNT(*) FROM Historian WHERE Acronym='STAT' AND NodeID={0}", nodeIDQueryString)) == 0)
             database.Connection.ExecuteNonQuery($"INSERT INTO Historian(NodeID, Acronym, Name, AssemblyName, TypeName, ConnectionString, IsLocal, Description, LoadOrder, Enabled) VALUES({nodeIDQueryString}, 'STAT', 'Statistics Archive', 'HistorianAdapters.dll', 'HistorianAdapters.LocalOutputAdapter', '', 1, 'Local historian used to archive system statistics', 9999, 1)");
 
         // Make sure statistics path exists to hold historian files
@@ -1351,7 +1351,7 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
         configFile.Save();
 
         // Get the needed statistic related IDs
-        int statHistorianID = Convert.ToInt32(database.Connection.ExecuteScalar($"SELECT ID FROM Historian WHERE Acronym='STAT' AND NodeID={nodeIDQueryString}"));
+        int statHistorianID = Convert.ToInt32(database.Connection.ExecuteScalar("SELECT ID FROM Historian WHERE Acronym='STAT' AND NodeID={0}, nodeIDQueryString"));
 
         // Load the defined system statistics
         IEnumerable<DataRow> statistics = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM Statistic ORDER BY Source, SignalIndex").AsEnumerable();
@@ -1457,7 +1457,7 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
             // Determine how many changes were made to devices and measurements -
             // if no changes were made, we can skip the next few steps
             if (trackedTables.Contains("Device") && trackedTables.Contains("Measurement"))
-                changes = Convert.ToUInt64(database.Connection.ExecuteScalar($"SELECT COUNT(*) FROM TrackedChange WHERE (TableName = 'Device' OR TableName = 'Measurement') AND ID > {trackingVersion}"));
+                changes = Convert.ToUInt64(database.Connection.ExecuteScalar("SELECT COUNT(*) FROM TrackedChange WHERE (TableName = 'Device' OR TableName = 'Measurement') AND ID > {0}", nodeIDQueryString));
             else
                 changes = ulong.MaxValue;
         }
@@ -1501,11 +1501,11 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
                 signalReference = SignalReference.ToString(acronym, SignalKind.Quality);
 
                 // See if quality flags measurement exists for device
-                if (Convert.ToInt32(database.Connection.ExecuteScalar($"SELECT COUNT(*) FROM Measurement WHERE SignalReference = '{signalReference}' AND DeviceID = {deviceID}")) == 0)
+                if (Convert.ToInt32(database.Connection.ExecuteScalar("SELECT COUNT(*) FROM Measurement WHERE SignalReference = '{0}' AND DeviceID = {1}", signalReference, deviceID)) == 0)
                 {
                     historianID = device.ConvertNullableField<int>("HistorianID");
 
-                    company = (string)database.Connection.ExecuteScalar($"SELECT MapAcronym FROM Company WHERE ID = {device.ConvertNullableField<int>("CompanyID") ?? 0}");
+                    company = (string)database.Connection.ExecuteScalar("SELECT MapAcronym FROM Company WHERE ID = {0}", device.ConvertNullableField<int>("CompanyID") ?? 0);
 
                     if (string.IsNullOrEmpty(company))
                         company = configFile.Settings["systemSettings"]["CompanyAcronym"].Value.TruncateRight(3);
@@ -1531,9 +1531,8 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
                     acronym = oldAcronym + "!PMU";
                     string oldSignalReference = SignalReference.ToString(oldAcronym, SignalKind.Statistic, signalIndex);
                     signalReference = SignalReference.ToString(acronym, SignalKind.Statistic, signalIndex);
-
                     // If the original format for device statistics is found in the database, update to new format
-                    if (Convert.ToInt32(database.Connection.ExecuteScalar($"SELECT COUNT(*) FROM Measurement WHERE SignalReference='{oldSignalReference}' AND HistorianID={statHistorianID}")) > 0)
+                    if (Convert.ToInt32(database.Connection.ExecuteScalar("SELECT COUNT(*) FROM Measurement WHERE SignalReference='{0}' AND HistorianID={1}", oldSignalReference, statHistorianID)) > 0)
                         database.Connection.ExecuteNonQuery($"UPDATE Measurement SET SignalReference='{signalReference}' WHERE SignalReference='{oldSignalReference}' AND HistorianID={statHistorianID}");
                     else if (!skipOptimization)
                         break;
@@ -1557,7 +1556,7 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
                     // To reduce time required to execute these steps, only first statistic is verified to exist
                     if (!skipOptimization && !firstStatisticExisted)
                     {
-                        firstStatisticExisted = Convert.ToInt32(database.Connection.ExecuteScalar($"SELECT COUNT(*) FROM Measurement WHERE SignalReference='{signalReference}'")) > 0;
+                        firstStatisticExisted = Convert.ToInt32(database.Connection.ExecuteScalar("SELECT COUNT(*) FROM Measurement WHERE SignalReference='{0}'", signalReference)) > 0;
 
                         // If the first extraneous input statistic doesn't exist, we assume no others do as well
                         if (!firstStatisticExisted)
@@ -1575,7 +1574,7 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
             // Determine how many changes were made to output streams, devices, and measurements -
             // if no changes were made, we can skip the next few steps
             if (trackedTables.Contains("OutputStream") && trackedTables.Contains("OutputStreamDevice") && trackedTables.Contains("OutputStreamMeasurement") && trackedTables.Contains("Measurement"))
-                changes = Convert.ToUInt64(database.Connection.ExecuteScalar($"SELECT COUNT(*) FROM TrackedChange WHERE (TableName = 'OutputStream' OR TableName = 'OutputStreamDevice' OR TableName = 'OutputStreamMeasurement' OR TableName = 'Measurement') AND ID > {trackingVersion}"));
+                changes = Convert.ToUInt64(database.Connection.ExecuteScalar("SELECT COUNT(*) FROM TrackedChange WHERE (TableName = 'OutputStream' OR TableName = 'OutputStreamDevice' OR TableName = 'OutputStreamMeasurement' OR TableName = 'Measurement') AND ID > {0}", trackingVersion));
             else
                 changes = ulong.MaxValue;
         }
@@ -1657,7 +1656,7 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
                     continue;
 
                 int? vendorDeviceID = measurement.ConvertNullableField<int>("VendorDeviceID");
-                string vendor = vendorDeviceID.HasValue ? (string)database.Connection.ExecuteScalar("SELECT Acronym FROM Vendor WHERE ID = " + vendorDeviceID.Value) : null;
+                string vendor = vendorDeviceID.HasValue ? (string)database.Connection.ExecuteScalar("SELECT Acronym FROM Vendor WHERE ID = {0}", vendorDeviceID.Value) : null;
                 string signalAcronym = measurement.ConvertField<string>("SignalAcronym");
 
                 try
