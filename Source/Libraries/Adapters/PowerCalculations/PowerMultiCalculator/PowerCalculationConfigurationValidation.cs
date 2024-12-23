@@ -56,7 +56,7 @@ public static class PowerCalculationConfigurationValidation
     /// <param name="database">Database connection to use for checking the data operation</param>
     /// <returns>True or false indicating whether the operation exists</returns>
     private static bool DataOperationExists(AdoDataConnection database) => 
-        Convert.ToInt32(database.ExecuteScalar($"SELECT COUNT(*) FROM DataOperation WHERE TypeName='{typeof(PowerCalculationConfigurationValidation).FullName}' AND MethodName='ValidatePowerCalculationConfigurations'")) > 0;
+        Convert.ToInt32(database.ExecuteScalar("SELECT COUNT(*) FROM DataOperation WHERE TypeName='{0}' AND MethodName='ValidatePowerCalculationConfigurations'", typeof(PowerCalculationConfigurationValidation).FullName)) > 0;
 
     /// <summary>
     /// Creates a data operation to run the validations in this class.
@@ -71,7 +71,7 @@ public static class PowerCalculationConfigurationValidation
     /// <param name="database">Database connection to use for checking the data operation</param>
     /// <returns>True or false indicating whether the operation exists</returns>
     private static bool AdapterInstanceExists(AdoDataConnection database) => 
-        Convert.ToInt32(database.ExecuteScalar($"SELECT COUNT(*) FROM CustomActionAdapter WHERE TypeName='{typeof(PowerMultiCalculatorAdapter).FullName}'")) > 0;
+        Convert.ToInt32(database.ExecuteScalar("SELECT COUNT(*) FROM CustomActionAdapter WHERE TypeName='{0}'", typeof(PowerMultiCalculatorAdapter).FullName)) > 0;
 
     /// <summary>
     /// Creates a data operation to run the validations in this class.
