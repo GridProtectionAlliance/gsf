@@ -540,11 +540,11 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 string deviceName = outputDeviceRecord.Field<string>("Acronym");
                 adapterID = outputDeviceRecord.ConvertField<int>("AdapterID");
 
-                string anglePointTag = database.Connection.ExecuteScalar(string.Format(measurementDetailFormat, deviceName, labelName, "PA")).ToNonNullString();
-                angleSignalReference = database.Connection.ExecuteScalar(string.Format(outputMeasurementDetailFormat, anglePointTag)).ToNonNullString();
+                string anglePointTag = database.Connection.ExecuteScalar(measurementDetailFormat, deviceName, labelName, "PA").ToNonNullString();
+                angleSignalReference = database.Connection.ExecuteScalar(outputMeasurementDetailFormat, anglePointTag).ToNonNullString();
 
-                string magnitudePointTag = database.Connection.ExecuteScalar(string.Format(measurementDetailFormat, deviceName, labelName, "PM")).ToNonNullString();
-                magnitudeSignalReference = database.Connection.ExecuteScalar(string.Format(outputMeasurementDetailFormat, magnitudePointTag)).ToNonNullString();
+                string magnitudePointTag = database.Connection.ExecuteScalar(measurementDetailFormat, deviceName, labelName, "PM").ToNonNullString();
+                magnitudeSignalReference = database.Connection.ExecuteScalar(outputMeasurementDetailFormat, magnitudePointTag).ToNonNullString();
             }
             catch (Exception ex)
             {
