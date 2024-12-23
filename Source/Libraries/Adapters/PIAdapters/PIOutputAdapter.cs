@@ -2475,7 +2475,7 @@ public class PIOutputAdapter : OutputAdapterBase
                         {
                             // Attempt to look up last update time for record
                             database ??= new AdoDataConnection("systemSettings");
-                            updateTime = Convert.ToDateTime(database.Connection.ExecuteScalar($"SELECT UpdatedOn FROM Measurement WHERE SignalID = '{signalID}'"));
+                            updateTime = Convert.ToDateTime(database.Connection.ExecuteScalar("SELECT UpdatedOn FROM Measurement WHERE SignalID = '{0}'", signalID));
                         }
                     }
                     catch
