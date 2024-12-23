@@ -252,7 +252,7 @@ namespace GSF.Historian.MetadataProviders
 
                 // Update existing metadata
                 MetadataUpdater metadataUpdater = new MetadataUpdater(Metadata);
-                metadataUpdater.UpdateMetadata(connection.ExecuteReader(m_selectString));
+                metadataUpdater.UpdateMetadata(connection.ExecuteReader("{0}", m_selectString));
             }
             finally
             {

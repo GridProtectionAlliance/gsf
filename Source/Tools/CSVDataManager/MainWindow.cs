@@ -505,7 +505,7 @@ namespace CSVDataManager
                 int count = Convert.ToInt32(result);
                 UpdateProgressBar(ExportProgressBar, 0);
 
-                using (IDataReader reader = DBSchema.Connection.ExecuteReader($"SELECT {fieldList} FROM {table.SQLEscapedName}"))
+                using (IDataReader reader = DBSchema.Connection.ExecuteReader("SELECT {0} FROM {1}", fieldList, table.SQLEscapedName))
                 {
                     int records = 0;
 
