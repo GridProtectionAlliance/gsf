@@ -1553,7 +1553,7 @@ namespace GSF.ErrorManagement
                         if (errorLogSize >= m_databaseLogSize)
                         {
                             executingTransaction = true;
-                            command.ExecuteNonQuery("DELETE FROM ErrorLog WHERE ID <= " + (int)(errorLogSize / 4 + minID), 60);
+                            command.ExecuteNonQuery("DELETE FROM ErrorLog WHERE ID <= {0}", (int)(errorLogSize / 4 + minID), 60);
                             transaction.Commit();
                         }
                     }

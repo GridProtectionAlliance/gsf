@@ -63,7 +63,8 @@ public static class PowerCalculationConfigurationValidation
     /// </summary>
     /// <param name="database">Database connection to use for creating the data operation</param>
     private static void CreateDataOperation(AdoDataConnection database) => 
-        database.ExecuteNonQuery($"INSERT INTO DataOperation(Description, AssemblyName, TypeName, MethodName, Enabled) VALUES ('Power Calculation Validations', 'PowerCalculations.dll', '{typeof(PowerCalculationConfigurationValidation).FullName}', 'ValidatePowerCalculationConfigurations', 1)");
+        database.ExecuteNonQuery("INSERT INTO DataOperation(Description, AssemblyName, TypeName, MethodName, Enabled) " +
+            "VALUES ('Power Calculation Validations', 'PowerCalculations.dll', '{0}', 'ValidatePowerCalculationConfigurations', 1)", typeof(PowerCalculationConfigurationValidation).FullName);
 
     /// <summary>
     /// Returns true if a data operation exists to run this class. Returns false otherwise.
@@ -78,7 +79,9 @@ public static class PowerCalculationConfigurationValidation
     /// </summary>
     /// <param name="database">Database connection to use for creating the data operation</param>
     private static void CreateAdapterInstance(AdoDataConnection database) => 
-        database.ExecuteNonQuery($"INSERT INTO CustomActionAdapter(NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, Enabled) VALUES ('{ConfigurationFile.Current.Settings["systemSettings"]["NodeID"].ValueAs<Guid>()}', 'PHASOR!POWERCALC', 'PowerCalculations.dll', '{typeof(PowerMultiCalculatorAdapter).FullName}', 'FramesPerSecond=30; LagTime=5.0; LeadTime=3.0', 1)");
+        database.ExecuteNonQuery("INSERT INTO CustomActionAdapter(NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, Enabled) " +
+            "VALUES ('{0}', 'PHASOR!POWERCALC', 'PowerCalculations.dll', '{1}', 'FramesPerSecond=30; LagTime=5.0; LeadTime=3.0', 1)",
+            ConfigurationFile.Current.Settings["systemSettings"]["NodeID"].ValueAs<Guid>(), typeof(PowerMultiCalculatorAdapter).FullName);
 
     /// <summary>
     /// Data operation to validate power calculation configuration. This method checks that input measurements and non-null output measurements exist, are enabled, and have the correct signal type.
