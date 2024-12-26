@@ -598,8 +598,8 @@ namespace GSF.TimeSeries.UI.DataModels
                 else
                     tableName = "CustomOutputAdapter";
 
-                string query = database.ParameterizedQueryString("DELETE FROM " + tableName + " WHERE ID = {0}", "adapterID");
-                database.Connection.ExecuteNonQuery(query, DefaultTimeout, adapterID);
+                string query = database.ParameterizedQueryString("DELETE FROM {1} WHERE ID = {0}", "adapterID", "tableName");
+                database.Connection.ExecuteNonQuery(query, DefaultTimeout, adapterID, tableName);
 
                 CommonFunctions.SendCommandToService("ReloadConfig");
 
