@@ -1126,7 +1126,7 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
             int virtualProtocolID = connection.ExecuteScalar<int>("SELECT ID FROM Protocol WHERE Acronym='VirtualInput'");
 
             // Create new virtual device record
-            connection.ExecuteNonQuery($"INSERT INTO Device(NodeID, Acronym, Name, ProtocolID, Enabled) VALUES({nodeIDQueryString}, {{0}}, {{1}}, {{2}}, 1)", deviceAcronym, deviceAcronym, virtualProtocolID);
+            connection.ExecuteNonQuery("INSERT INTO Device(NodeID, Acronym, Name, ProtocolID, Enabled) VALUES({0}, {1}, {2}, {3}, 1)", nodeIDQueryString, deviceAcronym, deviceAcronym, virtualProtocolID);
         }
 
         statusMessage($"Validating \"{deviceAcronym}\" virtual device measurement associations...");
@@ -1297,7 +1297,7 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
 
         // Validate that the statistics historian exists
         if (Convert.ToInt32(database.Connection.ExecuteScalar("SELECT COUNT(*) FROM Historian WHERE Acronym='STAT' AND NodeID={0}", nodeIDQueryString)) == 0)
-            database.Connection.ExecuteNonQuery($"INSERT INTO Historian(NodeID, Acronym, Name, AssemblyName, TypeName, ConnectionString, IsLocal, Description, LoadOrder, Enabled) VALUES({nodeIDQueryString}, 'STAT', 'Statistics Archive', 'HistorianAdapters.dll', 'HistorianAdapters.LocalOutputAdapter', '', 1, 'Local historian used to archive system statistics', 9999, 1)");
+            database.Connection.ExecuteNonQuery("INSERT INTO Historian(NodeID, Acronym, Name, AssemblyName, TypeName, ConnectionString, IsLocal, Description, LoadOrder, Enabled) VALUES({0}, 'STAT', 'Statistics Archive', 'HistorianAdapters.dll', 'HistorianAdapters.LocalOutputAdapter', '', 1, 'Local historian used to archive system statistics', 9999, 1)", nodeIDQueryString);
 
         // Make sure statistics path exists to hold historian files
         string statisticsPath = FilePath.GetAbsolutePath(FilePath.AddPathSuffix("Statistics"));
@@ -1533,7 +1533,8 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
                     signalReference = SignalReference.ToString(acronym, SignalKind.Statistic, signalIndex);
                     // If the original format for device statistics is found in the database, update to new format
                     if (Convert.ToInt32(database.Connection.ExecuteScalar("SELECT COUNT(*) FROM Measurement WHERE SignalReference='{0}' AND HistorianID={1}", oldSignalReference, statHistorianID)) > 0)
-                        database.Connection.ExecuteNonQuery($"UPDATE Measurement SET SignalReference='{signalReference}' WHERE SignalReference='{oldSignalReference}' AND HistorianID={statHistorianID}");
+                        database.Connection.ExecuteNonQuery("UPDATE Measurement SET SignalReference='{0}' " +
+                            "WHERE SignalReference='{1}' AND HistorianID={2}", signalReference, oldSignalReference, statHistorianID);
                     else if (!skipOptimization)
                         break;
                 }
@@ -1564,7 +1565,7 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
                     }
 
                     // Remove extraneous input statistics
-                    database.Connection.ExecuteNonQuery($"DELETE FROM Measurement WHERE SignalReference = '{signalReference}'");
+                    database.Connection.ExecuteNonQuery("DELETE FROM Measurement WHERE SignalReference = '{0}'", signalReference);
                 }
             }
         }
@@ -1635,7 +1636,7 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
 
             foreach (int measurementID in measurementIDsToDelete)
             {
-                database.Connection.ExecuteNonQuery($"DELETE FROM OutputStreamMeasurement WHERE ID = {measurementID} AND NodeID = {nodeIDQueryString}");
+                database.Connection.ExecuteNonQuery("DELETE FROM OutputStreamMeasurement WHERE ID = {0} AND NodeID = {1}", measurementID, nodeIDQueryString);
             }
         }
 
@@ -1679,7 +1680,8 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
                 if (string.IsNullOrWhiteSpace(label))
                     label = measurement.ConvertField<string>("AlternateTag");
 
-                database.Connection.ExecuteNonQuery($"UPDATE Measurement SET PointTag = '{CreatePointTag(company, device, vendor, signalAcronym, label, signalIndex, phase ?? '_', baseKV)}' WHERE SignalID = '{database.Guid(measurement, "SignalID")}'");
+                database.Connection.ExecuteNonQuery("UPDATE Measurement SET PointTag = '{0}' WHERE SignalID = '{1}'", 
+                    CreatePointTag(company, device, vendor, signalAcronym, label, signalIndex, phase ?? '_', baseKV), database.Guid(measurement, "SignalID"));
             }
         }
 
@@ -1709,7 +1711,7 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
         {
             statusMessage("Creating default record for Node...");
             database.Connection.ExecuteNonQuery("INSERT INTO Node(Name, CompanyID, Description, Settings, MenuType, MenuData, Master, LoadOrder, Enabled) VALUES('Default', NULL, 'Default node', 'RemoteStatusServerConnectionString={server=localhost:8500;integratedSecurity=true};datapublisherport=6165;AlarmServiceUrl=http://localhost:5018/alarmservices', 'File', 'Menu.xml', 1, 0, 1)");
-            database.Connection.ExecuteNonQuery("UPDATE Node SET ID=" + nodeIDQueryString);
+            database.Connection.ExecuteNonQuery("UPDATE Node SET ID={0}", nodeIDQueryString);
         }
     }
 
