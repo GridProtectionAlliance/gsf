@@ -413,15 +413,12 @@ namespace GSF.Data
                 useTruncateTable = m_forceTruncateTable || (table.Parent.Parent.DataSourceType == DatabaseType.SQLServer && !table.ReferencedByForeignKeys);
             }
 
-            if (useTruncateTable)
-                deleteSql = "TRUNCATE TABLE " + table.SQLEscapedName;
-            else
-                deleteSql = "DELETE FROM " + table.SQLEscapedName;
-
             try
             {
-                table.Connection.ExecuteNonQuery(deleteSql, Timeout);
-
+                if (useTruncateTable)
+                    table.Connection.ExecuteNonQuery("TRUNCATE TABLE {0}", table.SQLEscapedName, Timeout);
+                else
+                    table.Connection.ExecuteNonQuery("DELETE FROM {0}", table.SQLEscapedName, Timeout);
                 if ((object)TableCleared != null)
                     TableCleared(this, new EventArgs<string>(table.Name)); //-V3083
 
@@ -437,7 +434,8 @@ namespace GSF.Data
                     return ClearTable(table);
                 }
 
-                OnSQLFailure(deleteSql, ex);
+                if (useTruncateTable) OnSQLFailure("TRUNCATE TABLE " + table.SQLEscapedName, ex);
+                else OnSQLFailure("DELETE FROM " + table.SQLEscapedName, ex);
             }
 
             return false;
@@ -453,22 +451,23 @@ namespace GSF.Data
                 {
                     case DatabaseType.SQLServer:
                         resetAutoIncValueSQL = "DBCC CHECKIDENT('" + table.SQLEscapedName + "', RESEED)";
-                        table.Connection.ExecuteNonQuery(resetAutoIncValueSQL, Timeout);
+                        table.Connection.ExecuteNonQuery("DBCC CHECKIDENT('{0}', RESEED)", table.SQLEscapedName, Timeout);
                         break;
                     case DatabaseType.MySQL:
                         resetAutoIncValueSQL = "ALTER TABLE " + table.SQLEscapedName + " AUTO_INCREMENT = 1";
-                        table.Connection.ExecuteNonQuery(resetAutoIncValueSQL, Timeout);
+                        table.Connection.ExecuteNonQuery("ALTER TABLE {0} AUTO_INCREMENT = 1", table.SQLEscapedName, Timeout);
                         break;
                     case DatabaseType.SQLite:
                         resetAutoIncValueSQL = "DELETE FROM sqlite_sequence WHERE name = '" + table.Name + "'";
-                        table.Connection.ExecuteNonQuery(resetAutoIncValueSQL, Timeout);
+                        table.Connection.ExecuteNonQuery("DELETE FROM sqlite_sequence WHERE name = '{0}'", table.Name, Timeout);
                         break;
                     case DatabaseType.PostgreSQL:
                         // The escaping of names here is very deliberate; for certain table names,
                         // it is necessary to escape the table name in the pg_get_serial_sequence() call,
                         // but the call will fail if you attempt to escape the autoIncField name
                         resetAutoIncValueSQL = $"SELECT setval(pg_get_serial_sequence('{table.SQLEscapedName}', '{table.AutoIncField.Name.ToLower()}'), (SELECT MAX({table.AutoIncField.SQLEscapedName}) FROM {table.SQLEscapedName}))";
-                        table.Connection.ExecuteNonQuery(resetAutoIncValueSQL, Timeout);
+                        table.Connection.ExecuteNonQuery("SELECT setval(pg_get_serial_sequence('{0}', '{1}'), (SELECT MAX({2}) FROM {3}))",
+                            table.SQLEscapedName, table.AutoIncField.Name.ToLower(), table.AutoIncField.SQLEscapedName, table.SQLEscapedName, Timeout);
                         break;
                 }
             }
@@ -616,7 +615,7 @@ namespace GSF.Data
                     case DatabaseType.SQLServer:
                         try
                         {
-                            toTable.Connection.ExecuteNonQuery("SET IDENTITY_INSERT " + toTable.SQLEscapedName + " ON", Timeout);
+                            toTable.Connection.ExecuteNonQuery("SET IDENTITY_INSERT {0} ON", toTable.SQLEscapedName, Timeout);
                             usingIdentityInsert = true;
                         }
                         catch
@@ -677,7 +676,7 @@ namespace GSF.Data
                     try
                     {
                         // Turn off identity inserts
-                        toTable.Connection.ExecuteNonQuery(setIndentityInsertSQL, Timeout);
+                        toTable.Connection.ExecuteNonQuery("SET IDENTITY_INSERT {0} OFF", toTable.SQLEscapedName, Timeout);
                     }
                     catch (Exception ex)
                     {
@@ -833,7 +832,7 @@ namespace GSF.Data
                                 int currentIdentityValue = int.Parse(Common.ToNonNullString(toTable.Connection.ExecuteScalar(toTable.IdentitySQL, Timeout), "0"));
 
                                 // Delete record which was just inserted
-                                toTable.Connection.ExecuteNonQuery("DELETE FROM " + toTable.SQLEscapedName + " WHERE " + autoIncField.SQLEscapedName + " = " + currentIdentityValue, Timeout);
+                                toTable.Connection.ExecuteNonQuery("DELETE FROM {0} WHERE {1} = {2}", toTable.SQLEscapedName, autoIncField.SQLEscapedName, currentIdentityValue, Timeout);
 
                                 // For very long spans of auto-inc identity gaps we at least provide some level of feedback
                                 if (synchronizations++ % 50 == 0)
