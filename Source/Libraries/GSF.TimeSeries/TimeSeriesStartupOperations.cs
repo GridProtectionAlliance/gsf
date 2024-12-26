@@ -84,7 +84,7 @@ namespace GSF.TimeSeries
                 return;
 
             database.Connection.ExecuteNonQuery(NodeInsertFormat);
-            database.Connection.ExecuteNonQuery(string.Format(NodeUpdateFormat, nodeIDQueryString));
+            database.Connection.ExecuteNonQuery(NodeUpdateFormat, nodeIDQueryString);
         }
 
         /// <summary>
@@ -254,19 +254,19 @@ namespace GSF.TimeSeries
             int sttpsDataPublisherCount = Convert.ToInt32(database.Connection.ExecuteScalar(DataPublisherCountFormat, "STTPS", nodeIDQueryString));
 
             if (internalDataPublisherCount == 0)
-                database.Connection.ExecuteNonQuery(string.Format(GEPDataPublisherInsertFormat, nodeIDQueryString, "INTERNAL", "None", "cacheMeasurementKeys={FILTER ActiveMeasurements WHERE SignalType = ''STAT''}", internalDataPublisherEnabled ? 1 : 0));
+                database.Connection.ExecuteNonQuery(GEPDataPublisherInsertFormat, nodeIDQueryString, "INTERNAL", "None", "cacheMeasurementKeys={FILTER ActiveMeasurements WHERE SignalType = ''STAT''}", internalDataPublisherEnabled ? 1 : 0);
 
             if (externalDataPublisherCount == 0)
-                database.Connection.ExecuteNonQuery(string.Format(GEPDataPublisherInsertFormat, nodeIDQueryString, "EXTERNAL", "Gateway", "", externalDataPublisherEnabled ? 1 : 0));
+                database.Connection.ExecuteNonQuery(GEPDataPublisherInsertFormat, nodeIDQueryString, "EXTERNAL", "Gateway", "", externalDataPublisherEnabled ? 1 : 0);
 
             if (tlsDataPublisherCount == 0)
-                database.Connection.ExecuteNonQuery(string.Format(GEPDataPublisherInsertFormat, nodeIDQueryString, "TLS", "TLS", "", tlsDataPublisherEnabled ? 1 : 0));
+                database.Connection.ExecuteNonQuery(GEPDataPublisherInsertFormat, nodeIDQueryString, "TLS", "TLS", "", tlsDataPublisherEnabled ? 1 : 0);
 
             if (sttpDataPublisherCount == 0)
-                database.Connection.ExecuteNonQuery(string.Format(STTPDataPublisherInsertFormat, nodeIDQueryString, "STTP", "None", "cachedMeasurementExpression={FILTER ActiveMeasurements WHERE SignalType = ''STAT''}", sttpDataPublisherEnabled ? 1 : 0));
+                database.Connection.ExecuteNonQuery(STTPDataPublisherInsertFormat, nodeIDQueryString, "STTP", "None", "cachedMeasurementExpression={FILTER ActiveMeasurements WHERE SignalType = ''STAT''}", sttpDataPublisherEnabled ? 1 : 0);
 
             if (sttpsDataPublisherCount == 0)
-                database.Connection.ExecuteNonQuery(string.Format(STTPDataPublisherInsertFormat, nodeIDQueryString, "STTPS", "TLS", "", sttpsDataPublisherEnabled ? 1 : 0));
+                database.Connection.ExecuteNonQuery(STTPDataPublisherInsertFormat, nodeIDQueryString, "STTPS", "TLS", "", sttpsDataPublisherEnabled ? 1 : 0);
         }
 
         /// <summary>

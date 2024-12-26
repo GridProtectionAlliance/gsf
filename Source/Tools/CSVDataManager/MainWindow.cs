@@ -573,8 +573,7 @@ namespace CSVDataManager
                     .ToArray();
 
                 string tableFieldList = string.Join(",", tableFields);
-                string createTableSQL = $"CREATE TABLE {memTable.SQLEscapedName}({tableFieldList})";
-                MemSchema.Connection.ExecuteNonQuery(createTableSQL);
+                MemSchema.Connection.ExecuteNonQuery("CREATE TABLE {0}({1})", memTable.SQLEscapedName, tableFieldList);
 
                 // Modify the tableFieldList for INSERT statements
                 tableFields = memTable.Fields
