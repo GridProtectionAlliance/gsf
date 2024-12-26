@@ -911,7 +911,7 @@ namespace MetadataAdapters
                                 List<int> sourceIndicies;
 
                                 if (definedSourceIndicies.TryGetValue(id, out sourceIndicies))
-                                    command.ExecuteNonQuery(deletePhasorSql + $" AND SourceIndex NOT IN ({string.Join(",", sourceIndicies)})", MetadataSynchronizationTimeout, id);
+                                    command.ExecuteNonQuery(deletePhasorSql + " AND SourceIndex NOT IN ({0})", string.Join(",", sourceIndicies), MetadataSynchronizationTimeout, id);
                                 else
                                     command.ExecuteNonQuery(deletePhasorSql, MetadataSynchronizationTimeout, id);
                             }
