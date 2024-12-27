@@ -184,7 +184,7 @@ namespace GSF.TimeSeries
 
             // Update user accounts
             foreach (KeyValuePair<string, string> pair in updateMap)
-                database.Connection.ExecuteNonQuery(string.Format(UpdateUserAccountFormat, pair.Value, pair.Key));
+                database.Connection.ExecuteNonQuery(UpdateUserAccountFormat, pair.Value, pair.Key);
 
             updateMap.Clear();
 
@@ -208,7 +208,7 @@ namespace GSF.TimeSeries
 
             // Update security groups
             foreach (KeyValuePair<string, string> pair in updateMap)
-                database.Connection.ExecuteNonQuery(string.Format(UpdateSecurityGroupFormat, pair.Value, pair.Key));
+                database.Connection.ExecuteNonQuery(UpdateSecurityGroupFormat, pair.Value, pair.Key);
         }
 
         /// <summary>
@@ -710,16 +710,16 @@ namespace GSF.TimeSeries
 
             // Ensure that statistics historian exists
             if (statHistorianCount == 0)
-                database.Connection.ExecuteNonQuery(string.Format(StatHistorianInsertFormat, nodeIDQueryString));
+                database.Connection.ExecuteNonQuery(StatHistorianInsertFormat, nodeIDQueryString);
 
             // Ensure that statistics engine exists
             if (statEngineCount == 0)
-                database.Connection.ExecuteNonQuery(string.Format(StatEngineInsertFormat, nodeIDQueryString));
+                database.Connection.ExecuteNonQuery(StatEngineInsertFormat, nodeIDQueryString);
 
             // Ensure that system statistics exist
             if (systemStatCount < SystemStatNames.Length)
             {
-                database.Connection.ExecuteNonQuery(string.Format(SystemStatisticDeleteFormat, SystemStatNames.Length));
+                database.Connection.ExecuteNonQuery(SystemStatisticDeleteFormat, SystemStatNames.Length);
 
                 for (int i = 0; i < SystemStatNames.Length; i++)
                 {
@@ -729,14 +729,14 @@ namespace GSF.TimeSeries
                     statMethodSuffix = statName.Replace(" ", "");
                     statType = SystemStatTypes[i];
                     statFormat = SystemStatFormats[i];
-                    database.Connection.ExecuteNonQuery(string.Format(SystemStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix, statType, statFormat));
+                    database.Connection.ExecuteNonQuery(SystemStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix, statType, statFormat);
                 }
             }
 
             // Ensure that system statistics exist
             if (deviceStatCount < DeviceStatNames.Length)
             {
-                database.Connection.ExecuteNonQuery(string.Format(DeviceStatisticDeleteFormat, DeviceStatNames.Length));
+                database.Connection.ExecuteNonQuery(DeviceStatisticDeleteFormat, DeviceStatNames.Length);
 
                 for (int i = 0; i < DeviceStatNames.Length; i++)
                 {
@@ -746,14 +746,14 @@ namespace GSF.TimeSeries
                     statMethodSuffix = statName.Replace(" ", "");
                     statType = DeviceStatTypes[i];
                     statFormat = DeviceStatFormats[i];
-                    database.Connection.ExecuteNonQuery(string.Format(DeviceStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix, statType, statFormat));
+                    database.Connection.ExecuteNonQuery(DeviceStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix, statType, statFormat);
                 }
             }
 
             // Ensure that subscriber statistics exist
             if (subscriberStatCount < SubscriberStatNames.Length)
             {
-                database.Connection.ExecuteNonQuery(string.Format(SubscriberStatisticDeleteFormat, SubscriberStatNames.Length));
+                database.Connection.ExecuteNonQuery(SubscriberStatisticDeleteFormat, SubscriberStatNames.Length);
 
                 for (int i = 0; i < SubscriberStatNames.Length; i++)
                 {
@@ -763,14 +763,14 @@ namespace GSF.TimeSeries
                     statMethodSuffix = SubscriberStatMethodSuffix[i];
                     statType = SubscriberStatTypes[i];
                     statFormat = SubscriberStatFormats[i];
-                    database.Connection.ExecuteNonQuery(string.Format(SubscriberStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix, statType, statFormat, signalIndex == 1 ? 1 : 0));
+                    database.Connection.ExecuteNonQuery(SubscriberStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix, statType, statFormat, signalIndex == 1 ? 1 : 0);
                 }
             }
 
             // Ensure that publisher statistics exist
             if (publisherStatCount < PublisherStatNames.Length)
             {
-                database.Connection.ExecuteNonQuery(string.Format(PublisherStatisticDeleteFormat, PublisherStatNames.Length));
+                database.Connection.ExecuteNonQuery(PublisherStatisticDeleteFormat, PublisherStatNames.Length);
 
                 for (int i = 0; i < PublisherStatNames.Length; i++)
                 {
@@ -780,14 +780,14 @@ namespace GSF.TimeSeries
                     statMethodSuffix = PublisherStatMethodSuffix[i];
                     statType = PublisherStatTypes[i];
                     statFormat = PublisherStatFormats[i];
-                    database.Connection.ExecuteNonQuery(string.Format(PublisherStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix, statType, statFormat, signalIndex == 1 ? 1 : 0));
+                    database.Connection.ExecuteNonQuery(PublisherStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix, statType, statFormat, signalIndex == 1 ? 1 : 0);
                 }
             }
 
             // Ensure that process statistics exist
             if (processStatCount < ProcessStatNames.Length)
             {
-                database.Connection.ExecuteNonQuery(string.Format(ProcessStatisticDeleteFormat, ProcessStatNames.Length));
+                database.Connection.ExecuteNonQuery(ProcessStatisticDeleteFormat, ProcessStatNames.Length);
 
                 for (int i = 0; i < ProcessStatNames.Length; i++)
                 {
@@ -795,7 +795,7 @@ namespace GSF.TimeSeries
                     statName = ProcessStatNames[i];
                     statDescription = ProcessStatDescriptions[i];
                     statMethodSuffix = statName.Replace(" ", "");
-                    database.Connection.ExecuteNonQuery(string.Format(ProcessStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix));
+                    database.Connection.ExecuteNonQuery(ProcessStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix);
                 }
             }
         }

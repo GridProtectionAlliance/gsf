@@ -883,7 +883,7 @@ namespace GSF.Data
             try
             {
                 // If record already exists due to triggers or other means we must update it instead of inserting it
-                if (int.Parse(Common.ToNonNullString(toTable.Connection.ExecuteScalar("{0}", countSQL.ToString(), Timeout), "0")) > 0)
+                if (int.Parse(Common.ToNonNullString(toTable.Connection.ExecuteScalar(countSQL.ToString(), Timeout), "0")) > 0)
                 {
                     // Add where criteria to SQL update statement
                     updateSQL.Append(whereSQL);

@@ -2816,7 +2816,7 @@ namespace GSF.Data
                             {
                                 string fieldEscapedName = field.SQLEscapedName;
                                 // Make sure field exists
-                                m_schemaConnection.ExecuteScalar(string.Format(testFieldSQL, fieldEscapedName));
+                                m_schemaConnection.ExecuteScalar(testFieldSQL, fieldEscapedName);
                             }
                             catch
                             {
