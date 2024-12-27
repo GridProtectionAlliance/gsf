@@ -493,11 +493,11 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                DataRow outputAnalogRecord = database.Connection.RetrieveData(database.AdapterType, string.Format(outputAnalogFormat, outputStreamDeviceAnalogID)).Rows[0];
+                DataRow outputAnalogRecord = database.Connection.RetrieveData(database.AdapterType, outputAnalogFormat, outputStreamDeviceAnalogID).Rows[0];
                 string labelName = outputAnalogRecord.Field<string>("Label");
                 outputStreamDeviceID = outputAnalogRecord.ConvertField<int>("OutputStreamDeviceID");
 
-                DataRow outputDeviceRecord = database.Connection.RetrieveData(database.AdapterType, string.Format(outputDeviceFormat, outputStreamDeviceID)).Rows[0];
+                DataRow outputDeviceRecord = database.Connection.RetrieveData(database.AdapterType, outputDeviceFormat, outputStreamDeviceID).Rows[0];
                 string deviceName = outputDeviceRecord.Field<string>("Acronym");
                 adapterID = outputDeviceRecord.ConvertField<int>("AdapterID");
 
