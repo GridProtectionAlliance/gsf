@@ -58,7 +58,7 @@ The following optional special command operations can be specified as part of an
 | Command | Description |
 | ------- | ----------- |
 | `DropEmptySeries` | Ensures any empty series are hidden from display. Example: `; dropEmptySeries` |
-| `FullResolutionQuery` | Ensures query returns non-decimated, full resolution data. Example: `; fullResolutionData` |
+| `FullResolutionQuery` | Ensures query returns non-decimated, full resolution data. Example: `; FullResolutionQuery` |
 | `IncludePeaks` | Ensures decimated data includes both min/max interval peaks, note this can reduce query performance. Example: `; includePeaks` |
 | `RadialDistribution` | Updates query coordinate metadata, i.e., longitude/latitude, where values overlap in a radial distribution. Example: `; radialDistribution` |
 | `SquareDistribution` | Updates query coordinate metadata, i.e., longitude/latitude, where values overlap in a square distribution. Example: `; squareDistribution` |
@@ -231,8 +231,8 @@ Returns a single value that represents the evaluation of an expression over a sl
 * Returns: Single value per slice
 * Example 1: `Evaluate(0.0333, { R* Sin(T* PI / 180)}, T=GPA_SHELBY-PA1:VH; R=GPA_SHELBY-PM1:V)`
 * Example 2: `Eval(0.0333, { (GPA_SHELBYPA2VH - GPA_SHELBYPA1VH) % 360 - 180}, GPA_SHELBY-PA1:VH; GPA_SHELBY-PA2:VH)`
-* Example 3: `eval(0.5, { (if (_v0 &gt; 62, _v2, if (_v0 &lt; 57, _v2, _v0)) + if (_v1 &gt; 62, _v2, if (_v1 &lt; 57, _v2, _v1))) / 2 }, FILTER TOP 3 ActiveMeasurements WHERE SignalType = 'FREQ')`
-* Example 4: `evaluate(0.0333, { if (abs(b - a) &gt; 180, if (sign(b - a) &lt; 0, b - a + 360, b - a - 360), b - a)}, a=PMU.009-PZR.AV:ANG; b=PMU.008-PZR.AV:ANG)`
+* Example 3: `eval(0.5, { (if (_v0 > 62, _v2, if (_v0 < 57, _v2, _v0)) + if (_v1 > 62, _v2, if (_v1 < 57, _v2, _v1))) / 2 }, FILTER TOP 3 ActiveMeasurements WHERE SignalType = 'FREQ')`
+* Example 4: `evaluate(0.0333, { if (abs(b - a) > 180, if (sign(b - a) < 0, b - a + 360, b - a - 360), b - a)}, a=PMU.009-PZR.AV:ANG; b=PMU.008-PZR.AV:ANG)`
 * Variants: `Evaluate`, `Eval`
 * Execution: [Deferred enumeration](#execution-modes)
 * Group Operations: Slice
@@ -240,7 +240,7 @@ Returns a single value that represents the evaluation of an expression over a sl
 The following special command-level parameter is available to the `Evaluate` function: `Imports={expr}` This command adds custom .NET type imports that can be used with the `Evaluate` function. `expr`defines a key-value pair definition of assembly name, i.e., `AssemblyName` = DLL filename without suffix, and type name, i.e., `TypeName` = fully qualified case-sensitive type name, to be imported. Key-value pairs are separated with commas and multiple imports are by separated semicolons. `expr` must be surrounded by braces. Example: `; imports={AssemblyName=mscorlib, TypeName=System.TimeSpan; AssemblyName=MyCode, TypeName=MyCode.MyClass}`<br/> 
 ## ExceedsAt
 
-Returns a series of values at which a value exceeds the given threshold. The `threhsold` parameter value is a floating-point number that represents the threshold to be exceeded. Second parameter, `fallsBelow`, optional, is a boolean flag that determines if the value should be considered inversely as falling below the threshold instead of exceeding. `returnDurations`, optional, is a boolean that determines if the duration (in seconds) from where value exceeded threshold should be returned instead of the original value. Forth parameter, `reportEndMarker`, is a boolean flag that determines if a value should be reported at the point when threshold stops being exceeding the threshold. 
+Returns a series of values at which a value exceeds the given threshold. The `threhsold` parameter value is a floating-point number that represents the threshold to be exceeded. Second parameter, `fallsBelow`, optional, is a boolean flag that determines if the value should be considered inversely as falling below the threshold instead of exceeding. `returnDurations`, optional, is a boolean that determines if the duration (in seconds) from where value exceeded threshold should be returned instead of the original value. Forth parameter, `reportEndMarker`, is a boolean flag that determines if a value should be reported at the point when threshold stops being exceeding the threshold. See [ example template dashboard](https://github.com/GridProtectionAlliance/GrafanaTemplates?tab=readme-ov-file#exceedsat-threshold-dashboard). 
 
 * Signature: `ExceedsAt(threshold, [fallsBelow = false], [returnDurations = false], [reportEndMarker = false], expression)`
 * Returns: Series of values.
@@ -252,7 +252,7 @@ Returns a series of values at which a value exceeds the given threshold. The `th
 
 ## ExcludeRange
 
-Returns a series of values that represent a filtered set of the values in the source series where each value falls outside the specified low and high. The `low` and `high` parameter values are floating-point numbers that represent the range of values excluded in the return series. Third parameter, optional, is a boolean flag that determines if range values are inclusive, i.e., excluded values are &lt;= low or &gt;= high - defaults to false, which means values are exclusive, i.e., excluded values are &lt; low or &gt; high. Function allows a fourth optional parameter that is a boolean flag - when four parameters are provided, third parameter determines if low value is inclusive and forth parameter determines if high value is inclusive. The `low` and `high` parameter values can either be constant values or named targets available from the expression. 
+Returns a series of values that represent a filtered set of the values in the source series where each value falls outside the specified low and high. The `low` and `high` parameter values are floating-point numbers that represent the range of values excluded in the return series. Third parameter, optional, is a boolean flag that determines if range values are inclusive, i.e., excluded values are <= low or >= high - defaults to false, which means values are exclusive, i.e., excluded values are < low or > high. Function allows a fourth optional parameter that is a boolean flag - when four parameters are provided, third parameter determines if low value is inclusive and forth parameter determines if high value is inclusive. The `low` and `high` parameter values can either be constant values or named targets available from the expression. 
 
 * Signature: `ExcludeRange(low, high, [inclusive = false], expression)` -or- `ExcludeRange(low, high, [lowInclusive = false], [highInclusive = false], expression)`
 * Returns: Series of values.
@@ -308,7 +308,7 @@ Returns a series of values that represent the smallest integral value that is le
 
 ## IncludeRange
 
-Returns a series of values that represent a filtered set of the values in the source series where each value falls between the specified low and high. The `low` and `high` parameter values are floating-point numbers that represent the range of values allowed in the return series. Third parameter, optional, is a boolean flag that determines if range values are inclusive, i.e., allowed values are &gt;= low and &lt;= high - defaults to false, which means values are exclusive, i.e., allowed values are &gt; low and &lt; high. Function allows a fourth optional parameter that is a boolean flag - when four parameters are provided, third parameter determines if low value is inclusive and forth parameter determines if high value is inclusive. The `low` and `high` parameter values can either be constant values or named targets available from the expression. 
+Returns a series of values that represent a filtered set of the values in the source series where each value falls between the specified low and high. The `low` and `high` parameter values are floating-point numbers that represent the range of values allowed in the return series. Third parameter, optional, is a boolean flag that determines if range values are inclusive, i.e., allowed values are >= low and <= high - defaults to false, which means values are exclusive, i.e., allowed values are > low and < high. Function allows a fourth optional parameter that is a boolean flag - when four parameters are provided, third parameter determines if low value is inclusive and forth parameter determines if high value is inclusive. The `low` and `high` parameter values can either be constant values or named targets available from the expression. 
 
 * Signature: `IncludeRange(low, high, [inclusive = false], expression)` -or- `IncludeRange(low, high, [lowInclusive = false], [highInclusive = false], expression)`
 * Returns: Series of values.
