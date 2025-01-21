@@ -232,9 +232,6 @@ public class PhasorAddition : CalculatedMeasurementBase
 
     #region [ Static ]
 
-    // Static Fields
-
-    // a = e^((2/3) * pi * i)
     private static readonly ComplexNumber nanSeq = new(double.NaN, double.NaN);
 
     #endregion
