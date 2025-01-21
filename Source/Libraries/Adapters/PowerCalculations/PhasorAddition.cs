@@ -183,35 +183,29 @@ public class PhasorAddition : CalculatedMeasurementBase
         {
             ConcurrentDictionary<MeasurementKey, IMeasurement> measurements = frame.Measurements;
             double m1 = 0.0D, a1 = 0.0D, m2 = 0.0D, a2 = 0.0D;
-            bool allInputsReceived = false;
-
-            // Get all needed measurement values from this frame
-            if (measurements.TryGetValue(m_magnitudes[0], out IMeasurement measurement))
-            {
-                // Get first magnitude value
-                m1 = measurement.AdjustedValue;
-
-                if (measurements.TryGetValue(m_angles[0], out measurement))
-                {
-                    // Get first angle value
-                    a1 = measurement.AdjustedValue;
-
-                    if (measurements.TryGetValue(m_magnitudes[1], out measurement))
-                    {
-                        // Get second magnitude value
-                        m2 = measurement.AdjustedValue;
-
-                        if (measurements.TryGetValue(m_angles[1], out measurement))
-                        {
-                            // Get second angle value
-                            a2 = measurement.AdjustedValue;
-                        }
-                    }
-                }
-            }
-
-            if (!allInputsReceived)
+            // Get first magnitude value
+            if (!measurements.TryGetValue(m_magnitudes[0], out IMeasurement measurement))
                 return;
+
+            m1 = measurement.AdjustedValue;
+
+            // Get first angle value
+            if (!measurements.TryGetValue(m_angles[0], out measurement))
+                return;
+
+            a1 = measurement.AdjustedValue;
+
+            // Get second magnitude value
+            if (!measurements.TryGetValue(m_magnitudes[1], out measurement))
+                return;
+
+            m2 = measurement.AdjustedValue;
+
+            // Get second angle value
+            if (!measurements.TryGetValue(m_angles[1], out measurement))
+                return;
+
+            a2 = measurement.AdjustedValue;
 
             ComplexNumber phasor1 = new(Angle.FromDegrees(a1), m1);
             ComplexNumber phasor2 = new(Angle.FromDegrees(a2), m2);
