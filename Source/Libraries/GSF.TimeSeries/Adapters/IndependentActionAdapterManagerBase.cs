@@ -80,7 +80,7 @@ namespace GSF.TimeSeries.Adapters
         // Fields
         private readonly LongSynchronizedOperation m_parseConnectionString;
         private readonly LongSynchronizedOperation m_initializeChildAdapters;
-        private readonly List<MeasurementKey[]> m_inputMeasurementKeysQueue;
+        private MeasurementKey[] m_inputMeasurementKeysForInitialization;
         private bool m_disposed;
 
         #endregion
@@ -104,8 +104,6 @@ namespace GSF.TimeSeries.Adapters
             {
                 IsBackground = true
             };
-
-            m_inputMeasurementKeysQueue = new List<MeasurementKey[]>(2);
         }
 
         #endregion
@@ -458,32 +456,21 @@ namespace GSF.TimeSeries.Adapters
         /// </remarks>
         protected virtual void InitializeChildAdapterManagement(MeasurementKey[] inputMeasurementKeys)
         {
-            lock (m_inputMeasurementKeysQueue)
-            {
-                if (m_inputMeasurementKeysQueue.Count < 2)
-                    m_inputMeasurementKeysQueue.Add(inputMeasurementKeys);
-                else
-                    m_inputMeasurementKeysQueue[1] = inputMeasurementKeys;
-
-                m_initializeChildAdapters.RunOnceAsync();
-            }
+            Interlocked.Exchange(ref m_inputMeasurementKeysForInitialization, inputMeasurementKeys);
+            m_initializeChildAdapters.RunOnceAsync();
         }
 
         private void InitializeChildAdapters()
         {
-            MeasurementKey[] inputMeasurementKeys;
-
-            lock (m_inputMeasurementKeysQueue)
-            {
-                if (m_inputMeasurementKeysQueue.Count == 0)
-                    return;
-
-                inputMeasurementKeys = m_inputMeasurementKeysQueue[0];
-                m_inputMeasurementKeysQueue.RemoveAt(0);
-            }
-
             try
             {
+                MeasurementKey[] inputMeasurementKeys = Interlocked.Exchange(ref m_inputMeasurementKeysForInitialization, null);
+
+                // Indicates an extremely unlikely race condition occurred,
+                // but this is expected so don't issue a warning
+                if (inputMeasurementKeys is null)
+                    return;
+
                 // If no inputs are defined, skip setup
                 if (inputMeasurementKeys.Length == 0)
                 {
@@ -544,9 +531,9 @@ namespace GSF.TimeSeries.Adapters
                 }
 
                 // Create child adapter for provided inputs to the parent bulk collection-based adapter
-                for (int i = 0; i < inputMeasurementKeys.Length; i += inputsPerAdapter)
+                for (int i = 0, adapterIndex = 0; i < inputMeasurementKeys.Length; i += inputsPerAdapter, adapterIndex++)
                 {
-                    CurrentAdapterIndex = adapters.Count;
+                    CurrentAdapterIndex = adapterIndex;
                     inputsPerAdapter = PerAdapterInputCount;
 
                     Guid[] inputs = new Guid[inputsPerAdapter];
@@ -652,6 +639,10 @@ namespace GSF.TimeSeries.Adapters
         public virtual void ParseConnectionString()
         {
             this.HandleParseConnectionString();
+
+            InputMeasurementKeys = InputMeasurementKeys
+                .Where(key => this.SignalIDExists(key.SignalID))
+                .ToArray();
 
             if (FramesPerSecond < 1)
                 FramesPerSecond = DefaultFramesPerSecond;
