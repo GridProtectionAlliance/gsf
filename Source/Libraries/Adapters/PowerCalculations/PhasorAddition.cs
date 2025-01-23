@@ -129,7 +129,7 @@ public class PhasorAddition : CalculatedMeasurementBase
     #region [ Methods ]
 
     /// <summary>
-    /// Initializes the <see cref="PowerCalculator"/>.
+    /// Initializes the <see cref="PhasorAddition"/>.
     /// </summary>
     public override void Initialize()
     {
