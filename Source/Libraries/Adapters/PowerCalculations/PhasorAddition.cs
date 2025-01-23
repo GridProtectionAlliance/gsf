@@ -219,6 +219,8 @@ public class PhasorAddition : CalculatedMeasurementBase
         {
             IMeasurement[] outputMeasurements = OutputMeasurements;
            
+            m_lastAngleResult = result.Angle.ToDegrees();
+            m_lastMagnitudeResult = result.Magnitude;
             // Provide calculated measurements for external consumption
             OnNewMeasurements(new IMeasurement[]
             {
