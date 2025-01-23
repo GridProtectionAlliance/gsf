@@ -71,6 +71,7 @@
     <Compile Include="PowerMultiCalculator\RunningAverage.cs" />
     <Compile Include="AngleDifferenceCalculator.cs" />
     <Compile Include="ImpedanceCalculator.cs" />
+    <Compile Include="PhasorAddition.cs" />
     <Compile Include="VoltageAdjustmentStrategy.cs" />
     <Compile Include="SequenceCalculator.cs" />
     <Compile Include="PowerCalculator.cs" />
