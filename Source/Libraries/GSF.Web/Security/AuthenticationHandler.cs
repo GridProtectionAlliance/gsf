@@ -41,8 +41,6 @@ using GSF.Diagnostics;
 using GSF.Reflection;
 using GSF.Security;
 using Microsoft.Owin;
-using Microsoft.Owin.Security;
-using Microsoft.Owin.Security.Infrastructure;
 
 #pragma warning disable SG0015 // Validated - no hard-coded password present
 
@@ -51,7 +49,7 @@ namespace GSF.Web.Security
     /// <summary>
     /// Handles authentication using the configured <see cref="ISecurityProvider"/> implementation in the Owin pipeline.
     /// </summary>
-    public class AuthenticationHandler : AuthenticationHandler<AuthenticationOptions>
+    public class AuthenticationHandler
     {
         #region [ Members ]
         
@@ -67,10 +65,30 @@ namespace GSF.Web.Security
                     string.Join("; ", aggEx.Flatten().InnerExceptions.Select(inex => inex.Message)) : 
                     innerException.Message;
         }
-        
+
         #endregion
-        
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="AuthenticationHandler"/> class.
+        /// </summary>
+        /// <param name="context">Context of the request to be authenticated</param>
+        /// <param name="options">Configuration options for the authentication handler</param>
+        public AuthenticationHandler(IOwinContext context, AuthenticationOptions options)
+        {
+            Request = context.Request;
+            Response = context.Response;
+            Options = options;
+        }
+
+        #endregion
+
         #region [ Properties ]
+
+        private IOwinRequest Request { get; }
+        private IOwinResponse Response { get; }
+        private AuthenticationOptions Options { get; }
 
         // Reads the authorization header value from the request
         private AuthenticationHeaderValue AuthorizationHeader
@@ -104,6 +122,8 @@ namespace GSF.Web.Security
         private string AuthTestPath =>
             Options.GetFullAuthTestPath("");
 
+        private bool Faulted { get; set; }
+
         private string FaultReason { get; set; }
 
         #endregion
@@ -112,10 +132,9 @@ namespace GSF.Web.Security
 
         /// <summary>
         /// The core authentication logic which must be provided by the handler. Will be invoked at most
-        /// once per request. Do not call directly, call the wrapping Authenticate method instead.
+        /// once per request.
         /// </summary>
-        /// <returns>The ticket data provided by the authentication logic</returns>
-        protected override Task<AuthenticationTicket> AuthenticateCoreAsync()
+        public void Authenticate()
         {
             try
             {
@@ -125,7 +144,7 @@ namespace GSF.Web.Security
 
                 // No authentication required for anonymous resources
                 if (Options.IsAnonymousResource(Request.Path.Value))
-                    return Task.FromResult<AuthenticationTicket>(null);
+                    return;
 
                 NameValueCollection queryParameters = System.Web.HttpUtility.ParseQueryString(Request.QueryString.Value);
 
@@ -140,8 +159,7 @@ namespace GSF.Web.Security
                     IIdentity logoutIdentity = new GenericIdentity(sessionID.ToString());
                     string[] logoutRoles = { "logout" };
                     Request.User = new GenericPrincipal(logoutIdentity, logoutRoles);
-
-                    return Task.FromResult<AuthenticationTicket>(null);
+                    return;
                 }
 
                 AuthenticationHeaderValue authorization = AuthorizationHeader;
@@ -214,24 +232,19 @@ namespace GSF.Web.Security
                 else
                     FaultReason = $"Authentication Pipeline Exception: {ex.Message}";
 
-                Log.Publish(MessageLevel.Warning, nameof(AuthenticateCoreAsync), FaultReason, exception: ex);
+                Log.Publish(MessageLevel.Warning, nameof(Authenticate), FaultReason, exception: ex);
             }
-
-            return Task.FromResult<AuthenticationTicket>(null);
         }
 
         /// <summary>
-        /// Called once by common code after initialization. If an authentication middle-ware
-        /// responds directly to specifically known paths it must override this virtual,
-        /// compare the request path to it's known paths, provide any response information
-        /// as appropriate, and true to stop further processing.
+        /// Called once by common code after authentication to respond directly to specifically known paths.
         /// </summary>
         /// <returns>
-        /// Returning false will cause the common code to call the next middle-ware in line.
-        /// Returning true will cause the common code to begin the async completion journey
+        /// Returning true will cause the common code to call the next middle-ware in line.
+        /// Returning false will cause the common code to begin the async completion journey
         /// without calling the rest of the middle-ware pipeline.
         /// </returns>
-        public override async Task<bool> InvokeAsync()
+        public async Task<bool> AuthorizeAsync()
         {
             if (Faulted)
             {
@@ -239,7 +252,7 @@ namespace GSF.Web.Security
                 using TextWriter writer = new StreamWriter(Response.Body, Encoding.UTF8, 4096, true);
                 await writer.WriteAsync(FaultReason);
                 Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                return !HostingEnvironment.IsHosted;
+                return HostingEnvironment.IsHosted;
             }
 
             // Use Cases:
@@ -277,20 +290,20 @@ namespace GSF.Web.Security
                 cookieOptions.Path = Options.GetFullAuthTestPath(pathBase);
                 Response.Cookies.Delete(Options.AuthenticationToken, cookieOptions);
 
-                return true; // Abort pipeline
+                return false; // Abort pipeline
             }
 
             // If the user is properly Authenticated but a redirect is requested send that redirect
             if (securityPrincipal?.Identity.IsAuthenticated == true && securityPrincipal.Identity.Provider.IsRedirectRequested)
             {
                 Response.Redirect(securityPrincipal.Identity.Provider.RequestedRedirect ?? "/");
-                return true;
+                return false; // Abort pipeline
             }
 
             // If request is for an anonymous resource or user is properly authenticated, allow
             // request to propagate through the Owin pipeline
             if (Options.IsAnonymousResource(urlPath) || securityPrincipal?.Identity.IsAuthenticated == true)
-                return false; // Let pipeline continue
+                return true; // Let pipeline continue
 
             // Abort pipeline with appropriate response
             if (Options.IsAuthFailureRedirectResource(urlPath) && !IsAjaxCall() && !isAuthTest)
@@ -347,7 +360,7 @@ namespace GSF.Web.Security
             string failureReason = SecurityPrincipal.GetFailureReasonPhrase(securityPrincipal, AuthorizationHeader?.Scheme, true);
             Log.Publish(MessageLevel.Info, "AuthenticationFailure", $"Failed to authenticate {currentIdentity} for {Request.Path}: {failureReason}");
                 
-            return true; // Abort pipeline
+            return false; // Abort pipeline
         }
 
         private bool UserHasLogoutRole(IPrincipal user)
