@@ -24,11 +24,11 @@
 using System;
 using System.Linq;
 using System.Net;
+using System.Threading.Tasks;
 using System.Web.Hosting;
 using GSF.Diagnostics;
 using GSF.Security;
 using Microsoft.Owin;
-using Microsoft.Owin.Security.Infrastructure;
 using Owin;
 
 namespace GSF.Web.Security
@@ -36,24 +36,30 @@ namespace GSF.Web.Security
     /// <summary>
     /// Middle-ware for configuring authentication using <see cref="ISecurityProvider"/> in the Owin pipeline.
     /// </summary>
-    public class AuthenticationMiddleware : AuthenticationMiddleware<AuthenticationOptions>
+    public class AuthenticationMiddleware : OwinMiddleware
     {
+        private AuthenticationOptions Options { get; }
+
         /// <summary>
         /// Creates a new instance of the <see cref="AuthenticationMiddleware"/> class.
         /// </summary>
         /// <param name="next">The next middle-ware object in the pipeline.</param>
         /// <param name="options">The options for authentication.</param>
         public AuthenticationMiddleware(OwinMiddleware next, AuthenticationOptions options)
-            : base(next, options)
+            : base(next)
         {
+            Options = options;
         }
 
-        /// <summary>
-        /// Returns the authentication handler that provides the authentication logic.
-        /// </summary>
-        /// <returns>The authentication handler to provide authentication logic.</returns>
-        protected override AuthenticationHandler<AuthenticationOptions> CreateHandler() =>
-            new AuthenticationHandler();
+        /// <inheritdoc/>
+        public override async Task Invoke(IOwinContext context)
+        {
+            AuthenticationHandler handler = new(context, Options);
+            handler.Authenticate();
+
+            if (await handler.AuthorizeAsync())
+                await Next.Invoke(context);
+        }
     }
 
     /// <summary>

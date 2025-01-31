@@ -32,7 +32,7 @@ namespace GSF.Web.Security
     /// <summary>
     /// Represents options for authentication using <see cref="AuthenticationHandler"/>.
     /// </summary>
-    public sealed class AuthenticationOptions : Microsoft.Owin.Security.AuthenticationOptions
+    public sealed class AuthenticationOptions
     {
         #region [ Members ]
 
@@ -109,7 +109,7 @@ namespace GSF.Web.Security
         /// <summary>
         /// Creates a new instance of the <see cref="AuthenticationOptions"/> class.
         /// </summary>
-        public AuthenticationOptions() : base(SessionHandler.DefaultAuthenticationToken)
+        public AuthenticationOptions()
         {
             m_authFailureRedirectResourceCache = new ConcurrentDictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
             m_anonymousResourceCache = new ConcurrentDictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
