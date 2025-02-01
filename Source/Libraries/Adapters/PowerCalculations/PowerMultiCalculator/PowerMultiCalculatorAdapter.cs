@@ -275,8 +275,8 @@ public class PowerMultiCalculatorAdapter : ActionAdapterBase
                        "SELECT ID, CircuitDescription, VoltageAngleSignalID, VoltageMagSignalID, CurrentAngleSignalID, CurrentMagSignalID, " +
         //                           6                          7                           8
                        "ActivePowerOutputSignalID, ReactivePowerOutputSignalID, ApparentPowerOutputSignalID " +
-                       "FROM {0} WHERE NodeId = {1} AND Enabled <> 0",
-                       TableName, ConfigurationFile.Current.Settings["systemSettings"]["NodeID"].ValueAs<Guid>()))
+                       "FROM {" + TableName + "} WHERE NodeId = {1} AND Enabled <> 0",
+                       ConfigurationFile.Current.Settings["systemSettings"]["NodeID"].ValueAs<Guid>()))
         {
             while (reader.Read())
             {

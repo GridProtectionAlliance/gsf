@@ -423,7 +423,8 @@ public class DeviceAlarmStateAdapter : FacileActionAdapterBase
         if (TargetParentDevices)
             newDevices = connection.RetrieveData("SELECT * FROM Device WHERE (IsConcentrator != 0 OR ParentID IS NULL) " +
                 "AND ID NOT IN (SELECT DeviceID FROM AlarmDevice)").Select();
-        else newDevices = connection.RetrieveData("SELECT * FROM Device WHERE IsConcentrator = 0 " +
+        else
+            newDevices = connection.RetrieveData("SELECT * FROM Device WHERE IsConcentrator = 0 " +
             "AND AccessID <> {0} AND ID NOT IN (SELECT DeviceID FROM AlarmDevice)", DeviceGroupAccessID).Select();
 
         foreach (DataRow newDevice in newDevices)
