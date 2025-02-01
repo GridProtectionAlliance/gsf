@@ -848,7 +848,7 @@ namespace eDNAAdapters
                                 if ((object)database == null)
                                     database = new AdoDataConnection("systemSettings");
 
-                                updateTime = Convert.ToDateTime(database.Connection.ExecuteScalar("SELECT UpdatedOn FROM Measurement WHERE SignalID = '{0}'", signalID));
+                                updateTime = Convert.ToDateTime(database.Connection.ExecuteScalar("SELECT UpdatedOn FROM Measurement WHERE SignalID = {0}", signalID));
                             }
                         }
                         catch (Exception)

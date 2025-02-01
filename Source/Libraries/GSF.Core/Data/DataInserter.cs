@@ -416,9 +416,9 @@ namespace GSF.Data
             try
             {
                 if (useTruncateTable)
-                    table.Connection.ExecuteNonQuery("TRUNCATE TABLE {0}", table.SQLEscapedName, Timeout);
+                    table.Connection.ExecuteNonQuery("TRUNCATE TABLE " + table.SQLEscapedName, Timeout);
                 else
-                    table.Connection.ExecuteNonQuery("DELETE FROM {0}", table.SQLEscapedName, Timeout);
+                    table.Connection.ExecuteNonQuery("DELETE FROM " + table.SQLEscapedName, Timeout);
                 if ((object)TableCleared != null)
                     TableCleared(this, new EventArgs<string>(table.Name)); //-V3083
 
@@ -451,23 +451,22 @@ namespace GSF.Data
                 {
                     case DatabaseType.SQLServer:
                         resetAutoIncValueSQL = "DBCC CHECKIDENT('" + table.SQLEscapedName + "', RESEED)";
-                        table.Connection.ExecuteNonQuery("DBCC CHECKIDENT('{0}', RESEED)", table.SQLEscapedName, Timeout);
+                        table.Connection.ExecuteNonQuery(resetAutoIncValueSQL, Timeout);
                         break;
                     case DatabaseType.MySQL:
                         resetAutoIncValueSQL = "ALTER TABLE " + table.SQLEscapedName + " AUTO_INCREMENT = 1";
-                        table.Connection.ExecuteNonQuery("ALTER TABLE {0} AUTO_INCREMENT = 1", table.SQLEscapedName, Timeout);
+                        table.Connection.ExecuteNonQuery(resetAutoIncValueSQL, Timeout);
                         break;
                     case DatabaseType.SQLite:
                         resetAutoIncValueSQL = "DELETE FROM sqlite_sequence WHERE name = '" + table.Name + "'";
-                        table.Connection.ExecuteNonQuery("DELETE FROM sqlite_sequence WHERE name = '{0}'", table.Name, Timeout);
+                        table.Connection.ExecuteNonQuery(resetAutoIncValueSQL, Timeout);
                         break;
                     case DatabaseType.PostgreSQL:
                         // The escaping of names here is very deliberate; for certain table names,
                         // it is necessary to escape the table name in the pg_get_serial_sequence() call,
                         // but the call will fail if you attempt to escape the autoIncField name
                         resetAutoIncValueSQL = $"SELECT setval(pg_get_serial_sequence('{table.SQLEscapedName}', '{table.AutoIncField.Name.ToLower()}'), (SELECT MAX({table.AutoIncField.SQLEscapedName}) FROM {table.SQLEscapedName}))";
-                        table.Connection.ExecuteNonQuery("SELECT setval(pg_get_serial_sequence('{0}', '{1}'), (SELECT MAX({2}) FROM {3}))",
-                            table.SQLEscapedName, table.AutoIncField.Name.ToLower(), table.AutoIncField.SQLEscapedName, table.SQLEscapedName, Timeout);
+                        table.Connection.ExecuteNonQuery(resetAutoIncValueSQL, Timeout);
                         break;
                 }
             }
@@ -615,7 +614,7 @@ namespace GSF.Data
                     case DatabaseType.SQLServer:
                         try
                         {
-                            toTable.Connection.ExecuteNonQuery("SET IDENTITY_INSERT {0} ON", toTable.SQLEscapedName, Timeout);
+                            toTable.Connection.ExecuteNonQuery($"SET IDENTITY_INSERT {toTable.SQLEscapedName} ON", Timeout);
                             usingIdentityInsert = true;
                         }
                         catch

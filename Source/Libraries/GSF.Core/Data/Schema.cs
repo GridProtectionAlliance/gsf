@@ -2790,24 +2790,22 @@ namespace GSF.Data
                     try
                     {
                         // Make sure table exists
-                        m_schemaConnection.ExecuteScalar("SELECT COUNT(*) FROM {0}", table.SQLEscapedName);
+                        m_schemaConnection.ExecuteScalar($"SELECT COUNT(*) FROM {table.SQLEscapedName}");
 
                         List<Field> fieldsToRemove = new List<Field>();
                         string testFieldSQL;
-                        string sqlEscapedName = table.SQLEscapedName;
-                        string sqlAutoIncEscapedName = table.AutoIncField.SQLEscapedName;
 
                         try
                         {
                             // If table has an auto-inc field, this will typically be indexed and will allow for a faster field check than a count
                             if (table.HasAutoIncField)
-                                testFieldSQL = "SELECT {0} FROM " + sqlEscapedName + " WHERE " + sqlAutoIncEscapedName + " < 0";
+                                testFieldSQL = "SELECT {0} FROM " + table.SQLEscapedName + " WHERE " + table.AutoIncField.SQLEscapedName + " < 0";
                             else
-                                testFieldSQL = "SELECT COUNT({0}) FROM " + sqlEscapedName;
+                                testFieldSQL = "SELECT COUNT({0}) FROM " + table.SQLEscapedName;
                         }
                         catch
                         {
-                            testFieldSQL = "SELECT COUNT({0}) FROM " + sqlEscapedName;
+                            testFieldSQL = "SELECT COUNT({0}) FROM " + table.SQLEscapedName;
                         }
 
                         foreach (Field field in table.Fields)
