@@ -330,7 +330,7 @@ namespace GSF.TimeSeries.Configuration
 
                 try
                 {
-                    database.Connection.ExecuteNonQuery($"DELETE FROM TrackedChange WHERE ID <= {latestVersion}");
+                    database.Connection.ExecuteNonQuery("DELETE FROM TrackedChange WHERE ID <= {0}",latestVersion);
                 }
                 catch (Exception ex)
                 {
@@ -365,7 +365,7 @@ namespace GSF.TimeSeries.Configuration
             {
                 string assemblyName = "", typeName = "", methodName = "";
 
-                foreach (DataRow row in database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM DataOperation WHERE (NodeID IS NULL OR NodeID={NodeIDQueryString}) AND Enabled <> 0 ORDER BY LoadOrder").Rows)
+                foreach (DataRow row in database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM DataOperation WHERE (NodeID IS NULL OR NodeID={0}) AND Enabled <> 0 ORDER BY LoadOrder", NodeIDQueryString).Rows)
                 {
                     try
                     {
@@ -410,7 +410,7 @@ namespace GSF.TimeSeries.Configuration
             {
                 // Load configuration entity data filtered by node ID
                 Ticks operationStartTime = DateTime.UtcNow.Ticks;
-                DataTable source = database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM {entityRow["SourceName"]} WHERE NodeID={NodeIDQueryString}");
+                DataTable source = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM {0} WHERE NodeID={1}", entityRow["SourceName"], NodeIDQueryString);
                 Time operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
 
                 // Update table name as defined in configuration entity
@@ -491,8 +491,7 @@ namespace GSF.TimeSeries.Configuration
             {
                 try
                 {
-                    string query = $"SELECT CASE WHEN COUNT(ID) = 0 THEN {currentVersion} ELSE MAX(ID) END FROM TrackedChange";
-                    version = Convert.ToUInt64(database.Connection.ExecuteScalar(query));
+                    version = Convert.ToUInt64(database.Connection.ExecuteScalar("SELECT CASE WHEN COUNT(ID) = 0 THEN {0} ELSE MAX(ID) END FROM TrackedChange", currentVersion));
                 }
                 catch
                 {
@@ -511,8 +510,7 @@ namespace GSF.TimeSeries.Configuration
             {
                 try
                 {
-                    string query = $"SELECT COUNT(ID) FROM TrackedChange WHERE ID < {currentVersion}";
-                    changesAreValid = Convert.ToInt32(database.Connection.ExecuteScalar(query)) == 0;
+                    changesAreValid = Convert.ToInt32(database.Connection.ExecuteScalar("SELECT COUNT(ID) FROM TrackedChange WHERE ID < {0}", currentVersion)) == 0;
                 }
                 catch
                 {
@@ -526,7 +524,7 @@ namespace GSF.TimeSeries.Configuration
         private DataTable GetTrackedChanges(ulong currentVersion)
         {
             DataTable table = null;
-            Execute(database => table = database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM TrackedChange WHERE ID > {currentVersion}"));
+            Execute(database => table = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM TrackedChange WHERE ID > {0}", currentVersion));
             return table;
         }
 
@@ -536,8 +534,8 @@ namespace GSF.TimeSeries.Configuration
 
             Execute(database =>
             {
-                string query = $"SELECT * FROM {tableName} WHERE {primaryKeyColumn} IN (SELECT PrimaryKeyValue FROM TrackedChange WHERE TableName = '{tableName}' AND ID > {currentVersion}) AND NodeID = {NodeIDQueryString}";
-                changes = database.Connection.RetrieveData(database.AdapterType, query);
+                changes = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM {0} WHERE {1} IN " +
+                    "(SELECT PrimaryKeyValue FROM TrackedChange WHERE TableName = '{0}' AND ID > {2}) AND NodeID = {3}", tableName, primaryKeyColumn, currentVersion, NodeIDQueryString);
             });
 
             return changes;

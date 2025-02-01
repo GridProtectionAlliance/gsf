@@ -232,7 +232,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 if (!string.IsNullOrEmpty(sortMember))
                     sortClause = $"ORDER BY {sortMember} {sortDirection}";
 
-                DataTable outputStreamDeviceDigitalTable = database.Connection.RetrieveData(database.AdapterType, $"SELECT ID From OutputStreamDeviceDigital WHERE OutputStreamDeviceID = {outputStreamDeviceID} {sortClause}");
+                DataTable outputStreamDeviceDigitalTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID From OutputStreamDeviceDigital WHERE OutputStreamDeviceID = {0} {1}", outputStreamDeviceID, sortClause);
 
                 foreach (DataRow row in outputStreamDeviceDigitalTable.Rows)
                 {
@@ -272,9 +272,10 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 if (keys is not null && keys.Count > 0)
                 {
                     commaSeparatedKeys = keys.Select(key => $"{key}").Aggregate((str1, str2) => $"{str1},{str2}");
-                    query = database.ParameterizedQueryString($"SELECT NodeID, OutputStreamDeviceID, ID, Label, MaskValue, LoadOrder FROM OutputStreamDeviceDigital WHERE ID IN ({commaSeparatedKeys})");
 
-                    outputStreamDeviceDigitalTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
+                    outputStreamDeviceDigitalTable = database.Connection.RetrieveData(database.AdapterType, 
+                        "SELECT NodeID, OutputStreamDeviceID, ID, Label, MaskValue, LoadOrder FROM OutputStreamDeviceDigital " +
+                        "WHERE ID IN ({0})", DefaultTimeout, commaSeparatedKeys);
                     outputStreamDeviceDigitalList = new OutputStreamDeviceDigital[outputStreamDeviceDigitalTable.Rows.Count];
 
                     foreach (DataRow row in outputStreamDeviceDigitalTable.Rows)
@@ -515,8 +516,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 string deviceName = outputDeviceRecord.Field<string>("Acronym");
                 adapterID = outputDeviceRecord.ConvertField<int>("AdapterID");
 
-                string digitalPointTag = database.Connection.ExecuteScalar(string.Format(measurementDetailFormat, deviceName, labelName)).ToNonNullString();
-                digitalSignalReference = database.Connection.ExecuteScalar(string.Format(outputMeasurementDetailFormat, digitalPointTag)).ToNonNullString();
+                string digitalPointTag = database.Connection.ExecuteScalar(measurementDetailFormat, deviceName, labelName).ToNonNullString();
+                digitalSignalReference = database.Connection.ExecuteScalar(outputMeasurementDetailFormat, digitalPointTag).ToNonNullString();
             }
             catch (Exception ex)
             {

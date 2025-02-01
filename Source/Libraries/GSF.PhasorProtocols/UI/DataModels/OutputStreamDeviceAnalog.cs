@@ -220,7 +220,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 if (!string.IsNullOrEmpty(sortMember))
                     sortClause = $"ORDER BY {sortMember} {sortDirection}";
 
-                DataTable outputStreamDeviceAnalogTable = database.Connection.RetrieveData(database.AdapterType, $"SELECT ID FROM OutputStreamDeviceAnalog WHERE OutputStreamDeviceID = {outputStreamDeviceID} {sortClause}");
+                DataTable outputStreamDeviceAnalogTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID FROM OutputStreamDeviceAnalog WHERE OutputStreamDeviceID = {0} {1}", outputStreamDeviceID, sortClause);
 
                 foreach (DataRow row in outputStreamDeviceAnalogTable.Rows)
                     outputStreamDeviceAnalogList.Add((row.ConvertField<int>("ID")));
@@ -253,8 +253,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 if (keys is not null && keys.Count > 0)
                 {
                     string commaSeparatedKeys = keys.Select(key => $"{key}").Aggregate((str1, str2) => $"{str1},{str2}");
-                    string query = database.ParameterizedQueryString($"SELECT NodeID, OutputStreamDeviceID, ID, Label, Type, ScalingValue, LoadOrder FROM OutputStreamDeviceAnalog WHERE ID IN ({commaSeparatedKeys})");
-                    DataTable outputStreamDeviceAnalogTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
+                    DataTable outputStreamDeviceAnalogTable = database.Connection.RetrieveData(database.AdapterType, "SELECT NodeID, OutputStreamDeviceID, ID, Label, Type, ScalingValue, LoadOrder FROM OutputStreamDeviceAnalog WHERE ID IN ({0})", DefaultTimeout, commaSeparatedKeys);
                     outputStreamDeviceAnalogList = new OutputStreamDeviceAnalog[outputStreamDeviceAnalogTable.Rows.Count];
 
                     foreach (DataRow row in outputStreamDeviceAnalogTable.Rows)
@@ -494,16 +493,16 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                DataRow outputAnalogRecord = database.Connection.RetrieveData(database.AdapterType, string.Format(outputAnalogFormat, outputStreamDeviceAnalogID)).Rows[0];
+                DataRow outputAnalogRecord = database.Connection.RetrieveData(database.AdapterType, outputAnalogFormat, outputStreamDeviceAnalogID).Rows[0];
                 string labelName = outputAnalogRecord.Field<string>("Label");
                 outputStreamDeviceID = outputAnalogRecord.ConvertField<int>("OutputStreamDeviceID");
 
-                DataRow outputDeviceRecord = database.Connection.RetrieveData(database.AdapterType, string.Format(outputDeviceFormat, outputStreamDeviceID)).Rows[0];
+                DataRow outputDeviceRecord = database.Connection.RetrieveData(database.AdapterType, outputDeviceFormat, outputStreamDeviceID).Rows[0];
                 string deviceName = outputDeviceRecord.Field<string>("Acronym");
                 adapterID = outputDeviceRecord.ConvertField<int>("AdapterID");
 
-                string analogPointTag = database.Connection.ExecuteScalar(string.Format(measurementDetailFormat, deviceName, labelName)).ToNonNullString();
-                analogSignalReference = database.Connection.ExecuteScalar(string.Format(outputMeasurementDetailFormat, analogPointTag)).ToNonNullString();
+                string analogPointTag = database.Connection.ExecuteScalar(measurementDetailFormat, deviceName, labelName).ToNonNullString();
+                analogSignalReference = database.Connection.ExecuteScalar(outputMeasurementDetailFormat, analogPointTag).ToNonNullString();
             }
             catch (Exception ex)
             {

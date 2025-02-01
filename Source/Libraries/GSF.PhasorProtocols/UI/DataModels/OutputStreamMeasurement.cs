@@ -218,10 +218,10 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 string sortClause = string.Empty;
 
+                DataTable outputStreamMeasurementTable;
                 if (!string.IsNullOrEmpty(sortMember))
-                    sortClause = $"ORDER BY {sortMember} {sortDirection}";
-
-                DataTable outputStreamMeasurementTable = database.Connection.RetrieveData(database.AdapterType, $"SELECT ID From OutputStreamMeasurementDetail where AdapterID = {outputStreamID} {sortClause}");
+                    outputStreamMeasurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID From OutputStreamMeasurementDetail where AdapterID = {0} ORDER BY {1} {2}", outputStreamID, sortMember, sortDirection);
+                else outputStreamMeasurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID From OutputStreamMeasurementDetail where AdapterID = {0}", outputStreamID);
 
                 foreach (DataRow row in outputStreamMeasurementTable.Rows)
                 {
@@ -261,9 +261,10 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 if (keys is not null && keys.Count > 0)
                 {
                     commaSeparatedKeys = keys.Select(key => $"{key}").Aggregate((str1, str2) => $"{str1},{str2}");
-                    query = $"SELECT NodeID, AdapterID, ID, HistorianID, PointID, SignalReference, SourcePointTag, HistorianAcronym FROM OutputStreamMeasurementDetail WHERE ID IN ({commaSeparatedKeys})";
 
-                    outputStreamMeasurementTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
+                    outputStreamMeasurementTable = database.Connection.RetrieveData(database.AdapterType, 
+                        "SELECT NodeID, AdapterID, ID, HistorianID, PointID, SignalReference, SourcePointTag, HistorianAcronym " +
+                        "FROM OutputStreamMeasurementDetail WHERE ID IN ({0})", DefaultTimeout, commaSeparatedKeys);
                     outputStreamMeasurementList = new OutputStreamMeasurement[outputStreamMeasurementTable.Rows.Count];
 
                     foreach (DataRow row in outputStreamMeasurementTable.Rows)

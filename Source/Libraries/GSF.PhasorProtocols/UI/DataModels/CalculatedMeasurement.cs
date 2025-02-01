@@ -490,7 +490,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 if (!string.IsNullOrEmpty(sortMember))
                     sortClause = $"ORDER BY {sortMember} {sortDirection}";
 
-                DataTable calculatedMeasurementTable = database.Connection.RetrieveData(database.AdapterType, $"SELECT ID From CalculatedMeasurementDetail {sortClause}");
+                DataTable calculatedMeasurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID From CalculatedMeasurementDetail {0}", sortClause);
 
                 foreach (DataRow row in calculatedMeasurementTable.Rows)
                 {
@@ -531,12 +531,11 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 {
                     commaSeparatedKeys = keys.Select(key => key.ToString()).Aggregate((str1, str2) => $"{str1},{str2}");
 
-                    query = string.Format("SELECT NodeID, ID, Acronym, Name, AssemblyName, " +
+                    query = database.ParameterizedQueryString("SELECT NodeID, ID, Acronym, Name, AssemblyName, " +
                         "TypeName, ConnectionString, ConfigSection, InputMeasurements, OutputMeasurements, MinimumMeasurementsToUse, FramesPerSecond, LagTime, " +
                         "LeadTime, UseLocalClockAsRealTime, AllowSortsByArrival, LoadOrder, Enabled, IgnoreBadTimeStamps, TimeResolution, AllowPreemptivePublishing, " +
-                        "DownSamplingMethod, NodeName, PerformTimeReasonabilityCheck From CalculatedMeasurementDetail WHERE ID IN ({0}) AND NodeID = '{1}'", commaSeparatedKeys, database.CurrentNodeID());
-
-                    calculatedMeasurementTable = database.Connection.RetrieveData(database.AdapterType, query);
+                        "DownSamplingMethod, NodeName, PerformTimeReasonabilityCheck From CalculatedMeasurementDetail WHERE ID IN ({0}) AND NodeID = '{1}'", "commaSeparatedKeys", "database.CurrentNodeID()");
+                    calculatedMeasurementTable = database.Connection.RetrieveData(database.AdapterType, query, commaSeparatedKeys, database.CurrentNodeID());
                     calculatedMeasurementList = new CalculatedMeasurement[calculatedMeasurementTable.Rows.Count];
 
                     foreach (DataRow row in calculatedMeasurementTable.Rows)

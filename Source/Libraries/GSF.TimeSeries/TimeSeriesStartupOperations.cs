@@ -84,7 +84,7 @@ namespace GSF.TimeSeries
                 return;
 
             database.Connection.ExecuteNonQuery(NodeInsertFormat);
-            database.Connection.ExecuteNonQuery(string.Format(NodeUpdateFormat, nodeIDQueryString));
+            database.Connection.ExecuteNonQuery(NodeUpdateFormat, nodeIDQueryString);
         }
 
         /// <summary>
@@ -184,7 +184,7 @@ namespace GSF.TimeSeries
 
             // Update user accounts
             foreach (KeyValuePair<string, string> pair in updateMap)
-                database.Connection.ExecuteNonQuery(string.Format(UpdateUserAccountFormat, pair.Value, pair.Key));
+                database.Connection.ExecuteNonQuery(UpdateUserAccountFormat, pair.Value, pair.Key);
 
             updateMap.Clear();
 
@@ -208,7 +208,7 @@ namespace GSF.TimeSeries
 
             // Update security groups
             foreach (KeyValuePair<string, string> pair in updateMap)
-                database.Connection.ExecuteNonQuery(string.Format(UpdateSecurityGroupFormat, pair.Value, pair.Key));
+                database.Connection.ExecuteNonQuery(UpdateSecurityGroupFormat, pair.Value, pair.Key);
         }
 
         /// <summary>
@@ -247,26 +247,26 @@ namespace GSF.TimeSeries
                     sttpsDataPublisherEnabled = value.ParseBoolean();
             }
 
-            int internalDataPublisherCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(DataPublisherCountFormat, "INTERNAL", nodeIDQueryString)));
-            int externalDataPublisherCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(DataPublisherCountFormat, "EXTERNAL", nodeIDQueryString)));
-            int tlsDataPublisherCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(DataPublisherCountFormat, "TLS", nodeIDQueryString)));
-            int sttpDataPublisherCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(DataPublisherCountFormat, "STTP", nodeIDQueryString)));
-            int sttpsDataPublisherCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(DataPublisherCountFormat, "STTPS", nodeIDQueryString)));
+            int internalDataPublisherCount = Convert.ToInt32(database.Connection.ExecuteScalar(DataPublisherCountFormat, "INTERNAL", nodeIDQueryString));
+            int externalDataPublisherCount = Convert.ToInt32(database.Connection.ExecuteScalar(DataPublisherCountFormat, "EXTERNAL", nodeIDQueryString));
+            int tlsDataPublisherCount = Convert.ToInt32(database.Connection.ExecuteScalar(DataPublisherCountFormat, "TLS", nodeIDQueryString));
+            int sttpDataPublisherCount = Convert.ToInt32(database.Connection.ExecuteScalar(DataPublisherCountFormat, "STTP", nodeIDQueryString));
+            int sttpsDataPublisherCount = Convert.ToInt32(database.Connection.ExecuteScalar(DataPublisherCountFormat, "STTPS", nodeIDQueryString));
 
             if (internalDataPublisherCount == 0)
-                database.Connection.ExecuteNonQuery(string.Format(GEPDataPublisherInsertFormat, nodeIDQueryString, "INTERNAL", "None", "cacheMeasurementKeys={FILTER ActiveMeasurements WHERE SignalType = ''STAT''}", internalDataPublisherEnabled ? 1 : 0));
+                database.Connection.ExecuteNonQuery(GEPDataPublisherInsertFormat, nodeIDQueryString, "INTERNAL", "None", "cacheMeasurementKeys={FILTER ActiveMeasurements WHERE SignalType = ''STAT''}", internalDataPublisherEnabled ? 1 : 0);
 
             if (externalDataPublisherCount == 0)
-                database.Connection.ExecuteNonQuery(string.Format(GEPDataPublisherInsertFormat, nodeIDQueryString, "EXTERNAL", "Gateway", "", externalDataPublisherEnabled ? 1 : 0));
+                database.Connection.ExecuteNonQuery(GEPDataPublisherInsertFormat, nodeIDQueryString, "EXTERNAL", "Gateway", "", externalDataPublisherEnabled ? 1 : 0);
 
             if (tlsDataPublisherCount == 0)
-                database.Connection.ExecuteNonQuery(string.Format(GEPDataPublisherInsertFormat, nodeIDQueryString, "TLS", "TLS", "", tlsDataPublisherEnabled ? 1 : 0));
+                database.Connection.ExecuteNonQuery(GEPDataPublisherInsertFormat, nodeIDQueryString, "TLS", "TLS", "", tlsDataPublisherEnabled ? 1 : 0);
 
             if (sttpDataPublisherCount == 0)
-                database.Connection.ExecuteNonQuery(string.Format(STTPDataPublisherInsertFormat, nodeIDQueryString, "STTP", "None", "cachedMeasurementExpression={FILTER ActiveMeasurements WHERE SignalType = ''STAT''}", sttpDataPublisherEnabled ? 1 : 0));
+                database.Connection.ExecuteNonQuery(STTPDataPublisherInsertFormat, nodeIDQueryString, "STTP", "None", "cachedMeasurementExpression={FILTER ActiveMeasurements WHERE SignalType = ''STAT''}", sttpDataPublisherEnabled ? 1 : 0);
 
             if (sttpsDataPublisherCount == 0)
-                database.Connection.ExecuteNonQuery(string.Format(STTPDataPublisherInsertFormat, nodeIDQueryString, "STTPS", "TLS", "", sttpsDataPublisherEnabled ? 1 : 0));
+                database.Connection.ExecuteNonQuery(STTPDataPublisherInsertFormat, nodeIDQueryString, "STTPS", "TLS", "", sttpsDataPublisherEnabled ? 1 : 0);
         }
 
         /// <summary>
@@ -684,8 +684,8 @@ namespace GSF.TimeSeries
             int statConfigEntityCount = Convert.ToInt32(database.Connection.ExecuteScalar(StatConfigEntityCountFormat));
             int statSignalTypeCount = Convert.ToInt32(database.Connection.ExecuteScalar(StatSignalTypeCountFormat));
 
-            int statHistorianCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(StatHistorianCountFormat, nodeIDQueryString)));
-            int statEngineCount = Convert.ToInt32(database.Connection.ExecuteScalar(string.Format(StatEngineCountFormat, nodeIDQueryString)));
+            int statHistorianCount = Convert.ToInt32(database.Connection.ExecuteScalar(StatHistorianCountFormat, nodeIDQueryString));
+            int statEngineCount = Convert.ToInt32(database.Connection.ExecuteScalar(StatEngineCountFormat, nodeIDQueryString));
             int systemStatCount = Convert.ToInt32(database.Connection.ExecuteScalar(SystemStatCountFormat));
             int deviceStatCount = Convert.ToInt32(database.Connection.ExecuteScalar(DeviceStatCountFormat));
             int subscriberStatCount = Convert.ToInt32(database.Connection.ExecuteScalar(SubscriberStatCountFormat));
@@ -710,16 +710,16 @@ namespace GSF.TimeSeries
 
             // Ensure that statistics historian exists
             if (statHistorianCount == 0)
-                database.Connection.ExecuteNonQuery(string.Format(StatHistorianInsertFormat, nodeIDQueryString));
+                database.Connection.ExecuteNonQuery(StatHistorianInsertFormat, nodeIDQueryString);
 
             // Ensure that statistics engine exists
             if (statEngineCount == 0)
-                database.Connection.ExecuteNonQuery(string.Format(StatEngineInsertFormat, nodeIDQueryString));
+                database.Connection.ExecuteNonQuery(StatEngineInsertFormat, nodeIDQueryString);
 
             // Ensure that system statistics exist
             if (systemStatCount < SystemStatNames.Length)
             {
-                database.Connection.ExecuteNonQuery(string.Format(SystemStatisticDeleteFormat, SystemStatNames.Length));
+                database.Connection.ExecuteNonQuery(SystemStatisticDeleteFormat, SystemStatNames.Length);
 
                 for (int i = 0; i < SystemStatNames.Length; i++)
                 {
@@ -729,14 +729,14 @@ namespace GSF.TimeSeries
                     statMethodSuffix = statName.Replace(" ", "");
                     statType = SystemStatTypes[i];
                     statFormat = SystemStatFormats[i];
-                    database.Connection.ExecuteNonQuery(string.Format(SystemStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix, statType, statFormat));
+                    database.Connection.ExecuteNonQuery(SystemStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix, statType, statFormat);
                 }
             }
 
             // Ensure that system statistics exist
             if (deviceStatCount < DeviceStatNames.Length)
             {
-                database.Connection.ExecuteNonQuery(string.Format(DeviceStatisticDeleteFormat, DeviceStatNames.Length));
+                database.Connection.ExecuteNonQuery(DeviceStatisticDeleteFormat, DeviceStatNames.Length);
 
                 for (int i = 0; i < DeviceStatNames.Length; i++)
                 {
@@ -746,14 +746,14 @@ namespace GSF.TimeSeries
                     statMethodSuffix = statName.Replace(" ", "");
                     statType = DeviceStatTypes[i];
                     statFormat = DeviceStatFormats[i];
-                    database.Connection.ExecuteNonQuery(string.Format(DeviceStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix, statType, statFormat));
+                    database.Connection.ExecuteNonQuery(DeviceStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix, statType, statFormat);
                 }
             }
 
             // Ensure that subscriber statistics exist
             if (subscriberStatCount < SubscriberStatNames.Length)
             {
-                database.Connection.ExecuteNonQuery(string.Format(SubscriberStatisticDeleteFormat, SubscriberStatNames.Length));
+                database.Connection.ExecuteNonQuery(SubscriberStatisticDeleteFormat, SubscriberStatNames.Length);
 
                 for (int i = 0; i < SubscriberStatNames.Length; i++)
                 {
@@ -763,14 +763,14 @@ namespace GSF.TimeSeries
                     statMethodSuffix = SubscriberStatMethodSuffix[i];
                     statType = SubscriberStatTypes[i];
                     statFormat = SubscriberStatFormats[i];
-                    database.Connection.ExecuteNonQuery(string.Format(SubscriberStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix, statType, statFormat, signalIndex == 1 ? 1 : 0));
+                    database.Connection.ExecuteNonQuery(SubscriberStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix, statType, statFormat, signalIndex == 1 ? 1 : 0);
                 }
             }
 
             // Ensure that publisher statistics exist
             if (publisherStatCount < PublisherStatNames.Length)
             {
-                database.Connection.ExecuteNonQuery(string.Format(PublisherStatisticDeleteFormat, PublisherStatNames.Length));
+                database.Connection.ExecuteNonQuery(PublisherStatisticDeleteFormat, PublisherStatNames.Length);
 
                 for (int i = 0; i < PublisherStatNames.Length; i++)
                 {
@@ -780,14 +780,14 @@ namespace GSF.TimeSeries
                     statMethodSuffix = PublisherStatMethodSuffix[i];
                     statType = PublisherStatTypes[i];
                     statFormat = PublisherStatFormats[i];
-                    database.Connection.ExecuteNonQuery(string.Format(PublisherStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix, statType, statFormat, signalIndex == 1 ? 1 : 0));
+                    database.Connection.ExecuteNonQuery(PublisherStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix, statType, statFormat, signalIndex == 1 ? 1 : 0);
                 }
             }
 
             // Ensure that process statistics exist
             if (processStatCount < ProcessStatNames.Length)
             {
-                database.Connection.ExecuteNonQuery(string.Format(ProcessStatisticDeleteFormat, ProcessStatNames.Length));
+                database.Connection.ExecuteNonQuery(ProcessStatisticDeleteFormat, ProcessStatNames.Length);
 
                 for (int i = 0; i < ProcessStatNames.Length; i++)
                 {
@@ -795,7 +795,7 @@ namespace GSF.TimeSeries
                     statName = ProcessStatNames[i];
                     statDescription = ProcessStatDescriptions[i];
                     statMethodSuffix = statName.Replace(" ", "");
-                    database.Connection.ExecuteNonQuery(string.Format(ProcessStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix));
+                    database.Connection.ExecuteNonQuery(ProcessStatInsertFormat, signalIndex, statName, statDescription, statMethodSuffix);
                 }
             }
         }
