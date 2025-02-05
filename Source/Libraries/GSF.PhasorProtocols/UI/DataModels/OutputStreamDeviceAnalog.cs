@@ -253,7 +253,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 if (keys is not null && keys.Count > 0)
                 {
                     string commaSeparatedKeys = keys.Select(key => $"{key}").Aggregate((str1, str2) => $"{str1},{str2}");
-                    DataTable outputStreamDeviceAnalogTable = database.Connection.RetrieveData(database.AdapterType, "SELECT NodeID, OutputStreamDeviceID, ID, Label, Type, ScalingValue, LoadOrder FROM OutputStreamDeviceAnalog WHERE ID IN ({0})", DefaultTimeout, commaSeparatedKeys);
+                    string query = database.ParameterizedQueryString($"SELECT NodeID, OutputStreamDeviceID, ID, Label, Type, ScalingValue, LoadOrder FROM OutputStreamDeviceAnalog WHERE ID IN ({commaSeparatedKeys})");
+                    DataTable outputStreamDeviceAnalogTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
                     outputStreamDeviceAnalogList = new OutputStreamDeviceAnalog[outputStreamDeviceAnalogTable.Rows.Count];
 
                     foreach (DataRow row in outputStreamDeviceAnalogTable.Rows)

@@ -1204,8 +1204,8 @@ public class LocalOutputAdapter : OutputAdapterBase
     private static void AddPIHistorianReaders(AdoDataConnection database, string nodeIDQueryString, Action<Exception> processException)
     {
         // Load the defined local PI historians
-        IEnumerable<DataRow> historians = database.Connection.RetrieveData(database.AdapterType, "SELECT AdapterName, ConnectionString FROM RuntimeHistorian WHERE NodeID = {0} AND TypeName = 'PIAdapters.PIOutputAdapter'", nodeIDQueryString).AsEnumerable();
-        IEnumerable<DataRow> readers = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM CustomInputAdapter WHERE NodeID = {0} AND TypeName = 'PIAdapters.PIPBInputAdapter'", nodeIDQueryString).AsEnumerable();
+        IEnumerable<DataRow> historians = database.Connection.RetrieveData(database.AdapterType, $"SELECT AdapterName, ConnectionString FROM RuntimeHistorian WHERE NodeID = {nodeIDQueryString} AND TypeName = 'PIAdapters.PIOutputAdapter'").AsEnumerable();
+        IEnumerable<DataRow> readers = database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM CustomInputAdapter WHERE NodeID = {nodeIDQueryString} AND TypeName = 'PIAdapters.PIPBInputAdapter'").AsEnumerable();
 
         // Also check for PI adapters loaded into CustomOutputAdapters
         historians = historians.Concat(database.Connection.RetrieveData(database.AdapterType, "SELECT AdapterName, ConnectionString FROM RuntimeCustomOutputAdapter WHERE NodeID = {0} AND TypeName = 'PIAdapters.PIOutputAdapter'", nodeIDQueryString).AsEnumerable());
