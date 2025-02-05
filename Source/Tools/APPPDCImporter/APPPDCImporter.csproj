@@ -94,6 +94,7 @@
     </Compile>
     <Compile Include="MainForm.ManageHostConfig.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
+      <SubType>Form</SubType>
     </Compile>
     <Compile Include="APPPDCConfig.cs" />
     <Compile Include="GSFPDCConfig.cs" />
