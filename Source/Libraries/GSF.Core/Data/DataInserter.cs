@@ -675,7 +675,7 @@ namespace GSF.Data
                     try
                     {
                         // Turn off identity inserts
-                        toTable.Connection.ExecuteNonQuery("SET IDENTITY_INSERT {0} OFF", toTable.SQLEscapedName, Timeout);
+                        toTable.Connection.ExecuteNonQuery($"SET IDENTITY_INSERT {toTable.SQLEscapedName} OFF", Timeout);
                     }
                     catch (Exception ex)
                     {

@@ -359,12 +359,14 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 {
                     string commaSeparatedKeys = keys.Select(key => key.ToString()).Aggregate((str1, str2) => $"{str1},{str2}");
 
-                    string query = "SELECT NodeID, AdapterID, ID, IDCode, Acronym, BpaAcronym, Name, PhasorDataFormat, FrequencyDataFormat, AnalogDataFormat, CoordinateFormat, LoadOrder, Enabled, Virtual FROM OutputStreamDeviceDetail WHERE ID IN ({0})";
+                    string query = "SELECT NodeID, AdapterID, ID, IDCode, Acronym, BpaAcronym, Name, PhasorDataFormat, FrequencyDataFormat, AnalogDataFormat, " +
+                        $"CoordinateFormat, LoadOrder, Enabled, Virtual FROM OutputStreamDeviceDetail WHERE ID IN ({commaSeparatedKeys})";
 
                     if (database.IsMySQL)
-                        query = "SELECT NodeID, AdapterID, ID, IDCode, Acronym, BpaAcronym, Name, PhasorDataFormat, FrequencyDataFormat, AnalogDataFormat, CoordinateFormat, LoadOrder, Enabled, `Virtual` FROM OutputStreamDeviceDetail WHERE ID IN ({0})";
+                        query = $"SELECT NodeID, AdapterID, ID, IDCode, Acronym, BpaAcronym, Name, PhasorDataFormat, FrequencyDataFormat, AnalogDataFormat, " +
+                            $"CoordinateFormat, LoadOrder, Enabled, `Virtual` FROM OutputStreamDeviceDetail WHERE ID IN ({commaSeparatedKeys})";
 
-                    DataTable outputStreamDeviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, commaSeparatedKeys);
+                    DataTable outputStreamDeviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
                     outputStreamDeviceList = new OutputStreamDevice[outputStreamDeviceTable.Rows.Count];
 
                     foreach (DataRow row in outputStreamDeviceTable.Rows)

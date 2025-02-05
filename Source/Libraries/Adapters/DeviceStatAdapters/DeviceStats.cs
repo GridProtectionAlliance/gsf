@@ -406,7 +406,7 @@ namespace DeviceStatAdapters
                 {
                     // Load any newly defined devices into the statistics device table
                     TableOperations<Device> deviceTable = new(statConnection);
-                    DataRow[] devices = gsfConnection.RetrieveData("SELECT * FROM Device WHERE IsConcentrator = 0 AND AccessID <> {0}", DeviceGroupAccessID).Select();
+                    DataRow[] devices = gsfConnection.RetrieveData($"SELECT * FROM Device WHERE IsConcentrator = 0 AND AccessID <> {DeviceGroupAccessID}").Select();
 
                     foreach (DataRow device in devices)
                     {

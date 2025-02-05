@@ -415,17 +415,14 @@ public class DeviceAlarmStateAdapter : FacileActionAdapterBase
             m_alarmStateIDs[alarmStateRecord.ID] = alarmState;
         }
 
+        // Define SQL expression for direct connect and parent devices or all direct connect and child devices
+        string deviceSQL = TargetParentDevices ?
+            "SELECT * FROM Device WHERE (IsConcentrator != 0 OR ParentID IS NULL) AND ID NOT IN (SELECT DeviceID FROM AlarmDevice)" :
+            $"SELECT * FROM Device WHERE IsConcentrator = 0 AND AccessID <> {DeviceGroupAccessID} AND ID NOT IN (SELECT DeviceID FROM AlarmDevice)";
+
         // Load any newly defined devices into the alarm device table
         TableOperations<AlarmDevice> alarmDeviceTable = new(connection);
-        DataRow[] newDevices;
-
-        // Define SQL expression for direct connect and parent devices or all direct connect and child devices
-        if (TargetParentDevices)
-            newDevices = connection.RetrieveData("SELECT * FROM Device WHERE (IsConcentrator != 0 OR ParentID IS NULL) " +
-                "AND ID NOT IN (SELECT DeviceID FROM AlarmDevice)").Select();
-        else
-            newDevices = connection.RetrieveData("SELECT * FROM Device WHERE IsConcentrator = 0 " +
-            "AND AccessID <> {0} AND ID NOT IN (SELECT DeviceID FROM AlarmDevice)", DeviceGroupAccessID).Select();
+        DataRow[] newDevices = connection.RetrieveData(deviceSQL).Select();
 
         foreach (DataRow newDevice in newDevices)
         {
@@ -454,11 +451,10 @@ public class DeviceAlarmStateAdapter : FacileActionAdapterBase
             {
                 // Querying from MeasurementDetail because we also want to include disabled device measurements
                 string measurementSQL = TargetParentDevices ?
-                    "SELECT MeasurementDetail.SignalID AS SignalID, MeasurementDetail.ID AS ID FROM MeasurementDetail " +
-                    "INNER JOIN DeviceDetail ON MeasurementDetail.DeviceID = DeviceDetail.ID " +
+                    "SELECT MeasurementDetail.SignalID AS SignalID, MeasurementDetail.ID AS ID " +
+                    "FROM MeasurementDetail INNER JOIN DeviceDetail ON MeasurementDetail.DeviceID = DeviceDetail.ID " +
                     "WHERE (DeviceDetail.Acronym = {0} OR DeviceDetail.ParentAcronym = {0}) AND MeasurementDetail.SignalAcronym = 'FREQ'" :
                     "SELECT SignalID, ID FROM MeasurementDetail WHERE DeviceAcronym = {0} AND SignalAcronym = 'FREQ'";
-
                 DataTable table = connection.RetrieveData(measurementSQL, metadata.ConvertField<string>("Acronym"));
 
                 // ReSharper disable once AccessToDisposedClosure
