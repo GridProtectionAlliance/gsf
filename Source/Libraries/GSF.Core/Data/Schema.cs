@@ -2790,7 +2790,7 @@ namespace GSF.Data
                     try
                     {
                         // Make sure table exists
-                        m_schemaConnection.ExecuteScalar($"SELECT COUNT(*) FROM {table.SQLEscapedName}");
+                        m_schemaConnection.ExecuteScalar("SELECT COUNT(*) FROM " + table.SQLEscapedName);
 
                         List<Field> fieldsToRemove = new List<Field>();
                         string testFieldSQL;
@@ -2814,7 +2814,7 @@ namespace GSF.Data
                             {
                                 string fieldEscapedName = field.SQLEscapedName;
                                 // Make sure field exists
-                                m_schemaConnection.ExecuteScalar(testFieldSQL, fieldEscapedName);
+                                m_schemaConnection.ExecuteScalar(string.Format(testFieldSQL, field.SQLEscapedName));
                             }
                             catch
                             {
