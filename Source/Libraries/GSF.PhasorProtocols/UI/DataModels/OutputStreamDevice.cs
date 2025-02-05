@@ -698,7 +698,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             try
             {
                 createdConnection = CreateConnection(ref database);
-                DataTable deviceTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM OutputStreamDeviceDetail {0}", whereClause);
+                DataTable deviceTable = database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM OutputStreamDeviceDetail {whereClause}");
 
                 if (deviceTable.Rows.Count == 0)
                     return null;
@@ -748,7 +748,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 ObservableCollection<OutputStreamDevice> outputStreamDeviceList = new();
-                DataTable outputStreamDeviceTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM OutputStreamDeviceDetail {0}", whereClause);
+                DataTable outputStreamDeviceTable = database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM OutputStreamDeviceDetail {whereClause}");
 
                 foreach (DataRow row in outputStreamDeviceTable.Rows)
                 {

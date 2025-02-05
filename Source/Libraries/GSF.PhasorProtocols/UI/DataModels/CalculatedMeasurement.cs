@@ -490,7 +490,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 if (!string.IsNullOrEmpty(sortMember))
                     sortClause = $"ORDER BY {sortMember} {sortDirection}";
 
-                DataTable calculatedMeasurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID From CalculatedMeasurementDetail {0}", sortClause);
+                DataTable calculatedMeasurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID From CalculatedMeasurementDetail " + sortClause);
 
                 foreach (DataRow row in calculatedMeasurementTable.Rows)
                 {
