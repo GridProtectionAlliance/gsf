@@ -218,10 +218,9 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 string sortClause = string.Empty;
 
-                DataTable outputStreamMeasurementTable;
                 if (!string.IsNullOrEmpty(sortMember))
-                    outputStreamMeasurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID From OutputStreamMeasurementDetail where AdapterID = {0} ORDER BY {1} {2}", outputStreamID, sortMember, sortDirection);
-                else outputStreamMeasurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID From OutputStreamMeasurementDetail where AdapterID = {0}", outputStreamID);
+                    sortClause = $"ORDER BY {sortMember} {sortDirection}";
+                DataTable outputStreamMeasurementTable = database.Connection.RetrieveData(database.AdapterType, $"SELECT ID From OutputStreamMeasurementDetail where AdapterID = {outputStreamID} {sortClause}");
 
                 foreach (DataRow row in outputStreamMeasurementTable.Rows)
                 {
@@ -264,7 +263,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                     outputStreamMeasurementTable = database.Connection.RetrieveData(database.AdapterType, 
                         "SELECT NodeID, AdapterID, ID, HistorianID, PointID, SignalReference, SourcePointTag, HistorianAcronym " +
-                        "FROM OutputStreamMeasurementDetail WHERE ID IN ({0})", DefaultTimeout, commaSeparatedKeys);
+                        $"FROM OutputStreamMeasurementDetail WHERE ID IN ({commaSeparatedKeys})", DefaultTimeout);
                     outputStreamMeasurementList = new OutputStreamMeasurement[outputStreamMeasurementTable.Rows.Count];
 
                     foreach (DataRow row in outputStreamMeasurementTable.Rows)

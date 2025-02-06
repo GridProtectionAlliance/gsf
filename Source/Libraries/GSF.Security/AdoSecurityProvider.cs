@@ -1515,12 +1515,10 @@ namespace GSF.Security
 
         private static void AddSecurityContextTable(IDbConnection connection, DataSet securityContext, string tableName, Guid nodeID)
         {
-            using (IDataReader reader = nodeID == default
-                ? connection.ExecuteReader("SELECT * FROM {0}", tableName)
-                : connection.ExecuteReader("SELECT * FROM {0} WHERE NodeID = '{1}'", tableName, nodeID))
-            {
-                securityContext.Tables.Add(tableName).Load(reader);
-            }
+            string tableQuery = $"SELECT * FROM {tableName}{(nodeID == default ? "" : $" WHERE NodeID = '{nodeID}'")}";
+            using IDataReader reader = connection.ExecuteReader(tableQuery);
+            securityContext.Tables.Add(tableName).Load(reader);
+
         }
 
         private static string EncodeEscapeSequences(string value) => 

@@ -534,7 +534,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     query = database.ParameterizedQueryString("SELECT NodeID, ID, Acronym, Name, AssemblyName, " +
                         "TypeName, ConnectionString, ConfigSection, InputMeasurements, OutputMeasurements, MinimumMeasurementsToUse, FramesPerSecond, LagTime, " +
                         "LeadTime, UseLocalClockAsRealTime, AllowSortsByArrival, LoadOrder, Enabled, IgnoreBadTimeStamps, TimeResolution, AllowPreemptivePublishing, " +
-                        "DownSamplingMethod, NodeName, PerformTimeReasonabilityCheck From CalculatedMeasurementDetail WHERE ID IN ({0}) AND NodeID = '{1}'", "commaSeparatedKeys", "database.CurrentNodeID()");
+                        "DownSamplingMethod, NodeName, PerformTimeReasonabilityCheck From CalculatedMeasurementDetail WHERE ID IN ({0}) AND NodeID = {1}", "commaSeparatedKeys", "database.CurrentNodeID()");
                     calculatedMeasurementTable = database.Connection.RetrieveData(database.AdapterType, query, commaSeparatedKeys, database.CurrentNodeID());
                     calculatedMeasurementList = new CalculatedMeasurement[calculatedMeasurementTable.Rows.Count];
 

@@ -721,7 +721,7 @@ namespace GSF.TimeSeries.Transport.UI.ViewModels
             {
                 foreach (KeyValuePair<string, string> definition in dataTableDefinitions)
                 {
-                    dataTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM {0} WHERE NodeID = {1}", DataExtensions.DefaultTimeoutDuration, definition.Key, database.CurrentNodeID());
+                    dataTable = database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM {definition.Key} WHERE NodeID = {{0}}", DataExtensions.DefaultTimeoutDuration, database.CurrentNodeID());
                     dataTable.TableName = definition.Value;
                     dataTable.DataSet.Tables.Remove(dataTable);
                     m_subscriberPermissionsDataSet.Tables.Add(dataTable);
