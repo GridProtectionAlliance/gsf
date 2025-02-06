@@ -220,6 +220,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 if (!string.IsNullOrEmpty(sortMember))
                     sortClause = $"ORDER BY {sortMember} {sortDirection}";
+
                 DataTable outputStreamMeasurementTable = database.Connection.RetrieveData(database.AdapterType, $"SELECT ID From OutputStreamMeasurementDetail where AdapterID = {outputStreamID} {sortClause}");
 
                 foreach (DataRow row in outputStreamMeasurementTable.Rows)

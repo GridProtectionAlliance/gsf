@@ -1518,7 +1518,6 @@ namespace GSF.Security
             string tableQuery = $"SELECT * FROM {tableName}{(nodeID == default ? "" : $" WHERE NodeID = '{nodeID}'")}";
             using IDataReader reader = connection.ExecuteReader(tableQuery);
             securityContext.Tables.Add(tableName).Load(reader);
-
         }
 
         private static string EncodeEscapeSequences(string value) => 
