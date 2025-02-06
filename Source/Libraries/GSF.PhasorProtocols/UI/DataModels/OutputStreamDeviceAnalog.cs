@@ -498,7 +498,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 string labelName = outputAnalogRecord.Field<string>("Label");
                 outputStreamDeviceID = outputAnalogRecord.ConvertField<int>("OutputStreamDeviceID");
 
-                DataRow outputDeviceRecord = database.Connection.RetrieveData(database.AdapterType, string.Format(outputDeviceFormat, outputStreamDeviceAnalogID)).Rows[0];
+                DataRow outputDeviceRecord = database.Connection.RetrieveData(database.AdapterType, string.Format(outputDeviceFormat, outputStreamDeviceID)).Rows[0];
                 string deviceName = outputDeviceRecord.Field<string>("Acronym");
                 adapterID = outputDeviceRecord.ConvertField<int>("AdapterID");
 

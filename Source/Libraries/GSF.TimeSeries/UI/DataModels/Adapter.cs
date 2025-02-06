@@ -382,11 +382,10 @@ namespace GSF.TimeSeries.UI.DataModels
                 DataTable adapterTable;
 
                 if (!string.IsNullOrEmpty(sortMember))
-                    adapterTable = database.Connection.RetrieveData(database.AdapterType, 
-                        "SELECT ID FROM {0} WHERE NodeID = {1} ORDER BY {2} {3}", 
-                        DefaultTimeout, viewName, database.CurrentNodeID(), sortMember, sortDirection);
-                else adapterTable = database.Connection.RetrieveData(database.AdapterType, 
-                    "SELECT ID FROM {0} WHERE NodeID = {1}", DefaultTimeout, viewName, database.CurrentNodeID());
+                    adapterTable = database.Connection.RetrieveData(database.AdapterType,
+                        $"SELECT ID FROM {viewName} WHERE NodeID = {{0}} ORDER BY {sortMember} {sortDirection}", DefaultTimeout, database.CurrentNodeID());
+                else adapterTable = database.Connection.RetrieveData(database.AdapterType,
+                    $"SELECT ID FROM {viewName} WHERE NodeID = {{0}}", DefaultTimeout, database.CurrentNodeID());
 
                 foreach (DataRow row in adapterTable.Rows)
                 {
@@ -440,8 +439,7 @@ namespace GSF.TimeSeries.UI.DataModels
 
                     adapterTable = database.Connection.RetrieveData(database.AdapterType, 
                         "SELECT NodeID, ID, AdapterName, AssemblyName, TypeName, ConnectionString, " +
-                        "LoadOrder, Enabled, NodeName FROM {0} WHERE NodeID = {2} AND ID IN ({1})", 
-                        DefaultTimeout, viewName, commaSeparatedKeys, database.CurrentNodeID());
+                        $"LoadOrder, Enabled, NodeName FROM {viewName} WHERE NodeID = {database.CurrentNodeID()} AND ID IN ({commaSeparatedKeys})", DefaultTimeout);
                     adapterList = new Adapter[adapterTable.Rows.Count];
 
                     foreach (DataRow row in adapterTable.Rows)
@@ -503,8 +501,8 @@ namespace GSF.TimeSeries.UI.DataModels
                 else
                     tableName = "CustomOutputAdapter";
 
-                DataTable adapterTable = database.Connection.RetrieveData(database.AdapterType, 
-                    "SELECT ID, Name FROM {0} WHERE Enabled = {1} ORDER BY LoadOrder", "enabled", DefaultTimeout, tableName, database.Bool(true));
+                DataTable adapterTable = database.Connection.RetrieveData(database.AdapterType,
+                    $"SELECT ID, Name FROM {tableName} WHERE Enabled = {{0}} ORDER BY LoadOrder", "enabled", DefaultTimeout, database.Bool(true));
 
                 foreach (DataRow row in adapterTable.Rows)
                     adapterList[row.ConvertField<int>("ID")] = row.Field<string>("Name");
@@ -598,8 +596,8 @@ namespace GSF.TimeSeries.UI.DataModels
                 else
                     tableName = "CustomOutputAdapter";
 
-                string query = database.ParameterizedQueryString("DELETE FROM {1} WHERE ID = {0}", "adapterID", "tableName");
-                database.Connection.ExecuteNonQuery(query, DefaultTimeout, adapterID, tableName);
+                string query = database.ParameterizedQueryString("DELETE FROM " + tableName + " WHERE ID = {0}", "adapterID");
+                database.Connection.ExecuteNonQuery(query, DefaultTimeout, adapterID);
 
                 CommonFunctions.SendCommandToService("ReloadConfig");
 

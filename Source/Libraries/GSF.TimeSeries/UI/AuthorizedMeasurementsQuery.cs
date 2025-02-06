@@ -214,9 +214,10 @@ namespace GSF.TimeSeries.UI
                     database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
                     string guidPrefix = database.DatabaseType == DatabaseType.Access ? "{" : "'";
                     string guidSuffix = database.DatabaseType == DatabaseType.Access ? "}" : "'";
-                    DataTable measurementDevices = database.Connection.RetrieveData(database.AdapterType, "SELECT DISTINCT DeviceID " +
-                        "FROM ActiveMeasurement WHERE ProtocolType = 'Measurement' AND SignalID IN ({0})", 
-                        sourceMeasurements.Select(signalID => guidPrefix + signalID.ToString() + guidSuffix).ToDelimitedString(", "));
+                    string query = string.Format("SELECT DISTINCT DeviceID FROM ActiveMeasurement WHERE ProtocolType = 'Measurement' AND SignalID IN ({0})", sourceMeasurements.Select(signalID => guidPrefix + signalID.ToString() + guidSuffix).ToDelimitedString(", "));
+                    DataTable measurementDevices = database.Connection.RetrieveData(database.AdapterType, query);
+
+                    sourceMeasurements.Select(signalID => guidPrefix + signalID.ToString() + guidSuffix).ToDelimitedString(", "));
 
                     foreach (DataRow row in measurementDevices.Rows)
                     {

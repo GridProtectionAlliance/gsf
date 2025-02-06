@@ -282,10 +282,12 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 IList<int> phasorList = new List<int>();
 
-                DataTable phasorTable;
+                string sortClause = string.Empty;
                 if (!string.IsNullOrEmpty(sortMember))
-                    phasorTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID From PhasorDetail WHERE DeviceID = {0} ORDER BY {1} {2}", DefaultTimeout, deviceID, sortMember, sortDirection);
-                else phasorTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID From PhasorDetail WHERE DeviceID = {0}", DefaultTimeout, deviceID);
+                    sortClause = $"ORDER BY {sortMember} {sortDirection}";
+
+                string query = database.ParameterizedQueryString($"SELECT ID From PhasorDetail WHERE DeviceID = {{0}} {sortClause}", "deviceID");
+                DataTable phasorTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, deviceID);
 
                 foreach (DataRow row in phasorTable.Rows)
                     phasorList.Add(row.ConvertField<int>("ID"));
@@ -314,13 +316,15 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 string commaSeparatedKeys;
-
+                string query;
                 Phasor[] phasorList = null;
 
                 if (keys is not null && keys.Count > 0)
                 {
                     commaSeparatedKeys = keys.Select(key => $"{key}").Aggregate((str1, str2) => $"{str1},{str2}");
-                    DataTable phasorTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, DeviceID, Label, Type, Phase, BaseKV, DestinationPhasorID, SourceIndex, CreatedBy, CreatedOn, UpdatedBy, UpdatedOn FROM Phasor WHERE ID IN ({0})", DefaultTimeout, commaSeparatedKeys);
+                    query = $"SELECT ID, DeviceID, Label, Type, Phase, BaseKV, DestinationPhasorID, SourceIndex, CreatedBy, CreatedOn, UpdatedBy, UpdatedOn FROM Phasor WHERE ID IN ({commaSeparatedKeys})";
+
+                    DataTable phasorTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
                     phasorList = new Phasor[phasorTable.Rows.Count];
 
                     foreach (DataRow row in phasorTable.Rows)
@@ -567,7 +571,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             try
             {
                 createdConnection = CreateConnection(ref database);
-                DataTable phasorTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM PhasorDetail {0}", whereClause);
+                DataTable phasorTable = database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM PhasorDetail {whereClause}");
 
                 if (phasorTable.Rows.Count == 0)
                     return null;

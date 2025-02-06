@@ -882,7 +882,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 {
                     string commaSeparatedKeys = keys.Select(key => key.ToString()).Aggregate((str1, str2) => $"{str1},{str2}");
                     string query = $"SELECT * FROM DeviceDetail WHERE ID IN ({commaSeparatedKeys})";
-                    DataTable deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, commaSeparatedKeys);
+                    DataTable deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
                     deviceList = new Device[deviceTable.Rows.Count];
 
                     foreach (DataRow row in deviceTable.Rows)

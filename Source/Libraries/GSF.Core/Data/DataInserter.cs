@@ -820,7 +820,7 @@ namespace GSF.Data
                         // Added check to preserve ID number for auto-inc fields
                         if (!usingIdentityInsert && !skipKeyValuePreservation && m_preserveAutoIncValues && (object)autoIncField != null)
                         {
-                            int toTableRowCount = int.Parse(Common.ToNonNullString(toTable.Connection.ExecuteScalar("SELECT MAX({0}) FROM {1}", autoIncField.SQLEscapedName, toTable.SQLEscapedName, Timeout), "0")) + 1;
+                            int toTableRowCount = int.Parse(Common.ToNonNullString(toTable.Connection.ExecuteScalar($"SELECT MAX({autoIncField.SQLEscapedName}) FROM {toTable.SQLEscapedName}", Timeout), "0")) + 1;
                             int sourceTablePrimaryFieldValue = int.Parse(Common.ToNonNullString(autoIncField.Value, "0"));
                             int synchronizations = 0;
 
@@ -831,7 +831,7 @@ namespace GSF.Data
                                 int currentIdentityValue = int.Parse(Common.ToNonNullString(toTable.Connection.ExecuteScalar(toTable.IdentitySQL, Timeout), "0"));
 
                                 // Delete record which was just inserted
-                                toTable.Connection.ExecuteNonQuery("DELETE FROM {0} WHERE {1} = {2}", toTable.SQLEscapedName, autoIncField.SQLEscapedName, currentIdentityValue, Timeout);
+                                toTable.Connection.ExecuteNonQuery($"DELETE FROM {toTable.SQLEscapedName} WHERE {autoIncField.SQLEscapedName} = {{0}}", currentIdentityValue, Timeout);
 
                                 // For very long spans of auto-inc identity gaps we at least provide some level of feedback
                                 if (synchronizations++ % 50 == 0)

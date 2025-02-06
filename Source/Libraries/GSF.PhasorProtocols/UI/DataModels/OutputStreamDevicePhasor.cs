@@ -243,7 +243,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 if (!string.IsNullOrEmpty(sortMember))
                     sortClause = $"ORDER BY {sortMember} {sortDirection}";
 
-                DataTable OutputStreamDevicePhasorTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID FROM OutputStreamDevicePhasor WHERE OutputStreamDeviceID = {0} {1}", outputStreamDeviceID, sortClause);
+                DataTable OutputStreamDevicePhasorTable = database.Connection.RetrieveData(database.AdapterType,
+                    $"SELECT ID FROM OutputStreamDevicePhasor WHERE OutputStreamDeviceID = {{0}} {sortClause}", outputStreamDeviceID);
 
                 foreach (DataRow row in OutputStreamDevicePhasorTable.Rows)
                     outputStreamDevicePhasorList.Add((row.ConvertField<int>("ID")));
@@ -523,8 +524,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
         {
             const string outputPhasorFormat = "SELECT Label, OutputStreamDeviceID FROM OutputStreamDevicePhasor WHERE ID = {0}";
             const string outputDeviceFormat = "SELECT Acronym, AdapterID FROM OutputStreamDevice WHERE ID = {0}";
-            const string measurementDetailFormat = "SELECT PointTag FROM MeasurementDetail WHERE DeviceAcronym = '{0}' AND PhasorLabel = '{1}' AND SignalTypeSuffix = '{2}'";
-            const string outputMeasurementDetailFormat = "SELECT SignalReference FROM OutputStreamMeasurementDetail WHERE SourcePointTag = '{0}'";
+            const string measurementDetailFormat = "SELECT PointTag FROM MeasurementDetail WHERE DeviceAcronym = {0} AND PhasorLabel = {1} AND SignalTypeSuffix = {2}";
+            const string outputMeasurementDetailFormat = "SELECT SignalReference FROM OutputStreamMeasurementDetail WHERE SourcePointTag = {0}";
 
             bool createdConnection = false;
 
