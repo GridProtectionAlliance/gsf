@@ -283,6 +283,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 IList<int> phasorList = new List<int>();
 
                 string sortClause = string.Empty;
+
                 if (!string.IsNullOrEmpty(sortMember))
                     sortClause = $"ORDER BY {sortMember} {sortDirection}";
 
@@ -315,8 +316,9 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                string commaSeparatedKeys;
                 string query;
+                string commaSeparatedKeys;
+
                 Phasor[] phasorList = null;
 
                 if (keys is not null && keys.Count > 0)
