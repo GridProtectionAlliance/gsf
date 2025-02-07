@@ -566,9 +566,8 @@ namespace GSF.Web.Model
                     WHERE {flt}
                     {(orderBy != null ? " ORDER BY " + orderString : "")}";
 
-                DataTable dataTbl;
-                if (orderBy != null) dataTbl = connection.RetrieveData("SELECT * FROM ({0}) FullTbl WHERE {1} ORDER BY {2}", CustomView, flt, orderString, param);
-                else dataTbl = connection.RetrieveData("SELECT * FROM ({0}) FullTbl WHERE {1}", CustomView, flt, param);
+
+                DataTable dataTbl = connection.RetrieveData(sql, param);
 
                 List<T> result = new List<T>();
                 TableOperations<T> tblOperations = new TableOperations<T>(connection);
@@ -601,7 +600,8 @@ namespace GSF.Web.Model
                 }
 
                 whereClause = " WHERE " + whereClause;
-                DataTable dataTbl = connection.RetrieveData("SELECT * FROM (0) FullTbl{1}", CustomView, whereClause, param);
+                string sql = "SELECT * FROM (" + CustomView + ") FullTbl";
+                DataTable dataTbl = connection.RetrieveData(sql + whereClause, param);
 
                 TableOperations<T> tblOperations = new TableOperations<T>(connection);
                 if (dataTbl.Rows.Count > 0)
@@ -639,16 +639,16 @@ namespace GSF.Web.Model
                 DataTable dataTbl;
                 if (RootQueryRestriction != null)
                 {
-                    if (sortBy != null) dataTbl = connection.RetrieveData("SELECT * FROM ({0}) FullTbl WHERE ({1}) ORDER BY {2}",
-                        CustomView, RootQueryRestriction.FilterExpression, orderString, RootQueryRestriction.Parameters);
-                    else dataTbl = connection.RetrieveData("SELECT * FROM ({0}) FullTbl WHERE ({1})", 
-                        CustomView, RootQueryRestriction.FilterExpression, RootQueryRestriction.Parameters);
+                    sql = $@"
+                    SELECT * FROM 
+                    ({CustomView}) FullTbl 
+                    WHERE ({RootQueryRestriction.FilterExpression})
+                    {(sortBy != null ? " ORDER BY " + orderString : "")}";
+
+                    dataTbl = connection.RetrieveData(sql, RootQueryRestriction.Parameters);
                 }
                 else
-                    if (sortBy != null) dataTbl = connection.RetrieveData("SELECT * FROM ({0}) FullTbl ORDER BY {1}",
-                        CustomView, orderString);
-                    else dataTbl = connection.RetrieveData("SELECT * FROM ({0}) FullTbl WHERE ({1})",
-                        CustomView);
+                    dataTbl = connection.RetrieveData(sql);
 
                 List<T> result = new List<T>();
                 TableOperations<T> tblOperations = new TableOperations<T>(connection);
@@ -794,8 +794,7 @@ namespace GSF.Web.Model
                     
                     string sqlPivotColumns = $@"
                         SELECT '[AFV_' + [Key] + ']'
-                        FROM (Select DISTINCT {SearchSettings.FieldKeyField} AS [Key] 
-                        FROM {SearchSettings.AdditionalFieldTable} AS AF WHERE {collumnCondition}  ) AS [Fields]";
+                            FROM (Select DISTINCT {SearchSettings.FieldKeyField} AS [Key] FROM {SearchSettings.AdditionalFieldTable} AS AF WHERE {collumnCondition}  ) AS [Fields]";
                     sqlPivotColumns = string.Join(",", connection.RetrieveData(sqlPivotColumns).Select().Select(r => r[0].ToString()));
                     string tblSelect = $@"
                         (SELECT 
