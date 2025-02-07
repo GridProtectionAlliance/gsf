@@ -365,7 +365,8 @@ namespace GSF.TimeSeries.Configuration
             {
                 string assemblyName = "", typeName = "", methodName = "";
 
-                foreach (DataRow row in database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM DataOperation WHERE (NodeID IS NULL OR NodeID={0}) AND Enabled <> 0 ORDER BY LoadOrder", NodeIDQueryString).Rows)
+                foreach (DataRow row in database.Connection.RetrieveData(database.AdapterType,
+                    "SELECT * FROM DataOperation WHERE (NodeID IS NULL OR NodeID={0}) AND Enabled <> 0 ORDER BY LoadOrder", NodeIDQueryString).Rows)
                 {
                     try
                     {
@@ -410,7 +411,7 @@ namespace GSF.TimeSeries.Configuration
             {
                 // Load configuration entity data filtered by node ID
                 Ticks operationStartTime = DateTime.UtcNow.Ticks;
-                DataTable source = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM {0} WHERE NodeID={1}", entityRow["SourceName"], NodeIDQueryString);
+                DataTable source = database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM {entityRow["SourceName"]} WHERE NodeID={{1}}", NodeIDQueryString);
                 Time operationElapsedTime = (DateTime.UtcNow.Ticks - operationStartTime).ToSeconds();
 
                 // Update table name as defined in configuration entity
@@ -491,7 +492,7 @@ namespace GSF.TimeSeries.Configuration
             {
                 try
                 {
-                    version = Convert.ToUInt64(database.Connection.ExecuteScalar("SELECT CASE WHEN COUNT(ID) = 0 THEN {0} ELSE MAX(ID) END FROM TrackedChange", currentVersion));
+                    version = Convert.ToUInt64(database.Connection.ExecuteScalar($"SELECT CASE WHEN COUNT(ID) = 0 THEN {currentVersion} ELSE MAX(ID) END FROM TrackedChange"));
                 }
                 catch
                 {
@@ -510,7 +511,7 @@ namespace GSF.TimeSeries.Configuration
             {
                 try
                 {
-                    changesAreValid = Convert.ToInt32(database.Connection.ExecuteScalar("SELECT COUNT(ID) FROM TrackedChange WHERE ID < {0}", currentVersion)) == 0;
+                    changesAreValid = Convert.ToInt32(database.Connection.ExecuteScalar($"SELECT COUNT(ID) FROM TrackedChange WHERE ID < {currentVersion}")) == 0;
                 }
                 catch
                 {
@@ -524,7 +525,7 @@ namespace GSF.TimeSeries.Configuration
         private DataTable GetTrackedChanges(ulong currentVersion)
         {
             DataTable table = null;
-            Execute(database => table = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM TrackedChange WHERE ID > {0}", currentVersion));
+            Execute(database => table = database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM TrackedChange WHERE ID > {currentVersion}"));
             return table;
         }
 
@@ -534,8 +535,8 @@ namespace GSF.TimeSeries.Configuration
 
             Execute(database =>
             {
-                changes = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM {0} WHERE {1} IN " +
-                    "(SELECT PrimaryKeyValue FROM TrackedChange WHERE TableName = '{0}' AND ID > {2}) AND NodeID = {3}", tableName, primaryKeyColumn, currentVersion, NodeIDQueryString);
+                changes = database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM {tableName} WHERE {primaryKeyColumn} IN " +
+                    $"(SELECT PrimaryKeyValue FROM TrackedChange WHERE TableName = {tableName} AND ID > {currentVersion}) AND NodeID = {NodeIDQueryString}",);
             });
 
             return changes;
