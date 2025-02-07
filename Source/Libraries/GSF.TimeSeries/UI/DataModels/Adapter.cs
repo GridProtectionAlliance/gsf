@@ -38,7 +38,6 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Linq;
-using System.Windows.Controls.Primitives;
 using GSF.ComponentModel.DataAnnotations;
 using GSF.Data;
 

@@ -592,26 +592,18 @@ namespace GSF.TimeSeries.UI.DataModels
                 List<Guid> signalIDList = new List<Guid>();
                 DataTable measurementTable;
 
-                if (!string.IsNullOrEmpty(filterExpression) && !string.IsNullOrEmpty(sortMember))
-                { 
-                    measurementTable = database.Connection.RetrieveData(database.AdapterType,
-                        "SELECT SignalID FROM MeasurementDetail WHERE ({0}) ORDER BY {1} {2}", filterExpression, sortMember, sortDirection);
-                }
-                else if (!string.IsNullOrEmpty(filterExpression) && string.IsNullOrEmpty(sortMember))
-                {
-                    measurementTable = database.Connection.RetrieveData(database.AdapterType,
-                        "SELECT SignalID FROM MeasurementDetail WHERE ({0})", filterExpression);
-                }
-                else if (!string.IsNullOrEmpty(sortMember))
-                {
-                    measurementTable = database.Connection.RetrieveData(database.AdapterType,
-                        "SELECT SignalID FROM MeasurementDetail ORDER BY {0} {1}", sortMember, sortDirection);
-                }
+                string query;
+                string sortClause = string.Empty;
+
+                if (!string.IsNullOrEmpty(sortMember))
+                    sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
+
+                if (!string.IsNullOrEmpty(filterExpression))
+                    query = string.Format("SELECT SignalID FROM MeasurementDetail WHERE ({0}) {1}", filterExpression, sortClause);
                 else
-                {
-                    measurementTable = database.Connection.RetrieveData(database.AdapterType,
-                        "SELECT SignalID FROM MeasurementDetail");
-                }
+                    query = string.Format("SELECT SignalID FROM MeasurementDetail {0}", sortClause);
+
+                measurementTable = database.Connection.RetrieveData(database.AdapterType, query);
 
                 foreach (DataRow row in measurementTable.Rows)
                 {
@@ -651,8 +643,8 @@ namespace GSF.TimeSeries.UI.DataModels
                 if ((object)keys != null && keys.Count > 0)
                 {
                     commaSeparatedKeys = keys.Select(key => "'" + key.ToString() + "'").Aggregate((str1, str2) => str1 + "," + str2);
-                    query = database.ParameterizedQueryString("SELECT * FROM MeasurementDetail WHERE SignalID IN ({0})", "commaSeparatedKeys");
-                    measurementTable = database.Connection.RetrieveData(database.AdapterType, query, commaSeparatedKeys);
+                    query = string.Format("SELECT * FROM MeasurementDetail WHERE SignalID IN ({0})", commaSeparatedKeys);
+                    measurementTable = database.Connection.RetrieveData(database.AdapterType, query);
                     measurementList = new Measurement[measurementTable.Rows.Count];
 
                     foreach (DataRow row in measurementTable.Rows)
@@ -1211,7 +1203,7 @@ namespace GSF.TimeSeries.UI.DataModels
             try
             {
                 createdConnection = CreateConnection(ref database);
-                measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM MeasurementDetail {0}", whereClause);
+                measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM MeasurementDetail " + whereClause);
 
                 if (measurementTable.Rows.Count == 0)
                     return null;
@@ -1269,7 +1261,7 @@ namespace GSF.TimeSeries.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
                 ObservableCollection<Measurement> measurementList = new ObservableCollection<Measurement>();
-                DataTable measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM MeasurementDetail {0}", whereClause);
+                DataTable measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM MeasurementDetail " + whereClause);
                 foreach (DataRow row in measurementTable.Rows)
                 {
                     measurementList.Add(new Measurement

@@ -501,11 +501,11 @@ namespace CSVDataManager
             {
                 writer.WriteLine(csvHeader);
 
-                object result = DBSchema.Connection.ExecuteScalar("SELECT COUNT(*) FROM {0}", table.SQLEscapedName);
+                object result = DBSchema.Connection.ExecuteScalar($"SELECT COUNT(*) FROM {table.SQLEscapedName}");
                 int count = Convert.ToInt32(result);
                 UpdateProgressBar(ExportProgressBar, 0);
 
-                using (IDataReader reader = DBSchema.Connection.ExecuteReader("SELECT {0} FROM {1}", fieldList, table.SQLEscapedName))
+                using (IDataReader reader = DBSchema.Connection.ExecuteReader($"SELECT {fieldList} FROM {table.SQLEscapedName}"))
                 {
                     int records = 0;
 
@@ -573,7 +573,8 @@ namespace CSVDataManager
                     .ToArray();
 
                 string tableFieldList = string.Join(",", tableFields);
-                MemSchema.Connection.ExecuteNonQuery("CREATE TABLE {0}({1})", memTable.SQLEscapedName, tableFieldList);
+                string createTableSQL = $"CREATE TABLE {memTable.SQLEscapedName}({tableFieldList})";
+                MemSchema.Connection.ExecuteNonQuery(createTableSQL);
 
                 // Modify the tableFieldList for INSERT statements
                 tableFields = memTable.Fields

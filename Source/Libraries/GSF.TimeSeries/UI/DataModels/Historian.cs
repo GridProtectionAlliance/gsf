@@ -34,6 +34,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -380,12 +381,13 @@ namespace GSF.TimeSeries.UI.DataModels
                 IList<int> historianList = new List<int>();
                 string sortClause = string.Empty;
                 DataTable historianTable;
+                string query;
 
                 if (!string.IsNullOrEmpty(sortMember))
-                    historianTable = database.Connection.RetrieveData(database.AdapterType, 
-                        "SELECT ID FROM HistorianDetail WHERE NodeID = {0} ORDER BY {1} {2}", database.CurrentNodeID(), sortMember, sortDirection);
-                else historianTable = database.Connection.RetrieveData(database.AdapterType, 
-                    "SELECT ID FROM HistorianDetail WHERE NodeID = {0}", DefaultTimeout, database.CurrentNodeID());
+                    sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
+
+                query = database.ParameterizedQueryString(string.Format("SELECT ID FROM HistorianDetail WHERE NodeID = {{0}} {0}", sortClause), "nodeID");
+                historianTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
 
                 foreach (DataRow row in historianTable.Rows)
                 {
@@ -415,6 +417,7 @@ namespace GSF.TimeSeries.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
+                string query;
                 string commaSeparatedKeys;
 
                 Historian[] historianList = null;
@@ -424,11 +427,11 @@ namespace GSF.TimeSeries.UI.DataModels
                 if ((object)keys != null && keys.Count > 0)
                 {
                     commaSeparatedKeys = keys.Select(key => key.ToString()).Aggregate((str1, str2) => str1 + "," + str2);
-
-                    historianTable = database.Connection.RetrieveData(database.AdapterType, 
-                        "SELECT NodeID, ID, Acronym, Name, AssemblyName, TypeName, " +
+                    query = database.ParameterizedQueryString(string.Format("SELECT NodeID, ID, Acronym, Name, AssemblyName, TypeName, " +
                         "ConnectionString, IsLocal, Description, LoadOrder, Enabled, MeasurementReportingInterval, NodeName" +
-                        " FROM HistorianDetail WHERE NodeID = {0} AND ID IN ({1})", DefaultTimeout, database.CurrentNodeID(), commaSeparatedKeys);
+                        " FROM HistorianDetail WHERE NodeID = {{0}} AND ID IN ({0})", commaSeparatedKeys), "nodeID");
+
+                    historianTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
                     historianList = new Historian[historianTable.Rows.Count];
 
                     foreach (DataRow row in historianTable.Rows)
@@ -601,7 +604,7 @@ namespace GSF.TimeSeries.UI.DataModels
             try
             {
                 createdConnection = CreateConnection(ref database);
-                DataTable historianTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM HistorianDetail {0}", whereClause);
+                DataTable historianTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM HistorianDetail " + whereClause);
 
                 if (historianTable.Rows.Count == 0)
                     return null;
