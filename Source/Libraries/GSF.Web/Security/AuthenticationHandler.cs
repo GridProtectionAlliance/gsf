@@ -144,7 +144,10 @@ namespace GSF.Web.Security
 
                 // No authentication required for anonymous resources
                 if (Options.IsAnonymousResource(Request.Path.Value))
+                {
+                    Request.User = AnonymousPrincipal;
                     return;
+                }
 
                 NameValueCollection queryParameters = System.Web.HttpUtility.ParseQueryString(Request.QueryString.Value);
 
