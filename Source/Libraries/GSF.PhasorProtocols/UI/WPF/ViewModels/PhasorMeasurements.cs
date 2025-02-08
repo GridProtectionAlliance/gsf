@@ -94,26 +94,16 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
         public override void Save()
         {
-            if (CurrentItem.HistorianID != null && (int)CurrentItem.HistorianID > 0)
-            {
-                base.Save();
+            base.Save();
 
-                try
-                {
-                    // Note that a ReloadConfig will call RefreshMetadata on all relevant output adapters
-                    CommonFunctions.SendCommandToService("ReloadConfig");
-                }
-                catch (Exception ex)
-                {
-                    if ((object)ex.InnerException != null)
-                        CommonFunctions.LogException(null, "Save " + DataModelName, ex.InnerException);
-                    else
-                        CommonFunctions.LogException(null, "Save " + DataModelName, ex);
-                }
-            }
-            else
+            try
             {
-                base.Save();
+                // Note that a ReloadConfig will call RefreshMetadata on all relevant output adapters
+                CommonFunctions.SendCommandToService("ReloadConfig");
+            }
+            catch (Exception ex)
+            {
+                CommonFunctions.LogException(null, $"Save {DataModelName}", ex.InnerException ?? ex);
             }
         }
 
