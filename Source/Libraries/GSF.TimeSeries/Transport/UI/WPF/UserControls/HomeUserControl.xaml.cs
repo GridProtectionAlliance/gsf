@@ -878,7 +878,8 @@ public partial class HomeUserControl
                             systemSettings[0].Add(new XElement("add",
                                 new XAttribute("name", "DefaultCalculationLagTime"),
                                 new XAttribute("value", lagTimeText),
-                                new XAttribute("description", "Defines the default lag-time value, in seconds, for template calculations")));
+                                new XAttribute("description", "Defines the default lag-time value, in seconds, for template calculations"),
+                                new XAttribute("encrypted", "false")));
                         }
                         else
                         {
@@ -890,7 +891,8 @@ public partial class HomeUserControl
                             systemSettings[0].Add(new XElement("add",
                                 new XAttribute("name", "DefaultCalculationLeadTime"),
                                 new XAttribute("value", leadTimeText),
-                                new XAttribute("description", "Defines the default lead-time value, in seconds, for template calculations")));
+                                new XAttribute("description", "Defines the default lead-time value, in seconds, for template calculations"),
+                                new XAttribute("encrypted", "false")));
                         }
                         else
                         {
