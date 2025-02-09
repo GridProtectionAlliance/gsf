@@ -222,16 +222,31 @@
                         <StackPanel Orientation="Vertical">
                             <GroupBox x:Name="TimeReasonabilityGroupBox" Header="Change Local Time Reasonability Parameters" FontWeight="DemiBold" Margin="5">
                                 <StackPanel Orientation="Vertical">
-                                    <Label x:Name="RecommendedValues" FontSize="10" FontStyle="Italic" HorizontalContentAlignment="Center" Margin="0 -2 0 -6">
+                                    <Label HorizontalAlignment="Stretch" Height="5" />
+                                    <Rectangle HorizontalAlignment="Stretch" Fill="Blue" Height="3"/>
+                                    <CheckBox x:Name="UseRemoteTime" IsChecked="False" HorizontalAlignment="Center" ToolTip="This turns off adapter timestamp reasonability checks and&#x0a;uses latest incoming device time as current time.">Use Remote Device Time</CheckBox>
+                                    <Rectangle HorizontalAlignment="Stretch" Fill="Blue" Height="3" Margin="0"/>
+                                    <Label x:Name="RecommendedValues" FontSize="10" FontStyle="Italic" HorizontalContentAlignment="Center" Margin="0,-2,1,-6">
                                         <TextBlock TextAlignment="Center" Margin="0">
                                             The following are recommended lag and lead time<LineBreak/>
                                             values calculated based on current clock deviation:
                                         </TextBlock>
                                     </Label>
+                                    <StackPanel Orientation="Horizontal" Margin="0 -5 0 -10">
+                                        <Label Width="80"/>
+                                        <Label Width="60" FontSize="10" HorizontalContentAlignment="Right" ClipToBounds="False" Margin="-4 5 0 0">
+                                            <TextBlock Text="Current:" ClipToBounds="False"/>
+                                        </Label>
+                                        <Label Width="70" FontSize="10"  HorizontalContentAlignment="Right" ClipToBounds="False" Margin="-1 5 0 0">
+                                            <TextBlock Text="Suggested:" ClipToBounds="False"/>
+                                        </Label>
+                                        <Label Width="10"/>
+                                    </StackPanel>
                                     <StackPanel Orientation="Horizontal">
                                         <Label Width="80" HorizontalContentAlignment="Right">
-                                            <TextBlock Text="Lag Time:"  Margin="0 3 -5 0"/>
+                                            <TextBlock Text="Lag Time:" Margin="0 3 -5 0"/>
                                         </Label>
+                                        <TextBox x:Name="CurrentLagTime" Width="50" IsEnabled="False" IsReadOnly="True" />
                                         <TextBox x:Name="LagTime" Width="50" PreviewTextInput="TimeReasonability_PreviewTextInput" TextChanged="TimeReasonability_TextChanged" />
                                         <Label Margin="-10 -2 0 0">
                                             <TextBlock Text="seconds" TextAlignment="Left"/>
@@ -241,6 +256,7 @@
                                         <Label Width="80" HorizontalContentAlignment="Right">
                                             <TextBlock Text="Lead Time:" TextAlignment="Right" Margin="0 1 -5 0"/>
                                         </Label>
+                                        <TextBox x:Name="CurrentLeadTime" Width="50" IsEnabled="False" IsReadOnly="True" />
                                         <TextBox x:Name="LeadTime" Width="50" PreviewTextInput="TimeReasonability_PreviewTextInput" TextChanged="TimeReasonability_TextChanged" />
                                         <Label Margin="-10 -3 0 0">
                                             <TextBlock Text="seconds" TextAlignment="Left"/>
@@ -262,8 +278,11 @@
                                     </Label>
                                     <CheckBox x:Name="ApplyToServer" IsChecked="False" Checked="ApplyToServer_OnChecked" Unchecked="ApplyToServer_OnUnchecked">Apply to host service (use with caution)</CheckBox>
                                     <Label x:Name="LabelServerUpdateNote" Width="250" HorizontalContentAlignment="Center">
-                                        <TextBlock x:Name="ServerUpdateNote" TextWrapping="Wrap" TextAlignment="Left" FontStyle="Italic" FontWeight="DemiBold" FontSize="11" Margin="0 0 0 0"
-                                            Text="Reasonability changes will be applied to all adapters in host service, adjust with caution." />
+                                        <TextBlock x:Name="ServerUpdateNote" TextWrapping="Wrap" TextAlignment="Left" FontStyle="Italic" FontWeight="DemiBold" FontSize="11" Margin="0 0 0 0">
+                                            Reasonability changes will be applied to all adapters in host service, adjust with caution.
+                                            <LineBreak />
+                                            If config changes later, e.g., with addition of new adapter, reapplication may be needed.
+                                        </TextBlock>
                                     </Label>
                                 </StackPanel>
                             </GroupBox>
