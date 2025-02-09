@@ -12,9 +12,9 @@
     <Description>Library of .NET functions, extensions and components including asynchronous processing queues, configuration APIs, diagnostics, error handling, console functions, adapter framework, active directory and local account functions, checksum algorithms, unit conversion, binary parsing, cron-style task scheduler, Unix and NTP time classes, precision timer, 24-bit signed and unsigned integers, database extensions and abstraction layer, extensions for drawing, reflection, XML, buffers, chars, date/times, enumerations, strings, etc.</Description>
     <Copyright>Copyright © GPA, 2013.  All Rights Reserved.</Copyright>
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
-    <Version>2.4.224-beta</Version>
-    <AssemblyVersion>2.4.224.0</AssemblyVersion>
-    <FileVersion>2.4.224.0</FileVersion>
+    <Version>2.4.225-beta</Version>
+    <AssemblyVersion>2.4.225.0</AssemblyVersion>
+    <FileVersion>2.4.225.0</FileVersion>
     <DocumentationFile>$(OutputPath)\$(AssemblyName).XML</DocumentationFile>
     <CodeAnalysisRuleSet>GSF.Core.ruleset</CodeAnalysisRuleSet>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
