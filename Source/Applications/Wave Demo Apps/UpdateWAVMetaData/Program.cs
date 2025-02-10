@@ -94,12 +94,12 @@ namespace UpdateWAVMetaData
                     if (Convert.ToInt32(connection.ExecuteScalar(database.ParameterizedQueryString("SELECT COUNT(*) FROM Device WHERE Acronym = {0}", "acronym"), acronym)) == 0)
                     {
                         parameterizedQuery = database.ParameterizedQueryString("INSERT INTO Device(NodeID, Acronym, Name, ProtocolID, FramesPerSecond, " +
-                            "MeasurementReportingInterval, ConnectionString, Enabled) VALUES({7}, {0}, {1}, {2}, {3}, {4}, {5}, {6})",
+                            "MeasurementReportingInterval, ConnectionString, Enabled) VALUES({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})",
                             "acronym", "name", "protocolID", "framesPerSecond", "measurementReportingInterval",
-                            "connectionString", "enabled");
+                            "connectionString", "enabled", "nodeID");
 
                         // Insert new device record
-                        connection.ExecuteNonQuery(parameterizedQuery, acronym, name, protocolID, sourceWave.SampleRate, 1000000, $"wavFileName={FilePath.GetAbsolutePath(sourceFileName)}; connectOnDemand=true; outputSourceIDs={acronym}; memoryCache={useMemoryCache}", database.Bool(true), nodeID);
+                        connection.ExecuteNonQuery(parameterizedQuery, acronym, name, protocolID, sourceWave.SampleRate, 1000000, $"wavFileName={FilePath.GetAbsolutePath(sourceFileName)}; connectOnDemand=true; outputSourceIDs={acronym}; memoryCache={useMemoryCache}", database.Bool(true), database.Guid(nodeID)); memoryCache ={useMemoryCache}", database.Bool(true), nodeID);
                         int deviceID = Convert.ToInt32(connection.ExecuteScalar(database.ParameterizedQueryString("SELECT ID FROM Device WHERE Acronym = {0}", "acronym"), acronym));
                         string pointTag;
                         int lastPhasorIndex = 0;
