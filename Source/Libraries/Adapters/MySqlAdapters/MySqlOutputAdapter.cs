@@ -177,11 +177,23 @@ namespace MySqlAdapters
                 {
                     // Create the command string to insert the measurement as a record in the table.
                     IDbCommand command = m_connection.CreateCommand();
-                    command.Parameters.Add(measurement.ID);
-                    command.Parameters.Add((long)measurement.Timestamp);
-                    command.Parameters.Add(measurement.AdjustedValue);
+                    IDataParameter measurementIDParameter = command.CreateParameter();
+                    IDataParameter timeStampParameter = command.CreateParameter();
+                    IDataParameter valueParameter = command.CreateParameter();
 
-                    command.CommandText = "INSERT INTO Measurement VALUES ({0}, {1}, {2})";
+                    measurementIDParameter.Name = "@measurementID";
+                    timeStampParameter.Name = "@timeStamp";
+                    valueParameter.Name = "@adjustedValue";
+
+                    measurementIDParameter.Value = measurement.ID;
+                    timeStampParameter.Value = (long)measurement.Timestamp;
+                    valueParameter.Value = measurement.AdjustedValue;
+
+                    command.Parameters.Add(measurementIDParameter);
+                    command.Parameters.Add(timeStampParameter);
+                    command.Parameters.Add(valueParameter);
+
+                    command.CommandText = "INSERT INTO Measurement VALUES (@measurementID, @timeStamp, @adjustedValue)";
                     command.ExecuteNonQuery();
 
                 }
