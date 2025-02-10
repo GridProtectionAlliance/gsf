@@ -1057,7 +1057,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                         if (qualityType is not null)
                         {
-                            IList<int> keys = database.Connection.RetrieveData(database.AdapterType, $"SELECT ID FROM OutputStreamMeasurement WHERE AdapterID = {outputStream.ID}")
+                            IList<int> keys = database.Connection.RetrieveData(database.AdapterType, "SELECT ID FROM OutputStreamMeasurement WHERE AdapterID = {0}", outputStream.ID)
                                 .Select().Select(row => row.ConvertField<int>("ID")).ToList();
 
                             foreach (OutputStreamMeasurement measurement in OutputStreamMeasurement.Load(database, keys))

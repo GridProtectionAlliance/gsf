@@ -413,15 +413,12 @@ namespace GSF.Data
                 useTruncateTable = m_forceTruncateTable || (table.Parent.Parent.DataSourceType == DatabaseType.SQLServer && !table.ReferencedByForeignKeys);
             }
 
-            if (useTruncateTable)
-                deleteSql = "TRUNCATE TABLE " + table.SQLEscapedName;
-            else
-                deleteSql = "DELETE FROM " + table.SQLEscapedName;
-
             try
             {
-                table.Connection.ExecuteNonQuery(deleteSql, Timeout);
-
+                if (useTruncateTable)
+                    table.Connection.ExecuteNonQuery("TRUNCATE TABLE " + table.SQLEscapedName, Timeout);
+                else
+                    table.Connection.ExecuteNonQuery("DELETE FROM " + table.SQLEscapedName, Timeout);
                 if ((object)TableCleared != null)
                     TableCleared(this, new EventArgs<string>(table.Name)); //-V3083
 
@@ -437,7 +434,8 @@ namespace GSF.Data
                     return ClearTable(table);
                 }
 
-                OnSQLFailure(deleteSql, ex);
+                if (useTruncateTable) OnSQLFailure("TRUNCATE TABLE " + table.SQLEscapedName, ex);
+                else OnSQLFailure("DELETE FROM " + table.SQLEscapedName, ex);
             }
 
             return false;
@@ -616,7 +614,7 @@ namespace GSF.Data
                     case DatabaseType.SQLServer:
                         try
                         {
-                            toTable.Connection.ExecuteNonQuery("SET IDENTITY_INSERT " + toTable.SQLEscapedName + " ON", Timeout);
+                            toTable.Connection.ExecuteNonQuery($"SET IDENTITY_INSERT {toTable.SQLEscapedName} ON", Timeout);
                             usingIdentityInsert = true;
                         }
                         catch
@@ -677,7 +675,7 @@ namespace GSF.Data
                     try
                     {
                         // Turn off identity inserts
-                        toTable.Connection.ExecuteNonQuery(setIndentityInsertSQL, Timeout);
+                        toTable.Connection.ExecuteNonQuery($"SET IDENTITY_INSERT {toTable.SQLEscapedName} OFF", Timeout);
                     }
                     catch (Exception ex)
                     {
@@ -822,7 +820,7 @@ namespace GSF.Data
                         // Added check to preserve ID number for auto-inc fields
                         if (!usingIdentityInsert && !skipKeyValuePreservation && m_preserveAutoIncValues && (object)autoIncField != null)
                         {
-                            int toTableRowCount = int.Parse(Common.ToNonNullString(toTable.Connection.ExecuteScalar("SELECT MAX(" + autoIncField.SQLEscapedName + ") FROM " + toTable.SQLEscapedName, Timeout), "0")) + 1;
+                            int toTableRowCount = int.Parse(Common.ToNonNullString(toTable.Connection.ExecuteScalar($"SELECT MAX({autoIncField.SQLEscapedName}) FROM {toTable.SQLEscapedName}", Timeout), "0")) + 1;
                             int sourceTablePrimaryFieldValue = int.Parse(Common.ToNonNullString(autoIncField.Value, "0"));
                             int synchronizations = 0;
 
@@ -833,7 +831,7 @@ namespace GSF.Data
                                 int currentIdentityValue = int.Parse(Common.ToNonNullString(toTable.Connection.ExecuteScalar(toTable.IdentitySQL, Timeout), "0"));
 
                                 // Delete record which was just inserted
-                                toTable.Connection.ExecuteNonQuery("DELETE FROM " + toTable.SQLEscapedName + " WHERE " + autoIncField.SQLEscapedName + " = " + currentIdentityValue, Timeout);
+                                toTable.Connection.ExecuteNonQuery($"DELETE FROM {toTable.SQLEscapedName} WHERE {autoIncField.SQLEscapedName} = {{0}}", currentIdentityValue, Timeout);
 
                                 // For very long spans of auto-inc identity gaps we at least provide some level of feedback
                                 if (synchronizations++ % 50 == 0)

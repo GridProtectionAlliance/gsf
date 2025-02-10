@@ -261,9 +261,10 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 if (keys is not null && keys.Count > 0)
                 {
                     commaSeparatedKeys = keys.Select(key => $"{key}").Aggregate((str1, str2) => $"{str1},{str2}");
-                    query = $"SELECT NodeID, AdapterID, ID, HistorianID, PointID, SignalReference, SourcePointTag, HistorianAcronym FROM OutputStreamMeasurementDetail WHERE ID IN ({commaSeparatedKeys})";
 
-                    outputStreamMeasurementTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout);
+                    outputStreamMeasurementTable = database.Connection.RetrieveData(database.AdapterType, 
+                        "SELECT NodeID, AdapterID, ID, HistorianID, PointID, SignalReference, SourcePointTag, HistorianAcronym " +
+                        $"FROM OutputStreamMeasurementDetail WHERE ID IN ({commaSeparatedKeys})", DefaultTimeout);
                     outputStreamMeasurementList = new OutputStreamMeasurement[outputStreamMeasurementTable.Rows.Count];
 
                     foreach (DataRow row in outputStreamMeasurementTable.Rows)
