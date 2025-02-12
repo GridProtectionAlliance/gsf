@@ -99,7 +99,7 @@ namespace UpdateWAVMetaData
                             "connectionString", "enabled", "nodeID");
 
                         // Insert new device record
-                        connection.ExecuteNonQuery(parameterizedQuery, acronym, name, protocolID, sourceWave.SampleRate, 1000000, $"wavFileName={FilePath.GetAbsolutePath(sourceFileName)}; connectOnDemand=true; outputSourceIDs={acronym}; memoryCache={useMemoryCache}", database.Bool(true), database.Guid(nodeID)); memoryCache ={useMemoryCache}", database.Bool(true), nodeID);
+                        connection.ExecuteNonQuery(parameterizedQuery, acronym, name, protocolID, sourceWave.SampleRate, 1000000, $"wavFileName={FilePath.GetAbsolutePath(sourceFileName)}; connectOnDemand=true; outputSourceIDs={acronym}; memoryCache={useMemoryCache}", database.Bool(true), database.Guid(nodeID));
                         int deviceID = Convert.ToInt32(connection.ExecuteScalar(database.ParameterizedQueryString("SELECT ID FROM Device WHERE Acronym = {0}", "acronym"), acronym));
                         string pointTag;
                         int lastPhasorIndex = 0;
