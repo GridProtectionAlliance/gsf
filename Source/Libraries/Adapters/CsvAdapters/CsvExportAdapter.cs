@@ -183,7 +183,7 @@ namespace CsvAdapters
         /// </summary>
         [ConnectionStringParameter]
         [DefaultValue(DefaultSignalNameTemplate)]
-        [Description("Defines the CSV export signalname template - accepts \"{MeasurementID}\", \"{PointTag}\" and \"{SignalReference}\"")]
+        [Description("Defines the CSV export signalname template - accepts \"{MeasurementID}\" and \"{PointTag}\"")]
         public string SignalNameTemplate { get; set; }
 
 
@@ -476,9 +476,8 @@ namespace CsvAdapters
         {
             string timestamp = measurement.Timestamp.ToString(TimestampFormat);
             string measurementName = SignalNameTemplate;
-            measurementName.Replace("{MeasurementID}",measurement.ID.toString());
-            measurementName.Replace("{PointTag}",measurement.PointTag);
-            measurementName.Replace("{SignalReference}",measurement.SignalReference);
+            measurementName.Replace("{MeasurementID}",measurement.ID.ToString());
+            measurementName.Replace("{PointTag}",measurement.TagName);
 
             string value = measurement.AdjustedValue.ToString();
             
