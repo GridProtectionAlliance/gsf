@@ -588,7 +588,7 @@ namespace GSF.Data
                 {
                     foreach (ForeignKeyField foreignKey in field.ForeignKeys)
                     {
-                        if (string.Compare(sourceTable.Name, foreignKey.ForeignKey.Table.Name, StringComparison.OrdinalIgnoreCase) == 0)
+                        if (string.Compare(sourceTable.Name, foreignKey.ForeignKey.Table?.Name, StringComparison.OrdinalIgnoreCase) == 0)
                         {
                             // If Oracle, force it to sort NULLs at a higher level - note coalesce may fail for non-integer based primary keys for self-referencing tables
                             if (m_fromSchema.DataSourceType == DatabaseType.Oracle || m_fromSchema.DataSourceType == DatabaseType.PostgreSQL)
