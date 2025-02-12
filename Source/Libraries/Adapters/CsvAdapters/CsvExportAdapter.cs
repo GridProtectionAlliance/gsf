@@ -69,6 +69,11 @@ namespace CsvAdapters
         public const string DefaultFileNameTemplate = "{0:yyyy-MM-dd HH.mm}.csv";
 
         /// <summary>
+        /// Default value for the <see cref="SignalNameTemplate"/> property.
+        /// </summary>
+        public const string DefaultSignalNameTemplate = "{MeasurementID}";
+
+        /// <summary>
         /// Default value for the <see cref="DownsampleInterval"/> property.
         /// </summary>
         public const double DefaultDownsampleInterval = 0.0D;
@@ -172,6 +177,15 @@ namespace CsvAdapters
         [DefaultValue(DefaultFileNameTemplate)]
         [Description("Defines the CSV export filename template - string format parameter 0 is current UTC time")]
         public string FileNameTemplate { get; set; }
+
+        /// <summary>
+        /// Gets or sets the CSV export signalname template - accepts \"{MeasurementID}\", \"{PointTag}\" and \"{SignalReference}\".
+        /// </summary>
+        [ConnectionStringParameter]
+        [DefaultValue(DefaultSignalNameTemplate)]
+        [Description("Defines the CSV export signalname template - accepts \"{MeasurementID}\", \"{PointTag}\" and \"{SignalReference}\"")]
+        public string SignalNameTemplate { get; set; }
+
 
         /// <summary>
         /// Gets or sets the downsampling interval, in seconds, set to zero for no downsampling.
@@ -461,10 +475,14 @@ namespace CsvAdapters
         private string ToCsv(IMeasurement measurement)
         {
             string timestamp = measurement.Timestamp.ToString(TimestampFormat);
-            string id = measurement.ID.ToString();
+            string measurementName = SignalNameTemplate;
+            measurementName.Replace("{MeasurementID}",measurement.ID.toString());
+            measurementName.Replace("{PointTag}",measurement.PointTag);
+            measurementName.Replace("{SignalReference}",measurement.SignalReference);
+
             string value = measurement.AdjustedValue.ToString();
             
-            return string.Join(",", timestamp, id, value);
+            return string.Join(",", timestamp, measurementName, value);
         }
 
         // Generates the name of the next active file.
