@@ -298,23 +298,23 @@ public partial class HomeUserControl
     private void LoadComboBoxDeviceAsync()
     {
         new Thread(() =>
-            {
-                Dictionary<int, string> deviceLookupList = Device.GetLookupList(null);
+        {
+            Dictionary<int, string> deviceLookupList = Device.GetLookupList(null);
 
-                Dispatcher.BeginInvoke(new Action(() =>
-                {
-                    ComboBoxDevice.ItemsSource = deviceLookupList;
-
-                    if (Application.Current.Resources.Contains("SelectedDevice_Home"))
-                        ComboBoxDevice.SelectedIndex = (int)Application.Current.Resources["SelectedDevice_Home"];
-                    else
-                        ComboBoxDevice.SelectedIndex = 0;
-                }));
-            })
+            Dispatcher.BeginInvoke(new Action(() =>
             {
-                IsBackground = true
-            }
-            .Start();
+                ComboBoxDevice.ItemsSource = deviceLookupList;
+
+                if (Application.Current.Resources.Contains("SelectedDevice_Home"))
+                    ComboBoxDevice.SelectedIndex = (int)Application.Current.Resources["SelectedDevice_Home"];
+                else
+                    ComboBoxDevice.SelectedIndex = 0;
+            }));
+        })
+        {
+            IsBackground = true
+        }
+        .Start();
     }
 
     private void LoadComboBoxMeasurementAsync()
@@ -322,24 +322,24 @@ public partial class HomeUserControl
         int selectedDeviceID = ((KeyValuePair<int, string>)ComboBoxDevice.SelectedItem).Key;
 
         new Thread(() =>
-            {
-                ObservableCollection<MeasurementModel> measurements = MeasurementModel.Load(null, selectedDeviceID);
-                ObservableCollection<MeasurementModel> itemsSource = new(measurements.Where(m => m.SignalSuffix is "PA" or "FQ"));
+        {
+            ObservableCollection<MeasurementModel> measurements = MeasurementModel.Load(null, selectedDeviceID);
+            ObservableCollection<MeasurementModel> itemsSource = new(measurements.Where(m => m.SignalSuffix is "PA" or "FQ"));
 
-                Dispatcher.BeginInvoke(new Action(() =>
-                {
-                    ComboBoxMeasurement.ItemsSource = itemsSource;
-
-                    if (Application.Current.Resources.Contains("SelectedMeasurement_Home") && (int)Application.Current.Resources["SelectedMeasurement_Home"] != -1)
-                        ComboBoxMeasurement.SelectedIndex = (int)Application.Current.Resources["SelectedMeasurement_Home"];
-                    else
-                        ComboBoxMeasurement.SelectedIndex = 0;
-                }));
-            })
+            Dispatcher.BeginInvoke(new Action(() =>
             {
-                IsBackground = true
-            }
-            .Start();
+                ComboBoxMeasurement.ItemsSource = itemsSource;
+
+                if (Application.Current.Resources.Contains("SelectedMeasurement_Home") && (int)Application.Current.Resources["SelectedMeasurement_Home"] != -1)
+                    ComboBoxMeasurement.SelectedIndex = (int)Application.Current.Resources["SelectedMeasurement_Home"];
+                else
+                    ComboBoxMeasurement.SelectedIndex = 0;
+            }));
+        })
+        {
+            IsBackground = true
+        }
+        .Start();
     }
 
     private void RefreshTimer_Tick(object sender, EventArgs e)
@@ -851,7 +851,12 @@ public partial class HomeUserControl
                             elem.Attributes("name").Any(nameAttribute => 
                                 string.Compare(nameAttribute.Value, name, StringComparison.OrdinalIgnoreCase) == 0));
 
-                        return element?.Attributes("value").FirstOrDefault();
+                        XAttribute value = element?.Attributes("value").FirstOrDefault();
+
+                        if (value is null)
+                            throw new InvalidOperationException($"Failed to find \"{name}\" element to configuration file.");
+
+                        return value;
                     }
 
                     string configPath = FilePath.GetAbsolutePath(ConfigurationFile.Current.Configuration.FilePath.Replace("Manager", ""));
@@ -862,10 +867,35 @@ public partial class HomeUserControl
                     if (UserHasWriteAccess())
                     {
                         XDocument hostConfig = XDocument.Load(configPath);
+
+                        // Add setting for default calculation lag/lead times if it doesn't exist
                         XElement[] systemSettings = hostConfig.Descendants(SystemSettings).ToArray();
 
-                        getElementValue(systemSettings, "DefaultCalculationLagTime").Value = lagTimeText;
-                        getElementValue(systemSettings, "DefaultCalculationLeadTime").Value = leadTimeText;
+                        if (systemSettings.Elements("add").All(element => element.Attribute("name")?.Value != "DefaultCalculationLagTime"))
+                        {
+                            systemSettings[0].Add(new XElement("add",
+                                new XAttribute("name", "DefaultCalculationLagTime"),
+                                new XAttribute("value", lagTimeText),
+                                new XAttribute("description", "Defines the default lag-time value, in seconds, for template calculations"),
+                                new XAttribute("encrypted", "false")));
+                        }
+                        else
+                        {
+                            getElementValue(systemSettings, "DefaultCalculationLagTime").Value = lagTimeText;
+                        }
+
+                        if (systemSettings.Elements("add").All(element => element.Attribute("name")?.Value != "DefaultCalculationLeadTime"))
+                        {
+                            systemSettings[0].Add(new XElement("add",
+                                new XAttribute("name", "DefaultCalculationLeadTime"),
+                                new XAttribute("value", leadTimeText),
+                                new XAttribute("description", "Defines the default lead-time value, in seconds, for template calculations"),
+                                new XAttribute("encrypted", "false")));
+                        }
+                        else
+                        {
+                            getElementValue(systemSettings, "DefaultCalculationLeadTime").Value = leadTimeText;
+                        }
 
                         hostConfig.Save(configPath);
                     }

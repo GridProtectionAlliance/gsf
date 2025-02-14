@@ -33,6 +33,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
+using System.Security.Claims;
 using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
@@ -109,8 +110,9 @@ namespace GSF.Web.Security
         {
             get
             {
-                IIdentity anonymousIdentity = new GenericIdentity("anonymous");
-                return new GenericPrincipal(anonymousIdentity, Array.Empty<string>());
+                Claim name = new(ClaimTypes.Name, "anonymous");
+                IIdentity anonymousIdentity = new ClaimsIdentity([name]);
+                return new ClaimsPrincipal(anonymousIdentity);
             }
         }
 
@@ -144,7 +146,10 @@ namespace GSF.Web.Security
 
                 // No authentication required for anonymous resources
                 if (Options.IsAnonymousResource(Request.Path.Value))
+                {
+                    Request.User = AnonymousPrincipal;
                     return;
+                }
 
                 NameValueCollection queryParameters = System.Web.HttpUtility.ParseQueryString(Request.QueryString.Value);
 
