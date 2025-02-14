@@ -476,8 +476,8 @@ namespace CsvAdapters
         {
             string timestamp = measurement.Timestamp.ToString(TimestampFormat);
             string measurementName = SignalNameTemplate;
-            measurementName.Replace("{MeasurementID}",measurement.ID.ToString());
-            measurementName.Replace("{PointTag}",measurement.TagName);
+            measurementName = measurementName.Replace("{MeasurementID}",measurement.ID.ToString());
+            measurementName = measurementName.Replace("{PointTag}",measurement.TagName);
 
             string value = measurement.AdjustedValue.ToString();
             
