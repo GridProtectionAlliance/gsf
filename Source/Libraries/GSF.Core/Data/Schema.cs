@@ -2052,6 +2052,10 @@ namespace GSF.Data
                 {
                     // We don't want to circle back on ourselves
                     table = foreignKey.ForeignKey.Table;
+
+                    if (table is null)
+                        continue;
+
                     tableIsInStack = tableStack.Exists(tbl => string.Compare(tbl.Name, table.Name, StringComparison.OrdinalIgnoreCase) == 0);
 
                     if (tableIsInStack)
@@ -2221,6 +2225,12 @@ namespace GSF.Data
             {
                 try
                 {
+                    if (m_parent is null)
+                    {
+                        m_rows = 0;
+                        return;
+                    }
+
                     IDbCommand command = m_parent.Parent.Connection.CreateCommand();
 
                     command.CommandText = "SELECT COUNT(*) FROM " + SQLEscapedName;
