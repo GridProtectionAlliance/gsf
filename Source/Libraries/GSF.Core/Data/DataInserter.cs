@@ -403,7 +403,6 @@ namespace GSF.Data
         /// <param name="table">schema table</param>
         private bool ClearTable(Table table)
         {
-            string deleteSql;
             bool useTruncateTable = false;
 
             if (m_attemptTruncateTable || m_forceTruncateTable)

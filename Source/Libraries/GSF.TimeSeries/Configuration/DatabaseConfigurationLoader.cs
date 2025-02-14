@@ -536,7 +536,7 @@ namespace GSF.TimeSeries.Configuration
             Execute(database =>
             {
                 changes = database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM {tableName} WHERE {primaryKeyColumn} IN " +
-                    $"(SELECT PrimaryKeyValue FROM TrackedChange WHERE TableName = {tableName} AND ID > {currentVersion}) AND NodeID = {NodeIDQueryString}",);
+                    $"(SELECT PrimaryKeyValue FROM TrackedChange WHERE TableName = {tableName} AND ID > {currentVersion}) AND NodeID = {NodeIDQueryString}");
             });
 
             return changes;

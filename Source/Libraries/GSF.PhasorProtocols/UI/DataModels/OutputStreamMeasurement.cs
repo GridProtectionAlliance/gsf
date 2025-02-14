@@ -251,7 +251,6 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                string query;
                 string commaSeparatedKeys;
 
                 OutputStreamMeasurement[] outputStreamMeasurementList = null;

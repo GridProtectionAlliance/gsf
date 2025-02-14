@@ -181,9 +181,9 @@ namespace MySqlAdapters
                     IDataParameter timeStampParameter = command.CreateParameter();
                     IDataParameter valueParameter = command.CreateParameter();
 
-                    measurementIDParameter.Name = "@measurementID";
-                    timeStampParameter.Name = "@timeStamp";
-                    valueParameter.Name = "@adjustedValue";
+                    measurementIDParameter.ParameterName = "@measurementID";
+                    timeStampParameter.ParameterName = "@timeStamp";
+                    valueParameter.ParameterName = "@adjustedValue";
 
                     measurementIDParameter.Value = measurement.ID;
                     timeStampParameter.Value = (long)measurement.Timestamp;
