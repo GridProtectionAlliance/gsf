@@ -84,7 +84,7 @@ namespace GSF.TimeSeries
                 return;
 
             database.Connection.ExecuteNonQuery(NodeInsertFormat);
-            database.Connection.ExecuteNonQuery(string.Format(NodeUpdateFormat, nodeIDQueryString));
+            database.Connection.ExecuteNonQuery(NodeUpdateFormat, nodeIDQueryString);
         }
 
         /// <summary>
@@ -184,7 +184,7 @@ namespace GSF.TimeSeries
 
             // Update user accounts
             foreach (KeyValuePair<string, string> pair in updateMap)
-                database.Connection.ExecuteNonQuery(string.Format(UpdateUserAccountFormat, pair.Value, pair.Key));
+                database.Connection.ExecuteNonQuery(UpdateUserAccountFormat, pair.Value, pair.Key);
 
             updateMap.Clear();
 
@@ -208,7 +208,7 @@ namespace GSF.TimeSeries
 
             // Update security groups
             foreach (KeyValuePair<string, string> pair in updateMap)
-                database.Connection.ExecuteNonQuery(string.Format(UpdateSecurityGroupFormat, pair.Value, pair.Key));
+                database.Connection.ExecuteNonQuery(UpdateSecurityGroupFormat, pair.Value, pair.Key);
         }
 
         /// <summary>
@@ -218,8 +218,11 @@ namespace GSF.TimeSeries
         private static void ValidateDataPublishers(AdoDataConnection database, string nodeIDQueryString, string arguments)
         {
             const string DataPublisherCountFormat = "SELECT COUNT(*) FROM CustomActionAdapter WHERE AdapterName='{0}!DATAPUBLISHER' AND NodeID = {1}";
-            const string GEPDataPublisherInsertFormat = "INSERT INTO CustomActionAdapter(NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, Enabled) VALUES({0}, '{1}!DATAPUBLISHER', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Transport.DataPublisher', 'securityMode={2}; allowSynchronizedSubscription=false; useBaseTimeOffsets=true; {3}', {4})";
-            const string STTPDataPublisherInsertFormat = "INSERT INTO CustomActionAdapter(NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, Enabled) VALUES({0}, '{1}!DATAPUBLISHER', 'sttp.gsf.dll', 'sttp.DataPublisher', 'securityMode={2}; {3}', {4})";
+            const string GEPDataPublisherInsertFormat = "INSERT INTO CustomActionAdapter(NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, Enabled) " +
+                "VALUES({0}, '{1}!DATAPUBLISHER', 'GSF.TimeSeries.dll', 'GSF.TimeSeries.Transport.DataPublisher', 'securityMode={2}; " +
+                "allowSynchronizedSubscription=false; useBaseTimeOffsets=true; {3}', {4})";
+            const string STTPDataPublisherInsertFormat = "INSERT INTO CustomActionAdapter(NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, Enabled) " +
+                "VALUES({0}, '{1}!DATAPUBLISHER', 'sttp.gsf.dll', 'sttp.DataPublisher', 'securityMode={2}; {3}', {4})";
 
             bool internalDataPublisherEnabled = true;
             bool externalDataPublisherEnabled = true;

@@ -443,7 +443,7 @@ namespace MetadataAdapters
 
                         // Determine the active node ID - we cache this since this value won't change for the lifetime of this class
                         if (nodeID == Guid.Empty)
-                            nodeID = Guid.Parse(command.ExecuteScalar($"SELECT NodeID FROM IaonActionAdapter WHERE ID = {(int)ID}", MetadataSynchronizationTimeout).ToString());
+                            nodeID = Guid.Parse(command.ExecuteScalar("SELECT NodeID FROM IaonActionAdapter WHERE ID = {0}", (int)ID, MetadataSynchronizationTimeout).ToString());
 
                         // Determine the protocol record auto-inc ID value for the gateway transport protocol (GEP) - this value is also cached since it shouldn't change for the lifetime of this class
                         if (virtualProtocolID == 0)
@@ -462,7 +462,7 @@ namespace MetadataAdapters
                         if (sourceID == null || sourceID == DBNull.Value)
                         {
                             // Get a historian ID, but exclude the STAT historian
-                            object randomHistorianID = command.ExecuteScalar($"SELECT ID FROM Historian WHERE Acronym <> 'STAT'", MetadataSynchronizationTimeout);
+                            object randomHistorianID = command.ExecuteScalar("SELECT ID FROM Historian WHERE Acronym <> 'STAT'", MetadataSynchronizationTimeout);
                             command.ExecuteNonQuery(insertParentDeviceSql, MetadataSynchronizationTimeout, database.Guid(nodeID), randomHistorianID, ParentDeviceAcronym, ParentDeviceAcronym, virtualProtocolID);
                             sourceID = command.ExecuteScalar(parentDeviceIDSql, MetadataSynchronizationTimeout, ParentDeviceAcronym);
                         }
@@ -470,11 +470,11 @@ namespace MetadataAdapters
                         int parentID = Convert.ToInt32(sourceID);
 
                         // Validate that the subscriber device is marked as a concentrator (we are about to associate children devices with it)
-                        if (!command.ExecuteScalar($"SELECT IsConcentrator FROM Device WHERE ID = {parentID}", MetadataSynchronizationTimeout).ToString().ParseBoolean())
-                            command.ExecuteNonQuery($"UPDATE Device SET IsConcentrator = 1 WHERE ID = {parentID}", MetadataSynchronizationTimeout);
+                        if (!command.ExecuteScalar("SELECT IsConcentrator FROM Device WHERE ID = {0}", parentID, MetadataSynchronizationTimeout).ToString().ParseBoolean())
+                            command.ExecuteNonQuery("UPDATE Device SET IsConcentrator = 1 WHERE ID = {0}", parentID, MetadataSynchronizationTimeout);
 
                         // Get any historian associated with the subscriber device
-                        object historianID = command.ExecuteScalar($"SELECT HistorianID FROM Device WHERE ID = {parentID}", MetadataSynchronizationTimeout);
+                        object historianID = command.ExecuteScalar("SELECT HistorianID FROM Device WHERE ID = {0}", parentID, MetadataSynchronizationTimeout);
 
                         // Ascertain total number of actions required for all metadata synchronization so some level feed back can be provided on progress
                         initSyncProgress(metadata.Tables.Cast<DataTable>().Sum(dataTable => (long)dataTable.Rows.Count) + 3);
