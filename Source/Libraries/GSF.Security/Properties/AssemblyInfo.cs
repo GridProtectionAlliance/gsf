@@ -31,8 +31,8 @@ using System.Runtime.InteropServices;
 [assembly: InternalsVisibleTo("GSF.Windows")]
 
 // Assembly identity attributes.
-[assembly: AssemblyVersion("2.4.230.0")]
-[assembly: AssemblyInformationalVersion("2.4.230-beta")]
+[assembly: AssemblyVersion("2.4.231.0")]
+[assembly: AssemblyInformationalVersion("2.4.231-beta")]
 
 // Informational attributes.
 [assembly: AssemblyCompany("Grid Protection Alliance")]
