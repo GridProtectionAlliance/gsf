@@ -451,9 +451,10 @@ public class DeviceAlarmStateAdapter : FacileActionAdapterBase
             {
                 // Querying from MeasurementDetail because we also want to include disabled device measurements
                 string measurementSQL = TargetParentDevices ?
-                    "SELECT MeasurementDetail.SignalID AS SignalID, MeasurementDetail.ID AS ID FROM MeasurementDetail INNER JOIN DeviceDetail ON MeasurementDetail.DeviceID = DeviceDetail.ID WHERE (DeviceDetail.Acronym = {0} OR DeviceDetail.ParentAcronym = {0}) AND MeasurementDetail.SignalAcronym = 'FREQ'" :
+                    "SELECT MeasurementDetail.SignalID AS SignalID, MeasurementDetail.ID AS ID " +
+                    "FROM MeasurementDetail INNER JOIN DeviceDetail ON MeasurementDetail.DeviceID = DeviceDetail.ID " +
+                    "WHERE (DeviceDetail.Acronym = {0} OR DeviceDetail.ParentAcronym = {0}) AND MeasurementDetail.SignalAcronym = 'FREQ'" :
                     "SELECT SignalID, ID FROM MeasurementDetail WHERE DeviceAcronym = {0} AND SignalAcronym = 'FREQ'";
-
                 DataTable table = connection.RetrieveData(measurementSQL, metadata.ConvertField<string>("Acronym"));
 
                 // ReSharper disable once AccessToDisposedClosure

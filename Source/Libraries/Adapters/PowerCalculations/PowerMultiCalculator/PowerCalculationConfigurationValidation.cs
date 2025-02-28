@@ -56,14 +56,15 @@ public static class PowerCalculationConfigurationValidation
     /// <param name="database">Database connection to use for checking the data operation</param>
     /// <returns>True or false indicating whether the operation exists</returns>
     private static bool DataOperationExists(AdoDataConnection database) => 
-        Convert.ToInt32(database.ExecuteScalar($"SELECT COUNT(*) FROM DataOperation WHERE TypeName='{typeof(PowerCalculationConfigurationValidation).FullName}' AND MethodName='ValidatePowerCalculationConfigurations'")) > 0;
+        Convert.ToInt32(database.ExecuteScalar("SELECT COUNT(*) FROM DataOperation WHERE TypeName = {0} AND MethodName='ValidatePowerCalculationConfigurations'", typeof(PowerCalculationConfigurationValidation).FullName)) > 0;
 
     /// <summary>
     /// Creates a data operation to run the validations in this class.
     /// </summary>
     /// <param name="database">Database connection to use for creating the data operation</param>
     private static void CreateDataOperation(AdoDataConnection database) => 
-        database.ExecuteNonQuery($"INSERT INTO DataOperation(Description, AssemblyName, TypeName, MethodName, Enabled) VALUES ('Power Calculation Validations', 'PowerCalculations.dll', '{typeof(PowerCalculationConfigurationValidation).FullName}', 'ValidatePowerCalculationConfigurations', 1)");
+        database.ExecuteNonQuery("INSERT INTO DataOperation(Description, AssemblyName, TypeName, MethodName, Enabled) " +
+            "VALUES ('Power Calculation Validations', 'PowerCalculations.dll', {0}, 'ValidatePowerCalculationConfigurations', 1)", typeof(PowerCalculationConfigurationValidation).FullName);
 
     /// <summary>
     /// Returns true if a data operation exists to run this class. Returns false otherwise.
@@ -71,14 +72,16 @@ public static class PowerCalculationConfigurationValidation
     /// <param name="database">Database connection to use for checking the data operation</param>
     /// <returns>True or false indicating whether the operation exists</returns>
     private static bool AdapterInstanceExists(AdoDataConnection database) => 
-        Convert.ToInt32(database.ExecuteScalar($"SELECT COUNT(*) FROM CustomActionAdapter WHERE TypeName='{typeof(PowerMultiCalculatorAdapter).FullName}'")) > 0;
+        Convert.ToInt32(database.ExecuteScalar("SELECT COUNT(*) FROM CustomActionAdapter WHERE TypeName = {0}", typeof(PowerMultiCalculatorAdapter).FullName)) > 0;
 
     /// <summary>
     /// Creates a data operation to run the validations in this class.
     /// </summary>
     /// <param name="database">Database connection to use for creating the data operation</param>
     private static void CreateAdapterInstance(AdoDataConnection database) => 
-        database.ExecuteNonQuery($"INSERT INTO CustomActionAdapter(NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, Enabled) VALUES ('{ConfigurationFile.Current.Settings["systemSettings"]["NodeID"].ValueAs<Guid>()}', 'PHASOR!POWERCALC', 'PowerCalculations.dll', '{typeof(PowerMultiCalculatorAdapter).FullName}', 'FramesPerSecond=30; LagTime=5.0; LeadTime=3.0', 1)");
+        database.ExecuteNonQuery("INSERT INTO CustomActionAdapter(NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, Enabled) " +
+            "VALUES ({0}, 'PHASOR!POWERCALC', 'PowerCalculations.dll', {1}, 'FramesPerSecond=30; LagTime=5.0; LeadTime=3.0', 1)",
+            ConfigurationFile.Current.Settings["systemSettings"]["NodeID"].ValueAs<Guid>(), typeof(PowerMultiCalculatorAdapter).FullName);
 
     /// <summary>
     /// Data operation to validate power calculation configuration. This method checks that input measurements and non-null output measurements exist, are enabled, and have the correct signal type.
