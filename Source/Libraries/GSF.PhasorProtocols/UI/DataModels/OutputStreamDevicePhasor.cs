@@ -243,7 +243,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 if (!string.IsNullOrEmpty(sortMember))
                     sortClause = $"ORDER BY {sortMember} {sortDirection}";
 
-                DataTable OutputStreamDevicePhasorTable = database.Connection.RetrieveData(database.AdapterType, $"SELECT ID FROM OutputStreamDevicePhasor WHERE OutputStreamDeviceID = {outputStreamDeviceID} {sortClause}");
+                DataTable OutputStreamDevicePhasorTable = database.Connection.RetrieveData(database.AdapterType,
+                    $"SELECT ID FROM OutputStreamDevicePhasor WHERE OutputStreamDeviceID = {{0}} {sortClause}", outputStreamDeviceID);
 
                 foreach (DataRow row in OutputStreamDevicePhasorTable.Rows)
                     outputStreamDevicePhasorList.Add((row.ConvertField<int>("ID")));
@@ -276,9 +277,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 if (keys is not null && keys.Count > 0)
                 {
                     string commaSeparatedKeys = keys.Select(key => $"{key}").Aggregate((str1, str2) => $"{str1},{str2}");
-                    string query = database.ParameterizedQueryString($"SELECT NodeID, OutputStreamDeviceID, ID, Label, Type, Phase, ScalingValue, LoadOrder FROM OutputStreamDevicePhasor WHERE ID IN ({commaSeparatedKeys})");
 
-                    DataTable outputStreamDevicePhasorTable = database.Connection.RetrieveData(database.AdapterType, query);
+                    DataTable outputStreamDevicePhasorTable = database.Connection.RetrieveData(database.AdapterType, "SELECT NodeID, OutputStreamDeviceID, ID, Label, Type, Phase, ScalingValue, LoadOrder FROM OutputStreamDevicePhasor WHERE ID IN ({0})", commaSeparatedKeys);
                     outputStreamDevicePhasorList = new OutputStreamDevicePhasor[outputStreamDevicePhasorTable.Rows.Count];
 
                     foreach (DataRow row in outputStreamDevicePhasorTable.Rows)
@@ -524,8 +524,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
         {
             const string outputPhasorFormat = "SELECT Label, OutputStreamDeviceID FROM OutputStreamDevicePhasor WHERE ID = {0}";
             const string outputDeviceFormat = "SELECT Acronym, AdapterID FROM OutputStreamDevice WHERE ID = {0}";
-            const string measurementDetailFormat = "SELECT PointTag FROM MeasurementDetail WHERE DeviceAcronym = '{0}' AND PhasorLabel = '{1}' AND SignalTypeSuffix = '{2}'";
-            const string outputMeasurementDetailFormat = "SELECT SignalReference FROM OutputStreamMeasurementDetail WHERE SourcePointTag = '{0}'";
+            const string measurementDetailFormat = "SELECT PointTag FROM MeasurementDetail WHERE DeviceAcronym = {0} AND PhasorLabel = {1} AND SignalTypeSuffix = {2}";
+            const string outputMeasurementDetailFormat = "SELECT SignalReference FROM OutputStreamMeasurementDetail WHERE SourcePointTag = {0}";
 
             bool createdConnection = false;
 
@@ -541,11 +541,11 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 string deviceName = outputDeviceRecord.Field<string>("Acronym");
                 adapterID = outputDeviceRecord.ConvertField<int>("AdapterID");
 
-                string anglePointTag = database.Connection.ExecuteScalar(string.Format(measurementDetailFormat, deviceName, labelName, "PA")).ToNonNullString();
-                angleSignalReference = database.Connection.ExecuteScalar(string.Format(outputMeasurementDetailFormat, anglePointTag)).ToNonNullString();
+                string anglePointTag = database.Connection.ExecuteScalar(measurementDetailFormat, deviceName, labelName, "PA").ToNonNullString();
+                angleSignalReference = database.Connection.ExecuteScalar(outputMeasurementDetailFormat, anglePointTag).ToNonNullString();
 
-                string magnitudePointTag = database.Connection.ExecuteScalar(string.Format(measurementDetailFormat, deviceName, labelName, "PM")).ToNonNullString();
-                magnitudeSignalReference = database.Connection.ExecuteScalar(string.Format(outputMeasurementDetailFormat, magnitudePointTag)).ToNonNullString();
+                string magnitudePointTag = database.Connection.ExecuteScalar(measurementDetailFormat, deviceName, labelName, "PM").ToNonNullString();
+                magnitudeSignalReference = database.Connection.ExecuteScalar(outputMeasurementDetailFormat, magnitudePointTag).ToNonNullString();
             }
             catch (Exception ex)
             {
