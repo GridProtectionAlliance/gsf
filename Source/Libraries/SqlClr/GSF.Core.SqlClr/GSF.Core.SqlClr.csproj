@@ -7,8 +7,8 @@
     <AssemblyTitle>GSF.Core.SqlClr</AssemblyTitle>
     <Product>GSF.Core.SqlClr</Product>
     <Copyright>Copyright ©  2016</Copyright>
-    <AssemblyVersion>2.4.232.0</AssemblyVersion>
-    <FileVersion>2.4.232.0</FileVersion>
+    <AssemblyVersion>2.4.233.0</AssemblyVersion>
+    <FileVersion>2.4.233.0</FileVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>..\..\..\..\Build\Output\$(Configuration)\Libraries\SqlClr\</OutputPath>
