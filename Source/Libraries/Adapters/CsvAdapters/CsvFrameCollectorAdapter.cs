@@ -22,11 +22,13 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
 using GSF;
+using GSF.Collections;
 using GSF.Configuration;
 using GSF.Diagnostics;
 using GSF.IO;
@@ -72,6 +74,7 @@ namespace CsvAdapters
 
         // Fields
         private readonly object m_activeFileLock;
+        private string m_headerText;
         private long m_lastTimestamp;
         private long m_lastRolloverIndex;
         private long m_downsampleFrameCount;
@@ -218,6 +221,12 @@ namespace CsvAdapters
 
             if (string.IsNullOrWhiteSpace(ExportPath))
                 ExportPath = Path.Combine("CSVExports", Name);
+
+            InputMeasurementKeys = InputMeasurementKeys
+                .OrderBy(key => key.ID)
+                .ToArray();
+
+            m_headerText = "Timestamp," + string.Join(",", InputMeasurementKeys.Select(ToHeader));
         }
 
         /// <summary>
@@ -283,9 +292,13 @@ namespace CsvAdapters
                 using (TextWriter writer = AppendToFile(activeFilePath))
                 {
                     if (writeHeader)
-                        writer.WriteLine("Timestamp," + string.Join(",",frame.Measurements.Keys.OrderBy((k) => k.ID).Select(ToHeader)));
+                        writer.WriteLine(m_headerText);
 
-                    writer.WriteLine(timestamp + "," + string.Join(",",frame.Measurements.Values.OrderBy((k) => k.ID).Select(m => m.AdjustedValue)));
+                    IEnumerable<string> values = InputMeasurementKeys
+                        .Select(frame.Measurements.GetOrDefault)
+                        .Select(measurement => measurement?.AdjustedValue.ToString() ?? string.Empty);
+
+                    writer.WriteLine($"{timestamp},{string.Join(",", values)}");
                 }
             }
         }
