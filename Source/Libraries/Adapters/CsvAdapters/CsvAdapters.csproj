@@ -57,6 +57,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CsvExportAdapter.cs" />
+    <Compile Include="CsvFrameCollectorAdapter.cs" />
     <Compile Include="CsvImportAdapter.cs" />
     <Compile Include="CsvInputAdapter.cs" />
     <Compile Include="CsvOutputAdapter.cs" />
