@@ -106,7 +106,7 @@ public static class AnnotationRequestExtensions
         {
             AnnotationType.RaisedAlarms => value != 0.0D,
             AnnotationType.ClearedAlarms => value == 0.0D,
-            AnnotationType.Alarms => value == 0.0D,
+            AnnotationType.Alarms => true,
             _ => throw new InvalidOperationException("Cannot determine data point applicability for specified annotation type.")
         };
     }
