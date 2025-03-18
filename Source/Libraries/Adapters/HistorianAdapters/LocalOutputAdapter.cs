@@ -1056,7 +1056,6 @@ public class LocalOutputAdapter : OutputAdapterBase
                 settings = configFile.Settings[$"{acronym}ArchiveFile"];
                 settings.Add("CacheWrites", true, $"True if writes are to be cached for performance; otherwise False - this defaults to True for the {name} working archive file.");
                 settings.Add("ConserveMemory", false, $"True if attempts are to be made to conserve memory; otherwise False - this defaults to False for the {name} working archive file.");
-                //settings["CacheWrites"].Update(true);
                 settings["ConserveMemory"].Update(false);
 
                 defaultFileName = $"{archivePath}{Path.DirectorySeparatorChar}{acronym}_archive.d";
