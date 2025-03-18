@@ -261,7 +261,6 @@ namespace GSF.TimeSeries.UI.DataModels
 
                 if (!string.IsNullOrEmpty(sortMember))
                     sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
-
                 // check the query once again , Does it have to be details or somethng else
                 vendorTable = database.Connection.RetrieveData(database.AdapterType, string.Format("SELECT ID From VendorDetail {0}", sortClause));
 

@@ -509,7 +509,8 @@ namespace GSF.TimeSeries.UI.DataModels
                 if ((object)keys != null && keys.Count > 0)
                 {
                     commaSeparatedKeys = keys.Select(key => "'" + key.ToString() + "'").Aggregate((str1, str2) => str1 + "," + str2);
-                    query = "Select ID, Name, CompanyID, Longitude, Latitude, Description, ImagePath, Settings, MenuData, " + $"MenuType, Master, LoadOrder, Enabled, CompanyName From NodeDetail WHERE ID IN ({commaSeparatedKeys})";
+                    query = "Select ID, Name, CompanyID, Longitude, Latitude, Description, ImagePath, Settings, MenuData, " + 
+                        $"MenuType, Master, LoadOrder, Enabled, CompanyName From NodeDetail WHERE ID IN ({commaSeparatedKeys})";
 
                     nodeTable = database.Connection.RetrieveData(database.AdapterType, query);
                     nodeList = new Node[nodeTable.Rows.Count];
