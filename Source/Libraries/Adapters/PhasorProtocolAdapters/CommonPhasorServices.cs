@@ -1339,7 +1339,6 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
         settings.Add("FileName", $"Statistics{Path.DirectorySeparatorChar}stat_archive.d", "Name of the statistics working archive file including its path.");
         settings.Add("CacheWrites", true, "True if writes are to be cached for performance; otherwise False - this defaults to True for the statistics working archive file.");
         settings.Add("ConserveMemory", false, "True if attempts are to be made to conserve memory; otherwise False - this defaults to False for the statistics working archive file.");
-        settings["CacheWrites"].Update(true);
         settings["ConserveMemory"].Update(false);
 
         settings = configFile.Settings["statMetadataService"];
