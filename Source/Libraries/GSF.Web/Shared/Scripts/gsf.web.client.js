@@ -730,28 +730,32 @@ String.prototype.parseKeyValuePairs = function(parameterDelimiter,
     return keyValuePairs;
 };
 
-// Renders URLs and e-mail addresses as clickable links
-function renderHotLinks(sourceText, target) {
-    if (target === undefined)
-        target = "_blank";
+// Escape HTML special characters
+function escapeHTML(str) {
+    return str.replace(/[&<>"']/g, function (match) {
+        const replacements = { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" };
+        return replacements[match];
+    });
+}
 
-    sourceText = sourceText.toString();
-
-    var replacedText;
+// Renders URLs and email addresses as clickable links safely
+function renderHotLinks(sourceText, target = "_blank") {
+    // Escape HTML -- this santizes text to disallow script injection
+    let escapedText = escapeHTML(sourceText.toString());
 
     // URLs starting with http://, https://, or ftp://
     const replacePattern1 = /(\b(https?|ftp):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gim;
-    replacedText = sourceText.replace(replacePattern1, "<a href=\"$1\" target=\"" + target + "\">$1</a>");
+    escapedText = escapedText.replace(replacePattern1, `<a href="$1" target="${target}">$1</a>`);
 
     // URLs starting with "www." without // before it
     const replacePattern2 = /(^|[^\/])(www\.[\S]+(\b|$))/gim;
-    replacedText = replacedText.replace(replacePattern2, "$1<a href=\"http://$2\" target=\"" + target + "\">$2</a>");
+    escapedText = escapedText.replace(replacePattern2, `$1<a href="http://$2" target="${target}">$2</a>`);
 
     // Change e-mail addresses to mailto: links
     const replacePattern3 = /(([a-zA-Z0-9\-\_\.])+@[a-zA-Z\_]+?(\.[a-zA-Z]{2,6})+)/gim;
-    replacedText = replacedText.replace(replacePattern3, "<a href=\"mailto:$1\">$1</a>");
+    escapedText = escapedText.replace(replacePattern3, `<a href="mailto:$1">$1</a>`);
 
-    return replacedText;
+    return escapedText;
 }
 
 // Date Functions
