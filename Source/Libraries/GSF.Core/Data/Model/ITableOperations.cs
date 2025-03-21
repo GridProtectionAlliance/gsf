@@ -885,6 +885,13 @@ namespace GSF.Data.Model
         Type GetFieldType(string fieldName);
 
         /// <summary>
+        /// Gets flag that determines if the specified field exists.
+        /// </summary>
+        /// <param name="fieldName">Field name to check.</param>
+        /// <returns><c>true</c> if field is found; otherwise, <c>false</c>.</returns>
+        bool FieldExists(string fieldName);
+
+        /// <summary>
         /// Generates a <see cref="RecordRestriction"/> based on fields marked with <see cref="SearchableAttribute"/> and specified <paramref name="searchText"/>.
         /// </summary>
         /// <param name="searchText">Text to search.</param>
