@@ -592,20 +592,32 @@ namespace GSF.Web.Security
             {
                 IOwinContext owinContext = request.GetOwinContext();
                 HttpContextBase httpContext = owinContext.Get<HttpContextBase>(typeof(HttpContextBase).FullName);
-                
-                httpContext.Response.AppendCookie(new HttpCookie(key, value)
+                HttpCookie cookie = new HttpCookie(key, value)
                 { 
+                    HttpOnly = true,
+                    SameSite = SameSiteMode.Strict,
                     Path = path,
                     Expires = maxAge is null ? DateTime.MinValue : DateTime.UtcNow.Add(maxAge.Value)
-                });
+                };
+
+                if (context.Request.Scheme == "https")
+                    cookie.Secure = true;
+                httpContext.Response.AppendCookie(cookie);
             }
             else
             {
-                response.Headers.AddCookies(new[] { new CookieHeaderValue(key, value)
+                CookieHeaderValue cookie = new CookieHeaderValue(key, value)
                 {
+                    HttpOnly = true,
+                    SameSite = SameSiteMode.Strict,
                     Path = path,
                     MaxAge = maxAge
-                }});
+                };
+
+                 if (context.Request.Scheme == "https")
+                    cookie.Secure = true;
+
+                response.Headers.AddCookies(new[] { cookie });
             }
         }
 
