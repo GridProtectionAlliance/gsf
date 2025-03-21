@@ -1941,6 +1941,16 @@ namespace GSF.Data.Model
         }
 
         /// <summary>
+        /// Gets flag that determines if the specified field exists.
+        /// </summary>
+        /// <param name="fieldName">Field name to check.</param>
+        /// <returns><c>true</c> if field is found; otherwise, <c>false</c>.</returns>
+        public bool FieldExists(string fieldName)
+        {
+            return s_propertyNames.TryGetValue(fieldName, out _);
+        }
+
+        /// <summary>
         /// Generates a <see cref="RecordRestriction"/> based on fields marked with <see cref="SearchableAttribute"/> and specified <paramref name="searchText"/>.
         /// </summary>
         /// <param name="searchText">Text to search.</param>
