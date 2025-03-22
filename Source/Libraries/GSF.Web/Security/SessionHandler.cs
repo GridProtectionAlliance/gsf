@@ -600,7 +600,7 @@ namespace GSF.Web.Security
                     Expires = maxAge is null ? DateTime.MinValue : DateTime.UtcNow.Add(maxAge.Value)
                 };
 
-                if (context.Request.Scheme == "https")
+                if (request.RequestUri.Scheme == "https")
                     cookie.Secure = true;
                 httpContext.Response.AppendCookie(cookie);
             }
@@ -609,12 +609,12 @@ namespace GSF.Web.Security
                 CookieHeaderValue cookie = new CookieHeaderValue(key, value)
                 {
                     HttpOnly = true,
-                    SameSite = SameSiteMode.Strict,
                     Path = path,
                     MaxAge = maxAge
                 };
 
-                 if (context.Request.Scheme == "https")
+             
+                if (request.RequestUri.Scheme == "https")
                     cookie.Secure = true;
 
                 response.Headers.AddCookies(new[] { cookie });
