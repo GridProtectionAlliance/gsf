@@ -26,50 +26,37 @@
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
 
-namespace GSF.Historian.DataServices
+namespace GSF.Historian.DataServices;
+
+/// <summary>
+/// Represents a container for JSON serialized time-series data read request.
+/// </summary>
+[XmlType("ReadRequestData")]
+[DataContract(Name = "ReadRequestData")]
+public class SerializableReadRequestData
 {
+    #region [ Properties ]
+
     /// <summary>
-    /// Represents a container for JSON serialized time-series data read request.
+    /// XML array of integer historian ID's.
     /// </summary>
-    [XmlType("ReadRequestData"), DataContract(Name = "ReadRequestData")]
-    public class SerializableReadRequestData
-    {
-        #region [ Constructors ]
+    [XmlArray]
+    [DataMember(Order = 0)]
+    public int[] idArray { get; set; }
 
-        #endregion
+    /// <summary>
+    /// Start time.
+    /// </summary>
+    [XmlAttribute]
+    [DataMember(Order = 1)]
+    public string startTime { get; set; }
 
-        #region [ Properties ]
+    /// <summary>
+    /// End time.
+    /// </summary>
+    [XmlAttribute]
+    [DataMember(Order = 2)]
+    public string endTime { get; set; }
 
-        /// <summary>
-        /// XML array of integer historian ID's.
-        /// </summary>
-        [XmlArray, DataMember(Order = 0)]
-        public int[] idArray
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Start time.
-        /// </summary>
-        [XmlAttribute, DataMember(Order = 1)]
-        public string startTime
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// End time.
-        /// </summary>
-        [XmlAttribute, DataMember(Order = 2)]
-        public string endTime
-        {
-            get;
-            set;
-        }
-
-        #endregion
-    }
+    #endregion
 }

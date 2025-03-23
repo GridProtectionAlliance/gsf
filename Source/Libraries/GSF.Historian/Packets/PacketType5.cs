@@ -34,129 +34,120 @@
 using System;
 using System.Collections.Generic;
 
-namespace GSF.Historian.Packets
+// ReSharper disable VirtualMemberCallInConstructor
+
+namespace GSF.Historian.Packets;
+
+/// <summary>
+/// Represents a packet that can be used to query the status of a historian.
+/// </summary>
+public class PacketType5 : PacketBase
 {
+    // **************************************************************************************************
+    // *                                        Binary Structure                                        *
+    // **************************************************************************************************
+    // * # Of Bytes Byte Index Data Type  Property Name                                                 *
+    // * ---------- ---------- ---------- --------------------------------------------------------------*
+    // * 2          0-1        Int16      TypeID (packet identifier)                                    *
+    // **************************************************************************************************
+
+    #region [ Members ]
+
+    // Constants
+
     /// <summary>
-    /// Represents a packet that can be used to query the status of a historian.
+    /// Specifies the number of bytes in the binary image of <see cref="PacketType5"/>.
     /// </summary>
-    public class PacketType5 : PacketBase
+    public new const int FixedLength = 2;
+
+    #endregion
+
+    #region [ Constructors ]
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PacketType5"/> class.
+    /// </summary>
+    public PacketType5()
+        : base(5)
     {
-        // **************************************************************************************************
-        // *                                        Binary Structure                                        *
-        // **************************************************************************************************
-        // * # Of Bytes Byte Index Data Type  Property Name                                                 *
-        // * ---------- ---------- ---------- --------------------------------------------------------------*
-        // * 2          0-1        Int16      TypeID (packet identifier)                                    *
-        // **************************************************************************************************
-
-        #region [ Members ]
-
-        // Constants
-
-        /// <summary>
-        /// Specifies the number of bytes in the binary image of <see cref="PacketType5"/>.
-        /// </summary>
-        public new const int FixedLength = 2;
-
-        #endregion
-
-        #region [ Constructors ]
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PacketType5"/> class.
-        /// </summary>
-        public PacketType5()
-            : base(5)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PacketType5"/> class.
-        /// </summary>
-        /// <param name="buffer">Binary image to be used for initializing <see cref="PacketType5"/>.</param>
-        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="buffer"/>.</param>
-        /// <param name="length">Valid number of bytes in <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
-        public PacketType5(byte[] buffer, int startIndex, int length)
-            : this()
-        {
-            ParseBinaryImage(buffer, startIndex, length);
-        }
-
-        #endregion
-
-        #region [ Properties ]
-
-        /// <summary>
-        /// Gets the length of the <see cref="PacketType5"/>.
-        /// </summary>
-        public override int BinaryLength
-        {
-            get
-            {
-                return FixedLength;
-            }
-        }
-
-        #endregion
-
-        #region [ Methods ]
-
-        /// <summary>
-        /// Initializes <see cref="PacketType5"/> from the specified <paramref name="buffer"/>.
-        /// </summary>
-        /// <param name="buffer">Binary image to be used for initializing <see cref="PacketType5"/>.</param>
-        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="buffer"/>.</param>
-        /// <param name="length">Valid number of bytes in <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
-        /// <returns>Number of bytes used from the <paramref name="buffer"/> for initializing <see cref="PacketType5"/>.</returns>
-        public override int ParseBinaryImage(byte[] buffer, int startIndex, int length)
-        {
-            if (length >= FixedLength)
-            {
-                // Binary image has sufficient data.
-                short packetID = LittleEndian.ToInt16(buffer, startIndex);
-                if (packetID != TypeID)
-                    throw new ArgumentException(string.Format("Unexpected packet id '{0}' (expected '{1}')", packetID, TypeID));
-
-                // We have a binary image with the correct packet id and that all this packet type will contain.
-                return FixedLength;
-            }
-            else
-            {
-                // Binary image does not have sufficient data.
-                return 0;
-            }
-        }
-        /// <summary>
-        /// Generates binary image of the <see cref="PacketType5"/> and copies it into the given buffer, for <see cref="BinaryLength"/> bytes.
-        /// </summary>
-        /// <param name="buffer">Buffer used to hold generated binary image of the source object.</param>
-        /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start writing.</param>
-        /// <returns>The number of bytes written to the <paramref name="buffer"/>.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
-        /// <exception cref="ArgumentOutOfRangeException">
-        /// <paramref name="startIndex"/> or <see cref="BinaryLength"/> is less than 0 -or- 
-        /// <paramref name="startIndex"/> and <see cref="BinaryLength"/> will exceed <paramref name="buffer"/> length.
-        /// </exception>
-        public override int GenerateBinaryImage(byte[] buffer, int startIndex)
-        {
-            int length = BinaryLength;
-
-            buffer.ValidateParameters(startIndex, length);
-
-            Buffer.BlockCopy(LittleEndian.GetBytes(TypeID), 0, buffer, startIndex, 2);
-
-            return length;
-        }
-
-        /// <summary>
-        /// Extracts time-series data from <see cref="PacketType5"/>.
-        /// </summary>
-        /// <returns>A null reference.</returns>
-        public override IEnumerable<IDataPoint> ExtractTimeSeriesData()
-        {
-            return null;
-        }
-
-        #endregion
     }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PacketType5"/> class.
+    /// </summary>
+    /// <param name="buffer">Binary image to be used for initializing <see cref="PacketType5"/>.</param>
+    /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="buffer"/>.</param>
+    /// <param name="length">Valid number of bytes in <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
+    public PacketType5(byte[] buffer, int startIndex, int length)
+        : this()
+    {
+        ParseBinaryImage(buffer, startIndex, length);
+    }
+
+    #endregion
+
+    #region [ Properties ]
+
+    /// <summary>
+    /// Gets the length of the <see cref="PacketType5"/>.
+    /// </summary>
+    public override int BinaryLength => FixedLength;
+
+    #endregion
+
+    #region [ Methods ]
+
+    /// <summary>
+    /// Initializes <see cref="PacketType5"/> from the specified <paramref name="buffer"/>.
+    /// </summary>
+    /// <param name="buffer">Binary image to be used for initializing <see cref="PacketType5"/>.</param>
+    /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="buffer"/>.</param>
+    /// <param name="length">Valid number of bytes in <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
+    /// <returns>Number of bytes used from the <paramref name="buffer"/> for initializing <see cref="PacketType5"/>.</returns>
+    public override int ParseBinaryImage(byte[] buffer, int startIndex, int length)
+    {
+        // Binary image does not have sufficient data.
+        if (length < FixedLength)
+            return 0;
+        
+        // Binary image has sufficient data.
+        short packetID = LittleEndian.ToInt16(buffer, startIndex);
+
+        if (packetID != TypeID)
+            throw new ArgumentException($"Unexpected packet id '{packetID}' (expected '{TypeID}')");
+
+        // We have a binary image with the correct packet id and that all this packet type will contain.
+        return FixedLength;
+    }
+    /// <summary>
+    /// Generates binary image of the <see cref="PacketType5"/> and copies it into the given buffer, for <see cref="BinaryLength"/> bytes.
+    /// </summary>
+    /// <param name="buffer">Buffer used to hold generated binary image of the source object.</param>
+    /// <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to start writing.</param>
+    /// <returns>The number of bytes written to the <paramref name="buffer"/>.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="buffer"/> is null.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// <paramref name="startIndex"/> or <see cref="BinaryLength"/> is less than 0 -or- 
+    /// <paramref name="startIndex"/> and <see cref="BinaryLength"/> will exceed <paramref name="buffer"/> length.
+    /// </exception>
+    public override int GenerateBinaryImage(byte[] buffer, int startIndex)
+    {
+        int length = BinaryLength;
+
+        buffer.ValidateParameters(startIndex, length);
+        Buffer.BlockCopy(LittleEndian.GetBytes(TypeID), 0, buffer, startIndex, 2);
+
+        return length;
+    }
+
+    /// <summary>
+    /// Extracts time-series data from <see cref="PacketType5"/>.
+    /// </summary>
+    /// <returns>A null reference.</returns>
+    public override IEnumerable<IDataPoint> ExtractTimeSeriesData()
+    {
+        return null;
+    }
+
+    #endregion
 }

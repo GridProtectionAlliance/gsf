@@ -27,13 +27,12 @@
 
 using System.Runtime.CompilerServices;
 
-namespace GSF.Historian.DataServices
+namespace GSF.Historian.DataServices;
+
+/// <summary>
+/// Contains classes that define the fundamental data web services for a historian.
+/// </summary>
+[CompilerGenerated]
+class NamespaceDoc
 {
-    /// <summary>
-    /// Contains classes that define the fundamental data web services for a historian.
-    /// </summary>
-    [CompilerGenerated]
-    class NamespaceDoc
-    {
-    }
 }

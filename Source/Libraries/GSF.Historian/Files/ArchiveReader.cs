@@ -64,35 +64,35 @@ public class ArchiveReader : IDisposable
     /// <summary>
     /// Occurs when the process of building historic <see cref="ArchiveFile"/> list is started.
     /// </summary>
-    [Category("File")]
+    [Category(nameof(File))]
     [Description("Occurs when the process of building historic ArchiveFile list is started.")]
     public event EventHandler HistoricFileListBuildStart;
 
     /// <summary>
     /// Occurs when the process of building historic <see cref="ArchiveFile"/> list is complete.
     /// </summary>
-    [Category("File")]
+    [Category(nameof(File))]
     [Description("Occurs when the process of building historic ArchiveFile list is complete.")]
     public event EventHandler HistoricFileListBuildComplete;
 
     /// <summary>
     /// Occurs when an <see cref="Exception"/> is encountered in historic <see cref="ArchiveFile"/> list building process.
     /// </summary>
-    [Category("File")]
+    [Category(nameof(File))]
     [Description("Occurs when an Exception is encountered in historic ArchiveFile list building process.")]
     public event EventHandler<EventArgs<Exception>> HistoricFileListBuildException;
 
     /// <summary>
     /// Occurs when the historic <see cref="ArchiveFile"/> list is updated to reflect addition or deletion of historic <see cref="ArchiveFile"/>s.
     /// </summary>
-    [Category("File")]
+    [Category(nameof(File))]
     [Description("Occurs when the historic ArchiveFile list is updated to reflect addition or deletion of historic ArchiveFiles.")]
     public event EventHandler HistoricFileListUpdated;
 
     /// <summary>
     /// Occurs when an <see cref="Exception"/> is encountered while reading <see cref="IDataPoint"/> from the current or historic <see cref="ArchiveFile"/>.
     /// </summary>
-    [Category("Data")]
+    [Category(nameof(Data))]
     [Description("Occurs when an Exception is encountered while reading IDataPoint from the current or historic ArchiveFile.")]
     public event EventHandler<EventArgs<Exception>> DataReadException;
 
@@ -369,7 +369,7 @@ public class ArchiveReader : IDisposable
     /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
     public IEnumerable<IDataPoint> ReadData(int historianID, TimeTag startTime, TimeTag endTime, bool timeSorted = true)
     {
-        return ReadData(new[] { historianID }, startTime, endTime, timeSorted);
+        return ReadData([historianID], startTime, endTime, timeSorted);
     }
 
     /// <summary>
@@ -522,7 +522,7 @@ public class ArchiveReader : IDisposable
         }
         catch (Exception ex)
         {
-            OnDataReadException(new InvalidOperationException("Exception encountered during roll-over processing: " + ex.Message, ex));
+            OnDataReadException(new InvalidOperationException($"Exception encountered during roll-over processing: {ex.Message}", ex));
         }
         finally
         {

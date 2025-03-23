@@ -37,80 +37,84 @@ using System.Collections.Generic;
 using GSF.Historian.Files;
 using GSF.Parsing;
 
-namespace GSF.Historian.Packets
+// ReSharper disable VirtualMemberCallInConstructor
+
+namespace GSF.Historian.Packets;
+
+/// <summary>
+/// Represents a packet to be used for requesting <see cref="MetadataRecord.Summary"/> for the <see cref="QueryPacketBase.RequestIDs"/>.
+/// </summary>
+public class PacketType3 : QueryPacketBase
 {
+    #region [ Constructors ]
+
     /// <summary>
-    /// Represents a packet to be used for requesting <see cref="MetadataRecord.Summary"/> for the <see cref="QueryPacketBase.RequestIDs"/>.
+    /// Initializes a new instance of the <see cref="PacketType3"/> class.
     /// </summary>
-    public class PacketType3 : QueryPacketBase
+    public PacketType3()
+        : base(3)
     {
-        #region [ Constructors ]
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PacketType3"/> class.
-        /// </summary>
-        public PacketType3()
-            : base(3)
-        {
-            ProcessHandler = Process;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PacketType3"/> class.
-        /// </summary>
-        /// <param name="buffer">Binary image to be used for initializing <see cref="PacketType3"/>.</param>
-        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="buffer"/>.</param>
-        /// <param name="length">Valid number of bytes in <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
-        public PacketType3(byte[] buffer, int startIndex, int length)
-            : this()
-        {
-            ParseBinaryImage(buffer, startIndex, length);
-        }
-
-        #endregion
-
-        #region [ Methods ]
-
-        /// <summary>
-        /// Processes <see cref="PacketType3"/>.
-        /// </summary>
-        /// <returns>An <see cref="IEnumerable{T}"/> object containing the binary images of <see cref="MetadataRecord.Summary"/> for the <see cref="QueryPacketBase.RequestIDs"/>.</returns>
-        protected virtual IEnumerable<byte[]> Process()
-        {
-            if (Archive == null)
-                yield break;
-
-            byte[] data;
-            if (RequestIDs.Count == 0 || (RequestIDs.Count == 1 && RequestIDs[0] == -1))
-            {
-                // Information for all defined records is requested.
-                int id = 0;
-                while (true)
-                {
-                    data = Archive.ReadMetaDataSummary(++id);
-                    if (data == null)
-                        // No more records.
-                        break;
-
-                    yield return data;
-                }
-            }
-            else
-            {
-                // Information for specific records is requested.
-                foreach (int id in RequestIDs)
-                {
-                    data = Archive.ReadMetaDataSummary(id);
-                    if (data == null)
-                        // ID is invalid.
-                        continue;
-
-                    yield return data;
-                }
-            }
-            yield return new MetadataRecord(-1, MetadataFileLegacyMode.Enabled).Summary.BinaryImage();    // To indicate EOT.
-        }
-
-        #endregion
+        ProcessHandler = Process;
     }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PacketType3"/> class.
+    /// </summary>
+    /// <param name="buffer">Binary image to be used for initializing <see cref="PacketType3"/>.</param>
+    /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="buffer"/>.</param>
+    /// <param name="length">Valid number of bytes in <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
+    public PacketType3(byte[] buffer, int startIndex, int length)
+        : this()
+    {
+        ParseBinaryImage(buffer, startIndex, length);
+    }
+
+    #endregion
+
+    #region [ Methods ]
+
+    /// <summary>
+    /// Processes <see cref="PacketType3"/>.
+    /// </summary>
+    /// <returns>An <see cref="IEnumerable{T}"/> object containing the binary images of <see cref="MetadataRecord.Summary"/> for the <see cref="QueryPacketBase.RequestIDs"/>.</returns>
+    protected virtual IEnumerable<byte[]> Process()
+    {
+        if (Archive is null)
+            yield break;
+
+        byte[] data;
+
+        if (RequestIDs.Count == 0 || (RequestIDs.Count == 1 && RequestIDs[0] == -1))
+        {
+            // Information for all defined records is requested.
+            int id = 0;
+
+            while (true)
+            {
+                data = Archive.ReadMetaDataSummary(++id);
+                
+                if (data is null)
+                    break; // No more records.
+
+                yield return data;
+            }
+        }
+        else
+        {
+            // Information for specific records is requested.
+            foreach (int id in RequestIDs)
+            {
+                data = Archive.ReadMetaDataSummary(id);
+                
+                if (data is null) // ID is invalid.
+                    continue;
+
+                yield return data;
+            }
+        }
+
+        yield return new MetadataRecord(-1, MetadataFileLegacyMode.Enabled).Summary.BinaryImage();    // To indicate EOT.
+    }
+
+    #endregion
 }

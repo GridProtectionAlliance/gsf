@@ -29,488 +29,290 @@
 //
 //******************************************************************************************************
 
-namespace GSF.Historian.Files
+namespace GSF.Historian.Files;
+
+/// <summary>
+/// Defines which data <see cref="Quality"/> should trigger an alarm notification.
+/// </summary>
+/// <seealso cref="MetadataRecord"/>
+public class MetadataRecordAlarmFlags
 {
+    #region [ Properties ]
+
     /// <summary>
-    /// Defines which data <see cref="Quality"/> should trigger an alarm notification.
+    /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.Unknown"/> should trigger an alarm notification.
     /// </summary>
-    /// <seealso cref="MetadataRecord"/>
-    public class MetadataRecordAlarmFlags
+    public bool Unknown
     {
-        #region [ Members ]
-
-        // Fields
-        private int m_value;
-
-        #endregion
-
-        #region [ Properties ]
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.Unknown"/> should trigger an alarm notification.
-        /// </summary>
-        public bool Unknown
-        {
-            get
-            {
-                return m_value.CheckBits(Bits.Bit00);
-            }
-            set
-            {
-                m_value = value ? m_value.SetBits(Bits.Bit00) : m_value.ClearBits(Bits.Bit00);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.DeletedFromProcessing"/> should trigger an alarm notification.
-        /// </summary>
-        public bool DeletedFromProcessing
-        {
-            get
-            {
-                return m_value.CheckBits(Bits.Bit01);
-            }
-            set
-            {
-                m_value = value ? m_value.SetBits(Bits.Bit01) : m_value.ClearBits(Bits.Bit01);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.CouldNotCalculate"/> should trigger an alarm notification.
-        /// </summary>
-        public bool CouldNotCalculate
-        {
-            get
-            {
-                return m_value.CheckBits(Bits.Bit02);
-            }
-            set
-            {
-                m_value = value ? m_value.SetBits(Bits.Bit02) : m_value.ClearBits(Bits.Bit02);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.FrontEndHardwareError"/> should trigger an alarm notification.
-        /// </summary>
-        public bool FrontEndHardwareError
-        {
-            get
-            {
-                return m_value.CheckBits(Bits.Bit03);
-            }
-            set
-            {
-                m_value = value ? m_value.SetBits(Bits.Bit03) : m_value.ClearBits(Bits.Bit03);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.SensorReadError"/> should trigger an alarm notification.
-        /// </summary>
-        public bool SensorReadError
-        {
-            get
-            {
-                return m_value.CheckBits(Bits.Bit04);
-            }
-            set
-            {
-                m_value = value ? m_value.SetBits(Bits.Bit04) : m_value.ClearBits(Bits.Bit04);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.OpenThermocouple"/> should trigger an alarm notification.
-        /// </summary>
-        public bool OpenThermocouple
-        {
-            get
-            {
-                return m_value.CheckBits(Bits.Bit05);
-            }
-            set
-            {
-                m_value = value ? m_value.SetBits(Bits.Bit05) : m_value.ClearBits(Bits.Bit05);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.InputCountsOutOfSensorRange"/> should trigger an alarm notification.
-        /// </summary>
-        public bool InputCountsOutOfSensorRange
-        {
-            get
-            {
-                return m_value.CheckBits(Bits.Bit06);
-            }
-            set
-            {
-                m_value = value ? m_value.SetBits(Bits.Bit06) : m_value.ClearBits(Bits.Bit06);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.UnreasonableHigh"/> should trigger an alarm notification.
-        /// </summary>
-        public bool UnreasonableHigh
-        {
-            get
-            {
-                return m_value.CheckBits(Bits.Bit07);
-            }
-            set
-            {
-                m_value = value ? m_value.SetBits(Bits.Bit07) : m_value.ClearBits(Bits.Bit07);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.UnreasonableLow"/> should trigger an alarm notification.
-        /// </summary>
-        public bool UnreasonableLow
-        {
-            get
-            {
-                return m_value.CheckBits(Bits.Bit08);
-            }
-            set
-            {
-                m_value = value ? m_value.SetBits(Bits.Bit08) : m_value.ClearBits(Bits.Bit08);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.Old"/> should trigger an alarm notification.
-        /// </summary>
-        public bool Old
-        {
-            get
-            {
-                return m_value.CheckBits(Bits.Bit09);
-            }
-            set
-            {
-                m_value = value ? m_value.SetBits(Bits.Bit09) : m_value.ClearBits(Bits.Bit09);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.SuspectValueAboveHiHiLimit"/> should trigger an alarm notification.
-        /// </summary>
-        public bool SuspectValueAboveHiHiLimit
-        {
-            get
-            {
-                return m_value.CheckBits(Bits.Bit10);
-            }
-            set
-            {
-                m_value = value ? m_value.SetBits(Bits.Bit10) : m_value.ClearBits(Bits.Bit10);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.SuspectValueBelowLoLoLimit"/> should trigger an alarm notification.
-        /// </summary>
-        public bool SuspectValueBelowLoLoLimit
-        {
-            get
-            {
-                return m_value.CheckBits(Bits.Bit11);
-            }
-            set
-            {
-                m_value = value ? m_value.SetBits(Bits.Bit11) : m_value.ClearBits(Bits.Bit11);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.SuspectValueAboveHiLimit"/> should trigger an alarm notification.
-        /// </summary>
-        public bool SuspectValueAboveHiLimit
-        {
-            get
-            {
-                return m_value.CheckBits(Bits.Bit12);
-            }
-            set
-            {
-                m_value = value ? m_value.SetBits(Bits.Bit12) : m_value.ClearBits(Bits.Bit12);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.SuspectValueBelowLoLimit"/> should trigger an alarm notification.
-        /// </summary>
-        public bool SuspectValueBelowLoLimit
-        {
-            get
-            {
-                return m_value.CheckBits(Bits.Bit13);
-            }
-            set
-            {
-                m_value = value ? m_value.SetBits(Bits.Bit13) : m_value.ClearBits(Bits.Bit13);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.SuspectData"/> should trigger an alarm notification.
-        /// </summary>
-        public bool SuspectData
-        {
-            get
-            {
-                return m_value.CheckBits(Bits.Bit14);
-            }
-            set
-            {
-                m_value = value ? m_value.SetBits(Bits.Bit14) : m_value.ClearBits(Bits.Bit14);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.DigitalSuspectAlarm"/> should trigger an alarm notification.
-        /// </summary>
-        public bool DigitalSuspectAlarm
-        {
-            get
-            {
-                return m_value.CheckBits(Bits.Bit15);
-            }
-            set
-            {
-                m_value = value ? m_value.SetBits(Bits.Bit15) : m_value.ClearBits(Bits.Bit15);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.InsertedValueAboveHiHiLimit"/> should trigger an alarm notification.
-        /// </summary>
-        public bool InsertedValueAboveHiHiLimit
-        {
-            get
-            {
-                return m_value.CheckBits(Bits.Bit16);
-            }
-            set
-            {
-                m_value = value ? m_value.SetBits(Bits.Bit16) : m_value.ClearBits(Bits.Bit16);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.InsertedValueBelowLoLoLimit"/> should trigger an alarm notification.
-        /// </summary>
-        public bool InsertedValueBelowLoLoLimit
-        {
-            get
-            {
-                return m_value.CheckBits(Bits.Bit17);
-            }
-            set
-            {
-                m_value = value ? m_value.SetBits(Bits.Bit17) : m_value.ClearBits(Bits.Bit17);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.InsertedValueAboveHiLimit"/> should trigger an alarm notification.
-        /// </summary>
-        public bool InsertedValueAboveHiLimit
-        {
-            get
-            {
-                return m_value.CheckBits(Bits.Bit18);
-            }
-            set
-            {
-                m_value = value ? m_value.SetBits(Bits.Bit18) : m_value.ClearBits(Bits.Bit18);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.InsertedValueBelowLoLimit"/> should trigger an alarm notification.
-        /// </summary>
-        public bool InsertedValueBelowLoLimit
-        {
-            get
-            {
-                return m_value.CheckBits(Bits.Bit19);
-            }
-            set
-            {
-                m_value = value ? m_value.SetBits(Bits.Bit19) : m_value.ClearBits(Bits.Bit19);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.InsertedValue"/> should trigger an alarm notification.
-        /// </summary>
-        public bool InsertedValue
-        {
-            get
-            {
-                return m_value.CheckBits(Bits.Bit20);
-            }
-            set
-            {
-                m_value = value ? m_value.SetBits(Bits.Bit20) : m_value.ClearBits(Bits.Bit20);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.DigitalInsertedStatusInAlarm"/> should trigger an alarm notification.
-        /// </summary>
-        public bool DigitalInsertedStatusInAlarm
-        {
-            get
-            {
-                return m_value.CheckBits(Bits.Bit21);
-            }
-            set
-            {
-                m_value = value ? m_value.SetBits(Bits.Bit21) : m_value.ClearBits(Bits.Bit21);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.LogicalAlarm"/> should trigger an alarm notification.
-        /// </summary>
-        public bool LogicalAlarm
-        {
-            get
-            {
-                return m_value.CheckBits(Bits.Bit22);
-            }
-            set
-            {
-                m_value = value ? m_value.SetBits(Bits.Bit22) : m_value.ClearBits(Bits.Bit22);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.ValueAboveHiHiAlarm"/> should trigger an alarm notification.
-        /// </summary>
-        public bool ValueAboveHiHiAlarm
-        {
-            get
-            {
-                return m_value.CheckBits(Bits.Bit23);
-            }
-            set
-            {
-                m_value = value ? m_value.SetBits(Bits.Bit23) : m_value.ClearBits(Bits.Bit23);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.ValueBelowLoLoAlarm"/> should trigger an alarm notification.
-        /// </summary>
-        public bool ValueBelowLoLoAlarm
-        {
-            get
-            {
-                return m_value.CheckBits(Bits.Bit24);
-            }
-            set
-            {
-                m_value = value ? m_value.SetBits(Bits.Bit24) : m_value.ClearBits(Bits.Bit24);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.ValueAboveHiAlarm"/> should trigger an alarm notification.
-        /// </summary>
-        public bool ValueAboveHiAlarm
-        {
-            get
-            {
-                return m_value.CheckBits(Bits.Bit25);
-            }
-            set
-            {
-                m_value = value ? m_value.SetBits(Bits.Bit25) : m_value.ClearBits(Bits.Bit25);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.ValueBelowLoAlarm"/> should trigger an alarm notification.
-        /// </summary>
-        public bool ValueBelowLoAlarm
-        {
-            get
-            {
-                return m_value.CheckBits(Bits.Bit26);
-            }
-            set
-            {
-                m_value = value ? m_value.SetBits(Bits.Bit26) : m_value.ClearBits(Bits.Bit26);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.DeletedFromAlarmChecks"/> should trigger an alarm notification.
-        /// </summary>
-        public bool DeletedFromAlarmChecks
-        {
-            get
-            {
-                return m_value.CheckBits(Bits.Bit27);
-            }
-            set
-            {
-                m_value = value ? m_value.SetBits(Bits.Bit27) : m_value.ClearBits(Bits.Bit27);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.InhibitedByCutoutPoint"/> should trigger an alarm notification.
-        /// </summary>
-        public bool InhibitedByCutoutPoint
-        {
-            get
-            {
-                return m_value.CheckBits(Bits.Bit28);
-            }
-            set
-            {
-                m_value = value ? m_value.SetBits(Bits.Bit28) : m_value.ClearBits(Bits.Bit28);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.Good"/> should trigger an alarm notification.
-        /// </summary>
-        public bool Good
-        {
-            get
-            {
-                return m_value.CheckBits(Bits.Bit29);
-            }
-            set
-            {
-                m_value = value ? m_value.SetBits(Bits.Bit29) : m_value.ClearBits(Bits.Bit29);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the 32-bit integer value used for defining which data <see cref="Quality"/> should trigger an alarm notification.
-        /// </summary>
-        public int Value
-        {
-            get
-            {
-                return m_value;
-            }
-            set
-            {
-                m_value = value;
-            }
-        }
-
-        #endregion
+        get => Value.CheckBits(Bits.Bit00);
+        set => Value = value ? Value.SetBits(Bits.Bit00) : Value.ClearBits(Bits.Bit00);
     }
+
+    /// <summary>
+    /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.DeletedFromProcessing"/> should trigger an alarm notification.
+    /// </summary>
+    public bool DeletedFromProcessing
+    {
+        get => Value.CheckBits(Bits.Bit01);
+        set => Value = value ? Value.SetBits(Bits.Bit01) : Value.ClearBits(Bits.Bit01);
+    }
+
+    /// <summary>
+    /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.CouldNotCalculate"/> should trigger an alarm notification.
+    /// </summary>
+    public bool CouldNotCalculate
+    {
+        get => Value.CheckBits(Bits.Bit02);
+        set => Value = value ? Value.SetBits(Bits.Bit02) : Value.ClearBits(Bits.Bit02);
+    }
+
+    /// <summary>
+    /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.FrontEndHardwareError"/> should trigger an alarm notification.
+    /// </summary>
+    public bool FrontEndHardwareError
+    {
+        get => Value.CheckBits(Bits.Bit03);
+        set => Value = value ? Value.SetBits(Bits.Bit03) : Value.ClearBits(Bits.Bit03);
+    }
+
+    /// <summary>
+    /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.SensorReadError"/> should trigger an alarm notification.
+    /// </summary>
+    public bool SensorReadError
+    {
+        get => Value.CheckBits(Bits.Bit04);
+        set => Value = value ? Value.SetBits(Bits.Bit04) : Value.ClearBits(Bits.Bit04);
+    }
+
+    /// <summary>
+    /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.OpenThermocouple"/> should trigger an alarm notification.
+    /// </summary>
+    public bool OpenThermocouple
+    {
+        get => Value.CheckBits(Bits.Bit05);
+        set => Value = value ? Value.SetBits(Bits.Bit05) : Value.ClearBits(Bits.Bit05);
+    }
+
+    /// <summary>
+    /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.InputCountsOutOfSensorRange"/> should trigger an alarm notification.
+    /// </summary>
+    public bool InputCountsOutOfSensorRange
+    {
+        get => Value.CheckBits(Bits.Bit06);
+        set => Value = value ? Value.SetBits(Bits.Bit06) : Value.ClearBits(Bits.Bit06);
+    }
+
+    /// <summary>
+    /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.UnreasonableHigh"/> should trigger an alarm notification.
+    /// </summary>
+    public bool UnreasonableHigh
+    {
+        get => Value.CheckBits(Bits.Bit07);
+        set => Value = value ? Value.SetBits(Bits.Bit07) : Value.ClearBits(Bits.Bit07);
+    }
+
+    /// <summary>
+    /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.UnreasonableLow"/> should trigger an alarm notification.
+    /// </summary>
+    public bool UnreasonableLow
+    {
+        get => Value.CheckBits(Bits.Bit08);
+        set => Value = value ? Value.SetBits(Bits.Bit08) : Value.ClearBits(Bits.Bit08);
+    }
+
+    /// <summary>
+    /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.Old"/> should trigger an alarm notification.
+    /// </summary>
+    public bool Old
+    {
+        get => Value.CheckBits(Bits.Bit09);
+        set => Value = value ? Value.SetBits(Bits.Bit09) : Value.ClearBits(Bits.Bit09);
+    }
+
+    /// <summary>
+    /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.SuspectValueAboveHiHiLimit"/> should trigger an alarm notification.
+    /// </summary>
+    public bool SuspectValueAboveHiHiLimit
+    {
+        get => Value.CheckBits(Bits.Bit10);
+        set => Value = value ? Value.SetBits(Bits.Bit10) : Value.ClearBits(Bits.Bit10);
+    }
+
+    /// <summary>
+    /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.SuspectValueBelowLoLoLimit"/> should trigger an alarm notification.
+    /// </summary>
+    public bool SuspectValueBelowLoLoLimit
+    {
+        get => Value.CheckBits(Bits.Bit11);
+        set => Value = value ? Value.SetBits(Bits.Bit11) : Value.ClearBits(Bits.Bit11);
+    }
+
+    /// <summary>
+    /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.SuspectValueAboveHiLimit"/> should trigger an alarm notification.
+    /// </summary>
+    public bool SuspectValueAboveHiLimit
+    {
+        get => Value.CheckBits(Bits.Bit12);
+        set => Value = value ? Value.SetBits(Bits.Bit12) : Value.ClearBits(Bits.Bit12);
+    }
+
+    /// <summary>
+    /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.SuspectValueBelowLoLimit"/> should trigger an alarm notification.
+    /// </summary>
+    public bool SuspectValueBelowLoLimit
+    {
+        get => Value.CheckBits(Bits.Bit13);
+        set => Value = value ? Value.SetBits(Bits.Bit13) : Value.ClearBits(Bits.Bit13);
+    }
+
+    /// <summary>
+    /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.SuspectData"/> should trigger an alarm notification.
+    /// </summary>
+    public bool SuspectData
+    {
+        get => Value.CheckBits(Bits.Bit14);
+        set => Value = value ? Value.SetBits(Bits.Bit14) : Value.ClearBits(Bits.Bit14);
+    }
+
+    /// <summary>
+    /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.DigitalSuspectAlarm"/> should trigger an alarm notification.
+    /// </summary>
+    public bool DigitalSuspectAlarm
+    {
+        get => Value.CheckBits(Bits.Bit15);
+        set => Value = value ? Value.SetBits(Bits.Bit15) : Value.ClearBits(Bits.Bit15);
+    }
+
+    /// <summary>
+    /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.InsertedValueAboveHiHiLimit"/> should trigger an alarm notification.
+    /// </summary>
+    public bool InsertedValueAboveHiHiLimit
+    {
+        get => Value.CheckBits(Bits.Bit16);
+        set => Value = value ? Value.SetBits(Bits.Bit16) : Value.ClearBits(Bits.Bit16);
+    }
+
+    /// <summary>
+    /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.InsertedValueBelowLoLoLimit"/> should trigger an alarm notification.
+    /// </summary>
+    public bool InsertedValueBelowLoLoLimit
+    {
+        get => Value.CheckBits(Bits.Bit17);
+        set => Value = value ? Value.SetBits(Bits.Bit17) : Value.ClearBits(Bits.Bit17);
+    }
+
+    /// <summary>
+    /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.InsertedValueAboveHiLimit"/> should trigger an alarm notification.
+    /// </summary>
+    public bool InsertedValueAboveHiLimit
+    {
+        get => Value.CheckBits(Bits.Bit18);
+        set => Value = value ? Value.SetBits(Bits.Bit18) : Value.ClearBits(Bits.Bit18);
+    }
+
+    /// <summary>
+    /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.InsertedValueBelowLoLimit"/> should trigger an alarm notification.
+    /// </summary>
+    public bool InsertedValueBelowLoLimit
+    {
+        get => Value.CheckBits(Bits.Bit19);
+        set => Value = value ? Value.SetBits(Bits.Bit19) : Value.ClearBits(Bits.Bit19);
+    }
+
+    /// <summary>
+    /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.InsertedValue"/> should trigger an alarm notification.
+    /// </summary>
+    public bool InsertedValue
+    {
+        get => Value.CheckBits(Bits.Bit20);
+        set => Value = value ? Value.SetBits(Bits.Bit20) : Value.ClearBits(Bits.Bit20);
+    }
+
+    /// <summary>
+    /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.DigitalInsertedStatusInAlarm"/> should trigger an alarm notification.
+    /// </summary>
+    public bool DigitalInsertedStatusInAlarm
+    {
+        get => Value.CheckBits(Bits.Bit21);
+        set => Value = value ? Value.SetBits(Bits.Bit21) : Value.ClearBits(Bits.Bit21);
+    }
+
+    /// <summary>
+    /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.LogicalAlarm"/> should trigger an alarm notification.
+    /// </summary>
+    public bool LogicalAlarm
+    {
+        get => Value.CheckBits(Bits.Bit22);
+        set => Value = value ? Value.SetBits(Bits.Bit22) : Value.ClearBits(Bits.Bit22);
+    }
+
+    /// <summary>
+    /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.ValueAboveHiHiAlarm"/> should trigger an alarm notification.
+    /// </summary>
+    public bool ValueAboveHiHiAlarm
+    {
+        get => Value.CheckBits(Bits.Bit23);
+        set => Value = value ? Value.SetBits(Bits.Bit23) : Value.ClearBits(Bits.Bit23);
+    }
+
+    /// <summary>
+    /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.ValueBelowLoLoAlarm"/> should trigger an alarm notification.
+    /// </summary>
+    public bool ValueBelowLoLoAlarm
+    {
+        get => Value.CheckBits(Bits.Bit24);
+        set => Value = value ? Value.SetBits(Bits.Bit24) : Value.ClearBits(Bits.Bit24);
+    }
+
+    /// <summary>
+    /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.ValueAboveHiAlarm"/> should trigger an alarm notification.
+    /// </summary>
+    public bool ValueAboveHiAlarm
+    {
+        get => Value.CheckBits(Bits.Bit25);
+        set => Value = value ? Value.SetBits(Bits.Bit25) : Value.ClearBits(Bits.Bit25);
+    }
+
+    /// <summary>
+    /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.ValueBelowLoAlarm"/> should trigger an alarm notification.
+    /// </summary>
+    public bool ValueBelowLoAlarm
+    {
+        get => Value.CheckBits(Bits.Bit26);
+        set => Value = value ? Value.SetBits(Bits.Bit26) : Value.ClearBits(Bits.Bit26);
+    }
+
+    /// <summary>
+    /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.DeletedFromAlarmChecks"/> should trigger an alarm notification.
+    /// </summary>
+    public bool DeletedFromAlarmChecks
+    {
+        get => Value.CheckBits(Bits.Bit27);
+        set => Value = value ? Value.SetBits(Bits.Bit27) : Value.ClearBits(Bits.Bit27);
+    }
+
+    /// <summary>
+    /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.InhibitedByCutoutPoint"/> should trigger an alarm notification.
+    /// </summary>
+    public bool InhibitedByCutoutPoint
+    {
+        get => Value.CheckBits(Bits.Bit28);
+        set => Value = value ? Value.SetBits(Bits.Bit28) : Value.ClearBits(Bits.Bit28);
+    }
+
+    /// <summary>
+    /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.Good"/> should trigger an alarm notification.
+    /// </summary>
+    public bool Good
+    {
+        get => Value.CheckBits(Bits.Bit29);
+        set => Value = value ? Value.SetBits(Bits.Bit29) : Value.ClearBits(Bits.Bit29);
+    }
+
+    /// <summary>
+    /// Gets or sets the 32-bit integer value used for defining which data <see cref="Quality"/> should trigger an alarm notification.
+    /// </summary>
+    public int Value { get; set; }
+
+    #endregion
 }

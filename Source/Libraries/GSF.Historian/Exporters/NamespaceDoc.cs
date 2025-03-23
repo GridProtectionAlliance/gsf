@@ -27,13 +27,12 @@
 
 using System.Runtime.CompilerServices;
 
-namespace GSF.Historian.Exporters
+namespace GSF.Historian.Exporters;
+
+/// <summary>
+/// Contains classes used for automating data exports in a variety of formats.
+/// </summary>
+[CompilerGenerated]
+class NamespaceDoc
 {
-    /// <summary>
-    /// Contains classes used for automating data exports in a variety of formats.
-    /// </summary>
-    [CompilerGenerated]
-    class NamespaceDoc
-    {
-    }
 }

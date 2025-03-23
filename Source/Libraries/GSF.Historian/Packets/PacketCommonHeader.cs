@@ -32,26 +32,25 @@
 using System;
 using GSF.Parsing;
 
-namespace GSF.Historian.Packets
+namespace GSF.Historian.Packets;
+
+/// <summary>
+/// Represents the common header information that is present in the binary image of all <see cref="Type"/>s that implement the <see cref="IPacket"/> interface.
+/// </summary>
+public sealed class PacketCommonHeader : CommonHeaderBase<short>
 {
     /// <summary>
-    /// Represents the common header information that is present in the binary image of all <see cref="Type"/>s that implement the <see cref="IPacket"/> interface.
+    /// Initializes a new instance of the <see cref="PacketCommonHeader"/> class.
     /// </summary>
-    public class PacketCommonHeader : CommonHeaderBase<short>
+    /// <param name="buffer">Buffer containing binary image to be used for initializing <see cref="PacketCommonHeader"/>.</param>
+    /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="buffer"/>.</param>
+    /// <param name="length">Valid number of bytes in <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
+    /// <exception cref="InvalidOperationException">Not enough <paramref name="length"/> available to parse <see cref="PacketCommonHeader"/>.</exception>
+    public PacketCommonHeader(byte[] buffer, int startIndex, int length)
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PacketCommonHeader"/> class.
-        /// </summary>
-        /// <param name="buffer">Buffer containing binary image to be used for initializing <see cref="PacketCommonHeader"/>.</param>
-        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="buffer"/>.</param>
-        /// <param name="length">Valid number of bytes in <paramref name="buffer"/> from <paramref name="startIndex"/>.</param>
-        /// <exception cref="InvalidOperationException">Not enough <paramref name="length"/> available to parse <see cref="PacketCommonHeader"/>.</exception>
-        public PacketCommonHeader(byte[] buffer, int startIndex, int length)
-        {
-            if (length > 1)
-                TypeID = LittleEndian.ToInt16(buffer, startIndex);
-            else
-                throw new InvalidOperationException("Not enough length available to parse common header");
-        }
+        if (length > 1)
+            TypeID = LittleEndian.ToInt16(buffer, startIndex);
+        else
+            throw new InvalidOperationException("Not enough length available to parse common header");
     }
 }

@@ -27,13 +27,12 @@
 
 using System.Runtime.CompilerServices;
 
-namespace GSF.Historian.Packets
+namespace GSF.Historian.Packets;
+
+/// <summary>
+/// Contains classes that define packet definitions used for transmission of data points and metadata.
+/// </summary>
+[CompilerGenerated]
+class NamespaceDoc
 {
-    /// <summary>
-    /// Contains classes that define packet definitions used for transmission of data points and metadata.
-    /// </summary>
-    [CompilerGenerated]
-    class NamespaceDoc
-    {
-    }
 }

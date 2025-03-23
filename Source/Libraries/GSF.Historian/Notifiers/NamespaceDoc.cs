@@ -27,13 +27,12 @@
 
 using System.Runtime.CompilerServices;
 
-namespace GSF.Historian.Notifiers
+namespace GSF.Historian.Notifiers;
+
+/// <summary>
+/// Contains classes and interfaces that allow standard and custom historian notifications about critical system events.
+/// </summary>
+[CompilerGenerated]
+class NamespaceDoc
 {
-    /// <summary>
-    /// Contains classes and interfaces that allow standard and custom historian notifications about critical system events.
-    /// </summary>
-    [CompilerGenerated]
-    class NamespaceDoc
-    {
-    }
 }

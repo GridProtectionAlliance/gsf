@@ -27,12 +27,11 @@
 
 using GSF.Adapters;
 
-namespace GSF.Historian.Replication
+namespace GSF.Historian.Replication;
+
+/// <summary>
+/// A class that loads all of the <see cref="IReplicationProvider">replication providers</see>.
+/// </summary>
+public class ReplicationProviders : AdapterLoader<IReplicationProvider>
 {
-    /// <summary>
-    /// A class that loads all of the <see cref="IReplicationProvider">replication providers</see>.
-    /// </summary>
-    public class ReplicationProviders : AdapterLoader<IReplicationProvider>
-    {
-    }
 }

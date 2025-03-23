@@ -36,115 +36,119 @@ using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using GSF.Historian.Files;
 
-namespace GSF.Historian.DataServices
+namespace GSF.Historian.DataServices;
+
+/// <summary>
+/// Represents a time-series data-point that can be serialized using <see cref="XmlSerializer"/>, <see cref="DataContractSerializer"/> or <see cref="System.Runtime.Serialization.Json.DataContractJsonSerializer"/>.
+/// </summary>
+/// <example>
+/// This is the output for <see cref="SerializableTimeSeriesDataPoint"/> serialized using <see cref="XmlSerializer"/>:
+/// <code>
+/// <![CDATA[
+/// <?xml version="1.0"?>
+/// <TimeSeriesDataPoint xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+///   HistorianID="1" Time="2009-08-21 14:21:23.236" Value="60.0419579" Quality="Good" />
+/// ]]>
+/// </code>
+/// This is the output for <see cref="SerializableTimeSeriesDataPoint"/> serialized using <see cref="DataContractSerializer"/>:
+/// <code>
+/// <![CDATA[
+/// <TimeSeriesDataPoint xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+///   <HistorianID>1</HistorianID>
+///   <Time>2009-08-21 14:21:54.612</Time>
+///   <Value>60.025547</Value>
+///   <Quality>Good</Quality>
+/// </TimeSeriesDataPoint>
+/// ]]>
+/// </code>
+/// This is the output for <see cref="SerializableTimeSeriesDataPoint"/> serialized using <see cref="System.Runtime.Serialization.Json.DataContractJsonSerializer"/>:
+/// <code>
+/// {
+///   "HistorianID":1,
+///   "Time":"2009-08-21 14:22:26.971",
+///   "Value":59.9974136,
+///   "Quality":29
+/// }
+/// </code>
+/// </example>
+/// <seealso cref="IDataPoint"/>
+/// <seealso cref="XmlSerializer"/>
+/// <seealso cref="DataContractSerializer"/>
+/// <seealso cref="System.Runtime.Serialization.Json.DataContractJsonSerializer"/>
+[XmlType("TimeSeriesDataPoint")]
+[DataContract(Name = "TimeSeriesDataPoint", Namespace = "")]
+public class SerializableTimeSeriesDataPoint
 {
+    #region [ Constructors ]
+
     /// <summary>
-    /// Represents a time-series data-point that can be serialized using <see cref="XmlSerializer"/>, <see cref="DataContractSerializer"/> or <see cref="System.Runtime.Serialization.Json.DataContractJsonSerializer"/>.
+    /// Initializes a new instance of the <see cref="SerializableTimeSeriesDataPoint"/> class.
     /// </summary>
-    /// <example>
-    /// This is the output for <see cref="SerializableTimeSeriesDataPoint"/> serialized using <see cref="XmlSerializer"/>:
-    /// <code>
-    /// <![CDATA[
-    /// <?xml version="1.0"?>
-    /// <TimeSeriesDataPoint xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
-    ///   HistorianID="1" Time="2009-08-21 14:21:23.236" Value="60.0419579" Quality="Good" />
-    /// ]]>
-    /// </code>
-    /// This is the output for <see cref="SerializableTimeSeriesDataPoint"/> serialized using <see cref="DataContractSerializer"/>:
-    /// <code>
-    /// <![CDATA[
-    /// <TimeSeriesDataPoint xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
-    ///   <HistorianID>1</HistorianID>
-    ///   <Time>2009-08-21 14:21:54.612</Time>
-    ///   <Value>60.025547</Value>
-    ///   <Quality>Good</Quality>
-    /// </TimeSeriesDataPoint>
-    /// ]]>
-    /// </code>
-    /// This is the output for <see cref="SerializableTimeSeriesDataPoint"/> serialized using <see cref="System.Runtime.Serialization.Json.DataContractJsonSerializer"/>:
-    /// <code>
-    /// {
-    ///   "HistorianID":1,
-    ///   "Time":"2009-08-21 14:22:26.971",
-    ///   "Value":59.9974136,
-    ///   "Quality":29
-    /// }
-    /// </code>
-    /// </example>
-    /// <seealso cref="IDataPoint"/>
-    /// <seealso cref="XmlSerializer"/>
-    /// <seealso cref="DataContractSerializer"/>
-    /// <seealso cref="System.Runtime.Serialization.Json.DataContractJsonSerializer"/>
-    [XmlType("TimeSeriesDataPoint"), DataContract(Name = "TimeSeriesDataPoint", Namespace = "")]
-    public class SerializableTimeSeriesDataPoint
+    public SerializableTimeSeriesDataPoint()
     {
-        #region [ Constructors ]
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SerializableTimeSeriesDataPoint"/> class.
-        /// </summary>
-        public SerializableTimeSeriesDataPoint()
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SerializableTimeSeriesDataPoint"/> class.
-        /// </summary>
-        /// <param name="dataPoint"><see cref="IDataPoint"/> from which <see cref="SerializableTimeSeriesDataPoint"/> is to be initialized.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="dataPoint"/> is null.</exception>
-        public SerializableTimeSeriesDataPoint(IDataPoint dataPoint)
-        {
-            if (dataPoint == null)
-                throw new ArgumentNullException(nameof(dataPoint));
-
-            HistorianID = dataPoint.HistorianID;
-            Time = dataPoint.Time.ToString("yyyy-MM-dd HH:mm:ss.fff");
-            Value = dataPoint.Value;
-            Quality = dataPoint.Quality;
-        }
-
-        #endregion
-
-        #region [ Properties ]
-
-        /// <summary>
-        /// Gets or sets the <see cref="IDataPoint.HistorianID"/>.
-        /// </summary>
-        [XmlAttribute, DataMember(Order = 0)]
-        public int HistorianID { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="String"/> representation of <see cref="IDataPoint.Time"/>.
-        /// </summary>
-        [XmlAttribute, DataMember(Order = 1)]
-        public string Time { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="IDataPoint.Value"/>.
-        /// </summary>
-        [XmlAttribute, DataMember(Order = 2)]
-        public float Value { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="IDataPoint.Quality"/>.
-        /// </summary>
-        [XmlAttribute, DataMember(Order = 3)]
-        public Quality Quality { get; set; }
-
-        #endregion
-
-        #region [ Methods ]
-
-        /// <summary>
-        /// Returns an <see cref="IDataPoint"/> object for this <see cref="SerializableTimeSeriesDataPoint"/>.
-        /// </summary>
-        /// <returns>An <see cref="IDataPoint"/> object.</returns>
-        public IDataPoint Deflate()
-        {
-            // TODO: Eliminate the need for this by modifying ArchiveFile to use IDataPoint internally.
-            return new ArchiveDataPoint(HistorianID, TimeTag.Parse(Time), Value, Quality);
-        }
-
-        #endregion
     }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SerializableTimeSeriesDataPoint"/> class.
+    /// </summary>
+    /// <param name="dataPoint"><see cref="IDataPoint"/> from which <see cref="SerializableTimeSeriesDataPoint"/> is to be initialized.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="dataPoint"/> is null.</exception>
+    public SerializableTimeSeriesDataPoint(IDataPoint dataPoint)
+    {
+        if (dataPoint is null)
+            throw new ArgumentNullException(nameof(dataPoint));
+
+        HistorianID = dataPoint.HistorianID;
+        Time = dataPoint.Time.ToString("yyyy-MM-dd HH:mm:ss.fff");
+        Value = dataPoint.Value;
+        Quality = dataPoint.Quality;
+    }
+
+    #endregion
+
+    #region [ Properties ]
+
+    /// <summary>
+    /// Gets or sets the <see cref="IDataPoint.HistorianID"/>.
+    /// </summary>
+    [XmlAttribute]
+    [DataMember(Order = 0)]
+    public int HistorianID { get; set; }
+
+    /// <summary>
+    /// Gets or sets the <see cref="String"/> representation of <see cref="IDataPoint.Time"/>.
+    /// </summary>
+    [XmlAttribute]
+    [DataMember(Order = 1)]
+    public string Time { get; set; }
+
+    /// <summary>
+    /// Gets or sets the <see cref="IDataPoint.Value"/>.
+    /// </summary>
+    [XmlAttribute]
+    [DataMember(Order = 2)]
+    public float Value { get; set; }
+
+    /// <summary>
+    /// Gets or sets the <see cref="IDataPoint.Quality"/>.
+    /// </summary>
+    [XmlAttribute]
+    [DataMember(Order = 3)]
+    public Quality Quality { get; set; }
+
+    #endregion
+
+    #region [ Methods ]
+
+    /// <summary>
+    /// Returns an <see cref="IDataPoint"/> object for this <see cref="SerializableTimeSeriesDataPoint"/>.
+    /// </summary>
+    /// <returns>An <see cref="IDataPoint"/> object.</returns>
+    public IDataPoint Deflate()
+    {
+        // TODO: Eliminate the need for this by modifying ArchiveFile to use IDataPoint internally.
+        return new ArchiveDataPoint(HistorianID, TimeTag.Parse(Time), Value, Quality);
+    }
+
+    #endregion
 }

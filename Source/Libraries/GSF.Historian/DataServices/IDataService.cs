@@ -29,43 +29,42 @@
 
 using GSF.ServiceModel;
 
-namespace GSF.Historian.DataServices
+namespace GSF.Historian.DataServices;
+
+#region [ Enumerations ]
+
+/// <summary>
+/// Indicates the direction in which data will be flowing from a web service.
+/// </summary>
+public enum DataFlowDirection
 {
-    #region [ Enumerations ]
+    /// <summary>
+    /// Data will be flowing in to the web service.
+    /// </summary>
+    Incoming,
+    /// <summary>
+    /// Data will be flowing out from the web service.
+    /// </summary>
+    Outgoing,
+    /// <summary>
+    /// Data will be flowing both in and out from the web service.
+    /// </summary>
+    BothWays
+}
+
+#endregion
+
+/// <summary>
+/// Defines a web service that can send and receive historian data over REST (Representational State Transfer) interface.
+/// </summary>
+public interface IDataService : ISelfHostingService
+{
+    #region [ Properties ]
 
     /// <summary>
-    /// Indicates the direction in which data will be flowing from a web service.
+    /// Gets or sets the <see cref="IArchive"/> used by the web service for its data.
     /// </summary>
-    public enum DataFlowDirection
-    {
-        /// <summary>
-        /// Data will be flowing in to the web service.
-        /// </summary>
-        Incoming,
-        /// <summary>
-        /// Data will be flowing out from the web service.
-        /// </summary>
-        Outgoing,
-        /// <summary>
-        /// Data will be flowing both in and out from the web service.
-        /// </summary>
-        BothWays
-    }
+    IArchive Archive { get; set; }
 
     #endregion
-
-    /// <summary>
-    /// Defines a web service that can send and receive historian data over REST (Representational State Transfer) interface.
-    /// </summary>
-    public interface IDataService : ISelfHostingService
-    {
-        #region [ Properties ]
-
-        /// <summary>
-        /// Gets or sets the <see cref="IArchive"/> used by the web service for its data.
-        /// </summary>
-        IArchive Archive { get; set; }
-
-        #endregion
-    }
 }

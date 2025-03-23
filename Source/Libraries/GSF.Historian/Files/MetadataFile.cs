@@ -130,7 +130,7 @@ public class MetadataFile : IsamDataFileBase<MetadataRecord>
     /// </summary>
     public MetadataFile()
     {
-        SettingsCategory = this.GetType().Name;
+        SettingsCategory = GetType().Name;
         m_legacyMode = MetadataFileLegacyMode.Disabled;  // Default to only using new file format
         m_records = new Dictionary<int, MetadataRecord>();
     }
@@ -242,7 +242,7 @@ public class MetadataFile : IsamDataFileBase<MetadataRecord>
         ConfigurationFile config = ConfigurationFile.Current;
         CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
         
-        settings["LegacyMode", true].Update(m_legacyMode);
+        settings[nameof(LegacyMode), true].Update(m_legacyMode);
         config.Save();
     }
 
@@ -259,8 +259,8 @@ public class MetadataFile : IsamDataFileBase<MetadataRecord>
 
         // Load settings from the specified category.
         CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[SettingsCategory];
-        settings.Add("LegacyMode", m_legacyMode, "Metadata file legacy format mode. Value is one of \"Disabled\", \"Compatible\" or \"Enabled\" where \"Disabled\" means only use new format, \"Compatible\" means use new format and also write a legacy format file for compatibility and \"Enabled\" means only use the legacy format.");
-        LegacyMode = settings["LegacyMode"].ValueAs(m_legacyMode);
+        settings.Add(nameof(LegacyMode), m_legacyMode, "Metadata file legacy format mode. Value is one of \"Disabled\", \"Compatible\" or \"Enabled\" where \"Disabled\" means only use new format, \"Compatible\" means use new format and also write a legacy format file for compatibility and \"Enabled\" means only use the legacy format.");
+        LegacyMode = settings[nameof(LegacyMode)].ValueAs(m_legacyMode);
 
         // Define new file name for non-legacy implementations
         if (m_legacyMode != MetadataFileLegacyMode.Enabled && !FileName.EndsWith("2"))
@@ -319,7 +319,7 @@ public class MetadataFile : IsamDataFileBase<MetadataRecord>
                 base.FileName = m_baseFileName;
 
             // Use new file format if a newer one exists
-            if (m_legacyMode != MetadataFileLegacyMode.Enabled && !FileName.EndsWith("2") && File.Exists(FileName + "2"))
+            if (m_legacyMode != MetadataFileLegacyMode.Enabled && !FileName.EndsWith("2") && File.Exists($"{FileName}2"))
                 FileName += "2";
 
             // Fall back on legacy mode if needed

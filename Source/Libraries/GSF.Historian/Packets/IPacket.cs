@@ -35,58 +35,45 @@ using System;
 using System.Collections.Generic;
 using GSF.Parsing;
 
-namespace GSF.Historian.Packets
+namespace GSF.Historian.Packets;
+
+/// <summary>
+/// Defines a binary packet received by a historian.
+/// </summary>
+public interface IPacket : ISupportSourceIdentifiableFrameImage<Guid, short>
 {
+    #region [ Properties ]
+
     /// <summary>
-    /// Defines a binary packet received by a historian.
+    /// Gets or sets the current <see cref="IArchive"/>.
     /// </summary>
-    public interface IPacket : ISupportSourceIdentifiableFrameImage<Guid, short>
-    {
-        #region [ Properties ]
+    IArchive Archive { get; set; }
 
-        /// <summary>
-        /// Gets or sets the current <see cref="IArchive"/>.
-        /// </summary>
-        IArchive Archive
-        {
-            get;
-            set;
-        }
+    /// <summary>
+    /// Gets or sets the <see cref="Delegate"/> that processes the packet.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="Func{TResult}"/> returns an <see cref="IEnumerable{T}"/> object containing the binary data to be sent back to the packet sender.
+    /// </remarks>
+    Func<IEnumerable<byte[]>> ProcessHandler { get; set; }
 
-        /// <summary>
-        /// Gets or sets the <see cref="Delegate"/> that processes the packet.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="Func{TResult}"/> returns an <see cref="IEnumerable{T}"/> object containing the binary data to be sent back to the packet sender.
-        /// </remarks>
-        Func<IEnumerable<byte[]>> ProcessHandler
-        {
-            get;
-            set;
-        }
+    /// <summary>
+    /// Gets or sets the <see cref="Delegate"/> that pre-processes the packet.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="Func{TResult}"/> returns an <see cref="IEnumerable{T}"/> object containing the binary data to be sent back to the packet sender.
+    /// </remarks>
+    Func<IEnumerable<byte[]>> PreProcessHandler { get; set; }
 
-        /// <summary>
-        /// Gets or sets the <see cref="Delegate"/> that pre-processes the packet.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="Func{TResult}"/> returns an <see cref="IEnumerable{T}"/> object containing the binary data to be sent back to the packet sender.
-        /// </remarks>
-        Func<IEnumerable<byte[]>> PreProcessHandler
-        {
-            get;
-            set;
-        }
+    #endregion
 
-        #endregion
+    #region [ Methods ]
 
-        #region [ Methods ]
+    /// <summary>
+    /// Extracts time-series data from the packet.
+    /// </summary>
+    /// <returns>An <see cref="IEnumerable{T}"/> object of <see cref="IDataPoint"/>s if the packet contains time-series data; otherwise null.</returns>
+    IEnumerable<IDataPoint> ExtractTimeSeriesData();
 
-        /// <summary>
-        /// Extracts time-series data from the packet.
-        /// </summary>
-        /// <returns>An <see cref="IEnumerable{T}"/> object of <see cref="IDataPoint"/>s if the packet contains time-series data; otherwise null.</returns>
-        IEnumerable<IDataPoint> ExtractTimeSeriesData();
-
-        #endregion
-    }
+    #endregion
 }

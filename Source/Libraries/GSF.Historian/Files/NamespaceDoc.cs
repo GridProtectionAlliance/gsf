@@ -27,13 +27,12 @@
 
 using System.Runtime.CompilerServices;
 
-namespace GSF.Historian.Files
+namespace GSF.Historian.Files;
+
+/// <summary>
+/// Contains classes used for manipulating archive files.
+/// </summary>
+[CompilerGenerated]
+class NamespaceDoc
 {
-    /// <summary>
-    /// Contains classes used for manipulating archive files.
-    /// </summary>
-    [CompilerGenerated]
-    class NamespaceDoc
-    {
-    }
 }

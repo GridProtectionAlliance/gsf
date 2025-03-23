@@ -24,121 +24,116 @@
 using System;
 using System.Collections.Generic;
 
-namespace GSF.Historian.Files
+namespace GSF.Historian.Files;
+
+/// <summary>
+/// Scans an archive file for a given signal's data points over a given time range.
+/// </summary>
+internal class DataPointScanner
 {
+    #region [ Members ]
+
+    // Fields
+    private readonly ArchiveFileAllocationTable m_dataBlockAllocationTable;
+    private readonly EventHandler<EventArgs<Exception>> m_dataReadExceptionHandler;
+
+    #endregion
+
+    #region [ Constructors ]
+
     /// <summary>
-    /// Scans an archive file for a given signal's data points over a given time range.
+    /// Creates a new <see cref="DataPointScanner"/> instance.
     /// </summary>
-    internal class DataPointScanner
+    /// <param name="dataBlockAllocationTable"><see cref="ArchiveFileAllocationTable"/> for the file to be scanned.</param>
+    /// <param name="historianID">Historian ID to scan for.</param>
+    /// <param name="startTime">Desired start time.</param>
+    /// <param name="endTime">Desired end time.</param>
+    /// <param name="includeEdgeTimes">True to include data points equal to the start or end time; false to exclude.</param>
+    /// <param name="dataReadExceptionHandler">Read exception handler.</param>
+    public DataPointScanner(ArchiveFileAllocationTable dataBlockAllocationTable, int historianID, TimeTag startTime, TimeTag endTime, bool includeEdgeTimes, EventHandler<EventArgs<Exception>> dataReadExceptionHandler)
     {
-        #region [ Members ]
+        m_dataBlockAllocationTable = dataBlockAllocationTable;
+        HistorianID = historianID;
+        StartTime = startTime;
+        EndTime = endTime;
+        IncludeEdgeTimes = includeEdgeTimes;
+        m_dataReadExceptionHandler = dataReadExceptionHandler;
+    }
 
-        // Fields
-        private readonly List<ArchiveDataBlock> m_dataBlocks;
-        private readonly TimeTag m_startTime;
-        private readonly TimeTag m_endTime;
-        private readonly int m_historianID;
-        private readonly bool m_includeStartTime;
-        private readonly EventHandler<EventArgs<Exception>> m_dataReadExceptionHandler;
+    #endregion
 
-        #endregion
+    #region [ Properties ]
 
-        #region [ Constructors ]
+    /// <summary>
+    /// Gets the historian ID associated with this <see cref="DataPointScanner"/>.
+    /// </summary>
+    public int HistorianID { get; }
 
-        /// <summary>
-        /// Creates a new <see cref="DataPointScanner"/> instance.
-        /// </summary>
-        /// <param name="dataBlockAllocationTable"><see cref="ArchiveFileAllocationTable"/> for the file to be scanned.</param>
-        /// <param name="historianID">Historian ID to scan for.</param>
-        /// <param name="startTime">Desired start time.</param>
-        /// <param name="endTime">Desired end time.</param>
-        /// <param name="includeStartTime">True to include data points equal to the start time; false to exclude.</param>
-        /// <param name="dataReadExceptionHandler">Read exception handler.</param>
-        public DataPointScanner(ArchiveFileAllocationTable dataBlockAllocationTable, int historianID, TimeTag startTime, TimeTag endTime, bool includeStartTime, EventHandler<EventArgs<Exception>> dataReadExceptionHandler)
+    /// <summary>
+    /// Gets flag that indicates whether the start or end time is inclusive when reading data points from the <see cref="ArchiveDataBlock"/>s.
+    /// </summary>
+    public bool IncludeEdgeTimes { get; }
+
+    /// <summary>
+    /// Gets the start time associated with this <see cref="DataPointScanner"/>. The start time is inclusive if <see cref="IncludeEdgeTimes"/> is true.
+    /// </summary>
+    public TimeTag StartTime { get; }
+
+    /// <summary>
+    /// Gets the end time associated with this <see cref="DataPointScanner"/>. The end time is inclusive if <see cref="IncludeEdgeTimes"/> is true.
+    /// </summary>
+    public TimeTag EndTime { get; }
+
+    #endregion
+
+    #region [ Methods ]
+
+    /// <summary>
+    /// Reads all <see cref="IDataPoint"/>s from the <see cref="ArchiveDataBlock"/>s.
+    /// </summary>
+    /// <returns>Each <see cref="IDataPoint"/> read from the <see cref="ArchiveDataBlock"/>s.</returns>
+    public IEnumerable<IDataPoint> Read()
+    {
+        Func<IDataPoint, bool> includeDataPoint = IncludeEdgeTimes ? 
+            dataPoint => dataPoint.Time.CompareTo(StartTime) >= 0 && dataPoint.Time.CompareTo(EndTime) <= 0 : 
+            dataPoint => dataPoint.Time.CompareTo(StartTime) > 0 && dataPoint.Time.CompareTo(EndTime) <= 0;
+
+        bool isFirst = true;
+
+        // Loop through each data block
+        foreach ((ArchiveDataBlock dataBlock, bool isLast) in m_dataBlockAllocationTable.FindDataBlocks(HistorianID, StartTime, EndTime, false))
         {
-            // Find all data blocks for desired point over given time range
-            m_dataBlocks = dataBlockAllocationTable.FindDataBlocks(historianID, startTime, endTime, false);
-            m_startTime = startTime;
-            m_endTime = endTime;
-            m_historianID = historianID;
-            m_includeStartTime = includeStartTime;
-            m_dataReadExceptionHandler = dataReadExceptionHandler;
-        }
-
-        #endregion
-
-        #region [ Properties ]
-
-        /// <summary>
-        /// Gets the historian ID associated with this <see cref="DataPointScanner"/>.
-        /// </summary>
-        public int HistorianID
-        {
-            get
-            {
-                return m_historianID;
-            }
-        }
-
-        #endregion
-
-        #region [ Methods ]
-
-        /// <summary>
-        /// Reads all <see cref="IDataPoint"/>s from the <see cref="ArchiveDataBlock"/>s.
-        /// </summary>
-        /// <returns>Each <see cref="IDataPoint"/> read from the <see cref="ArchiveDataBlock"/>s.</returns>
-        public IEnumerable<IDataPoint> Read()
-        {
-            int count = m_dataBlocks.Count;
-            int index = 0;
-
-            Func<IDataPoint, bool> includeDataPoint;
-
-            if (m_includeStartTime)
-                includeDataPoint = dataPoint => (dataPoint.Time.CompareTo(m_startTime) >= 0 && dataPoint.Time.CompareTo(m_endTime) <= 0);
-            else
-                includeDataPoint = dataPoint => (dataPoint.Time.CompareTo(m_startTime) > 0 && dataPoint.Time.CompareTo(m_endTime) <= 0);
-
-            // Loop through each data block
-            foreach (ArchiveDataBlock dataBlock in m_dataBlocks)
+            try
             {
                 // Attach to data read exception event for the data block
                 dataBlock.DataReadException += m_dataReadExceptionHandler;
 
-                // Pre-read all data points in this block
-                List<IDataPoint> dataPoints = new List<IDataPoint>();
-
-                if (index == 0 || index == count - 1)
+                if (isFirst || isLast)
                 {
-                    // Read data through first and last data blocks validating time range
+                    isFirst = false;
+
+                    // Read data through first or last data blocks
                     foreach (IDataPoint dataPoint in dataBlock.Read())
                     {
+                        // Validate time range on edges
                         if (includeDataPoint(dataPoint))
-                            dataPoints.Add(dataPoint);
+                            yield return dataPoint;
                     }
                 }
                 else
                 {
-                    // Read all of the data from the rest of the data blocks
+                    // Read all the data from remainder of data blocks
                     foreach (IDataPoint dataPoint in dataBlock.Read())
-                    {
-                        dataPoints.Add(dataPoint);
-                    }
+                        yield return dataPoint;
                 }
-
+            }
+            finally
+            {
                 // Detach from data read exception event for the data block
                 dataBlock.DataReadException -= m_dataReadExceptionHandler;
-
-                foreach (IDataPoint dataPoint in dataPoints)
-                {
-                    yield return dataPoint;
-                }
-
-                index++;
             }
         }
-
-        #endregion
     }
+
+    #endregion
 }

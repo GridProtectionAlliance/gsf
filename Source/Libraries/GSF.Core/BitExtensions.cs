@@ -466,7 +466,7 @@ namespace GSF
         /// <returns><see cref="sbyte"/> value with specified <paramref name="bits"/> set.</returns>
         public static sbyte SetBits(this sbyte source, sbyte bits)
         {
-            return ((sbyte)(source | bits));
+            return (sbyte)(source | bits);
         }
 
         /// <summary>
@@ -491,7 +491,7 @@ namespace GSF
         /// <returns><see cref="byte"/> value with specified <paramref name="bits"/> set.</returns>
         public static byte SetBits(this byte source, byte bits)
         {
-            return ((byte)(source | bits));
+            return (byte)(source | bits);
         }
 
         /// <summary>
@@ -516,7 +516,7 @@ namespace GSF
         /// <returns><see cref="short"/> value with specified <paramref name="bits"/> set.</returns>
         public static short SetBits(this short source, short bits)
         {
-            return ((short)(source | bits));
+            return (short)(source | bits);
         }
 
         /// <summary>
@@ -541,7 +541,7 @@ namespace GSF
         /// <returns><see cref="ushort"/> value with specified <paramref name="bits"/> set.</returns>
         public static ushort SetBits(this ushort source, ushort bits)
         {
-            return ((ushort)(source | bits));
+            return (ushort)(source | bits);
         }
 
         /// <summary>
@@ -566,7 +566,7 @@ namespace GSF
         /// <returns><see cref="Int24"/> value with specified <paramref name="bits"/> set.</returns>
         public static Int24 SetBits(this Int24 source, Int24 bits)
         {
-            return (source | bits);
+            return source | bits;
         }
 
         /// <summary>
@@ -591,7 +591,7 @@ namespace GSF
         /// <returns><see cref="UInt24"/> value with specified <paramref name="bits"/> set.</returns>
         public static UInt24 SetBits(this UInt24 source, UInt24 bits)
         {
-            return (source | bits);
+            return source | bits;
         }
 
         /// <summary>
@@ -616,7 +616,7 @@ namespace GSF
         /// <returns><see cref="int"/> value with specified <paramref name="bits"/> set.</returns>
         public static int SetBits(this int source, int bits)
         {
-            return (source | bits);
+            return source | bits;
         }
 
         /// <summary>
@@ -641,7 +641,7 @@ namespace GSF
         /// <returns><see cref="uint"/> value with specified <paramref name="bits"/> set.</returns>
         public static uint SetBits(this uint source, uint bits)
         {
-            return (source | bits);
+            return source | bits;
         }
 
         /// <summary>
@@ -666,7 +666,7 @@ namespace GSF
         /// <returns><see cref="long"/> value with specified <paramref name="bits"/> set.</returns>
         public static long SetBits(this long source, long bits)
         {
-            return (source | bits);
+            return source | bits;
         }
 
         /// <summary>
@@ -691,7 +691,7 @@ namespace GSF
         /// <returns><see cref="ulong"/> value with specified <paramref name="bits"/> set.</returns>
         public static ulong SetBits(this ulong source, ulong bits)
         {
-            return (source | bits);
+            return source | bits;
         }
 
         #endregion
@@ -720,7 +720,7 @@ namespace GSF
         /// <returns><see cref="sbyte"/> value with specified <paramref name="bits"/> cleared.</returns>
         public static sbyte ClearBits(this sbyte source, sbyte bits)
         {
-            return ((sbyte)(source & ~bits));
+            return (sbyte)(source & ~bits);
         }
 
         /// <summary>
@@ -745,7 +745,7 @@ namespace GSF
         /// <returns><see cref="byte"/> value with specified <paramref name="bits"/> cleared.</returns>
         public static byte ClearBits(this byte source, byte bits)
         {
-            return ((byte)(source & ~bits));
+            return (byte)(source & ~bits);
         }
 
         /// <summary>
@@ -770,7 +770,7 @@ namespace GSF
         /// <returns><see cref="short"/> value with specified <paramref name="bits"/> cleared.</returns>
         public static short ClearBits(this short source, short bits)
         {
-            return ((short)(source & ~bits));
+            return (short)(source & ~bits);
         }
 
         /// <summary>
@@ -795,7 +795,7 @@ namespace GSF
         /// <returns><see cref="ushort"/> value with specified <paramref name="bits"/> cleared.</returns>
         public static ushort ClearBits(this ushort source, ushort bits)
         {
-            return ((ushort)(source & ~bits));
+            return (ushort)(source & ~bits);
         }
 
         /// <summary>
@@ -820,7 +820,7 @@ namespace GSF
         /// <returns><see cref="Int24"/> value with specified <paramref name="bits"/> cleared.</returns>
         public static Int24 ClearBits(this Int24 source, Int24 bits)
         {
-            return (source & ~bits);
+            return source & ~bits;
         }
 
         /// <summary>
@@ -845,7 +845,7 @@ namespace GSF
         /// <returns><see cref="UInt24"/> value with specified <paramref name="bits"/> cleared.</returns>
         public static UInt24 ClearBits(this UInt24 source, UInt24 bits)
         {
-            return (source & ~bits);
+            return source & ~bits;
         }
 
         /// <summary>
@@ -870,7 +870,7 @@ namespace GSF
         /// <returns><see cref="int"/> value with specified <paramref name="bits"/> cleared.</returns>
         public static int ClearBits(this int source, int bits)
         {
-            return (source & ~bits);
+            return source & ~bits;
         }
 
         /// <summary>
@@ -895,7 +895,7 @@ namespace GSF
         /// <returns><see cref="uint"/> value with specified <paramref name="bits"/> cleared.</returns>
         public static uint ClearBits(this uint source, uint bits)
         {
-            return (source & ~bits);
+            return source & ~bits;
         }
 
         /// <summary>
@@ -920,7 +920,7 @@ namespace GSF
         /// <returns><see cref="long"/> value with specified <paramref name="bits"/> cleared.</returns>
         public static long ClearBits(this long source, long bits)
         {
-            return (source & ~bits);
+            return source & ~bits;
         }
 
         /// <summary>
@@ -945,7 +945,7 @@ namespace GSF
         /// <returns><see cref="ulong"/> value with specified <paramref name="bits"/> cleared.</returns>
         public static ulong ClearBits(this ulong source, ulong bits)
         {
-            return (source & ~bits);
+            return source & ~bits;
         }
 
         #endregion
@@ -1001,7 +1001,7 @@ namespace GSF
         /// <returns>true if specified <paramref name="bits"/> are set in <paramref name="source"/> value; otherwise false.</returns>
         public static bool CheckBits(this sbyte source, sbyte bits, bool allBits)
         {
-            return (allBits ? ((source & bits) == bits) : ((source & bits) != 0));
+            return allBits ? (source & bits) == bits : (source & bits) != 0;
         }
 
         /// <summary>
@@ -1053,7 +1053,7 @@ namespace GSF
         /// <returns>true if specified <paramref name="bits"/> are set in <paramref name="source"/> value; otherwise false.</returns>
         public static bool CheckBits(this byte source, byte bits, bool allBits)
         {
-            return (allBits ? ((source & bits) == bits) : ((source & bits) != 0));
+            return allBits ? (source & bits) == bits : (source & bits) != 0;
         }
 
         /// <summary>
@@ -1105,7 +1105,7 @@ namespace GSF
         /// <returns>true if specified <paramref name="bits"/> are set in <paramref name="source"/> value; otherwise false.</returns>
         public static bool CheckBits(this short source, short bits, bool allBits)
         {
-            return (allBits ? ((source & bits) == bits) : ((source & bits) != 0));
+            return allBits ? (source & bits) == bits : (source & bits) != 0;
         }
 
         /// <summary>
@@ -1157,7 +1157,7 @@ namespace GSF
         /// <returns>true if specified <paramref name="bits"/> are set in <paramref name="source"/> value; otherwise false.</returns>
         public static bool CheckBits(this ushort source, ushort bits, bool allBits)
         {
-            return (allBits ? ((source & bits) == bits) : ((source & bits) != 0));
+            return allBits ? (source & bits) == bits : (source & bits) != 0;
         }
 
         /// <summary>
@@ -1209,7 +1209,7 @@ namespace GSF
         /// <returns>true if specified <paramref name="bits"/> are set in <paramref name="source"/> value; otherwise false.</returns>
         public static bool CheckBits(this Int24 source, Int24 bits, bool allBits)
         {
-            return (allBits ? ((source & bits) == bits) : ((source & bits) != 0));
+            return allBits ? (source & bits) == bits : (source & bits) != 0;
         }
 
         /// <summary>
@@ -1261,7 +1261,7 @@ namespace GSF
         /// <returns>true if specified <paramref name="bits"/> are set in <paramref name="source"/> value; otherwise false.</returns>
         public static bool CheckBits(this UInt24 source, UInt24 bits, bool allBits)
         {
-            return (allBits ? ((source & bits) == bits) : ((source & bits) != 0));
+            return allBits ? (source & bits) == bits : (source & bits) != 0;
         }
 
         /// <summary>
@@ -1313,7 +1313,7 @@ namespace GSF
         /// <returns>true if specified <paramref name="bits"/> are set in <paramref name="source"/> value; otherwise false.</returns>
         public static bool CheckBits(this int source, int bits, bool allBits)
         {
-            return (allBits ? ((source & bits) == bits) : ((source & bits) != 0));
+            return allBits ? (source & bits) == bits : (source & bits) != 0;
         }
 
         /// <summary>
@@ -1365,7 +1365,7 @@ namespace GSF
         /// <returns>true if specified <paramref name="bits"/> are set in <paramref name="source"/> value; otherwise false.</returns>
         public static bool CheckBits(this uint source, uint bits, bool allBits)
         {
-            return (allBits ? ((source & bits) == bits) : ((source & bits) != 0));
+            return allBits ? (source & bits) == bits : (source & bits) != 0;
         }
 
         /// <summary>
@@ -1417,7 +1417,7 @@ namespace GSF
         /// <returns>true if specified <paramref name="bits"/> are set in <paramref name="source"/> value; otherwise false.</returns>
         public static bool CheckBits(this long source, long bits, bool allBits)
         {
-            return (allBits ? ((source & bits) == bits) : ((source & bits) != 0));
+            return allBits ? (source & bits) == bits : (source & bits) != 0;
         }
 
         /// <summary>
@@ -1469,7 +1469,7 @@ namespace GSF
         /// <returns>true if specified <paramref name="bits"/> are set in <paramref name="source"/> value; otherwise false.</returns>
         public static bool CheckBits(this ulong source, ulong bits, bool allBits)
         {
-            return (allBits ? ((source & bits) == bits) : ((source & bits) != 0));
+            return allBits ? (source & bits) == bits : (source & bits) != 0;
         }
 
         #endregion
@@ -1498,7 +1498,7 @@ namespace GSF
         /// <returns><see cref="sbyte"/> value with specified <paramref name="bits"/> toggled.</returns>
         public static sbyte ToggleBits(this sbyte source, sbyte bits)
         {
-            return ((sbyte)(source ^ bits));
+            return (sbyte)(source ^ bits);
         }
 
         /// <summary>
@@ -1523,7 +1523,7 @@ namespace GSF
         /// <returns><see cref="byte"/> value with specified <paramref name="bits"/> toggled.</returns>
         public static byte ToggleBits(this byte source, byte bits)
         {
-            return ((byte)(source ^ bits));
+            return (byte)(source ^ bits);
         }
 
         /// <summary>
@@ -1548,7 +1548,7 @@ namespace GSF
         /// <returns><see cref="short"/> value with specified <paramref name="bits"/> toggled.</returns>
         public static short ToggleBits(this short source, short bits)
         {
-            return ((short)(source ^ bits));
+            return (short)(source ^ bits);
         }
 
         /// <summary>
@@ -1573,7 +1573,7 @@ namespace GSF
         /// <returns><see cref="ushort"/> value with specified <paramref name="bits"/> toggled.</returns>
         public static ushort ToggleBits(this ushort source, ushort bits)
         {
-            return ((ushort)(source ^ bits));
+            return (ushort)(source ^ bits);
         }
 
         /// <summary>
@@ -1598,7 +1598,7 @@ namespace GSF
         /// <returns><see cref="Int24"/> value with specified <paramref name="bits"/> toggled.</returns>
         public static Int24 ToggleBits(this Int24 source, Int24 bits)
         {
-            return (source ^ bits);
+            return source ^ bits;
         }
 
         /// <summary>
@@ -1623,7 +1623,7 @@ namespace GSF
         /// <returns><see cref="UInt24"/> value with specified <paramref name="bits"/> toggled.</returns>
         public static UInt24 ToggleBits(this UInt24 source, UInt24 bits)
         {
-            return (source ^ bits);
+            return source ^ bits;
         }
 
         /// <summary>
@@ -1648,7 +1648,7 @@ namespace GSF
         /// <returns><see cref="int"/> value with specified <paramref name="bits"/> toggled.</returns>
         public static int ToggleBits(this int source, int bits)
         {
-            return (source ^ bits);
+            return source ^ bits;
         }
 
         /// <summary>
@@ -1673,7 +1673,7 @@ namespace GSF
         /// <returns><see cref="uint"/> value with specified <paramref name="bits"/> toggled.</returns>
         public static uint ToggleBits(this uint source, uint bits)
         {
-            return (source ^ bits);
+            return source ^ bits;
         }
 
         /// <summary>
@@ -1698,7 +1698,7 @@ namespace GSF
         /// <returns><see cref="long"/> value with specified <paramref name="bits"/> toggled.</returns>
         public static long ToggleBits(this long source, long bits)
         {
-            return (source ^ bits);
+            return source ^ bits;
         }
 
         /// <summary>
@@ -1723,7 +1723,7 @@ namespace GSF
         /// <returns><see cref="ulong"/> value with specified <paramref name="bits"/> toggled.</returns>
         public static ulong ToggleBits(this ulong source, ulong bits)
         {
-            return (source ^ bits);
+            return source ^ bits;
         }
 
         #endregion
@@ -1752,7 +1752,7 @@ namespace GSF
         /// <returns><see cref="sbyte"/> value.</returns>
         public static sbyte GetMaskedValue(this sbyte source, sbyte bitmask)
         {
-            return ((sbyte)(source & bitmask));
+            return (sbyte)(source & bitmask);
         }
 
         /// <summary>
@@ -1777,7 +1777,7 @@ namespace GSF
         /// <returns><see cref="byte"/> value.</returns>
         public static byte GetMaskedValue(this byte source, byte bitmask)
         {
-            return ((byte)(source & bitmask));
+            return (byte)(source & bitmask);
         }
 
         /// <summary>
@@ -1802,7 +1802,7 @@ namespace GSF
         /// <returns><see cref="short"/> value.</returns>
         public static short GetMaskedValue(this short source, short bitmask)
         {
-            return ((short)(source & bitmask));
+            return (short)(source & bitmask);
         }
 
         /// <summary>
@@ -1827,7 +1827,7 @@ namespace GSF
         /// <returns><see cref="ushort"/> value.</returns>
         public static ushort GetMaskedValue(this ushort source, ushort bitmask)
         {
-            return ((ushort)(source & bitmask));
+            return (ushort)(source & bitmask);
         }
 
         /// <summary>
@@ -1852,7 +1852,7 @@ namespace GSF
         /// <returns><see cref="Int24"/> value.</returns>
         public static Int24 GetMaskedValue(this Int24 source, Int24 bitmask)
         {
-            return (source & bitmask);
+            return source & bitmask;
         }
 
         /// <summary>
@@ -1877,7 +1877,7 @@ namespace GSF
         /// <returns><see cref="UInt24"/> value.</returns>
         public static UInt24 GetMaskedValue(this UInt24 source, UInt24 bitmask)
         {
-            return (source & bitmask);
+            return source & bitmask;
         }
 
         /// <summary>
@@ -1902,7 +1902,7 @@ namespace GSF
         /// <returns><see cref="int"/> value.</returns>
         public static int GetMaskedValue(this int source, int bitmask)
         {
-            return (source & bitmask);
+            return source & bitmask;
         }
 
         /// <summary>
@@ -1927,7 +1927,7 @@ namespace GSF
         /// <returns><see cref="uint"/> value.</returns>
         public static uint GetMaskedValue(this uint source, uint bitmask)
         {
-            return (source & bitmask);
+            return source & bitmask;
         }
 
         /// <summary>
@@ -1952,7 +1952,7 @@ namespace GSF
         /// <returns><see cref="long"/> value.</returns>
         public static long GetMaskedValue(this long source, long bitmask)
         {
-            return (source & bitmask);
+            return source & bitmask;
         }
 
         /// <summary>
@@ -1977,7 +1977,7 @@ namespace GSF
         /// <returns><see cref="ulong"/> value.</returns>
         public static ulong GetMaskedValue(this ulong source, ulong bitmask)
         {
-            return (source & bitmask);
+            return source & bitmask;
         }
 
         #endregion
@@ -2008,7 +2008,7 @@ namespace GSF
         /// <returns><see cref="sbyte"/> value.</returns>
         public static sbyte SetMaskedValue(this sbyte source, sbyte bitmask, sbyte value)
         {
-            return ((sbyte)((sbyte)(source & ~bitmask) | value));
+            return (sbyte)((sbyte)(source & ~bitmask) | value);
         }
 
         /// <summary>
@@ -2035,7 +2035,7 @@ namespace GSF
         /// <returns><see cref="byte"/> value.</returns>
         public static byte SetMaskedValue(this byte source, byte bitmask, byte value)
         {
-            return ((byte)((source & ~bitmask) | value));
+            return (byte)((source & ~bitmask) | value);
         }
 
         /// <summary>
@@ -2062,7 +2062,7 @@ namespace GSF
         /// <returns><see cref="short"/> value.</returns>
         public static short SetMaskedValue(this short source, short bitmask, short value)
         {
-            return ((short)((short)(source & ~bitmask) | value));
+            return (short)((short)(source & ~bitmask) | value);
         }
 
         /// <summary>
@@ -2089,7 +2089,7 @@ namespace GSF
         /// <returns><see cref="ushort"/> value.</returns>
         public static ushort SetMaskedValue(this ushort source, ushort bitmask, ushort value)
         {
-            return ((ushort)((source & ~bitmask) | value));
+            return (ushort)((source & ~bitmask) | value);
         }
 
         /// <summary>
@@ -2116,7 +2116,7 @@ namespace GSF
         /// <returns><see cref="Int24"/> value.</returns>
         public static Int24 SetMaskedValue(this Int24 source, Int24 bitmask, Int24 value)
         {
-            return ((source & ~bitmask) | value);
+            return (source & ~bitmask) | value;
         }
 
         /// <summary>
@@ -2143,7 +2143,7 @@ namespace GSF
         /// <returns><see cref="UInt24"/> value.</returns>
         public static UInt24 SetMaskedValue(this UInt24 source, UInt24 bitmask, UInt24 value)
         {
-            return ((source & ~bitmask) | value);
+            return (source & ~bitmask) | value;
         }
 
         /// <summary>
@@ -2170,7 +2170,7 @@ namespace GSF
         /// <returns><see cref="int"/> value.</returns>
         public static int SetMaskedValue(this int source, int bitmask, int value)
         {
-            return ((source & ~bitmask) | value);
+            return (source & ~bitmask) | value;
         }
 
         /// <summary>
@@ -2197,7 +2197,7 @@ namespace GSF
         /// <returns><see cref="uint"/> value.</returns>
         public static uint SetMaskedValue(this uint source, uint bitmask, uint value)
         {
-            return ((source & ~bitmask) | value);
+            return (source & ~bitmask) | value;
         }
 
         /// <summary>
@@ -2224,7 +2224,7 @@ namespace GSF
         /// <returns><see cref="long"/> value.</returns>
         public static long SetMaskedValue(this long source, long bitmask, long value)
         {
-            return ((source & ~bitmask) | value);
+            return (source & ~bitmask) | value;
         }
 
         /// <summary>
@@ -2251,7 +2251,7 @@ namespace GSF
         /// <returns><see cref="ulong"/> value.</returns>
         public static ulong SetMaskedValue(this ulong source, ulong bitmask, ulong value)
         {
-            return ((source & ~bitmask) | value);
+            return (source & ~bitmask) | value;
         }
 
         #endregion
@@ -2259,7 +2259,7 @@ namespace GSF
         #region [ Bit Rotation Extensions ]
 
         /// <summary>
-        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// Performs right-wise bit-rotation for the specified number of rotations.
         /// </summary>
         /// <param name="value">Value used for bit-rotation.</param>
         /// <param name="rotations">Number of rotations to perform.</param>
@@ -2271,11 +2271,9 @@ namespace GSF
         /// </remarks>
         public static byte BitRotL(this byte value, int rotations)
         {
-            bool hiBitSet;
-
-            for (int x = 1; x <= (rotations % 8); x++)
+            for (int x = 1; x <= rotations % 8; x++)
             {
-                hiBitSet = value.CheckBits(Bits.Bit07);
+                bool hiBitSet = value.CheckBits(Bits.Bit07);
 
                 value <<= 1;
 
@@ -2287,7 +2285,7 @@ namespace GSF
         }
 
         /// <summary>
-        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// Performs right-wise bit-rotation for the specified number of rotations.
         /// </summary>
         /// <param name="value">Value used for bit-rotation.</param>
         /// <param name="rotations">Number of rotations to perform.</param>
@@ -2299,11 +2297,9 @@ namespace GSF
         /// </remarks>
         public static sbyte BitRotL(this sbyte value, int rotations)
         {
-            bool hiBitSet;
-
-            for (int x = 1; x <= (rotations % 8); x++)
+            for (int x = 1; x <= rotations % 8; x++)
             {
-                hiBitSet = value.CheckBits(Bits.Bit07);
+                bool hiBitSet = value.CheckBits(Bits.Bit07);
 
                 value <<= 1;
 
@@ -2315,7 +2311,7 @@ namespace GSF
         }
 
         /// <summary>
-        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// Performs right-wise bit-rotation for the specified number of rotations.
         /// </summary>
         /// <param name="value">Value used for bit-rotation.</param>
         /// <param name="rotations">Number of rotations to perform.</param>
@@ -2327,11 +2323,9 @@ namespace GSF
         /// </remarks>
         public static short BitRotL(this short value, int rotations)
         {
-            bool hiBitSet;
-
-            for (int x = 1; x <= (rotations % 16); x++)
+            for (int x = 1; x <= rotations % 16; x++)
             {
-                hiBitSet = value.CheckBits(Bits.Bit15);
+                bool hiBitSet = value.CheckBits(Bits.Bit15);
 
                 value <<= 1;
 
@@ -2343,7 +2337,7 @@ namespace GSF
         }
 
         /// <summary>
-        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// Performs right-wise bit-rotation for the specified number of rotations.
         /// </summary>
         /// <param name="value">Value used for bit-rotation.</param>
         /// <param name="rotations">Number of rotations to perform.</param>
@@ -2355,11 +2349,9 @@ namespace GSF
         /// </remarks>
         public static ushort BitRotL(this ushort value, int rotations)
         {
-            bool hiBitSet;
-
-            for (int x = 1; x <= (rotations % 16); x++)
+            for (int x = 1; x <= rotations % 16; x++)
             {
-                hiBitSet = value.CheckBits(Bits.Bit15);
+                bool hiBitSet = value.CheckBits(Bits.Bit15);
 
                 value <<= 1;
 
@@ -2371,7 +2363,7 @@ namespace GSF
         }
 
         /// <summary>
-        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// Performs right-wise bit-rotation for the specified number of rotations.
         /// </summary>
         /// <param name="value">Value used for bit-rotation.</param>
         /// <param name="rotations">Number of rotations to perform.</param>
@@ -2383,11 +2375,9 @@ namespace GSF
         /// </remarks>
         public static Int24 BitRotL(this Int24 value, int rotations)
         {
-            bool hiBitSet;
-
-            for (int x = 1; x <= (rotations % 24); x++)
+            for (int x = 1; x <= rotations % 24; x++)
             {
-                hiBitSet = value.CheckBits(Bits.Bit23);
+                bool hiBitSet = value.CheckBits(Bits.Bit23);
 
                 value <<= 1;
 
@@ -2399,7 +2389,7 @@ namespace GSF
         }
 
         /// <summary>
-        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// Performs right-wise bit-rotation for the specified number of rotations.
         /// </summary>
         /// <param name="value">Value used for bit-rotation.</param>
         /// <param name="rotations">Number of rotations to perform.</param>
@@ -2411,11 +2401,9 @@ namespace GSF
         /// </remarks>
         public static UInt24 BitRotL(this UInt24 value, int rotations)
         {
-            bool hiBitSet;
-
-            for (int x = 1; x <= (rotations % 24); x++)
+            for (int x = 1; x <= rotations % 24; x++)
             {
-                hiBitSet = value.CheckBits(Bits.Bit23);
+                bool hiBitSet = value.CheckBits(Bits.Bit23);
 
                 value <<= 1;
 
@@ -2427,7 +2415,7 @@ namespace GSF
         }
 
         /// <summary>
-        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// Performs right-wise bit-rotation for the specified number of rotations.
         /// </summary>
         /// <param name="value">Value used for bit-rotation.</param>
         /// <param name="rotations">Number of rotations to perform.</param>
@@ -2439,11 +2427,9 @@ namespace GSF
         /// </remarks>
         public static int BitRotL(this int value, int rotations)
         {
-            bool hiBitSet;
-
-            for (int x = 1; x <= (rotations % 32); x++)
+            for (int x = 1; x <= rotations % 32; x++)
             {
-                hiBitSet = value.CheckBits(Bits.Bit31);
+                bool hiBitSet = value.CheckBits(Bits.Bit31);
 
                 value <<= 1;
 
@@ -2455,7 +2441,7 @@ namespace GSF
         }
 
         /// <summary>
-        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// Performs right-wise bit-rotation for the specified number of rotations.
         /// </summary>
         /// <param name="value">Value used for bit-rotation.</param>
         /// <param name="rotations">Number of rotations to perform.</param>
@@ -2467,11 +2453,9 @@ namespace GSF
         /// </remarks>
         public static uint BitRotL(this uint value, int rotations)
         {
-            bool hiBitSet;
-
-            for (int x = 1; x <= (rotations % 32); x++)
+            for (int x = 1; x <= rotations % 32; x++)
             {
-                hiBitSet = value.CheckBits(Bits.Bit31);
+                bool hiBitSet = value.CheckBits(Bits.Bit31);
 
                 value <<= 1;
 
@@ -2483,7 +2467,7 @@ namespace GSF
         }
 
         /// <summary>
-        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// Performs right-wise bit-rotation for the specified number of rotations.
         /// </summary>
         /// <param name="value">Value used for bit-rotation.</param>
         /// <param name="rotations">Number of rotations to perform.</param>
@@ -2495,11 +2479,9 @@ namespace GSF
         /// </remarks>
         public static long BitRotL(this long value, int rotations)
         {
-            bool hiBitSet;
-
-            for (int x = 1; x <= (rotations % 64); x++)
+            for (int x = 1; x <= rotations % 64; x++)
             {
-                hiBitSet = value.CheckBits(Bits.Bit63);
+                bool hiBitSet = value.CheckBits(Bits.Bit63);
 
                 value <<= 1;
 
@@ -2511,7 +2493,7 @@ namespace GSF
         }
 
         /// <summary>
-        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// Performs right-wise bit-rotation for the specified number of rotations.
         /// </summary>
         /// <param name="value">Value used for bit-rotation.</param>
         /// <param name="rotations">Number of rotations to perform.</param>
@@ -2523,11 +2505,9 @@ namespace GSF
         /// </remarks>
         public static ulong BitRotL(this ulong value, int rotations)
         {
-            bool hiBitSet;
-
-            for (int x = 1; x <= (rotations % 64); x++)
+            for (int x = 1; x <= rotations % 64; x++)
             {
-                hiBitSet = value.CheckBits(Bits.Bit63);
+                bool hiBitSet = value.CheckBits(Bits.Bit63);
 
                 value <<= 1;
 
@@ -2539,7 +2519,7 @@ namespace GSF
         }
 
         /// <summary>
-        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// Performs right-wise bit-rotation for the specified number of rotations.
         /// </summary>
         /// <param name="value">Value used for bit-rotation.</param>
         /// <param name="rotations">Number of rotations to perform.</param>
@@ -2551,25 +2531,20 @@ namespace GSF
         /// </remarks>
         public static byte BitRotR(this byte value, int rotations)
         {
-            bool loBitSet;
-
-            for (int x = 1; x <= (rotations % 8); x++)
+            for (int x = 1; x <= rotations % 8; x++)
             {
-                loBitSet = value.CheckBits(Bits.Bit00);
+                bool loBitSet = value.CheckBits(Bits.Bit00);
 
                 value >>= 1;
-
-                if (loBitSet)
-                    value = value.SetBits(Bits.Bit07);
-                else
-                    value = value.ClearBits(Bits.Bit07);
+                
+                value = loBitSet ? value.SetBits(Bits.Bit07) : value.ClearBits(Bits.Bit07);
             }
 
             return value;
         }
 
         /// <summary>
-        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// Performs right-wise bit-rotation for the specified number of rotations.
         /// </summary>
         /// <param name="value">Value used for bit-rotation.</param>
         /// <param name="rotations">Number of rotations to perform.</param>
@@ -2581,25 +2556,20 @@ namespace GSF
         /// </remarks>
         public static sbyte BitRotR(this sbyte value, int rotations)
         {
-            bool loBitSet;
-
-            for (int x = 1; x <= (rotations % 8); x++)
+            for (int x = 1; x <= rotations % 8; x++)
             {
-                loBitSet = value.CheckBits(Bits.Bit00);
+                bool loBitSet = value.CheckBits(Bits.Bit00);
 
                 value >>= 1;
 
-                if (loBitSet)
-                    value = value.SetBits(Bits.Bit07);
-                else
-                    value = value.ClearBits(Bits.Bit07);
+                value = loBitSet ? value.SetBits(Bits.Bit07) : value.ClearBits(Bits.Bit07);
             }
 
             return value;
         }
 
         /// <summary>
-        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// Performs right-wise bit-rotation for the specified number of rotations.
         /// </summary>
         /// <param name="value">Value used for bit-rotation.</param>
         /// <param name="rotations">Number of rotations to perform.</param>
@@ -2611,25 +2581,20 @@ namespace GSF
         /// </remarks>
         public static short BitRotR(this short value, int rotations)
         {
-            bool loBitSet;
-
-            for (int x = 1; x <= (rotations % 16); x++)
+            for (int x = 1; x <= rotations % 16; x++)
             {
-                loBitSet = value.CheckBits(Bits.Bit00);
+                bool loBitSet = value.CheckBits(Bits.Bit00);
 
                 value >>= 1;
 
-                if (loBitSet)
-                    value = value.SetBits(Bits.Bit15);
-                else
-                    value = value.ClearBits(Bits.Bit15);
+                value = loBitSet ? value.SetBits(Bits.Bit15) : value.ClearBits(Bits.Bit15);
             }
 
             return value;
         }
 
         /// <summary>
-        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// Performs right-wise bit-rotation for the specified number of rotations.
         /// </summary>
         /// <param name="value">Value used for bit-rotation.</param>
         /// <param name="rotations">Number of rotations to perform.</param>
@@ -2641,25 +2606,20 @@ namespace GSF
         /// </remarks>
         public static ushort BitRotR(this ushort value, int rotations)
         {
-            bool loBitSet;
-
-            for (int x = 1; x <= (rotations % 16); x++)
+            for (int x = 1; x <= rotations % 16; x++)
             {
-                loBitSet = value.CheckBits(Bits.Bit00);
+                bool loBitSet = value.CheckBits(Bits.Bit00);
 
                 value >>= 1;
 
-                if (loBitSet)
-                    value = value.SetBits(Bits.Bit15);
-                else
-                    value = value.ClearBits(Bits.Bit15);
+                value = loBitSet ? value.SetBits(Bits.Bit15) : value.ClearBits(Bits.Bit15);
             }
 
             return value;
         }
 
         /// <summary>
-        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// Performs right-wise bit-rotation for the specified number of rotations.
         /// </summary>
         /// <param name="value">Value used for bit-rotation.</param>
         /// <param name="rotations">Number of rotations to perform.</param>
@@ -2671,25 +2631,20 @@ namespace GSF
         /// </remarks>
         public static Int24 BitRotR(this Int24 value, int rotations)
         {
-            bool loBitSet;
-
-            for (int x = 1; x <= (rotations % 24); x++)
+            for (int x = 1; x <= rotations % 24; x++)
             {
-                loBitSet = value.CheckBits(Bits.Bit00);
+                bool loBitSet = value.CheckBits(Bits.Bit00);
 
                 value >>= 1;
 
-                if (loBitSet)
-                    value = value.SetBits(Bits.Bit23);
-                else
-                    value = value.ClearBits(Bits.Bit23);
+                value = loBitSet ? value.SetBits(Bits.Bit23) : value.ClearBits(Bits.Bit23);
             }
 
             return value;
         }
 
         /// <summary>
-        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// Performs right-wise bit-rotation for the specified number of rotations.
         /// </summary>
         /// <param name="value">Value used for bit-rotation.</param>
         /// <param name="rotations">Number of rotations to perform.</param>
@@ -2701,25 +2656,20 @@ namespace GSF
         /// </remarks>
         public static UInt24 BitRotR(this UInt24 value, int rotations)
         {
-            bool loBitSet;
-
-            for (int x = 1; x <= (rotations % 24); x++)
+            for (int x = 1; x <= rotations % 24; x++)
             {
-                loBitSet = value.CheckBits(Bits.Bit00);
+                bool loBitSet = value.CheckBits(Bits.Bit00);
 
                 value >>= 1;
 
-                if (loBitSet)
-                    value = value.SetBits(Bits.Bit23);
-                else
-                    value = value.ClearBits(Bits.Bit23);
+                value = loBitSet ? value.SetBits(Bits.Bit23) : value.ClearBits(Bits.Bit23);
             }
 
             return value;
         }
 
         /// <summary>
-        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// Performs right-wise bit-rotation for the specified number of rotations.
         /// </summary>
         /// <param name="value">Value used for bit-rotation.</param>
         /// <param name="rotations">Number of rotations to perform.</param>
@@ -2731,25 +2681,20 @@ namespace GSF
         /// </remarks>
         public static int BitRotR(this int value, int rotations)
         {
-            bool loBitSet;
-
-            for (int x = 1; x <= (rotations % 32); x++)
+            for (int x = 1; x <= rotations % 32; x++)
             {
-                loBitSet = value.CheckBits(Bits.Bit00);
+                bool loBitSet = value.CheckBits(Bits.Bit00);
 
                 value >>= 1;
 
-                if (loBitSet)
-                    value = value.SetBits(Bits.Bit31);
-                else
-                    value = value.ClearBits(Bits.Bit31);
+                value = loBitSet ? value.SetBits(Bits.Bit31) : value.ClearBits(Bits.Bit31);
             }
 
             return value;
         }
 
         /// <summary>
-        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// Performs right-wise bit-rotation for the specified number of rotations.
         /// </summary>
         /// <param name="value">Value used for bit-rotation.</param>
         /// <param name="rotations">Number of rotations to perform.</param>
@@ -2761,25 +2706,20 @@ namespace GSF
         /// </remarks>
         public static uint BitRotR(this uint value, int rotations)
         {
-            bool loBitSet;
-
-            for (int x = 1; x <= (rotations % 32); x++)
+            for (int x = 1; x <= rotations % 32; x++)
             {
-                loBitSet = value.CheckBits(Bits.Bit00);
+                bool loBitSet = value.CheckBits(Bits.Bit00);
 
                 value >>= 1;
 
-                if (loBitSet)
-                    value = value.SetBits(Bits.Bit31);
-                else
-                    value = value.ClearBits(Bits.Bit31);
+                value = loBitSet ? value.SetBits(Bits.Bit31) : value.ClearBits(Bits.Bit31);
             }
 
             return value;
         }
 
         /// <summary>
-        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// Performs right-wise bit-rotation for the specified number of rotations.
         /// </summary>
         /// <param name="value">Value used for bit-rotation.</param>
         /// <param name="rotations">Number of rotations to perform.</param>
@@ -2791,25 +2731,20 @@ namespace GSF
         /// </remarks>
         public static long BitRotR(this long value, int rotations)
         {
-            bool loBitSet;
-
-            for (int x = 1; x <= (rotations % 64); x++)
+            for (int x = 1; x <= rotations % 64; x++)
             {
-                loBitSet = value.CheckBits(Bits.Bit00);
+                bool loBitSet = value.CheckBits(Bits.Bit00);
 
                 value >>= 1;
 
-                if (loBitSet)
-                    value = value.SetBits(Bits.Bit63);
-                else
-                    value = value.ClearBits(Bits.Bit63);
+                value = loBitSet ? value.SetBits(Bits.Bit63) : value.ClearBits(Bits.Bit63);
             }
 
             return value;
         }
 
         /// <summary>
-        /// Performs rightwise bit-rotation for the specified number of rotations.
+        /// Performs right-wise bit-rotation for the specified number of rotations.
         /// </summary>
         /// <param name="value">Value used for bit-rotation.</param>
         /// <param name="rotations">Number of rotations to perform.</param>
@@ -2821,18 +2756,13 @@ namespace GSF
         /// </remarks>
         public static ulong BitRotR(this ulong value, int rotations)
         {
-            bool loBitSet;
-
-            for (int x = 1; x <= (rotations % 64); x++)
+            for (int x = 1; x <= rotations % 64; x++)
             {
-                loBitSet = value.CheckBits(Bits.Bit00);
+                bool loBitSet = value.CheckBits(Bits.Bit00);
 
                 value >>= 1;
 
-                if (loBitSet)
-                    value = value.SetBits(Bits.Bit63);
-                else
-                    value = value.ClearBits(Bits.Bit63);
+                value = loBitSet ? value.SetBits(Bits.Bit63) : value.ClearBits(Bits.Bit63);
             }
 
             return value;
@@ -2842,78 +2772,110 @@ namespace GSF
 
         #region [ ToBinaryString Extensions ]
 
-        private static string RemoveSign(string value) =>
-            value.Length > 0 && value[0] == '-' ? value.Substring(1) : value;
+        private static string RemoveSign(string value)
+        {
+            return value.Length > 0 && value[0] == '-' ? value.Substring(1) : value;
+        }
 
         /// <summary>
         /// Encodes <paramref name="value"/> as binary, i.e., a string of bit values (0 or 1).
         /// </summary>
         /// <param name="value">Integer value to encode.</param>
         /// <returns>Binary encoding of <paramref name="value"/>.</returns>
-        public static string ToBinaryString(this sbyte value) => RemoveSign(Radix2.Encode(value)).PadLeft(8, '0');
-        
+        public static string ToBinaryString(this sbyte value)
+        {
+            return RemoveSign(Radix2.Encode(value)).PadLeft(8, '0');
+        }
+
         /// <summary>
         /// Encodes <paramref name="value"/> as binary, i.e., a string of bit values (0 or 1).
         /// </summary>
         /// <param name="value">Integer value to encode.</param>
         /// <returns>Binary encoding of <paramref name="value"/>.</returns>
-        public static string ToBinaryString(this byte value) => Radix2.Encode((ushort)value).PadLeft(8, '0');
-        
+        public static string ToBinaryString(this byte value)
+        {
+            return Radix2.Encode((ushort)value).PadLeft(8, '0');
+        }
+
         /// <summary>
         /// Encodes <paramref name="value"/> as binary, i.e., a string of bit values (0 or 1).
         /// </summary>
         /// <param name="value">Integer value to encode.</param>
         /// <returns>Binary encoding of <paramref name="value"/>.</returns>
-        public static string ToBinaryString(this short value) => RemoveSign(Radix2.Encode(value)).PadLeft(16, '0');
-        
+        public static string ToBinaryString(this short value)
+        {
+            return RemoveSign(Radix2.Encode(value)).PadLeft(16, '0');
+        }
+
         /// <summary>
         /// Encodes <paramref name="value"/> as binary, i.e., a string of bit values (0 or 1).
         /// </summary>
         /// <param name="value">Integer value to encode.</param>
         /// <returns>Binary encoding of <paramref name="value"/>.</returns>
-        public static string ToBinaryString(this ushort value) => Radix2.Encode(value).PadLeft(16, '0');
-        
+        public static string ToBinaryString(this ushort value)
+        {
+            return Radix2.Encode(value).PadLeft(16, '0');
+        }
+
         /// <summary>
         /// Encodes <paramref name="value"/> as binary, i.e., a string of bit values (0 or 1).
         /// </summary>
         /// <param name="value">Integer value to encode.</param>
         /// <returns>Binary encoding of <paramref name="value"/>.</returns>
-        public static string ToBinaryString(this Int24 value) => RemoveSign(Radix2.Encode(value)).PadLeft(24, '0');
-        
+        public static string ToBinaryString(this Int24 value)
+        {
+            return RemoveSign(Radix2.Encode(value)).PadLeft(24, '0');
+        }
+
         /// <summary>
         /// Encodes <paramref name="value"/> as binary, i.e., a string of bit values (0 or 1).
         /// </summary>
         /// <param name="value">Integer value to encode.</param>
         /// <returns>Binary encoding of <paramref name="value"/>.</returns>
-        public static string ToBinaryString(this UInt24 value) => Radix2.Encode(value).PadLeft(24, '0');
-        
+        public static string ToBinaryString(this UInt24 value)
+        {
+            return Radix2.Encode(value).PadLeft(24, '0');
+        }
+
         /// <summary>
         /// Encodes <paramref name="value"/> as binary, i.e., a string of bit values (0 or 1).
         /// </summary>
         /// <param name="value">Integer value to encode.</param>
         /// <returns>Binary encoding of <paramref name="value"/>.</returns>
-        public static string ToBinaryString(this int value) => RemoveSign(Radix2.Encode(value)).PadLeft(32, '0');
-        
+        public static string ToBinaryString(this int value)
+        {
+            return RemoveSign(Radix2.Encode(value)).PadLeft(32, '0');
+        }
+
         /// <summary>
         /// Encodes <paramref name="value"/> as binary, i.e., a string of bit values (0 or 1).
         /// </summary>
         /// <param name="value">Integer value to encode.</param>
         /// <returns>Binary encoding of <paramref name="value"/>.</returns>
-        public static string ToBinaryString(this uint value) => Radix2.Encode(value).PadLeft(32, '0');
-        
+        public static string ToBinaryString(this uint value)
+        {
+            return Radix2.Encode(value).PadLeft(32, '0');
+        }
+
         /// <summary>
         /// Encodes <paramref name="value"/> as binary, i.e., a string of bit values (0 or 1).
         /// </summary>
         /// <param name="value">Integer value to encode.</param>
         /// <returns>Binary encoding of <paramref name="value"/>.</returns>
-        public static string ToBinaryString(this long value) => RemoveSign(Radix2.Encode(value).PadLeft(64, '0'));
-        
+        public static string ToBinaryString(this long value)
+        {
+            return RemoveSign(Radix2.Encode(value).PadLeft(64, '0'));
+        }
+
         /// <summary>
         /// Encodes <paramref name="value"/> as binary, i.e., a string of bit values (0 or 1).
         /// </summary>
         /// <param name="value">Integer value to encode.</param>
         /// <returns>Binary encoding of <paramref name="value"/>.</returns>
-        public static string ToBinaryString(this ulong value) => Radix2.Encode(value).PadLeft(64, '0');
+        public static string ToBinaryString(this ulong value)
+        {
+            return Radix2.Encode(value).PadLeft(64, '0');
+        }
 
         #endregion
     }

@@ -33,48 +33,47 @@
 using System;
 using GSF.Adapters;
 
-namespace GSF.Historian.MetadataProviders
+namespace GSF.Historian.MetadataProviders;
+
+/// <summary>
+/// A class that loads all <see cref="IMetadataProvider">Metadata Provider</see> adapters.
+/// </summary>
+/// <seealso cref="IMetadataProvider"/>
+public class MetadataProviders : AdapterLoader<IMetadataProvider>
 {
+    #region [ Methods ]
+
     /// <summary>
-    /// A class that loads all <see cref="IMetadataProvider">Metadata Provider</see> adapters.
+    /// <see cref="IMetadataProvider.Refresh()"/>es the <see cref="IMetadataProvider.Metadata"/> using all loaded metadata provider <see cref="AdapterLoader{T}.Adapters"/>.
     /// </summary>
-    /// <seealso cref="IMetadataProvider"/>
-    public class MetadataProviders : AdapterLoader<IMetadataProvider>
+    public void RefreshAll()
     {
-        #region [ Methods ]
-
-        /// <summary>
-        /// <see cref="IMetadataProvider.Refresh()"/>es the <see cref="IMetadataProvider.Metadata"/> using all loaded metadata provider <see cref="AdapterLoader{T}.Adapters"/>.
-        /// </summary>
-        public void RefreshAll()
-        {
-            OperationQueue.Enqueue(null);
-        }
-
-        /// <summary>
-        /// <see cref="IMetadataProvider.Refresh()"/>es the <see cref="IMetadataProvider.Metadata"/> using the specified <paramref name="provider"/> from the loaded metadata provider <see cref="AdapterLoader{T}.Adapters"/>.
-        /// </summary>
-        /// <param name="provider">Name of the <see cref="IMetadataProvider"/> to use for the <see cref="IMetadataProvider.Refresh()"/>.</param>
-        public void RefreshOne(string provider)
-        {
-            OperationQueue.Enqueue(provider);
-        }
-
-        /// <summary>
-        /// Executes <see cref="IMetadataProvider.Refresh()"/> on the specified metadata provider <paramref name="adapter"/>.
-        /// </summary>
-        /// <param name="adapter">An <see cref="IMetadataProvider"/> object.</param>
-        /// <param name="data"><see cref="System.Reflection.MemberInfo.Name"/> of the <paramref name="adapter"/>.</param>
-        protected override void ExecuteAdapterOperation(IMetadataProvider adapter, object data)
-        {
-            if (adapter.Enabled && 
-                (string.IsNullOrEmpty(Convert.ToString(data)) || 
-                 string.Compare(data.ToString(), adapter.GetType().Name, true) == 0))
-            {
-                adapter.Refresh();
-            }
-        }
-
-        #endregion        
+        OperationQueue.Enqueue(null);
     }
+
+    /// <summary>
+    /// <see cref="IMetadataProvider.Refresh()"/>es the <see cref="IMetadataProvider.Metadata"/> using the specified <paramref name="provider"/> from the loaded metadata provider <see cref="AdapterLoader{T}.Adapters"/>.
+    /// </summary>
+    /// <param name="provider">Name of the <see cref="IMetadataProvider"/> to use for the <see cref="IMetadataProvider.Refresh()"/>.</param>
+    public void RefreshOne(string provider)
+    {
+        OperationQueue.Enqueue(provider);
+    }
+
+    /// <summary>
+    /// Executes <see cref="IMetadataProvider.Refresh()"/> on the specified metadata provider <paramref name="adapter"/>.
+    /// </summary>
+    /// <param name="adapter">An <see cref="IMetadataProvider"/> object.</param>
+    /// <param name="data"><see cref="System.Reflection.MemberInfo.Name"/> of the <paramref name="adapter"/>.</param>
+    protected override void ExecuteAdapterOperation(IMetadataProvider adapter, object data)
+    {
+        if (adapter.Enabled && 
+            (string.IsNullOrEmpty(Convert.ToString(data)) || 
+             string.Compare(data.ToString(), adapter.GetType().Name, StringComparison.OrdinalIgnoreCase) == 0))
+        {
+            adapter.Refresh();
+        }
+    }
+
+    #endregion        
 }
