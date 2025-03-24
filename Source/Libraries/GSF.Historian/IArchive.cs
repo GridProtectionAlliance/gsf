@@ -32,115 +32,114 @@
 using System;
 using System.Collections.Generic;
 
-namespace GSF.Historian
+namespace GSF.Historian;
+
+/// <summary>
+/// Defines a repository where time-series data is warehoused by a historian.
+/// </summary>
+/// <seealso cref="IDataPoint"/>
+public interface IArchive
 {
     /// <summary>
-    /// Defines a repository where time-series data is warehoused by a historian.
+    /// Occurs when associated Metadata file is updated.
     /// </summary>
-    /// <seealso cref="IDataPoint"/>
-    public interface IArchive
-    {
-        /// <summary>
-        /// Occurs when associated Metadata file is updated.
-        /// </summary>
-        event EventHandler MetadataUpdated;
+    event EventHandler MetadataUpdated;
 
-        /// <summary>
-        /// Opens the repository.
-        /// </summary>
-        void Open();
+    /// <summary>
+    /// Opens the repository.
+    /// </summary>
+    void Open();
 
-        /// <summary>
-        /// Closes the repository.
-        /// </summary>
-        void Close();
+    /// <summary>
+    /// Closes the repository.
+    /// </summary>
+    void Close();
 
-        /// <summary>
-        /// Writes time-series data to the repository.
-        /// </summary>
-        /// <param name="dataPoint"><see cref="IDataPoint"/> to be written.</param>
-        void WriteData(IDataPoint dataPoint);
+    /// <summary>
+    /// Writes time-series data to the repository.
+    /// </summary>
+    /// <param name="dataPoint"><see cref="IDataPoint"/> to be written.</param>
+    void WriteData(IDataPoint dataPoint);
 
-        /// <summary>
-        /// Writes meta information for the specified <paramref name="historianID"/> to the repository.
-        /// </summary>
-        /// <param name="historianID">Historian identifier.</param>
-        /// <param name="metaData">Binary image of the meta information.</param>
-        void WriteMetaData(int historianID, byte[] metaData);
+    /// <summary>
+    /// Writes meta information for the specified <paramref name="historianID"/> to the repository.
+    /// </summary>
+    /// <param name="historianID">Historian identifier.</param>
+    /// <param name="metaData">Binary image of the meta information.</param>
+    void WriteMetaData(int historianID, byte[] metaData);
 
-        /// <summary>
-        /// Writes state information for the specified <paramref name="historianID"/> to the repository.
-        /// </summary>
-        /// <param name="historianID">Historian identifier.</param>
-        /// <param name="stateData">Binary image of the state information.</param>
-        void WriteStateData(int historianID, byte[] stateData);
+    /// <summary>
+    /// Writes state information for the specified <paramref name="historianID"/> to the repository.
+    /// </summary>
+    /// <param name="historianID">Historian identifier.</param>
+    /// <param name="stateData">Binary image of the state information.</param>
+    void WriteStateData(int historianID, byte[] stateData);
 
-        /// <summary>
-        /// Reads time-series data from the repository.
-        /// </summary>
-        /// <param name="historianID">Historian identifier for which <see cref="IDataPoint"/>s are to be read.</param>
-        /// <param name="startTime"><see cref="System.String"/> representation of the start time (in UTC) of the timespan for which <see cref="IDataPoint"/>s are to be read.</param>
-        /// <param name="endTime"><see cref="System.String"/> representation of the end time (in UTC) of the timespan for which <see cref="IDataPoint"/>s are to be read.</param>
-        /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
-        /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="IDataPoint"/>s.</returns>
-        IEnumerable<IDataPoint> ReadData(int historianID, string startTime, string endTime, bool timeSorted = true);
+    /// <summary>
+    /// Reads time-series data from the repository.
+    /// </summary>
+    /// <param name="historianID">Historian identifier for which <see cref="IDataPoint"/>s are to be read.</param>
+    /// <param name="startTime"><see cref="System.String"/> representation of the start time (in UTC) of the timespan for which <see cref="IDataPoint"/>s are to be read.</param>
+    /// <param name="endTime"><see cref="System.String"/> representation of the end time (in UTC) of the timespan for which <see cref="IDataPoint"/>s are to be read.</param>
+    /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
+    /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="IDataPoint"/>s.</returns>
+    IEnumerable<IDataPoint> ReadData(int historianID, string startTime, string endTime, bool timeSorted = true);
 
-        /// <summary>
-        /// Reads time-series data from the repository.
-        /// </summary>
-        /// <param name="historianID">Historian identifier for which time-series data are to be retrieved.</param>
-        /// <param name="startTime">Start <see cref="DateTime"/> (in UTC) for the time-series data to be retrieved.</param>
-        /// <param name="endTime">End <see cref="DateTime"/> (in UTC) for the time-series data to be retrieved.</param>
-        /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
-        /// <returns><see cref="IEnumerable{T}"/> object containing zero or more time-series data.</returns>
-        IEnumerable<IDataPoint> ReadData(int historianID, DateTime startTime, DateTime endTime, bool timeSorted = true);
+    /// <summary>
+    /// Reads time-series data from the repository.
+    /// </summary>
+    /// <param name="historianID">Historian identifier for which time-series data are to be retrieved.</param>
+    /// <param name="startTime">Start <see cref="DateTime"/> (in UTC) for the time-series data to be retrieved.</param>
+    /// <param name="endTime">End <see cref="DateTime"/> (in UTC) for the time-series data to be retrieved.</param>
+    /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
+    /// <returns><see cref="IEnumerable{T}"/> object containing zero or more time-series data.</returns>
+    IEnumerable<IDataPoint> ReadData(int historianID, DateTime startTime, DateTime endTime, bool timeSorted = true);
 
-        /// <summary>
-        /// Reads time-series data from the repository.
-        /// </summary>
-        /// <param name="historianIDs">Historian identifiers for which <see cref="IDataPoint"/>s are to be read.</param>
-        /// <param name="startTime"><see cref="System.String"/> representation of the start time (in UTC) of the timespan for which <see cref="IDataPoint"/>s are to be read.</param>
-        /// <param name="endTime"><see cref="System.String"/> representation of the end time (in UTC) of the timespan for which <see cref="IDataPoint"/>s are to be read.</param>
-        /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
-        /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="IDataPoint"/>s.</returns>
-        IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, string startTime, string endTime, bool timeSorted = true);
+    /// <summary>
+    /// Reads time-series data from the repository.
+    /// </summary>
+    /// <param name="historianIDs">Historian identifiers for which <see cref="IDataPoint"/>s are to be read.</param>
+    /// <param name="startTime"><see cref="System.String"/> representation of the start time (in UTC) of the timespan for which <see cref="IDataPoint"/>s are to be read.</param>
+    /// <param name="endTime"><see cref="System.String"/> representation of the end time (in UTC) of the timespan for which <see cref="IDataPoint"/>s are to be read.</param>
+    /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
+    /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="IDataPoint"/>s.</returns>
+    IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, string startTime, string endTime, bool timeSorted = true);
 
-        /// <summary>
-        /// Reads time-series data from the repository.
-        /// </summary>
-        /// <param name="historianIDs">Historian identifiers for which <see cref="IDataPoint"/>s are to be read.</param>
-        /// <param name="startTime">Start <see cref="DateTime"/> (in UTC) for the time-series data to be retrieved.</param>
-        /// <param name="endTime">End <see cref="DateTime"/> (in UTC) for the time-series data to be retrieved.</param>
-        /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
-        /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="IDataPoint"/>s.</returns>
-        IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, DateTime startTime, DateTime endTime, bool timeSorted = true);
+    /// <summary>
+    /// Reads time-series data from the repository.
+    /// </summary>
+    /// <param name="historianIDs">Historian identifiers for which <see cref="IDataPoint"/>s are to be read.</param>
+    /// <param name="startTime">Start <see cref="DateTime"/> (in UTC) for the time-series data to be retrieved.</param>
+    /// <param name="endTime">End <see cref="DateTime"/> (in UTC) for the time-series data to be retrieved.</param>
+    /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
+    /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="IDataPoint"/>s.</returns>
+    IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, DateTime startTime, DateTime endTime, bool timeSorted = true);
 
-        /// <summary>
-        /// Read meta information for the specified <paramref name="historianID"/>.
-        /// </summary>
-        /// <param name="historianID">Historian identifier.</param>
-        /// <returns>A <see cref="byte"/> array containing meta information.</returns>
-        byte[] ReadMetaData(int historianID);
+    /// <summary>
+    /// Read meta information for the specified <paramref name="historianID"/>.
+    /// </summary>
+    /// <param name="historianID">Historian identifier.</param>
+    /// <returns>A <see cref="byte"/> array containing meta information.</returns>
+    byte[] ReadMetaData(int historianID);
 
-        /// <summary>
-        /// Reads state information for the specified <paramref name="historianID"/>.
-        /// </summary>
-        /// <param name="historianID">Historian identifier.</param>
-        /// <returns>A <see cref="byte"/> array containing state information.</returns>
-        byte[] ReadStateData(int historianID);
+    /// <summary>
+    /// Reads state information for the specified <paramref name="historianID"/>.
+    /// </summary>
+    /// <param name="historianID">Historian identifier.</param>
+    /// <returns>A <see cref="byte"/> array containing state information.</returns>
+    byte[] ReadStateData(int historianID);
 
-        /// <summary>
-        /// Reads meta information summary for the specified <paramref name="historianID"/>.
-        /// </summary>
-        /// <param name="historianID">Historian identifier.</param>
-        /// <returns>A <see cref="byte"/> array containing meta information summary.</returns>
-        byte[] ReadMetaDataSummary(int historianID);
+    /// <summary>
+    /// Reads meta information summary for the specified <paramref name="historianID"/>.
+    /// </summary>
+    /// <param name="historianID">Historian identifier.</param>
+    /// <returns>A <see cref="byte"/> array containing meta information summary.</returns>
+    byte[] ReadMetaDataSummary(int historianID);
 
-        /// <summary>
-        /// Read state information summary for the specified <paramref name="historianID"/>.
-        /// </summary>
-        /// <param name="historianID">Historian identifier.</param>
-        /// <returns>A <see cref="byte"/> array containing state information summary.</returns>
-        byte[] ReadStateDataSummary(int historianID);
-    }
+    /// <summary>
+    /// Read state information summary for the specified <paramref name="historianID"/>.
+    /// </summary>
+    /// <param name="historianID">Historian identifier.</param>
+    /// <returns>A <see cref="byte"/> array containing state information summary.</returns>
+    byte[] ReadStateDataSummary(int historianID);
 }

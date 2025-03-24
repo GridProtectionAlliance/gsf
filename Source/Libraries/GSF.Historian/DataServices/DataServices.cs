@@ -29,12 +29,11 @@
 
 using GSF.Adapters;
 
-namespace GSF.Historian.DataServices
+namespace GSF.Historian.DataServices;
+
+/// <summary>
+/// A class that loads all of the <see cref="IDataService">data web services</see>.
+/// </summary>
+public class DataServices : AdapterLoader<IDataService>
 {
-    /// <summary>
-    /// A class that loads all of the <see cref="IDataService">data web services</see>.
-    /// </summary>
-    public class DataServices : AdapterLoader<IDataService>
-    {
-    }
 }

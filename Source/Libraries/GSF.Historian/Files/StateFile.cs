@@ -34,48 +34,47 @@
 using System.Drawing;
 using GSF.IO;
 
-namespace GSF.Historian.Files
+namespace GSF.Historian.Files;
+
+/// <summary>
+/// Represents a file containing <see cref="StateRecord"/>s.
+/// </summary>
+/// <seealso cref="StateRecord"/>
+[ToolboxBitmap(typeof(StateFile))]
+public class StateFile : IsamDataFileBase<StateRecord>
 {
+    #region [ Constructors ]
+
     /// <summary>
-    /// Represents a file containing <see cref="StateRecord"/>s.
+    /// Initializes a new instance of the <see cref="StateFile"/> class.
     /// </summary>
-    /// <seealso cref="StateRecord"/>
-    [ToolboxBitmap(typeof(StateFile))]
-    public class StateFile : IsamDataFileBase<StateRecord>
+    public StateFile()
     {
-        #region [ Constructors ]
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="StateFile"/> class.
-        /// </summary>
-        public StateFile()
-        {
-            SettingsCategory = this.GetType().Name;
-        }
-
-        #endregion
-
-        #region [ Methods ]
-
-        /// <summary>
-        /// Gets the binary size of a <see cref="StateRecord"/>.
-        /// </summary>
-        /// <returns>A 32-bit signed integer.</returns>
-        protected override int GetRecordSize()
-        {
-            return StateRecord.FixedLength;
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="StateRecord"/> with the specified <paramref name="recordIndex"/>.
-        /// </summary>
-        /// <param name="recordIndex">1-based index of the <see cref="StateRecord"/>.</param>
-        /// <returns>A <see cref="StateRecord"/> object.</returns>
-        protected override StateRecord CreateNewRecord(int recordIndex)
-        {
-            return new StateRecord(recordIndex);
-        }
-
-        #endregion
+        SettingsCategory = GetType().Name;
     }
+
+    #endregion
+
+    #region [ Methods ]
+
+    /// <summary>
+    /// Gets the binary size of a <see cref="StateRecord"/>.
+    /// </summary>
+    /// <returns>A 32-bit signed integer.</returns>
+    protected override int GetRecordSize()
+    {
+        return StateRecord.FixedLength;
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="StateRecord"/> with the specified <paramref name="recordIndex"/>.
+    /// </summary>
+    /// <param name="recordIndex">1-based index of the <see cref="StateRecord"/>.</param>
+    /// <returns>A <see cref="StateRecord"/> object.</returns>
+    protected override StateRecord CreateNewRecord(int recordIndex)
+    {
+        return new StateRecord(recordIndex);
+    }
+
+    #endregion
 }

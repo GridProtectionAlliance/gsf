@@ -64,35 +64,35 @@ public class ArchiveReader : IDisposable
     /// <summary>
     /// Occurs when the process of building historic <see cref="ArchiveFile"/> list is started.
     /// </summary>
-    [Category("File")]
+    [Category(nameof(File))]
     [Description("Occurs when the process of building historic ArchiveFile list is started.")]
     public event EventHandler HistoricFileListBuildStart;
 
     /// <summary>
     /// Occurs when the process of building historic <see cref="ArchiveFile"/> list is complete.
     /// </summary>
-    [Category("File")]
+    [Category(nameof(File))]
     [Description("Occurs when the process of building historic ArchiveFile list is complete.")]
     public event EventHandler HistoricFileListBuildComplete;
 
     /// <summary>
     /// Occurs when an <see cref="Exception"/> is encountered in historic <see cref="ArchiveFile"/> list building process.
     /// </summary>
-    [Category("File")]
+    [Category(nameof(File))]
     [Description("Occurs when an Exception is encountered in historic ArchiveFile list building process.")]
     public event EventHandler<EventArgs<Exception>> HistoricFileListBuildException;
 
     /// <summary>
     /// Occurs when the historic <see cref="ArchiveFile"/> list is updated to reflect addition or deletion of historic <see cref="ArchiveFile"/>s.
     /// </summary>
-    [Category("File")]
+    [Category(nameof(File))]
     [Description("Occurs when the historic ArchiveFile list is updated to reflect addition or deletion of historic ArchiveFiles.")]
     public event EventHandler HistoricFileListUpdated;
 
     /// <summary>
     /// Occurs when an <see cref="Exception"/> is encountered while reading <see cref="IDataPoint"/> from the current or historic <see cref="ArchiveFile"/>.
     /// </summary>
-    [Category("Data")]
+    [Category(nameof(Data))]
     [Description("Occurs when an Exception is encountered while reading IDataPoint from the current or historic ArchiveFile.")]
     public event EventHandler<EventArgs<Exception>> DataReadException;
 
@@ -267,6 +267,10 @@ public class ArchiveReader : IDisposable
     /// <param name="endTime"><see cref="String"/> representation of the end time (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
     /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
     /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
+    /// <remarks>
+    /// Data is always read from <paramref name="startTime"/> to <paramref name="endTime"/>. If <paramref name="startTime"/> is
+    /// greater than <paramref name="endTime"/>, query data will be read from the archive in reverse time order.
+    /// </remarks>
     public IEnumerable<IDataPoint> ReadData(int historianID, string startTime, string endTime, bool timeSorted = true)
     {
         return ReadData(historianID, TimeTag.Parse(startTime), TimeTag.Parse(endTime), timeSorted);
@@ -280,6 +284,10 @@ public class ArchiveReader : IDisposable
     /// <param name="endTime"><see cref="String"/> representation of the end time (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
     /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
     /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
+    /// <remarks>
+    /// Data is always read from <paramref name="startTime"/> to <paramref name="endTime"/>. If <paramref name="startTime"/> is
+    /// greater than <paramref name="endTime"/>, query data will be read from the archive in reverse time order.
+    /// </remarks>
     public IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, string startTime, string endTime, bool timeSorted = true)
     {
         return ReadData(historianIDs, TimeTag.Parse(startTime), TimeTag.Parse(endTime), timeSorted);
@@ -317,6 +325,10 @@ public class ArchiveReader : IDisposable
     /// <param name="endTime">End <see cref="DateTime"/> (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
     /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
     /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
+    /// <remarks>
+    /// Data is always read from <paramref name="startTime"/> to <paramref name="endTime"/>. If <paramref name="startTime"/> is
+    /// greater than <paramref name="endTime"/>, query data will be read from the archive in reverse time order.
+    /// </remarks>
     public IEnumerable<IDataPoint> ReadData(int historianID, DateTime startTime, DateTime endTime, bool timeSorted = true)
     {
         return ReadData(historianID, new TimeTag(startTime), new TimeTag(endTime), timeSorted);
@@ -330,6 +342,10 @@ public class ArchiveReader : IDisposable
     /// <param name="endTime">End <see cref="DateTime"/> (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
     /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
     /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
+    /// <remarks>
+    /// Data is always read from <paramref name="startTime"/> to <paramref name="endTime"/>. If <paramref name="startTime"/> is
+    /// greater than <paramref name="endTime"/>, query data will be read from the archive in reverse time order.
+    /// </remarks>
     public IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, DateTime startTime, DateTime endTime, bool timeSorted = true)
     {
         return ReadData(historianIDs, new TimeTag(startTime), new TimeTag(endTime), timeSorted);
@@ -367,9 +383,13 @@ public class ArchiveReader : IDisposable
     /// <param name="endTime">End <see cref="TimeTag"/> (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
     /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
     /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
+    /// <remarks>
+    /// Data is always read from <paramref name="startTime"/> to <paramref name="endTime"/>. If <paramref name="startTime"/> is
+    /// greater than <paramref name="endTime"/>, query data will be read from the archive in reverse time order.
+    /// </remarks>
     public IEnumerable<IDataPoint> ReadData(int historianID, TimeTag startTime, TimeTag endTime, bool timeSorted = true)
     {
-        return ReadData(new[] { historianID }, startTime, endTime, timeSorted);
+        return ReadData([historianID], startTime, endTime, timeSorted);
     }
 
     /// <summary>
@@ -380,6 +400,10 @@ public class ArchiveReader : IDisposable
     /// <param name="endTime">End <see cref="TimeTag"/> (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
     /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
     /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
+    /// <remarks>
+    /// Data is always read from <paramref name="startTime"/> to <paramref name="endTime"/>. If <paramref name="startTime"/> is
+    /// greater than <paramref name="endTime"/>, query data will be read from the archive in reverse time order.
+    /// </remarks>
     public IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, TimeTag startTime, TimeTag endTime, bool timeSorted = true)
     {
         if (m_archiveFile is null)
@@ -522,7 +546,7 @@ public class ArchiveReader : IDisposable
         }
         catch (Exception ex)
         {
-            OnDataReadException(new InvalidOperationException("Exception encountered during roll-over processing: " + ex.Message, ex));
+            OnDataReadException(new InvalidOperationException($"Exception encountered during roll-over processing: {ex.Message}", ex));
         }
         finally
         {

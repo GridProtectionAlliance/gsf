@@ -34,48 +34,47 @@
 using System.Drawing;
 using GSF.IO;
 
-namespace GSF.Historian.Files
+namespace GSF.Historian.Files;
+
+/// <summary>
+/// Represents a file containing <see cref="IntercomRecord"/>s.
+/// </summary>
+/// <seealso cref="IntercomRecord"/>
+[ToolboxBitmap(typeof(IntercomFile))]
+public class IntercomFile : IsamDataFileBase<IntercomRecord>
 {
+    #region [ Constructors ]
+
     /// <summary>
-    /// Represents a file containing <see cref="IntercomRecord"/>s.
+    /// Initializes a new instance of the <see cref="IntercomFile"/> class.
     /// </summary>
-    /// <seealso cref="IntercomRecord"/>
-    [ToolboxBitmap(typeof(IntercomFile))]
-    public class IntercomFile : IsamDataFileBase<IntercomRecord>
+    public IntercomFile()
     {
-        #region [ Constructors ]
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="IntercomFile"/> class.
-        /// </summary>
-        public IntercomFile()
-        {
-            SettingsCategory = this.GetType().Name;
-        }
-
-        #endregion
-
-        #region [ Methods ]
-
-        /// <summary>
-        /// Gets the binary size of a <see cref="IntercomRecord"/>.
-        /// </summary>
-        /// <returns>A 32-bit signed integer.</returns>
-        protected override int GetRecordSize()
-        {
-            return IntercomRecord.FixedLength;
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="IntercomRecord"/> with the specified <paramref name="recordIndex"/>.
-        /// </summary>
-        /// <param name="recordIndex">1-based index of the <see cref="IntercomRecord"/>.</param>
-        /// <returns>A <see cref="IntercomRecord"/> object.</returns>
-        protected override IntercomRecord CreateNewRecord(int recordIndex)
-        {
-            return new IntercomRecord(recordIndex);
-        }
-
-        #endregion
+        SettingsCategory = GetType().Name;
     }
+
+    #endregion
+
+    #region [ Methods ]
+
+    /// <summary>
+    /// Gets the binary size of a <see cref="IntercomRecord"/>.
+    /// </summary>
+    /// <returns>A 32-bit signed integer.</returns>
+    protected override int GetRecordSize()
+    {
+        return IntercomRecord.FixedLength;
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="IntercomRecord"/> with the specified <paramref name="recordIndex"/>.
+    /// </summary>
+    /// <param name="recordIndex">1-based index of the <see cref="IntercomRecord"/>.</param>
+    /// <returns>A <see cref="IntercomRecord"/> object.</returns>
+    protected override IntercomRecord CreateNewRecord(int recordIndex)
+    {
+        return new IntercomRecord(recordIndex);
+    }
+
+    #endregion
 }

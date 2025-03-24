@@ -28,66 +28,65 @@
 using System;
 using GSF.Adapters;
 
-namespace GSF.Historian.Replication
+namespace GSF.Historian.Replication;
+
+/// <summary>
+/// Defines a provider of replication mechanism for the <see cref="IArchive"/>.
+/// </summary>
+public interface IReplicationProvider : IAdapter
 {
+    #region [ Members ]
+
+    // Events
+
     /// <summary>
-    /// Defines a provider of replication mechanism for the <see cref="IArchive"/>.
+    /// Occurs when the process of replicating the <see cref="IArchive"/> is started.
     /// </summary>
-    public interface IReplicationProvider : IAdapter
-    {
-        #region [ Members ]
+    event EventHandler ReplicationStart;
 
-        // Events
+    /// <summary>
+    /// Occurs when the process of replicating the <see cref="IArchive"/> is complete.
+    /// </summary>
+    event EventHandler ReplicationComplete;
 
-        /// <summary>
-        /// Occurs when the process of replicating the <see cref="IArchive"/> is started.
-        /// </summary>
-        event EventHandler ReplicationStart;
+    /// <summary>
+    /// Occurs when an <see cref="Exception"/> is encountered during the replication process of <see cref="IArchive"/>.
+    /// </summary>
+    event EventHandler<EventArgs<Exception>> ReplicationException;
 
-        /// <summary>
-        /// Occurs when the process of replicating the <see cref="IArchive"/> is complete.
-        /// </summary>
-        event EventHandler ReplicationComplete;
+    /// <summary>
+    /// Occurs when the <see cref="IArchive"/> is being replicated.
+    /// </summary>
+    event EventHandler<EventArgs<ProcessProgress<int>>> ReplicationProgress;
 
-        /// <summary>
-        /// Occurs when an <see cref="Exception"/> is encountered during the replication process of <see cref="IArchive"/>.
-        /// </summary>
-        event EventHandler<EventArgs<Exception>> ReplicationException;
+    #endregion
 
-        /// <summary>
-        /// Occurs when the <see cref="IArchive"/> is being replicated.
-        /// </summary>
-        event EventHandler<EventArgs<ProcessProgress<int>>> ReplicationProgress;
+    #region [ Properties ]
 
-        #endregion
+    /// <summary>
+    /// Gets or sets the primary location of the <see cref="IArchive"/>.
+    /// </summary>
+    string ArchiveLocation { get; set; }
 
-        #region [ Properties ]
+    /// <summary>
+    /// Gets or sets the mirrored location of the <see cref="IArchive"/>.
+    /// </summary>
+    string ReplicaLocation { get; set; }
 
-        /// <summary>
-        /// Gets or sets the primary location of the <see cref="IArchive"/>.
-        /// </summary>
-        string ArchiveLocation { get; set; }
+    /// <summary>
+    /// Gets or sets the interval in milliseconds at which the <see cref="IArchive"/> is to be replicated.
+    /// </summary>
+    int ReplicationInterval { get; set; }
 
-        /// <summary>
-        /// Gets or sets the mirrored location of the <see cref="IArchive"/>.
-        /// </summary>
-        string ReplicaLocation { get; set; }
+    #endregion
 
-        /// <summary>
-        /// Gets or sets the interval in milliseconds at which the <see cref="IArchive"/> is to be replicated.
-        /// </summary>
-        int ReplicationInterval { get; set; }
+    #region [ Methods ]
 
-        #endregion
+    /// <summary>
+    /// Replicates the <see cref="IArchive"/>.
+    /// </summary>
+    /// <returns>true if the replication is successful; otherwise false.</returns>
+    bool Replicate();
 
-        #region [ Methods ]
-
-        /// <summary>
-        /// Replicates the <see cref="IArchive"/>.
-        /// </summary>
-        /// <returns>true if the replication is successful; otherwise false.</returns>
-        bool Replicate();
-
-        #endregion
-    }
+    #endregion
 }

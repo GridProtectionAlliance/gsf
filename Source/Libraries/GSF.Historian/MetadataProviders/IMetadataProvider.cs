@@ -31,67 +31,66 @@ using System;
 using GSF.Adapters;
 using GSF.Historian.Files;
 
-namespace GSF.Historian.MetadataProviders
+namespace GSF.Historian.MetadataProviders;
+
+/// <summary>
+/// Defines a provider of updates to the data in a <see cref="MetadataFile"/>.
+/// </summary>
+/// <seealso cref="MetadataFile"/>
+public interface IMetadataProvider : IAdapter
 {
+    #region [ Members ]
+
+    // Events
+
     /// <summary>
-    /// Defines a provider of updates to the data in a <see cref="MetadataFile"/>.
+    /// Occurs when <see cref="Refresh()"/> of <see cref="Metadata"/> is started.
     /// </summary>
-    /// <seealso cref="MetadataFile"/>
-    public interface IMetadataProvider : IAdapter
-    {
-        #region [ Members ]
+    event EventHandler MetadataRefreshStart;
 
-        // Events
+    /// <summary>
+    /// Occurs when <see cref="Refresh()"/> of <see cref="Metadata"/> is completed.
+    /// </summary>
+    event EventHandler MetadataRefreshComplete;
 
-        /// <summary>
-        /// Occurs when <see cref="Refresh()"/> of <see cref="Metadata"/> is started.
-        /// </summary>
-        event EventHandler MetadataRefreshStart;
+    /// <summary>
+    /// Occurs when <see cref="Refresh()"/> of <see cref="Metadata"/> times out.
+    /// </summary>
+    event EventHandler MetadataRefreshTimeout;
 
-        /// <summary>
-        /// Occurs when <see cref="Refresh()"/> of <see cref="Metadata"/> is completed.
-        /// </summary>
-        event EventHandler MetadataRefreshComplete;
+    /// <summary>
+    /// Occurs when an <see cref="Exception"/> is encountered during <see cref="Refresh()"/> of <see cref="Metadata"/>.
+    /// </summary>
+    event EventHandler<EventArgs<Exception>> MetadataRefreshException;
 
-        /// <summary>
-        /// Occurs when <see cref="Refresh()"/> of <see cref="Metadata"/> times out.
-        /// </summary>
-        event EventHandler MetadataRefreshTimeout;
+    #endregion
 
-        /// <summary>
-        /// Occurs when an <see cref="Exception"/> is encountered during <see cref="Refresh()"/> of <see cref="Metadata"/>.
-        /// </summary>
-        event EventHandler<EventArgs<Exception>> MetadataRefreshException;
+    #region [ Properties ]
 
-        #endregion
+    /// <summary>
+    /// Gets or sets the number of seconds to wait for the <see cref="Refresh()"/> to complete.
+    /// </summary>
+    int RefreshTimeout { get; set; }
 
-        #region [ Properties ]
+    /// <summary>
+    /// Gets or sets the number of minutes at which the <see cref="Metadata"/> if to be refreshed automatically.
+    /// </summary>
+    int RefreshInterval { get; set; }
 
-        /// <summary>
-        /// Gets or sets the number of seconds to wait for the <see cref="Refresh()"/> to complete.
-        /// </summary>
-        int RefreshTimeout { get; set; }
+    /// <summary>
+    /// Gets or sets the <see cref="MetadataFile"/> to be refreshed by the metadata provider.
+    /// </summary>
+    MetadataFile Metadata { get; set; }
 
-        /// <summary>
-        /// Gets or sets the number of minutes at which the <see cref="Metadata"/> if to be refreshed automatically.
-        /// </summary>
-        int RefreshInterval { get; set; }
+    #endregion
 
-        /// <summary>
-        /// Gets or sets the <see cref="MetadataFile"/> to be refreshed by the metadata provider.
-        /// </summary>
-        MetadataFile Metadata { get; set; }
+    #region [ Methods ]
 
-        #endregion
+    /// <summary>
+    /// Refreshes the <see cref="Metadata"/> from an external source.
+    /// </summary>
+    /// <returns>true if the <see cref="Metadata"/> is refreshed; otherwise false.</returns>
+    bool Refresh();
 
-        #region [ Methods ]
-
-        /// <summary>
-        /// Refreshes the <see cref="Metadata"/> from an external source.
-        /// </summary>
-        /// <returns>true if the <see cref="Metadata"/> is refreshed; otherwise false.</returns>
-        bool Refresh();
-
-        #endregion
-    }
+    #endregion
 }

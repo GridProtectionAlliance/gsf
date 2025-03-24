@@ -24,168 +24,94 @@
 using System;
 using System.Collections.Generic;
 
-namespace GSF.Historian.Files
+namespace GSF.Historian.Files;
+
+/// <summary>
+/// Scans an archive file for data points in a given time
+/// range and returns them in the order that they are scanned.
+/// </summary>
+/// <param name="reverseQuery">True to read data points in reverse order (i.e., from end time to start time); false to read in normal order.</param>
+public class ArchiveFileScanner(bool reverseQuery) : IArchiveFileScanner
 {
+    #region [ Properties ]
+
     /// <summary>
-    /// Scans an archive file for data points in a given time
-    /// range and returns them in the order that they are scanned.
+    /// Gets or sets the file allocation table of
+    /// the file that this scanner is reading from.
     /// </summary>
-    public class ArchiveFileScanner : IArchiveFileScanner
+    public ArchiveFileAllocationTable FileAllocationTable { get; set; }
+
+    /// <summary>
+    /// Gets or sets the collection of
+    /// point IDs to be scanned from the file.
+    /// </summary>
+    public IEnumerable<int> HistorianIDs { get; set; }
+
+    /// <summary>
+    /// Gets or sets the minimum value of the timestamps
+    /// of the data points returned by the scanner.
+    /// </summary>
+    public TimeTag StartTime { get; set; }
+
+    /// <summary>
+    /// Gets or sets the maximum value of the timestamps
+    /// of the data points returned by the scanner.
+    /// </summary>
+    public TimeTag EndTime { get; set; }
+
+    /// <summary>
+    /// Gets flag that determines if data will be queried in reverse order.
+    /// </summary>
+    public bool ReverseQuery => reverseQuery;
+
+    /// <summary>
+    /// Gets or sets the data point from which to resume
+    /// the scan if it was interrupted by a rollover.
+    /// </summary>
+    public IDataPoint ResumeFrom { get; set; }
+
+    /// <summary>
+    /// Gets or sets the handler used to handle
+    /// errors that occur while scanning the file.
+    /// </summary>
+    public EventHandler<EventArgs<Exception>> DataReadExceptionHandler { get; set; }
+
+    #endregion
+
+    #region [ Methods ]
+
+    /// <summary>
+    /// Reads all <see cref="IDataPoint"/>s for the specified historian IDs.
+    /// </summary>
+    /// <returns>Each <see cref="IDataPoint"/> for the specified historian IDs.</returns>
+    public IEnumerable<IDataPoint> Read()
     {
-        #region [ Members ]
-
-        // Fields
-        private ArchiveFileAllocationTable m_fileAllocationTable;
-        private IEnumerable<int> m_historianIDs;
-        private TimeTag m_startTime;
-        private TimeTag m_endTime;
-        private IDataPoint m_resumeFrom;
-        private EventHandler<EventArgs<Exception>> m_dataReadExceptionHandler;
-
-        #endregion
-
-        #region [ Constructors ]
-
-        #endregion
-
-        #region [ Properties ]
-
-        /// <summary>
-        /// Gets or sets the file allocation table of
-        /// the file that this scanner is reading from.
-        /// </summary>
-        public ArchiveFileAllocationTable FileAllocationTable
+        foreach (DataPointScanner scanner in GetScanners())
         {
-            get
-            {
-                return m_fileAllocationTable;
-            }
-            set
-            {
-                m_fileAllocationTable = value;
-            }
+            foreach (IDataPoint dataPoint in scanner.Read())
+                yield return dataPoint;
         }
-
-        /// <summary>
-        /// Gets or sets the collection of
-        /// point IDs to be scanned from the file.
-        /// </summary>
-        public IEnumerable<int> HistorianIDs
-        {
-            get
-            {
-                return m_historianIDs;
-            }
-            set
-            {
-                m_historianIDs = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the minimum value of the timestamps
-        /// of the data points returned by the scanner.
-        /// </summary>
-        public TimeTag StartTime
-        {
-            get
-            {
-                return m_startTime;
-            }
-            set
-            {
-                m_startTime = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the maximum value of the timestamps
-        /// of the data points returned by the scanner.
-        /// </summary>
-        public TimeTag EndTime
-        {
-            get
-            {
-                return m_endTime;
-            }
-            set
-            {
-                m_endTime = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the data point from which to resume
-        /// the scan if it was interrupted by a rollover.
-        /// </summary>
-        public IDataPoint ResumeFrom
-        {
-            get
-            {
-                return m_resumeFrom;
-            }
-            set
-            {
-                m_resumeFrom = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the handler used to handle
-        /// errors that occur while scanning the file.
-        /// </summary>
-        public EventHandler<EventArgs<Exception>> DataReadExceptionHandler
-        {
-            get
-            {
-                return m_dataReadExceptionHandler;
-            }
-            set
-            {
-                m_dataReadExceptionHandler = value;
-            }
-        }
-
-        #endregion
-
-        #region [ Methods ]
-
-        /// <summary>
-        /// Reads all <see cref="IDataPoint"/>s for the specified historian IDs.
-        /// </summary>
-        /// <returns>Each <see cref="IDataPoint"/> for the specified historian IDs.</returns>
-        public IEnumerable<IDataPoint> Read()
-        {
-            foreach (DataPointScanner scanner in GetScanners())
-            {
-                foreach (IDataPoint dataPoint in scanner.Read())
-                    yield return dataPoint;
-            }
-        }
-
-        // Gets the list of data point scanners used to
-        // scan the file for data belonging to this query.
-        private List<DataPointScanner> GetScanners()
-        {
-            List<DataPointScanner> dataPointScanners = new List<DataPointScanner>();
-            bool alreadyScanned = ((object)m_resumeFrom != null);
-
-            foreach (int historianID in m_historianIDs)
-            {
-                if (!alreadyScanned)
-                {
-                    dataPointScanners.Add(new DataPointScanner(m_fileAllocationTable, historianID, m_startTime, m_endTime, true, m_dataReadExceptionHandler));
-                }
-                else if (historianID == m_resumeFrom.HistorianID)
-                {
-                    dataPointScanners.Add(new DataPointScanner(m_fileAllocationTable, historianID, m_resumeFrom.Time, m_endTime, false, m_dataReadExceptionHandler));
-                    alreadyScanned = false;
-                }
-            }
-
-            return dataPointScanners;
-        }
-
-        #endregion
     }
+
+    // Gets the list of data point scanners used to
+    // scan the file for data belonging to this query.
+    private IEnumerable<DataPointScanner> GetScanners()
+    {
+        bool alreadyScanned = ResumeFrom is not null;
+
+        foreach (int historianID in HistorianIDs)
+        {
+            if (!alreadyScanned)
+            {
+                yield return new DataPointScanner(FileAllocationTable, historianID, StartTime, EndTime, true, reverseQuery, DataReadExceptionHandler);
+            }
+            else if (historianID == ResumeFrom.HistorianID)
+            {
+                yield return new DataPointScanner(FileAllocationTable, historianID, ResumeFrom.Time, EndTime, false, reverseQuery, DataReadExceptionHandler);
+                alreadyScanned = false;
+            }
+        }
+    }
+
+    #endregion
 }

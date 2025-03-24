@@ -34,46 +34,36 @@
 using System;
 using GSF.Parsing;
 
-namespace GSF.Historian.Packets
+namespace GSF.Historian.Packets;
+
+/// <summary>
+/// Represents a data parser that can parse binary data in to <see cref="IPacket"/>s.
+/// </summary>
+public class PacketParser : MultiSourceFrameImageParserBase<Guid, short, IPacket>
 {
+    #region [ Properties ]
+
     /// <summary>
-    /// Represents a data parser that can parse binary data in to <see cref="IPacket"/>s.
+    /// Returns false since the protocol implementation of <see cref="IPacket"/> does not use synchronization.
     /// </summary>
-    public class PacketParser : MultiSourceFrameImageParserBase<Guid, short, IPacket>
+    public override bool ProtocolUsesSyncBytes => false;
+
+    #endregion
+
+    #region [ Methods ]
+
+    /// <summary>
+    /// Returns an <see cref="PacketCommonHeader"/> object.
+    /// </summary>
+    /// <param name="buffer">Buffer containing data to parse.</param>
+    /// <param name="offset">Offset index into <paramref name="buffer"/> that represents where to start parsing.</param>
+    /// <param name="length">Maximum length of valid data from <paramref name="offset"/>.</param>
+    /// <returns>A <see cref="PacketCommonHeader"/> object parsed from the <paramref name="buffer"/>, or <c>null</c> if not enough buffer is available..</returns>
+    protected override ICommonHeader<short> ParseCommonHeader(byte[] buffer, int offset, int length)
     {
-        #region [ Properties ]
-
-        /// <summary>
-        /// Returns false since the protocol implementation of <see cref="IPacket"/> does not use synchronization.
-        /// </summary>
-        public override bool ProtocolUsesSyncBytes
-        {
-            get
-            {
-                return false;
-            }
-        }
-
-        #endregion
-
-        #region [ Methods ]
-
-        /// <summary>
-        /// Returns an <see cref="PacketCommonHeader"/> object.
-        /// </summary>
-        /// <param name="buffer">Buffer containing data to parse.</param>
-        /// <param name="offset">Offset index into <paramref name="buffer"/> that represents where to start parsing.</param>
-        /// <param name="length">Maximum length of valid data from <paramref name="offset"/>.</param>
-        /// <returns>A <see cref="PacketCommonHeader"/> object parsed from the <paramref name="buffer"/>, or <c>null</c> if not enough buffer is available..</returns>
-        protected override ICommonHeader<short> ParseCommonHeader(byte[] buffer, int offset, int length)
-        {
-            if (length > 1)
-                return new PacketCommonHeader(buffer, offset, length);
-
-            // Return null if there is not enough buffer to parse common header
-            return null;
-        }
-
-        #endregion
+        // Return null if there is not enough buffer to parse common header
+        return length > 1 ? new PacketCommonHeader(buffer, offset, length) : null;
     }
+
+    #endregion
 }

@@ -31,50 +31,39 @@
 
 using GSF.Units;
 
-namespace GSF.Historian.Files
+namespace GSF.Historian.Files;
+
+/// <summary>
+/// A class that contains the statistics of an <see cref="ArchiveFile"/>.
+/// </summary>
+/// <seealso cref="ArchiveFile"/>
+public class ArchiveFileStatistics
 {
     /// <summary>
-    /// A class that contains the statistics of an <see cref="ArchiveFile"/>.
+    /// Current usage (in %) of the <see cref="ArchiveFile"/>.
     /// </summary>
-    /// <seealso cref="ArchiveFile"/>
-    public class ArchiveFileStatistics
+    public float FileUsage;
+
+    /// <summary>
+    /// Current rate of data compression (in %) in the <see cref="ArchiveFile"/>.
+    /// </summary>
+    public float CompressionRate;
+
+    /// <summary>
+    /// <see cref="Time"/> over which the <see cref="AverageWriteSpeed"/> is calculated.
+    /// </summary>
+    public Time AveragingWindow;
+
+    /// <summary>
+    /// Average number of time-series data points written to the <see cref="ArchiveFile"/> in one second.
+    /// </summary>
+    public int AverageWriteSpeed;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ArchiveFileStatistics"/> class.
+    /// </summary>
+    internal ArchiveFileStatistics()
     {
-        #region [ Members ]
-
-        // Fields
-
-        /// <summary>
-        /// Current usage (in %) of the <see cref="ArchiveFile"/>.
-        /// </summary>
-        public float FileUsage;
-
-        /// <summary>
-        /// Current rate of data compression (in %) in the <see cref="ArchiveFile"/>.
-        /// </summary>
-        public float CompressionRate;
-
-        /// <summary>
-        /// <see cref="Time"/> over which the <see cref="AverageWriteSpeed"/> is calculated.
-        /// </summary>
-        public Time AveragingWindow;
-
-        /// <summary>
-        /// Average number of time-series data points written to the <see cref="ArchiveFile"/> in one second.
-        /// </summary>
-        public int AverageWriteSpeed;
-
-        #endregion
-
-        #region [ Constructors ]
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ArchiveFileStatistics"/> class.
-        /// </summary>
-        internal ArchiveFileStatistics()
-        {
-            AveragingWindow = Time.MinValue;
-        }
-
-        #endregion
+        AveragingWindow = Time.MinValue;
     }
 }

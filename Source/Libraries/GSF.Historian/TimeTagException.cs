@@ -23,36 +23,35 @@
 
 using System;
 
-namespace GSF.Historian
+namespace GSF.Historian;
+
+/// <summary>
+/// Represents an exception related to <see cref="TimeTag"/> instances.
+/// </summary>
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2237:MarkISerializableTypesWithSerializable")]
+public class TimeTagException : Exception
 {
     /// <summary>
-    /// Represents an exception related to <see cref="TimeTag"/> instances.
+    /// Initializes a new instance of the <see cref="TimeTagException" /> class.
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2237:MarkISerializableTypesWithSerializable")]
-    public class TimeTagException : Exception
+    public TimeTagException()
+    {            
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TimeTagException" /> class with a specified error <paramref name="message"/> that is the cause of this exception.
+    /// </summary>
+    /// <param name="message">The error message that explains the reason for the exception.</param>
+    public TimeTagException(string message) : base(message)
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="TimeTagException" /> class.
-        /// </summary>
-        public TimeTagException()
-        {            
-        }
+    }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="TimeTagException" /> class with a specified error <paramref name="message"/> that is the cause of this exception.
-        /// </summary>
-        /// <param name="message">The error message that explains the reason for the exception.</param>
-        public TimeTagException(string message) : base(message)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="TimeTagException" /> class with a specified error <paramref name="message"/> and a reference to the <paramref name="innerException"/> that is the cause of this exception.
-        /// </summary>
-        /// <param name="message">The error message that explains the reason for the exception.</param>
-        /// <param name="innerException">The exception that is the cause of the current exception, or a <c>null</c> reference if no inner exception is specified.</param>
-        public TimeTagException(string message, Exception innerException) : base(message, innerException)
-        {
-        }
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TimeTagException" /> class with a specified error <paramref name="message"/> and a reference to the <paramref name="innerException"/> that is the cause of this exception.
+    /// </summary>
+    /// <param name="message">The error message that explains the reason for the exception.</param>
+    /// <param name="innerException">The exception that is the cause of the current exception, or a <c>null</c> reference if no inner exception is specified.</param>
+    public TimeTagException(string message, Exception innerException) : base(message, innerException)
+    {
     }
 }
