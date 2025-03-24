@@ -34,7 +34,8 @@ namespace GSF.Historian.Files;
 /// <summary>
 /// Reads a series of data points from an <see cref="ArchiveFile"/> in sorted order.
 /// </summary>
-public class TimeSortedArchiveFileScanner : IArchiveFileScanner
+/// <param name="reverseQuery">True to read data points in reverse order (i.e., from end time to start time); false to read in normal order.</param>
+public class TimeSortedArchiveFileScanner(bool reverseQuery) : IArchiveFileScanner
 {
     #region [ Properties ]
 
@@ -61,6 +62,11 @@ public class TimeSortedArchiveFileScanner : IArchiveFileScanner
     /// of the data points returned by the scanner.
     /// </summary>
     public TimeTag EndTime { get; set; }
+
+    /// <summary>
+    /// Gets flag that determines if data will be queried in reverse order.
+    /// </summary>
+    public bool ReverseQuery => reverseQuery;
 
     /// <summary>
     /// Gets or sets the data point from which to resume
@@ -106,7 +112,7 @@ public class TimeSortedArchiveFileScanner : IArchiveFileScanner
         // Start publishing data points in time-sorted order
         do
         {
-            TimeTag publishTime = TimeTag.MaxValue;
+            TimeTag publishTime = reverseQuery ? TimeTag.MinValue : TimeTag.MaxValue;
 
             // Find minimum publication time for current values
             IDataPoint dataPoint;
@@ -114,12 +120,17 @@ public class TimeSortedArchiveFileScanner : IArchiveFileScanner
             foreach (IEnumerator<IDataPoint> enumerator in enumerators)
             {
                 dataPoint = enumerator.Current;
+                int result = dataPoint?.Time.CompareTo(publishTime) ?? 0;
 
-                if (dataPoint?.Time.CompareTo(publishTime) < 0)
-                    publishTime = dataPoint.Time;
+                if (reverseQuery ? result > 0 : result < 0)
+                    publishTime = dataPoint!.Time;
             }
 
             int index = 0;
+
+            Func<TimeTag, TimeTag, bool> compareTime = reverseQuery ?
+                (srcTime, dstTime) => srcTime.CompareTo(dstTime) >= 0 :
+                (srcTime, dstTime) => srcTime.CompareTo(dstTime) <= 0;
 
             // Publish all values at the current time
             foreach (IEnumerator<IDataPoint> enumerator in enumerators)
@@ -127,7 +138,7 @@ public class TimeSortedArchiveFileScanner : IArchiveFileScanner
                 bool enumerationComplete = false;
                 dataPoint = enumerator.Current;
 
-                if (dataPoint?.Time.CompareTo(publishTime) <= 0)
+                if (compareTime(dataPoint?.Time, publishTime))
                 {
                     // Attempt to advance to next data point, tracking completed enumerators
                     if (!enumerator.MoveNext())
@@ -203,7 +214,7 @@ public class TimeSortedArchiveFileScanner : IArchiveFileScanner
 
         foreach (int historianID in historianIDs)
         {
-            dataPointScanners.Add(new DataPointScanner(FileAllocationTable, historianID, startTime, endTime, includeStartTime, DataReadExceptionHandler));
+            dataPointScanners.Add(new DataPointScanner(FileAllocationTable, historianID, startTime, endTime, includeStartTime, reverseQuery, DataReadExceptionHandler));
 
             if (historianID == resumeFromHistorianID)
                 includeStartTime = true;

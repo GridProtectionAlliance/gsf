@@ -1657,6 +1657,10 @@ public class ArchiveFile : Component, IArchive, ISupportLifecycle, ISupportIniti
     /// <param name="endTime"><see cref="String"/> representation of the end time (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
     /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
     /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
+    /// <remarks>
+    /// Data is always read from <paramref name="startTime"/> to <paramref name="endTime"/>. If <paramref name="startTime"/> is
+    /// greater than <paramref name="endTime"/>, query data will be read from the archive in reverse time order.
+    /// </remarks>
     public IEnumerable<IDataPoint> ReadData(int historianID, string startTime, string endTime, bool timeSorted = true)
     {
         return ReadData(historianID, TimeTag.Parse(startTime), TimeTag.Parse(endTime), timeSorted);
@@ -1670,6 +1674,10 @@ public class ArchiveFile : Component, IArchive, ISupportLifecycle, ISupportIniti
     /// <param name="endTime"><see cref="String"/> representation of the end time (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
     /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
     /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
+    /// <remarks>
+    /// Data is always read from <paramref name="startTime"/> to <paramref name="endTime"/>. If <paramref name="startTime"/> is
+    /// greater than <paramref name="endTime"/>, query data will be read from the archive in reverse time order.
+    /// </remarks>
     public IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, string startTime, string endTime, bool timeSorted = true)
     {
         return ReadData(historianIDs, TimeTag.Parse(startTime), TimeTag.Parse(endTime), timeSorted);
@@ -1707,6 +1715,10 @@ public class ArchiveFile : Component, IArchive, ISupportLifecycle, ISupportIniti
     /// <param name="endTime">End <see cref="DateTime"/> (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
     /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
     /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
+    /// <remarks>
+    /// Data is always read from <paramref name="startTime"/> to <paramref name="endTime"/>. If <paramref name="startTime"/> is
+    /// greater than <paramref name="endTime"/>, query data will be read from the archive in reverse time order.
+    /// </remarks>
     public IEnumerable<IDataPoint> ReadData(int historianID, DateTime startTime, DateTime endTime, bool timeSorted = true)
     {
         return ReadData(historianID, new TimeTag(startTime), new TimeTag(endTime), timeSorted);
@@ -1720,6 +1732,10 @@ public class ArchiveFile : Component, IArchive, ISupportLifecycle, ISupportIniti
     /// <param name="endTime">End <see cref="DateTime"/> (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
     /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
     /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
+    /// <remarks>
+    /// Data is always read from <paramref name="startTime"/> to <paramref name="endTime"/>. If <paramref name="startTime"/> is
+    /// greater than <paramref name="endTime"/>, query data will be read from the archive in reverse time order.
+    /// </remarks>
     public IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, DateTime startTime, DateTime endTime, bool timeSorted = true)
     {
         return ReadData(historianIDs, new TimeTag(startTime), new TimeTag(endTime), timeSorted);
@@ -1757,6 +1773,10 @@ public class ArchiveFile : Component, IArchive, ISupportLifecycle, ISupportIniti
     /// <param name="endTime">End <see cref="TimeTag"/> (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
     /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
     /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
+    /// <remarks>
+    /// Data is always read from <paramref name="startTime"/> to <paramref name="endTime"/>. If <paramref name="startTime"/> is
+    /// greater than <paramref name="endTime"/>, query data will be read from the archive in reverse time order.
+    /// </remarks>
     public IEnumerable<IDataPoint> ReadData(int historianID, TimeTag startTime, TimeTag endTime, bool timeSorted = true)
     {
         return ReadData([historianID], startTime, endTime, timeSorted);
@@ -1770,6 +1790,10 @@ public class ArchiveFile : Component, IArchive, ISupportLifecycle, ISupportIniti
     /// <param name="endTime">End <see cref="TimeTag"/> (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
     /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
     /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
+    /// <remarks>
+    /// Data is always read from <paramref name="startTime"/> to <paramref name="endTime"/>. If <paramref name="startTime"/> is
+    /// greater than <paramref name="endTime"/>, query data will be read from the archive in reverse time order.
+    /// </remarks>
     public IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, TimeTag startTime, TimeTag endTime, bool timeSorted = true)
     {
         return ReadData(historianIDs, startTime, endTime, null, timeSorted);
@@ -1789,9 +1813,14 @@ public class ArchiveFile : Component, IArchive, ISupportLifecycle, ISupportIniti
         if (m_fileType != ArchiveFileType.Active)
             throw new InvalidOperationException("Data can only be directly read from files that are Active");
 
-        // Ensure that the start and end time are valid.
+        bool reverseQuery = false;
+
+        // If start time is greater than end time, assuming reverse query is requested
         if (startTime.CompareTo(endTime) > 0)
-            throw new ArgumentException("End Time precedes Start Time in the specified time span");
+        {
+            reverseQuery = true;
+            (startTime, endTime) = (endTime, startTime); // Swap start and end time
+        }
 
         List<Info> dataFiles = [];
         bool pendingRollover = false;
@@ -1861,9 +1890,9 @@ public class ArchiveFile : Component, IArchive, ISupportLifecycle, ISupportIniti
                 IArchiveFileScanner scanner;
 
                 if (timeSorted)
-                    scanner = new TimeSortedArchiveFileScanner();
+                    scanner = new TimeSortedArchiveFileScanner(reverseQuery);
                 else
-                    scanner = new ArchiveFileScanner();
+                    scanner = new ArchiveFileScanner(reverseQuery);
 
                 scanner.FileAllocationTable = file.Fat;
                 scanner.HistorianIDs = historianIDs;

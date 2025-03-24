@@ -267,6 +267,10 @@ public class ArchiveReader : IDisposable
     /// <param name="endTime"><see cref="String"/> representation of the end time (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
     /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
     /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
+    /// <remarks>
+    /// Data is always read from <paramref name="startTime"/> to <paramref name="endTime"/>. If <paramref name="startTime"/> is
+    /// greater than <paramref name="endTime"/>, query data will be read from the archive in reverse time order.
+    /// </remarks>
     public IEnumerable<IDataPoint> ReadData(int historianID, string startTime, string endTime, bool timeSorted = true)
     {
         return ReadData(historianID, TimeTag.Parse(startTime), TimeTag.Parse(endTime), timeSorted);
@@ -280,6 +284,10 @@ public class ArchiveReader : IDisposable
     /// <param name="endTime"><see cref="String"/> representation of the end time (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
     /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
     /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
+    /// <remarks>
+    /// Data is always read from <paramref name="startTime"/> to <paramref name="endTime"/>. If <paramref name="startTime"/> is
+    /// greater than <paramref name="endTime"/>, query data will be read from the archive in reverse time order.
+    /// </remarks>
     public IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, string startTime, string endTime, bool timeSorted = true)
     {
         return ReadData(historianIDs, TimeTag.Parse(startTime), TimeTag.Parse(endTime), timeSorted);
@@ -317,6 +325,10 @@ public class ArchiveReader : IDisposable
     /// <param name="endTime">End <see cref="DateTime"/> (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
     /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
     /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
+    /// <remarks>
+    /// Data is always read from <paramref name="startTime"/> to <paramref name="endTime"/>. If <paramref name="startTime"/> is
+    /// greater than <paramref name="endTime"/>, query data will be read from the archive in reverse time order.
+    /// </remarks>
     public IEnumerable<IDataPoint> ReadData(int historianID, DateTime startTime, DateTime endTime, bool timeSorted = true)
     {
         return ReadData(historianID, new TimeTag(startTime), new TimeTag(endTime), timeSorted);
@@ -330,6 +342,10 @@ public class ArchiveReader : IDisposable
     /// <param name="endTime">End <see cref="DateTime"/> (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
     /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
     /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
+    /// <remarks>
+    /// Data is always read from <paramref name="startTime"/> to <paramref name="endTime"/>. If <paramref name="startTime"/> is
+    /// greater than <paramref name="endTime"/>, query data will be read from the archive in reverse time order.
+    /// </remarks>
     public IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, DateTime startTime, DateTime endTime, bool timeSorted = true)
     {
         return ReadData(historianIDs, new TimeTag(startTime), new TimeTag(endTime), timeSorted);
@@ -367,6 +383,10 @@ public class ArchiveReader : IDisposable
     /// <param name="endTime">End <see cref="TimeTag"/> (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
     /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
     /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
+    /// <remarks>
+    /// Data is always read from <paramref name="startTime"/> to <paramref name="endTime"/>. If <paramref name="startTime"/> is
+    /// greater than <paramref name="endTime"/>, query data will be read from the archive in reverse time order.
+    /// </remarks>
     public IEnumerable<IDataPoint> ReadData(int historianID, TimeTag startTime, TimeTag endTime, bool timeSorted = true)
     {
         return ReadData([historianID], startTime, endTime, timeSorted);
@@ -380,6 +400,10 @@ public class ArchiveReader : IDisposable
     /// <param name="endTime">End <see cref="TimeTag"/> (in UTC) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
     /// <param name="timeSorted">Indicates whether the data retrieved from the archive should be time sorted.</param>
     /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
+    /// <remarks>
+    /// Data is always read from <paramref name="startTime"/> to <paramref name="endTime"/>. If <paramref name="startTime"/> is
+    /// greater than <paramref name="endTime"/>, query data will be read from the archive in reverse time order.
+    /// </remarks>
     public IEnumerable<IDataPoint> ReadData(IEnumerable<int> historianIDs, TimeTag startTime, TimeTag endTime, bool timeSorted = true)
     {
         if (m_archiveFile is null)

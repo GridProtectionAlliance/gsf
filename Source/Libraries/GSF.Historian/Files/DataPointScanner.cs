@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace GSF.Historian.Files;
 
@@ -48,15 +49,17 @@ internal class DataPointScanner
     /// <param name="historianID">Historian ID to scan for.</param>
     /// <param name="startTime">Desired start time.</param>
     /// <param name="endTime">Desired end time.</param>
-    /// <param name="includeEdgeTimes">True to include data points equal to the start or end time; false to exclude.</param>
+    /// <param name="includeStartTime">True to include data points equal to the start ime; false to exclude.</param>
+    /// <param name="reverseQuery">True to read data points in reverse order (i.e., from end time to start time); false to read in normal order.</param>
     /// <param name="dataReadExceptionHandler">Read exception handler.</param>
-    public DataPointScanner(ArchiveFileAllocationTable dataBlockAllocationTable, int historianID, TimeTag startTime, TimeTag endTime, bool includeEdgeTimes, EventHandler<EventArgs<Exception>> dataReadExceptionHandler)
+    public DataPointScanner(ArchiveFileAllocationTable dataBlockAllocationTable, int historianID, TimeTag startTime, TimeTag endTime, bool includeStartTime, bool reverseQuery, EventHandler<EventArgs<Exception>> dataReadExceptionHandler)
     {
         m_dataBlockAllocationTable = dataBlockAllocationTable;
         HistorianID = historianID;
         StartTime = startTime;
         EndTime = endTime;
-        IncludeEdgeTimes = includeEdgeTimes;
+        IncludeStartTime = includeStartTime;
+        ReverseQuery = reverseQuery;
         m_dataReadExceptionHandler = dataReadExceptionHandler;
     }
 
@@ -70,19 +73,24 @@ internal class DataPointScanner
     public int HistorianID { get; }
 
     /// <summary>
-    /// Gets flag that indicates whether the start or end time is inclusive when reading data points from the <see cref="ArchiveDataBlock"/>s.
-    /// </summary>
-    public bool IncludeEdgeTimes { get; }
-
-    /// <summary>
-    /// Gets the start time associated with this <see cref="DataPointScanner"/>. The start time is inclusive if <see cref="IncludeEdgeTimes"/> is true.
+    /// Gets the start time associated with this <see cref="DataPointScanner"/>. The start time is inclusive if <see cref="IncludeStartTime"/> is true.
     /// </summary>
     public TimeTag StartTime { get; }
 
     /// <summary>
-    /// Gets the end time associated with this <see cref="DataPointScanner"/>. The end time is inclusive if <see cref="IncludeEdgeTimes"/> is true.
+    /// Gets the end time associated with this <see cref="DataPointScanner"/>. The end time is inclusive if <see cref="IncludeStartTime"/> is true.
     /// </summary>
     public TimeTag EndTime { get; }
+
+    /// <summary>
+    /// Gets flag that indicates whether the start time is inclusive when reading data points from the <see cref="ArchiveDataBlock"/>s.
+    /// </summary>
+    public bool IncludeStartTime { get; }
+
+    /// <summary>
+    /// Gets flag that indicates whether the data points should be read in reverse order (i.e., from end time to start time).
+    /// </summary>
+    public bool ReverseQuery { get; }
 
     #endregion
 
@@ -94,26 +102,31 @@ internal class DataPointScanner
     /// <returns>Each <see cref="IDataPoint"/> read from the <see cref="ArchiveDataBlock"/>s.</returns>
     public IEnumerable<IDataPoint> Read()
     {
-        Func<IDataPoint, bool> includeDataPoint = IncludeEdgeTimes ? 
+        Func<IDataPoint, bool> includeDataPoint = IncludeStartTime ? 
             dataPoint => dataPoint.Time.CompareTo(StartTime) >= 0 && dataPoint.Time.CompareTo(EndTime) <= 0 : 
             dataPoint => dataPoint.Time.CompareTo(StartTime) > 0 && dataPoint.Time.CompareTo(EndTime) <= 0;
 
         bool isFirst = true;
 
         // Loop through each data block
-        foreach ((ArchiveDataBlock dataBlock, bool isLast) in m_dataBlockAllocationTable.FindDataBlocks(HistorianID, StartTime, EndTime, false))
+        foreach ((ArchiveDataBlock dataBlock, bool isLast) in m_dataBlockAllocationTable.FindDataBlocks(HistorianID, StartTime, EndTime, false, ReverseQuery))
         {
             try
             {
                 // Attach to data read exception event for the data block
                 dataBlock.DataReadException += m_dataReadExceptionHandler;
 
+                IEnumerable<IDataPoint> dataPoints = dataBlock.Read();
+
+                if (ReverseQuery)
+                    dataPoints = dataPoints.Reverse();
+
                 if (isFirst || isLast)
                 {
                     isFirst = false;
 
                     // Read data through first or last data blocks
-                    foreach (IDataPoint dataPoint in dataBlock.Read())
+                    foreach (IDataPoint dataPoint in dataPoints)
                     {
                         // Validate time range on edges
                         if (includeDataPoint(dataPoint))
@@ -123,7 +136,7 @@ internal class DataPointScanner
                 else
                 {
                     // Read all the data from remainder of data blocks
-                    foreach (IDataPoint dataPoint in dataBlock.Read())
+                    foreach (IDataPoint dataPoint in dataPoints)
                         yield return dataPoint;
                 }
             }

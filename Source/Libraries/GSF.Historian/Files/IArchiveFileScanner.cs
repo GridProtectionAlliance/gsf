@@ -58,6 +58,11 @@ public interface IArchiveFileScanner
     TimeTag EndTime { get; set; }
 
     /// <summary>
+    /// Gets flag that determines if data will be queried in reverse order.
+    /// </summary>
+    bool ReverseQuery { get; }
+
+    /// <summary>
     /// Gets or sets the data point from which to resume
     /// the scan if it was interrupted by a rollover.
     /// </summary>

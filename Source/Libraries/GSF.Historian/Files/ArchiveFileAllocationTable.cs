@@ -607,10 +607,11 @@ public class ArchiveFileAllocationTable : ISupportBinaryImage
     /// </summary>
     /// <param name="historianID">Historian identifier.</param>
     /// <param name="preRead">true to pre-read data to locate write cursor.</param>
+    /// <param name="reverseQuery">true to search backwards from the end of the file.</param>
     /// <returns>A collection of <see cref="ArchiveDataBlock"/>s.</returns>
-    public IEnumerable<(ArchiveDataBlock dataBlock, bool isLast)> FindDataBlocks(int historianID, bool preRead = true)
+    public IEnumerable<(ArchiveDataBlock dataBlock, bool isLast)> FindDataBlocks(int historianID, bool preRead = true, bool reverseQuery = false)
     {
-        return FindDataBlocks(historianID, TimeTag.MinValue, preRead);
+        return FindDataBlocks(historianID, TimeTag.MinValue, preRead, reverseQuery);
     }
 
     /// <summary>
@@ -619,10 +620,11 @@ public class ArchiveFileAllocationTable : ISupportBinaryImage
     /// <param name="historianID">Historian identifier.</param>
     /// <param name="startTime">Start <see cref="TimeTag"/>.</param>
     /// <param name="preRead">true to pre-read data to locate write cursor.</param>
+    /// <param name="reverseQuery">true to search backwards from the end of the file.</param>
     /// <returns>A collection of <see cref="ArchiveDataBlock"/>s.</returns>
-    public IEnumerable<(ArchiveDataBlock dataBlock, bool isLast)> FindDataBlocks(int historianID, TimeTag startTime, bool preRead = true)
+    public IEnumerable<(ArchiveDataBlock dataBlock, bool isLast)> FindDataBlocks(int historianID, TimeTag startTime, bool preRead = true, bool reverseQuery = false)
     {
-        return FindDataBlocks(historianID, startTime, TimeTag.MaxValue, preRead);
+        return FindDataBlocks(historianID, startTime, TimeTag.MaxValue, preRead, reverseQuery);
     }
 
     /// <summary>
@@ -632,13 +634,15 @@ public class ArchiveFileAllocationTable : ISupportBinaryImage
     /// <param name="startTime">Start <see cref="TimeTag"/>.</param>
     /// <param name="endTime">End <see cref="TimeTag"/>.</param>
     /// <param name="preRead">true to pre-read data to locate write cursor.</param>
+    /// <param name="reverseQuery">true to search backwards from the end of the file.</param>
     /// <returns>A collection of <see cref="ArchiveDataBlock"/>s.</returns>
-    public IEnumerable<(ArchiveDataBlock dataBlock, bool isLast)> FindDataBlocks(int historianID, TimeTag startTime, TimeTag endTime, bool preRead = true)
+    public IEnumerable<(ArchiveDataBlock dataBlock, bool isLast)> FindDataBlocks(int historianID, TimeTag startTime, TimeTag endTime, bool preRead = true, bool reverseQuery = false)
     {
         startTime ??= TimeTag.MaxValue;
         endTime ??= TimeTag.MaxValue;
 
         List<ArchiveDataBlockPointer> blockPointers;
+        IEnumerable<(ArchiveDataBlock, bool)> dataBlocks;
 
         lock (m_dataBlockPointers)
         {
@@ -647,7 +651,10 @@ public class ArchiveFileAllocationTable : ISupportBinaryImage
 
             // Look for pointer to data block on the borders of the specified range which may contain data
             if (startTime == TimeTag.MinValue || endTime == TimeTag.MaxValue)
-                return blockPointers.Select((pointer, i) => (pointer.GetDataBlock(preRead), i == blockPointers.Count - 1));
+            {
+                dataBlocks = blockPointers.Select((pointer, i) => (pointer.GetDataBlock(preRead), i == blockPointers.Count - 1));
+                return reverseQuery ? dataBlocks.Reverse() : dataBlocks;
+            }
             
             // There are 2 different search criteria for this:
 
@@ -667,7 +674,8 @@ public class ArchiveFileAllocationTable : ISupportBinaryImage
         }
 
         // Return list of data blocks for given block pointers
-        return blockPointers.Select((pointer, i) => (pointer.GetDataBlock(preRead), i == blockPointers.Count - 1));
+        dataBlocks = blockPointers.Select((pointer, i) => (pointer.GetDataBlock(preRead), i == blockPointers.Count - 1));
+        return reverseQuery ? dataBlocks.Reverse() : dataBlocks;
     }
 
     /// <summary>

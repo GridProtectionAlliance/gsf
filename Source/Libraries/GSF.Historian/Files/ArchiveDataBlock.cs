@@ -104,6 +104,7 @@ public class ArchiveDataBlock
     /// <param name="index">0-based index of the <see cref="ArchiveDataBlock"/>.</param>
     /// <param name="historianID">Historian identifier whose <see cref="ArchiveDataPoint"/> is stored in the <see cref="ArchiveDataBlock"/>.</param>
     /// <param name="preRead">true to pre-read data to locate write cursor.</param>
+    /// <param name="reverseQuery">true to search backwards from the end of the file.</param>
     internal ArchiveDataBlock(ArchiveFile parent, int index, int historianID, bool preRead = true)
     {
         m_parent = parent;
@@ -193,7 +194,7 @@ public class ArchiveDataBlock
 
                 if (dataPoint is { IsEmpty: false })
                 {
-                    // There is data - use it.
+                    // There is data, return it.
                     m_writeCursor = m_parent.FileData.Position;
                     yield return dataPoint;
                 }

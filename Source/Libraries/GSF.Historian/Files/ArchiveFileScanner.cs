@@ -30,7 +30,8 @@ namespace GSF.Historian.Files;
 /// Scans an archive file for data points in a given time
 /// range and returns them in the order that they are scanned.
 /// </summary>
-public class ArchiveFileScanner : IArchiveFileScanner
+/// <param name="reverseQuery">True to read data points in reverse order (i.e., from end time to start time); false to read in normal order.</param>
+public class ArchiveFileScanner(bool reverseQuery) : IArchiveFileScanner
 {
     #region [ Properties ]
 
@@ -57,6 +58,11 @@ public class ArchiveFileScanner : IArchiveFileScanner
     /// of the data points returned by the scanner.
     /// </summary>
     public TimeTag EndTime { get; set; }
+
+    /// <summary>
+    /// Gets flag that determines if data will be queried in reverse order.
+    /// </summary>
+    public bool ReverseQuery => reverseQuery;
 
     /// <summary>
     /// Gets or sets the data point from which to resume
@@ -97,11 +103,11 @@ public class ArchiveFileScanner : IArchiveFileScanner
         {
             if (!alreadyScanned)
             {
-                yield return new DataPointScanner(FileAllocationTable, historianID, StartTime, EndTime, true, DataReadExceptionHandler);
+                yield return new DataPointScanner(FileAllocationTable, historianID, StartTime, EndTime, true, reverseQuery, DataReadExceptionHandler);
             }
             else if (historianID == ResumeFrom.HistorianID)
             {
-                yield return new DataPointScanner(FileAllocationTable, historianID, ResumeFrom.Time, EndTime, false, DataReadExceptionHandler);
+                yield return new DataPointScanner(FileAllocationTable, historianID, ResumeFrom.Time, EndTime, false, reverseQuery, DataReadExceptionHandler);
                 alreadyScanned = false;
             }
         }
