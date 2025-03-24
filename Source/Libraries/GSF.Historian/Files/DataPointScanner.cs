@@ -78,7 +78,7 @@ internal class DataPointScanner
     public TimeTag StartTime { get; }
 
     /// <summary>
-    /// Gets the end time associated with this <see cref="DataPointScanner"/>. The end time is inclusive if <see cref="IncludeStartTime"/> is true.
+    /// Gets the end time associated with this <see cref="DataPointScanner"/>. The end time is always inclusive.
     /// </summary>
     public TimeTag EndTime { get; }
 
