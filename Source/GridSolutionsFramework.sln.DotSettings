@@ -394,6 +394,7 @@
 	<s:Boolean x:Key="/Default/Environment/SettingsMigration/IsMigratorApplied/=JetBrains_002EReSharper_002EPsi_002ECSharp_002ECodeStyle_002EMemberReordering_002EMigrations_002ECSharpFileLayoutPatternRemoveIsAttributeUpgrade/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/Environment/SettingsMigration/IsMigratorApplied/=JetBrains_002EReSharper_002EPsi_002ECSharp_002ECodeStyle_002ESettingsUpgrade_002EMigrateBlankLinesAroundFieldToBlankLinesAroundProperty/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/Environment/SettingsMigration/IsMigratorApplied/=JetBrains_002EReSharper_002EPsi_002ECSharp_002ECodeStyle_002ESettingsUpgrade_002EPredefinedNamingRulesToUserRulesUpgrade/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/GrammarAndSpelling/GrammarChecking/Exceptions/=An_0020enumerable_0020of/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/GrammarAndSpelling/GrammarChecking/Exceptions/=an_0020reference/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/GrammarAndSpelling/GrammarChecking/Exceptions/=An_0020referencecontaining/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/GrammarAndSpelling/GrammarChecking/Exceptions/=an_0020referencefunction/@EntryIndexedValue">True</s:Boolean>
@@ -512,6 +513,7 @@
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=Trunc/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=unboxed/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=unboxes/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/UserDictionary/Words/=unescaping/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=UNIXTIME/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=unregister/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=Unregistering/@EntryIndexedValue">True</s:Boolean>
