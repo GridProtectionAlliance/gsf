@@ -32,6 +32,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using Ciloci.Flee;
 using GSF;
 using GSF.Collections;
@@ -117,6 +118,8 @@ namespace DynamicCalculator
         private IDynamicExpression m_expression;
 
         private readonly DelayedSynchronizedOperation m_timerOperation;
+
+        private int m_raisingVerboseMessages;
 
         #endregion
 
@@ -429,6 +432,12 @@ namespace DynamicCalculator
                 _ => m_latestTimestamp
             };
 
+        private bool RaisingVerboseMessages
+        {
+            get => Interlocked.CompareExchange(ref m_raisingVerboseMessages, 0, 0) != 0;
+            set => Interlocked.Exchange(ref m_raisingVerboseMessages, value ? 1 : 0);
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -486,6 +495,18 @@ namespace DynamicCalculator
         }
 
         /// <summary>
+        /// Begins raising verbose messages to provide insight into the values used in the calculation.
+        /// </summary>
+        [AdapterCommand("Begins raising verbose messages to provide insight into the values used in the calculation", "Administrator", "Editor")]
+        public void RaiseVerboseMessages() { RaisingVerboseMessages = true; }
+
+        /// <summary>
+        /// Stop raising verbose messages.
+        /// </summary>
+        [AdapterCommand("Stop raising verbose messages", "Administrator", "Editor")]
+        public void StopVerboseMessages() { RaisingVerboseMessages = false; }
+
+        /// <summary>
         /// Publish <see cref="IFrame"/> of time-aligned collection of <see cref="IMeasurement"/> values that arrived within the
         /// concentrator's defined <see cref="ConcentratorBase.LagTime"/>.
         /// </summary>
@@ -493,6 +514,12 @@ namespace DynamicCalculator
         /// <param name="index">Index of <see cref="IFrame"/> within a second ranging from zero to <c><see cref="ConcentratorBase.FramesPerSecond"/> - 1</c>.</param>
         protected override void PublishFrame(IFrame frame, int index)
         {
+            // UseLatestValues indicates that the ImmediateMeasurements collection provides
+            // values to variables for the dynamic calculation so the actual values of measurements
+            // received by the adapter are logged separately to better understand what's happening
+            if (UseLatestValues && RaisingVerboseMessages)
+                RaiseVerboseMessage(frame);
+
             m_latestTimestamp = frame.Timestamp;
 
             if (UseLatestValues)
@@ -629,7 +656,11 @@ namespace DynamicCalculator
             m_expression ??= m_expressionContext.CompileDynamic(m_aliasedExpressionText);
 
             // Evaluate the expression and generate the measurement
-            HandleCalculatedValue(m_expression.Evaluate());
+            object calculatedValue = m_expression.Evaluate();
+            HandleCalculatedValue(calculatedValue);
+
+            if (RaisingVerboseMessages)
+                RaiseVerboseMessage(m_expressionContext.Variables, calculatedValue);
         }
 
         // Adds a variable to the key-variable map.
@@ -807,6 +838,42 @@ namespace DynamicCalculator
             // Skip processing of an output with a value of NaN unless configured to process NaN outputs
             if (!SkipNaNOutput || !double.IsNaN(measurement.Value))
                 OnNewMeasurements(new List<IMeasurement>(new []{ measurement })); // List is intentional
+        }
+
+        private void RaiseVerboseMessage(IFrame frame)
+        {
+            StringBuilder builder = new StringBuilder();
+            builder.AppendLine($"Received frame {frame.Timestamp:yyyy-MM-dd HH:mm:ss.fffffff}:");
+
+            foreach (KeyValuePair<MeasurementKey, IMeasurement> kvp in frame.Measurements.OrderBy(kvp => kvp.Key.ToString()))
+            {
+                string name = kvp.Key.ToString();
+                builder.AppendLine($"{name} = {kvp.Value.AdjustedValue}");
+            }
+
+            OnStatusMessage(MessageLevel.Info, builder.ToString(), $"{nameof(DynamicCalculator)} FramePublished");
+        }
+
+        private void RaiseVerboseMessage(VariableCollection variables, object calculatedValue)
+        {
+            StringBuilder builder = new StringBuilder();
+            builder.AppendLine($"Calculation details {RealTime:yyyy-MM-dd HH:mm:ss.fffffff}:");
+
+            foreach (KeyValuePair<string, object> variable in variables.OrderBy(kvp => kvp.Key, StringComparer.OrdinalIgnoreCase))
+            {
+                if (variable.Value is Array array)
+                {
+                    for (int i = 0; i < array.Length; i++)
+                        builder.AppendLine($"{variable.Key}[{i}] = {array.GetValue(i)}");
+
+                    continue;
+                }
+
+                builder.AppendLine($"{variable.Key} = {variable.Value}");
+            }
+
+            builder.AppendLine($"Result = {calculatedValue}");
+            OnStatusMessage(MessageLevel.Info, builder.ToString(), $"{nameof(DynamicCalculator)} Calculated");
         }
 
         #endregion
