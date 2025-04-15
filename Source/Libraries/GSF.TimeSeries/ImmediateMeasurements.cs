@@ -281,7 +281,7 @@ namespace GSF.TimeSeries
             TemporalMeasurement measurement = Measurement(newMeasurement);
 
             // Set new value updating state flags if value was updated...
-            if (!measurement.SetValue(newMeasurement.Timestamp, newMeasurement.Value, newMeasurement.StateFlags))
+            if (!measurement.SetValue(m_realTimeFunction(), newMeasurement.Timestamp, newMeasurement.Value, newMeasurement.StateFlags))
                 return;
 
             measurement.Metadata = newMeasurement.Metadata;
