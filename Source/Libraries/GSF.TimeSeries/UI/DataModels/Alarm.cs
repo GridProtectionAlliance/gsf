@@ -24,6 +24,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -524,7 +525,7 @@ namespace GSF.TimeSeries.UI.DataModels
                 string sortClause = string.Empty;
                 DataTable adapterTable;
                 string query;
-
+                
                 if (!string.IsNullOrEmpty(sortMember))
                     sortClause = string.Format("ORDER BY {0} {1}", sortMember, sortDirection);
 
@@ -571,8 +572,9 @@ namespace GSF.TimeSeries.UI.DataModels
                 if ((object)keys != null && keys.Count > 0)
                 {
                     commaSeparatedKeys = keys.Select(key => "" + key.ToString() + "").Aggregate((str1, str2) => str1 + "," + str2);
-                    query = database.ParameterizedQueryString(string.Format("SELECT NodeID, TagName, ID, SignalID, AssociatedMeasurementID, Description, Severity, Operation, " +
-                        "SetPoint, Tolerance, Delay, Hysteresis, LoadOrder, Enabled FROM Alarm WHERE NodeID = {{0}} AND ID IN ({0})", commaSeparatedKeys), "nodeID");
+                    query = database.ParameterizedQueryString(string.Format("SELECT NodeID, TagName, ID, SignalID, AssociatedMeasurementID, " +
+                        "Description, Severity, Operation, SetPoint, Tolerance, Delay, Hysteresis, LoadOrder, Enabled " +
+                        "FROM Alarm WHERE NodeID = {{0}} AND ID IN ({0})", commaSeparatedKeys), "nodeID");
 
                     alarmTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID());
                     alarmList = new Alarm[alarmTable.Rows.Count];
@@ -625,7 +627,7 @@ namespace GSF.TimeSeries.UI.DataModels
             try
             {
                 createdConnection = CreateConnection(ref database);
-                DataTable alarmTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM Alarm " + whereClause);
+                DataTable alarmTable = database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM Alarm {whereClause}");
 
                 if (alarmTable.Rows.Count == 0)
                     return null;

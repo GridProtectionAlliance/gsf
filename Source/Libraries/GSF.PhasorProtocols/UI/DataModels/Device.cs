@@ -1452,7 +1452,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             try
             {
                 createdConnection = CreateConnection(ref database);
-                DataTable deviceTable = database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM DeviceDetail {whereClause}");
+                DataTable deviceTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM DeviceDetail " + whereClause);
 
                 if (deviceTable.Rows.Count == 0)
                     return null;
@@ -1537,7 +1537,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             try
             {
                 createdConnection = CreateConnection(ref database);
-                DataTable deviceTable = database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM DeviceDetail {whereClause}");
+                DataTable deviceTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM DeviceDetail " + whereClause);
                 ObservableCollection<Device> deviceList = new();
 
                 if (deviceTable.Rows.Count == 0)
@@ -1696,7 +1696,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 // Note that OleDB does not support parameterized sub-query.
                 if (database.DatabaseType == DatabaseType.Access)
                 {
-                    query = database.ParameterizedQueryString($"SELECT * FROM DeviceDetail WHERE NodeID = {{0}} AND IsConcentrator = {{1}} AND Acronym NOT IN (SELECT Acronym FROM OutputStreamDevice WHERE AdapterID = {outputStreamID}) ORDER BY Acronym", "nodeID", "isConcentrator");
+                    query = database.ParameterizedQueryString($"SELECT * FROM DeviceDetail WHERE NodeID = {{0}} AND IsConcentrator = {{1}} " +
+                        $"AND Acronym NOT IN (SELECT Acronym FROM OutputStreamDevice WHERE AdapterID = {outputStreamID}) ORDER BY Acronym", "nodeID", "isConcentrator");
 
                     deviceTable = database.Connection.RetrieveData(database.AdapterType, query, DefaultTimeout, database.CurrentNodeID(), database.Bool(false));
                 }
