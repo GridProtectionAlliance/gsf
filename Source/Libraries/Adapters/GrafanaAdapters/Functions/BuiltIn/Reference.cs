@@ -65,6 +65,13 @@ public abstract class Reference<T> : GrafanaFunctionBase<T> where T : struct, ID
             Default = AngleUnit.Degrees,
             Description = "Specifies the type of angle units and must be one of the following: Degrees, Radians, Grads, ArcMinutes, ArcSeconds or AngularMil.",
             Required = false
+        },
+        new ParameterDefinition<string>
+        {
+            Name = "ReferenceTarget",
+            Default = "",
+            Description = "Specifies the referece angel as a target to ensure it is always the same tag. If that tag does not exist the function will return NaN.",
+            Required = false
         }
     };
 
@@ -93,6 +100,7 @@ public abstract class Reference<T> : GrafanaFunctionBase<T> where T : struct, ID
         bool adjustCoordinateMidPoint = parameters.Value<bool>(0);
         bool applyWrapOps = parameters.Value<bool>(1);
         AngleUnit units = parameters.Value<AngleUnit>(2);
+        string target = parameters.Value<string>(3);
 
         await using IAsyncEnumerator<T> enumerator = GetDataSourceValues(parameters).GetAsyncEnumerator(cancellationToken);
 
@@ -101,6 +109,9 @@ public abstract class Reference<T> : GrafanaFunctionBase<T> where T : struct, ID
             yield break;
 
         double reference = enumerator.Current.Value;
+
+        if (!string.IsNullOrEmpty(target) && enumerator.Current.Target != target)
+            reference = double.NaN;
 
         // Each data source value in a slice is part of different series that will have their own metadata maps
         Dictionary<string, MetadataMap> metadataMaps = parameters.MetadataMaps;
@@ -148,26 +159,32 @@ public abstract class Reference<T> : GrafanaFunctionBase<T> where T : struct, ID
                 }
             }
 
-            if (applyWrapOps)
+            if (double.IsNaN(reference))
+                yield return enumerator.Current with { Value = double.NaN };
+            else 
             {
-                // Apply unwrap operations to angles converted to radians
-                Angle[] angles = Angle.Unwrap([
-                    Angle.ConvertFrom(enumerator.Current.Value, units), 
-                    Angle.ConvertFrom(reference, units)
-                ]).ToArray();
+                if (applyWrapOps)
+                {
+                    
+                    // Apply unwrap operations to angles converted to radians
+                    Angle[] angles = Angle.Unwrap([
+                        Angle.ConvertFrom(enumerator.Current.Value, units), 
+                        Angle.ConvertFrom(reference, units)
+                    ]).ToArray();
 
-                yield return enumerator.Current with
+                    yield return enumerator.Current with
+                    {
+                        // Return difference between unwrapped angles, rewrapped and converted to original units
+                        Value = (angles[0] - angles[1]).ToRange(-Math.PI, false).ConvertTo(units)
+                    };
+                }
+                else
                 {
-                    // Return difference between unwrapped angles, rewrapped and converted to original units
-                    Value = (angles[0] - angles[1]).ToRange(-Math.PI, false).ConvertTo(units)
-                };
-            }
-            else
-            {
-                yield return enumerator.Current with
-                {
-                    Value = enumerator.Current.Value - reference
-                };
+                    yield return enumerator.Current with
+                    {
+                        Value = enumerator.Current.Value - reference
+                    };
+                }
             }
         }
 
