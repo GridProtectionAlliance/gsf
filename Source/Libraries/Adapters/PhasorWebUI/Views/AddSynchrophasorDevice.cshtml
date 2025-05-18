@@ -560,6 +560,9 @@
         var phasorSignalTypes = [];
         var freqDeviceName = "@(SystemName)SYSTEM!FREQ";
 
+        const dbOpRetryCount = 6;
+        const dbOpWaitTime = 5000;
+
         function showLoadingLabel() {
             $("#loadingDataLabel").css("visibility", "visible");
             viewModel.working(true);
@@ -2651,8 +2654,8 @@
             if (attempt === undefined)
                 attempt = 1;
 
-            if (attempt > 4) {
-                return $.Deferred().reject("Failed to find \"" + type +"\" power output measurement after waiting 12 seconds - skipping 3-phase power calculations.").promise();
+            if (attempt > dbOpRetryCount) {
+                return $.Deferred().reject("Failed to find \"" + type + "\" power output measurement after waiting " + (dbOpRetryCount * dbOpWaitTime / 1000).toString() + " seconds - skipping 3-phase power calculations.").promise();
             }
 
             if (!linePhase.voltage.hasOwnProperty("vphaMeasurement") || !linePhase.voltage.hasOwnProperty("vphmMeasurement") || !linePhase.current.hasOwnProperty("iphaMeasurement") || !linePhase.current.hasOwnProperty("iphmMeasurement"))
@@ -2668,17 +2671,17 @@
                     switch (type) {
                         case "MW":
                             if (powerCalculation.ActivePowerOutputSignalID == null || powerCalculation.ActivePowerOutputSignalID === 0)
-                                return delayedPromise(3000).then(function () { return queryPowerOutput(type, linePhase, ++attempt); });
+                                return delayedPromise(dbOpWaitTime).then(function () { return queryPowerOutput(type, linePhase, ++attempt); });
 
                             return $.Deferred().resolve(powerCalculation.ActivePowerOutputSignalID).promise();
                         case "MVAR":
                             if (powerCalculation.ReactivePowerOutputSignalID == null || powerCalculation.ReactivePowerOutputSignalID === 0)
-                                return delayedPromise(3000).then(function () { return queryPowerOutput(type, linePhase, ++attempt); });
+                                return delayedPromise(dbOpWaitTime).then(function () { return queryPowerOutput(type, linePhase, ++attempt); });
 
                             return $.Deferred().resolve(powerCalculation.ReactivePowerOutputSignalID).promise();
                         case "MVA":
                             if (powerCalculation.ApparentPowerOutputSignalID == null || powerCalculation.ApparentPowerOutputSignalID === 0)
-                                return delayedPromise(3000).then(function () { return queryPowerOutput(type, linePhase, ++attempt); });
+                                return delayedPromise(dbOpWaitTime).then(function () { return queryPowerOutput(type, linePhase, ++attempt); });
 
                             return $.Deferred().resolve(powerCalculation.ApparentPowerOutputSignalID).promise();
                     }
@@ -2716,7 +2719,7 @@
                 let phaseBSignalID = null;
                 let phaseCSignalID = null;
 
-                // These queries will keep looping while power calculations are initializing until power output measurements exist or timeout after 12 seconds:
+                // These queries will keep looping while power calculations are initializing until power output measurements exist or timeout after ~30 seconds:
                 queryPromises.push(queryPowerOutput(type, line.A, 1).then(function (signalID) {
                     phaseASignalID = signalID;
                 }));
@@ -3117,7 +3120,7 @@
 
                             // Inputs can be outputs of other calculations, so will wait for a moment for these to get created if needed
                             if (Object.keys(inputSet[property]).length === 0)
-                                return delayedPromise(3000).then(function () { return saveDynamicCalculation(cell, tagTemplate, templateIndex, subType, calcSignalType, ++attempt); });
+                                return delayedPromise(dbOpWaitTime).then(function () { return saveDynamicCalculation(cell, tagTemplate, templateIndex, subType, calcSignalType, ++attempt); });
                         }
                     }
                 }
@@ -3756,7 +3759,8 @@
                 viewModel.longitude(device.Longitude);
                 viewModel.latitude(device.Latitude);
 
-                    showInfoMessage("Loading existing configuration...");
+                showInfoMessage("Loading existing configuration...");
+
                 return loadDeviceConfiguration(device.Acronym).then(function (mapping) {
                         // TODO: If loading from a mapping, need to determine which information from database should be
                         // used to override the mapping - e.g., device name, longitude, latitude, etc.
