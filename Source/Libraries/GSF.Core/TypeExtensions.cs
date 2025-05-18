@@ -174,7 +174,7 @@ namespace GSF
 
                 if (executeStaticConstructors)
                 {
-                    ThreadPool.QueueUserWorkItem(state =>
+                    ThreadPool.QueueUserWorkItem(static state =>
                     {
                         if (state is not Type[] asmTypes)
                             return;

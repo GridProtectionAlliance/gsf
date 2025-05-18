@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
-//  AssemblyInfo.cs - Gbtc
+//  ExtensionAttributeBase.cs - Gbtc
 //
-//  Copyright © 2017, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2025, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,36 +16,32 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  03/09/2017 - J. Ritchie Carroll
+//  03/27/2025 - J. Ritchie Carroll
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
 using System;
-using System.Reflection;
-using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("eDNAAdapters")]
-[assembly: AssemblyDescription("Instep eDNA Adapters for the Grid Solutions Framework")]
-[assembly: AssemblyDefaultAlias("eDNAAdapters")]
-[assembly: AssemblyProduct("Grid Solutions Framework")]
-[assembly: AssemblyCopyright("Copyright © GPA, 2017.  All Rights Reserved.")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
+namespace GSF.Data.Model;
 
-// Assembly manifest attributes.
-#if DEBUG
-[assembly: AssemblyConfiguration("Debug Build")]
-#else
-[assembly: AssemblyConfiguration("Release Build")]
-#endif
+/// <summary>
+/// Base class for Attributes that are used to extend the functionality of <see cref="TableOperations{T}"/>.
+/// </summary>
+[AttributeUsage(AttributeTargets.Method)]
+public abstract class ExtensionAttributeBase : Attribute
+{
+    /// <summary>
+    /// The regular expression used to match field names the attribute applies to.
+    /// </summary>
+    public string FieldMatch { get; }
 
-// Other configuration attributes.
-[assembly: CLSCompliant(false)]
-[assembly: ComVisible(false)]
-[assembly: Guid("1c165fad-7d51-4d8e-9311-4a3be266d877")]
-
-// Assembly identity attributes.
-[assembly: AssemblyVersion("2.4.241.0")]
-[assembly: AssemblyFileVersion("2.4.241.0")]
-[assembly: AssemblyInformationalVersion("2.4.241-beta")]
+    /// <summary>
+    /// Creates a new <see cref="ExtensionAttributeBase"/>
+    /// </summary>
+    /// <param name="fieldMatch">Field match expression for the attribute.</param>
+    protected ExtensionAttributeBase(string fieldMatch)
+    {
+        FieldMatch = fieldMatch;
+    }
+}
