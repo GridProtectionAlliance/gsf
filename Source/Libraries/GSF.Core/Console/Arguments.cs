@@ -104,7 +104,7 @@ namespace GSF.Console
         /// <summary>
         /// Regular expression pattern for tokenizing a list of arguments.
         /// </summary>
-        public const string TokenRegex = @"(?:(?<Open>"")(?:[^\\""]*(?:\\.)*)*(?<Close-Open>"")(?(Open)(?!))|\S)+";
+        public const string TokenRegex = /* lang=regex */ @"(?:""(?:\\.|[^\\""])*""|\S)+";
 
         /// <summary>
         /// Default value for <see cref="OrderedArgID"/>.
