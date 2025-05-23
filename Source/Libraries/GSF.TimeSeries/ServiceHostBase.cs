@@ -426,10 +426,10 @@ namespace GSF.TimeSeries
 
                 // Min threads needs to be between 0 and maximum threads
                 // Max threads needs to be at least as large as both min threads and Environment.ProcessorCount
-                if (targetMaxThreadPoolSize == 0 && targetMaxThreadPoolSize < Environment.ProcessorCount)
+                if (targetMaxThreadPoolSize == 0 || targetMaxThreadPoolSize < Environment.ProcessorCount)
                     targetMaxThreadPoolSize = Environment.ProcessorCount;
 
-                if (targetMaxIOPortThreads == 0 && targetMaxIOPortThreads < Environment.ProcessorCount)
+                if (targetMaxIOPortThreads == 0 || targetMaxIOPortThreads < Environment.ProcessorCount)
                     targetMaxIOPortThreads = Environment.ProcessorCount;
 
                 if (targetMinThreadPoolSize > targetMaxThreadPoolSize)
