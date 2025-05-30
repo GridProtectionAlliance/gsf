@@ -65,6 +65,13 @@ public abstract class Reference<T> : GrafanaFunctionBase<T> where T : struct, ID
             Default = AngleUnit.Degrees,
             Description = "Specifies the type of angle units and must be one of the following: Degrees, Radians, Grads, ArcMinutes, ArcSeconds or AngularMil.",
             Required = false
+        },
+        new ParameterDefinition<string>
+        {
+            Name = "ReferenceTarget",
+            Default = "",
+            Description = "Specifies the referece angel as a target to ensure it is always the same tag. If that tag does not exist the function will return NaN.",
+            Required = false
         }
     };
 
@@ -93,6 +100,7 @@ public abstract class Reference<T> : GrafanaFunctionBase<T> where T : struct, ID
         bool adjustCoordinateMidPoint = parameters.Value<bool>(0);
         bool applyWrapOps = parameters.Value<bool>(1);
         AngleUnit units = parameters.Value<AngleUnit>(2);
+        string target = parameters.Value<string>(3);
 
         await using IAsyncEnumerator<T> enumerator = GetDataSourceValues(parameters).GetAsyncEnumerator(cancellationToken);
 
@@ -120,11 +128,24 @@ public abstract class Reference<T> : GrafanaFunctionBase<T> where T : struct, ID
             }
         }
 
-        // Return first series, the reference, always zero
-        yield return enumerator.Current with
+        if (string.IsNullOrEmpty(target) || enumerator.Current.Target == target)
         {
-            Value = 0.0D
-        };
+            // Return first series, the reference, always zero
+            yield return enumerator.Current with
+            {
+                Value = 0.0D
+            };
+        }
+        else
+        {
+            reference = double.NaN;
+
+            // Return first series, not the reference in this case
+            yield return enumerator.Current with
+            {
+                Value = double.NaN
+            };
+        }
 
         while (await enumerator.MoveNextAsync().ConfigureAwait(false))
         {
@@ -148,11 +169,15 @@ public abstract class Reference<T> : GrafanaFunctionBase<T> where T : struct, ID
                 }
             }
 
-            if (applyWrapOps)
+            if (double.IsNaN(reference))
+            {
+                yield return enumerator.Current with { Value = double.NaN };
+            }
+            else if (applyWrapOps)
             {
                 // Apply unwrap operations to angles converted to radians
                 Angle[] angles = Angle.Unwrap([
-                    Angle.ConvertFrom(enumerator.Current.Value, units), 
+                    Angle.ConvertFrom(enumerator.Current.Value, units),
                     Angle.ConvertFrom(reference, units)
                 ]).ToArray();
 
