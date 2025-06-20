@@ -358,6 +358,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                                     {
                                         device.Info,
                                         MeasurementList = new ObservableCollection<RealTimeMeasurement>(device.Measurements
+                                            .Where(measurement => measurement.ConvertField<bool>("Enabled"))
                                             .Where(measurement => measurement.ConvertField<bool>("Subscribed") || measurement.ConvertField<bool>("Internal") || (settings.ContainsKey("securityMode") && settings["securityMode"].Equals("None", StringComparison.OrdinalIgnoreCase))) // We will only display measurements which are internal or subscribed to avoid confusion.
                                             .Select(measurement => new RealTimeMeasurement
                                             {
@@ -412,6 +413,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         Expanded = false,
                         DeviceList = new ObservableCollection<RealTimeDevice>(otherMeasurements
                             .AsEnumerable()
+                            .Where(measurement => measurement.ConvertField<bool>("Enabled"))
                             .Where(measurement => measurement.ConvertNullableField<int>("DeviceID") is null)
                             .GroupBy(measurement => GetSourceName(measurement.Field<string>("SignalReference")))
                             .Select(grouping => new RealTimeDevice
@@ -465,6 +467,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         Expanded = false,
                         DeviceList = new ObservableCollection<RealTimeDevice>(resultSet.Tables["MeasurementTable"]
                             .AsEnumerable()
+                            .Where(measurement => measurement.ConvertField<bool>("Enabled"))
                             .Where(measurement => measurement.ConvertNullableField<int>("DeviceID") is null)
                             .GroupBy(measurement => GetSourceName(measurement.Field<string>("SignalReference")))
                             .Select(grouping => new RealTimeDevice
