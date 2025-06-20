@@ -1112,7 +1112,7 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
         }
 
         // Make sure device acronym exists
-        if (connection.ExecuteScalar<int>($"SELECT COUNT(*) FROM Device WHERE NodeID={nodeIDQueryString} AND Acronym={{0}}", deviceAcronym) == 0)
+        if (connection.ExecuteScalar<int>("SELECT COUNT(*) FROM Device WHERE NodeID={0} AND Acronym={1}", nodeIDQueryString, deviceAcronym) == 0)
         {
             // Lookup virtual device protocol
             if (connection.ExecuteScalar<int>("SELECT COUNT(*) FROM Protocol WHERE Acronym='VirtualInput'") == 0)
@@ -1126,16 +1126,16 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
             int virtualProtocolID = connection.ExecuteScalar<int>("SELECT ID FROM Protocol WHERE Acronym='VirtualInput'");
 
             // Create new virtual device record
-            connection.ExecuteNonQuery($"INSERT INTO Device(NodeID, Acronym, Name, ProtocolID, Enabled) VALUES({nodeIDQueryString}, {{0}}, {{1}}, {{2}}, 1)", deviceAcronym, deviceAcronym, virtualProtocolID);
+            connection.ExecuteNonQuery("INSERT INTO Device(NodeID, Acronym, Name, ProtocolID, Enabled) VALUES({0}, {1}, {2}, {3}, 1)", nodeIDQueryString, deviceAcronym, deviceAcronym, virtualProtocolID);
         }
 
         statusMessage($"Validating \"{deviceAcronym}\" virtual device measurement associations...");
 
         // Get device ID
-        int deviceID = connection.ExecuteScalar<int>($"SELECT ID FROM Device WHERE NodeID={nodeIDQueryString} AND Acronym={{0}}", deviceAcronym);
+        int deviceID = connection.ExecuteScalar<int>("SELECT ID FROM Device WHERE NodeID={0} AND Acronym={1}", nodeIDQueryString, deviceAcronym);
 
         // Get measurements that should be associated with device ID but are not currently
-        IEnumerable<DataRow> measurements = connection.RetrieveData($"SELECT PointID FROM Measurement WHERE ({lookupExpression}) AND (DeviceID IS NULL OR DeviceID <> {{0}})", deviceID).AsEnumerable();
+        IEnumerable<DataRow> measurements = connection.RetrieveData("SELECT PointID FROM Measurement WHERE ({0}) AND (DeviceID IS NULL OR DeviceID <> {{1}})", lookupExpression, deviceID).AsEnumerable();
 
         int associatedMeasurements = 0;
 
@@ -1296,8 +1296,8 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
         statusMessage("Verifying statistics archive exists...");
 
         // Validate that the statistics historian exists
-        if (Convert.ToInt32(database.Connection.ExecuteScalar($"SELECT COUNT(*) FROM Historian WHERE Acronym='STAT' AND NodeID={nodeIDQueryString}")) == 0)
-            database.Connection.ExecuteNonQuery($"INSERT INTO Historian(NodeID, Acronym, Name, AssemblyName, TypeName, ConnectionString, IsLocal, Description, LoadOrder, Enabled) VALUES({nodeIDQueryString}, 'STAT', 'Statistics Archive', 'HistorianAdapters.dll', 'HistorianAdapters.LocalOutputAdapter', '', 1, 'Local historian used to archive system statistics', 9999, 1)");
+        if (Convert.ToInt32(database.Connection.ExecuteScalar("SELECT COUNT(*) FROM Historian WHERE Acronym='STAT' AND NodeID={0}", nodeIDQueryString)) == 0)
+            database.Connection.ExecuteNonQuery("INSERT INTO Historian(NodeID, Acronym, Name, AssemblyName, TypeName, ConnectionString, IsLocal, Description, LoadOrder, Enabled) VALUES({0}, 'STAT', 'Statistics Archive', 'HistorianAdapters.dll', 'HistorianAdapters.LocalOutputAdapter', '', 1, 'Local historian used to archive system statistics', 9999, 1)", nodeIDQueryString);
 
         // Make sure statistics path exists to hold historian files
         string statisticsPath = FilePath.GetAbsolutePath(FilePath.AddPathSuffix("Statistics"));
@@ -1350,7 +1350,7 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
         configFile.Save();
 
         // Get the needed statistic related IDs
-        int statHistorianID = Convert.ToInt32(database.Connection.ExecuteScalar($"SELECT ID FROM Historian WHERE Acronym='STAT' AND NodeID={nodeIDQueryString}"));
+        int statHistorianID = Convert.ToInt32(database.Connection.ExecuteScalar("SELECT ID FROM Historian WHERE Acronym='STAT' AND NodeID={0}, nodeIDQueryString"));
 
         // Load the defined system statistics
         IEnumerable<DataRow> statistics = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM Statistic ORDER BY Source, SignalIndex").AsEnumerable();
@@ -1456,7 +1456,7 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
             // Determine how many changes were made to devices and measurements -
             // if no changes were made, we can skip the next few steps
             if (trackedTables.Contains("Device") && trackedTables.Contains("Measurement"))
-                changes = Convert.ToUInt64(database.Connection.ExecuteScalar($"SELECT COUNT(*) FROM TrackedChange WHERE (TableName = 'Device' OR TableName = 'Measurement') AND ID > {trackingVersion}"));
+                changes = Convert.ToUInt64(database.Connection.ExecuteScalar("SELECT COUNT(*) FROM TrackedChange WHERE (TableName = 'Device' OR TableName = 'Measurement') AND ID > {0}", nodeIDQueryString));
             else
                 changes = ulong.MaxValue;
         }
@@ -1486,7 +1486,8 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
             int qualityFlagsSignalTypeID = Convert.ToInt32(database.Connection.ExecuteScalar("SELECT ID FROM SignalType WHERE Acronym='QUAL'"));
 
             // Make sure one device quality flags measurement exists for each "connection" for devices that support time quality flags
-            foreach (DataRow device in database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM Device WHERE ((IsConcentrator = 0 AND ParentID IS NULL) OR IsConcentrator = 1) AND NodeID = {nodeIDQueryString} AND ProtocolID IN ({timeQualityProtocolIDs})").Rows)
+            foreach (DataRow device in database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM Device WHERE ((IsConcentrator = 0 AND ParentID IS NULL) " +
+                "OR IsConcentrator = 1) AND NodeID = {0} AND ProtocolID IN ({1})", nodeIDQueryString, timeQualityProtocolIDs).Rows)
             {
                 Dictionary<string, string> connectionSettings = device.Field<string>("ConnectionString")?.ParseKeyValuePairs();
 
@@ -1499,11 +1500,11 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
                 signalReference = SignalReference.ToString(acronym, SignalKind.Quality);
 
                 // See if quality flags measurement exists for device
-                if (Convert.ToInt32(database.Connection.ExecuteScalar($"SELECT COUNT(*) FROM Measurement WHERE SignalReference = '{signalReference}' AND DeviceID = {deviceID}")) == 0)
+                if (Convert.ToInt32(database.Connection.ExecuteScalar("SELECT COUNT(*) FROM Measurement WHERE SignalReference = '{0}' AND DeviceID = {1}", signalReference, deviceID)) == 0)
                 {
                     historianID = device.ConvertNullableField<int>("HistorianID");
 
-                    company = (string)database.Connection.ExecuteScalar($"SELECT MapAcronym FROM Company WHERE ID = {device.ConvertNullableField<int>("CompanyID") ?? 0}");
+                    company = (string)database.Connection.ExecuteScalar("SELECT MapAcronym FROM Company WHERE ID = {0}", device.ConvertNullableField<int>("CompanyID") ?? 0);
 
                     if (string.IsNullOrEmpty(company))
                         company = configFile.Settings["systemSettings"]["CompanyAcronym"].Value.TruncateRight(3);
@@ -1520,7 +1521,7 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
             }
 
             // Make sure needed device statistic measurements exist, currently statistics are only associated with phasor devices so we filter based on protocol
-            foreach (DataRow device in database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM Device WHERE IsConcentrator = 0 AND NodeID = {nodeIDQueryString} AND ProtocolID IN ({protocolIDs})").Rows)
+            foreach (DataRow device in database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM Device WHERE IsConcentrator = 0 AND NodeID = {0} AND ProtocolID IN ({1})", nodeIDQueryString, protocolIDs).Rows)
             {
                 foreach (DataRow statistic in deviceStatistics)
                 {
@@ -1529,10 +1530,10 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
                     acronym = oldAcronym + "!PMU";
                     string oldSignalReference = SignalReference.ToString(oldAcronym, SignalKind.Statistic, signalIndex);
                     signalReference = SignalReference.ToString(acronym, SignalKind.Statistic, signalIndex);
-
                     // If the original format for device statistics is found in the database, update to new format
-                    if (Convert.ToInt32(database.Connection.ExecuteScalar($"SELECT COUNT(*) FROM Measurement WHERE SignalReference='{oldSignalReference}' AND HistorianID={statHistorianID}")) > 0)
-                        database.Connection.ExecuteNonQuery($"UPDATE Measurement SET SignalReference='{signalReference}' WHERE SignalReference='{oldSignalReference}' AND HistorianID={statHistorianID}");
+                    if (Convert.ToInt32(database.Connection.ExecuteScalar("SELECT COUNT(*) FROM Measurement WHERE SignalReference='{0}' AND HistorianID={1}", oldSignalReference, statHistorianID)) > 0)
+                        database.Connection.ExecuteNonQuery("UPDATE Measurement SET SignalReference='{0}' " +
+                            "WHERE SignalReference='{1}' AND HistorianID={2}", signalReference, oldSignalReference, statHistorianID);
                     else if (!skipOptimization)
                         break;
                 }
@@ -1542,7 +1543,7 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
 
             // Make sure devices associated with a concentrator do not have any extraneous input stream statistic measurements - this can happen
             // when a device was once a direct connect device but now is part of a concentrator...
-            foreach (DataRow inputStream in database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM Device WHERE (IsConcentrator = 0 AND ParentID IS NOT NULL) AND NodeID = {nodeIDQueryString} AND ProtocolID IN ({protocolIDs})").Rows)
+            foreach (DataRow inputStream in database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM Device WHERE (IsConcentrator = 0 AND ParentID IS NOT NULL) AND NodeID = {0} AND ProtocolID IN ({1})", nodeIDQueryString, protocolIDs).Rows)
             {
                 firstStatisticExisted = false;
 
@@ -1555,7 +1556,7 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
                     // To reduce time required to execute these steps, only first statistic is verified to exist
                     if (!skipOptimization && !firstStatisticExisted)
                     {
-                        firstStatisticExisted = Convert.ToInt32(database.Connection.ExecuteScalar($"SELECT COUNT(*) FROM Measurement WHERE SignalReference='{signalReference}'")) > 0;
+                        firstStatisticExisted = Convert.ToInt32(database.Connection.ExecuteScalar("SELECT COUNT(*) FROM Measurement WHERE SignalReference='{0}'", signalReference)) > 0;
 
                         // If the first extraneous input statistic doesn't exist, we assume no others do as well
                         if (!firstStatisticExisted)
@@ -1563,7 +1564,7 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
                     }
 
                     // Remove extraneous input statistics
-                    database.Connection.ExecuteNonQuery($"DELETE FROM Measurement WHERE SignalReference = '{signalReference}'");
+                    database.Connection.ExecuteNonQuery("DELETE FROM Measurement WHERE SignalReference = '{0}'", signalReference);
                 }
             }
         }
@@ -1573,7 +1574,7 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
             // Determine how many changes were made to output streams, devices, and measurements -
             // if no changes were made, we can skip the next few steps
             if (trackedTables.Contains("OutputStream") && trackedTables.Contains("OutputStreamDevice") && trackedTables.Contains("OutputStreamMeasurement") && trackedTables.Contains("Measurement"))
-                changes = Convert.ToUInt64(database.Connection.ExecuteScalar($"SELECT COUNT(*) FROM TrackedChange WHERE (TableName = 'OutputStream' OR TableName = 'OutputStreamDevice' OR TableName = 'OutputStreamMeasurement' OR TableName = 'Measurement') AND ID > {trackingVersion}"));
+                changes = Convert.ToUInt64(database.Connection.ExecuteScalar("SELECT COUNT(*) FROM TrackedChange WHERE (TableName = 'OutputStream' OR TableName = 'OutputStreamDevice' OR TableName = 'OutputStreamMeasurement' OR TableName = 'Measurement') AND ID > {0}", trackingVersion));
             else
                 changes = ulong.MaxValue;
         }
@@ -1587,14 +1588,14 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
             statusMessage("Validating output stream measurements...");
 
             // Make sure needed output stream statistic measurements exist
-            foreach (DataRow outputStream in database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM OutputStream WHERE NodeID = {nodeIDQueryString}").Rows)
+            foreach (DataRow outputStream in database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM OutputStream WHERE NodeID = {0}", nodeIDQueryString).Rows)
             {
                 adapterID = outputStream.ConvertField<int>("ID");
 
                 // Load devices acronyms associated with this output stream
                 List<string> deviceAcronyms =
                     database.Connection.RetrieveData(database.AdapterType,
-                            $"SELECT Acronym FROM OutputStreamDevice WHERE AdapterID = {adapterID} AND NodeID = {nodeIDQueryString}")
+                            "SELECT Acronym FROM OutputStreamDevice WHERE AdapterID = {0} AND NodeID = {1}", adapterID, nodeIDQueryString)
                         .AsEnumerable()
                         .Select(row => row.Field<string>("Acronym"))
                         .ToList();
@@ -1606,7 +1607,7 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
                 deviceAcronyms.Sort(StringComparer.OrdinalIgnoreCase);
 
                 // Validate measurements associated with this output stream
-                foreach (DataRow outputStreamMeasurement in database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM OutputStreamMeasurement WHERE AdapterID = {adapterID} AND NodeID = {nodeIDQueryString}").Rows)
+                foreach (DataRow outputStreamMeasurement in database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM OutputStreamMeasurement WHERE AdapterID = {0} AND NodeID = {1}", adapterID, nodeIDQueryString).Rows)
                 {
                     // Parse output stream measurement signal reference
                     deviceSignalReference = new SignalReference(outputStreamMeasurement.Field<string>("SignalReference"));
@@ -1634,7 +1635,7 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
 
             foreach (int measurementID in measurementIDsToDelete)
             {
-                database.Connection.ExecuteNonQuery($"DELETE FROM OutputStreamMeasurement WHERE ID = {measurementID} AND NodeID = {nodeIDQueryString}");
+                database.Connection.ExecuteNonQuery("DELETE FROM OutputStreamMeasurement WHERE ID = {0} AND NodeID = {1}", measurementID, nodeIDQueryString);
             }
         }
 
@@ -1655,7 +1656,7 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
                     continue;
 
                 int? vendorDeviceID = measurement.ConvertNullableField<int>("VendorDeviceID");
-                string vendor = vendorDeviceID.HasValue ? (string)database.Connection.ExecuteScalar("SELECT Acronym FROM Vendor WHERE ID = " + vendorDeviceID.Value) : null;
+                string vendor = vendorDeviceID.HasValue ? (string)database.Connection.ExecuteScalar("SELECT Acronym FROM Vendor WHERE ID = {0}", vendorDeviceID.Value) : null;
                 string signalAcronym = measurement.ConvertField<string>("SignalAcronym");
 
                 try
@@ -1678,7 +1679,8 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
                 if (string.IsNullOrWhiteSpace(label))
                     label = measurement.ConvertField<string>("AlternateTag");
 
-                database.Connection.ExecuteNonQuery($"UPDATE Measurement SET PointTag = '{CreatePointTag(company, device, vendor, signalAcronym, label, signalIndex, phase ?? '_', baseKV)}' WHERE SignalID = '{database.Guid(measurement, "SignalID")}'");
+                database.Connection.ExecuteNonQuery("UPDATE Measurement SET PointTag = '{0}' WHERE SignalID = '{1}'", 
+                    CreatePointTag(company, device, vendor, signalAcronym, label, signalIndex, phase ?? '_', baseKV), database.Guid(measurement, "SignalID"));
             }
         }
 
@@ -1708,7 +1710,7 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
         {
             statusMessage("Creating default record for Node...");
             database.Connection.ExecuteNonQuery("INSERT INTO Node(Name, CompanyID, Description, Settings, MenuType, MenuData, Master, LoadOrder, Enabled) VALUES('Default', NULL, 'Default node', 'RemoteStatusServerConnectionString={server=localhost:8500;integratedSecurity=true};datapublisherport=6165;AlarmServiceUrl=http://localhost:5018/alarmservices', 'File', 'Menu.xml', 1, 0, 1)");
-            database.Connection.ExecuteNonQuery("UPDATE Node SET ID=" + nodeIDQueryString);
+            database.Connection.ExecuteNonQuery("UPDATE Node SET ID={0}", nodeIDQueryString);
         }
     }
 
