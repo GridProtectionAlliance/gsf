@@ -2632,6 +2632,10 @@
                     if (!nextVoltage)
                         continue;
 
+                    // See if this line current has already been matched
+                    if (lineCurrentExists(lines, nextCurrent))
+                        continue;
+
                     // See if this next current is for matching line based on label minus phase designations
                     if (match === nextCurrent.Label().trim().toUpperCase().replace(/[ABCRYB]/gi, "")) {
                         line[nextPhase] = {

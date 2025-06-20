@@ -689,7 +689,7 @@ namespace GSF.ServiceProcess
             status.Append(m_remotingClient.Status);
             status.AppendLine();
             
-            UpdateStatus(UpdateType.Information, status.ToString());
+            UpdateStatus(UpdateType.Information, "{0}", status.ToString());
         }
 
         private void RemotingClient_ConnectionException(object sender, EventArgs<Exception> e)
@@ -700,7 +700,7 @@ namespace GSF.ServiceProcess
             status.AppendLine();
             status.AppendLine();
 
-            UpdateStatus(UpdateType.Alarm, status.ToString());
+            UpdateStatus(UpdateType.Alarm, "{0}", status.ToString());
 
             switch (m_remotingClient)
             {
@@ -722,7 +722,7 @@ namespace GSF.ServiceProcess
             status.Append(m_remotingClient.Status);
             status.AppendLine();
             
-            UpdateStatus(UpdateType.Warning, status.ToString());
+            UpdateStatus(UpdateType.Warning, "{0}", status.ToString());
 
             // Attempt reconnection on a separate thread.
             if (!m_attemptReconnection)
@@ -753,13 +753,13 @@ namespace GSF.ServiceProcess
             switch (response.Type)
             {
                 case "UPDATECLIENTSTATUS-INFORMATION":
-                    UpdateStatus(UpdateType.Information, response.Message);
+                    UpdateStatus(UpdateType.Information, "{0}", response.Message);
                     break;
                 case "UPDATECLIENTSTATUS-WARNING":
-                    UpdateStatus(UpdateType.Warning, response.Message);
+                    UpdateStatus(UpdateType.Warning, "{0}", response.Message);
                     break;
                 case "UPDATECLIENTSTATUS-ALARM":
-                    UpdateStatus(UpdateType.Alarm, response.Message);
+                    UpdateStatus(UpdateType.Alarm, "{0}", response.Message);
                     break;
                 case "AUTHENTICATIONSUCCESS":
                     SendRequest(StatusMessageFilter);
