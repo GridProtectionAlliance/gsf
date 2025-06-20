@@ -151,7 +151,8 @@
         </StackPanel>
 
             <TreeView ItemsSource="{tsfBinding:Column Path=ItemsSource}" ItemTemplate="{StaticResource RootNodeTemplate}" ItemContainerStyle="{StaticResource ExpandedItemStyle}"
-                      Height="610" VerticalAlignment="Top" HorizontalAlignment="Left" Width="850" ScrollViewer.HorizontalScrollBarVisibility="Disabled"/>
+                      Height="610" VerticalAlignment="Top" HorizontalAlignment="Left" Width="850" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                      VirtualizingStackPanel.IsVirtualizing="True" VirtualizingStackPanel.VirtualizationMode="Recycling" />
 
       </StackPanel>
 
