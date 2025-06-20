@@ -42,6 +42,7 @@
             this.InsertButton = new System.Windows.Forms.Button();
             this.UpdateButton = new System.Windows.Forms.Button();
             this.DeleteButton = new System.Windows.Forms.Button();
+            this.LogoPictureBox = new System.Windows.Forms.PictureBox();
             this.ImportTopBarPanel = new System.Windows.Forms.TableLayoutPanel();
             this.ImportTableComboBox = new System.Windows.Forms.ComboBox();
             this.ImportCountLabel = new System.Windows.Forms.Label();
@@ -61,17 +62,19 @@
             this.ExportFileDialog = new System.Windows.Forms.SaveFileDialog();
             this.ImportFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.SerializedSchemaBrowseDialog = new System.Windows.Forms.OpenFileDialog();
-            this.LogoPictureBox = new System.Windows.Forms.PictureBox();
+            this.ErrorsTabPage = new System.Windows.Forms.TabPage();
+            this.ErrorsTextBox = new System.Windows.Forms.TextBox();
             this.MainTabControl.SuspendLayout();
             this.ExportTabPage.SuspendLayout();
             this.ExportTopBarPanel.SuspendLayout();
             this.ImportTabPage.SuspendLayout();
             this.ImportActionsPanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.LogoPictureBox)).BeginInit();
             this.ImportTopBarPanel.SuspendLayout();
             this.ConfigurationTabPage.SuspendLayout();
             this.ConfigurationPanel.SuspendLayout();
             this.SerializedSchemaConfigurationPanel.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.LogoPictureBox)).BeginInit();
+            this.ErrorsTabPage.SuspendLayout();
             this.SuspendLayout();
             // 
             // MainTabControl
@@ -79,6 +82,7 @@
             this.MainTabControl.Controls.Add(this.ExportTabPage);
             this.MainTabControl.Controls.Add(this.ImportTabPage);
             this.MainTabControl.Controls.Add(this.ConfigurationTabPage);
+            this.MainTabControl.Controls.Add(this.ErrorsTabPage);
             this.MainTabControl.Dock = System.Windows.Forms.DockStyle.Fill;
             this.MainTabControl.Location = new System.Drawing.Point(0, 0);
             this.MainTabControl.Name = "MainTabControl";
@@ -238,6 +242,17 @@
             this.DeleteButton.Text = "Delete...";
             this.DeleteButton.UseVisualStyleBackColor = true;
             this.DeleteButton.Click += new System.EventHandler(this.ImportButton_Click);
+            // 
+            // LogoPictureBox
+            // 
+            this.LogoPictureBox.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.LogoPictureBox.Image = ((System.Drawing.Image)(resources.GetObject("LogoPictureBox.Image")));
+            this.LogoPictureBox.Location = new System.Drawing.Point(4, 115);
+            this.LogoPictureBox.Name = "LogoPictureBox";
+            this.LogoPictureBox.Size = new System.Drawing.Size(448, 146);
+            this.LogoPictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.LogoPictureBox.TabIndex = 3;
+            this.LogoPictureBox.TabStop = false;
             // 
             // ImportTopBarPanel
             // 
@@ -448,16 +463,27 @@
             this.SerializedSchemaBrowseDialog.FileName = "SerializedSchema.bin";
             this.SerializedSchemaBrowseDialog.Filter = "Bin files|*.bin|All files|*.*";
             // 
-            // LogoPictureBox
+            // ErrorsTabPage
             // 
-            this.LogoPictureBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.LogoPictureBox.Image = ((System.Drawing.Image)(resources.GetObject("LogoPictureBox.Image")));
-            this.LogoPictureBox.Location = new System.Drawing.Point(4, 115);
-            this.LogoPictureBox.Name = "LogoPictureBox";
-            this.LogoPictureBox.Size = new System.Drawing.Size(448, 146);
-            this.LogoPictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
-            this.LogoPictureBox.TabIndex = 3;
-            this.LogoPictureBox.TabStop = false;
+            this.ErrorsTabPage.Controls.Add(this.ErrorsTextBox);
+            this.ErrorsTabPage.Location = new System.Drawing.Point(4, 22);
+            this.ErrorsTabPage.Name = "ErrorsTabPage";
+            this.ErrorsTabPage.Padding = new System.Windows.Forms.Padding(10);
+            this.ErrorsTabPage.Size = new System.Drawing.Size(476, 335);
+            this.ErrorsTabPage.TabIndex = 3;
+            this.ErrorsTabPage.Text = "Errors";
+            this.ErrorsTabPage.UseVisualStyleBackColor = true;
+            // 
+            // ErrorsTextBox
+            // 
+            this.ErrorsTextBox.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.ErrorsTextBox.Location = new System.Drawing.Point(10, 10);
+            this.ErrorsTextBox.Multiline = true;
+            this.ErrorsTextBox.Name = "ErrorsTextBox";
+            this.ErrorsTextBox.ReadOnly = true;
+            this.ErrorsTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.ErrorsTextBox.Size = new System.Drawing.Size(456, 315);
+            this.ErrorsTextBox.TabIndex = 0;
             // 
             // MainWindow
             // 
@@ -478,6 +504,7 @@
             this.ImportTabPage.ResumeLayout(false);
             this.ImportTabPage.PerformLayout();
             this.ImportActionsPanel.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.LogoPictureBox)).EndInit();
             this.ImportTopBarPanel.ResumeLayout(false);
             this.ImportTopBarPanel.PerformLayout();
             this.ConfigurationTabPage.ResumeLayout(false);
@@ -485,7 +512,8 @@
             this.ConfigurationPanel.PerformLayout();
             this.SerializedSchemaConfigurationPanel.ResumeLayout(false);
             this.SerializedSchemaConfigurationPanel.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.LogoPictureBox)).EndInit();
+            this.ErrorsTabPage.ResumeLayout(false);
+            this.ErrorsTabPage.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -525,6 +553,8 @@
         private System.Windows.Forms.OpenFileDialog SerializedSchemaBrowseDialog;
         private System.Windows.Forms.Label ConfigurationTipLabel;
         private System.Windows.Forms.PictureBox LogoPictureBox;
+        private System.Windows.Forms.TabPage ErrorsTabPage;
+        private System.Windows.Forms.TextBox ErrorsTextBox;
     }
 }
 
