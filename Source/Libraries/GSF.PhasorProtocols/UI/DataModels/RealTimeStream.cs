@@ -301,7 +301,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 // Get non-statistical measurement list
                 resultSet.Tables.Add(database.Connection.RetrieveData(database.AdapterType, database.ParameterizedQueryString("SELECT ID, DeviceID, SignalID, PointID, PointTag, SignalReference, " +
-                    "SignalAcronym, Description, SignalName, EngineeringUnits, HistorianAcronym, Subscribed, Internal FROM MeasurementDetail WHERE NodeID = {0} AND " +
+                    "SignalAcronym, Description, SignalName, EngineeringUnits, HistorianAcronym, Subscribed, Internal, Enabled FROM MeasurementDetail WHERE NodeID = {0} AND " +
                     "SignalAcronym <> {1} ORDER BY SignalReference", "nodeID", "signalAcronym"), DefaultTimeout, database.CurrentNodeID(), "STAT").Copy());
 
                 resultSet.Tables[2].TableName = "MeasurementTable";
@@ -309,7 +309,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                 // Query for any non-statistical measurements that are subscribed via GEP, but are a part of another node in the same database
                 // IMPORTANT: Make sure columns in this external node query exactly match those of the previous primary measurement query
                 DataTable otherMeasurements = database.Connection.RetrieveData(database.AdapterType, database.ParameterizedQueryString("SELECT ID, 0 AS DeviceID, SignalID, PointID, PointTag, SignalReference, " +
-                    "SignalAcronym, Description, SignalName, EngineeringUnits, HistorianAcronym, Subscribed, Internal FROM MeasurementDetail WHERE NodeID <> {0} AND " +
+                    "SignalAcronym, Description, SignalName, EngineeringUnits, HistorianAcronym, Subscribed, Internal, Enabled FROM MeasurementDetail WHERE NodeID <> {0} AND " +
                     "SignalAcronym <> {1} AND Subscribed <> 0 ORDER BY SignalReference", "nodeID", "signalAcronym"), DefaultTimeout, database.CurrentNodeID(), "STAT");
 
                 Dictionary<string, string> parseKeyValuePairs(string connectionString)
