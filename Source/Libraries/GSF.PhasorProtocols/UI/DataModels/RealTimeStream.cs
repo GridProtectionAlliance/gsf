@@ -328,36 +328,105 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     return settings;
                 }
 
-                ObservableCollection<RealTimeStream> realTimeStreamList = new(
-                    from pdc in resultSet.Tables["PdcTable"].AsEnumerable()
-                    let settings = parseKeyValuePairs(pdc.Field<string>("ConnectionString").ToNonNullString())
-                    select new RealTimeStream
-                    {
-                        ID = pdc.ConvertField<int>(nameof(ID)),
-                        Acronym = string.IsNullOrEmpty(pdc.Field<string>(nameof(Acronym))) ? "DIRECT CONNECTED" : pdc.Field<string>(nameof(Acronym)),
-                        Name = pdc.Field<string>(nameof(Name)),
-                        CompanyName = pdc.Field<string>(nameof(CompanyName)),
-                        StatusColor = string.IsNullOrEmpty(pdc.Field<string>(nameof(Acronym))) ? "Transparent" : "Gray",
-                        Enabled = Convert.ToBoolean(pdc.Field<object>(nameof(Enabled))),
-                        Expanded = false,
-                        DeviceList = new ObservableCollection<RealTimeDevice>(
-                            from device in resultSet.Tables["DeviceTable"].AsEnumerable()
-                            where device.Field<string>("ParentAcronym").ToNonNullString() == pdc.Field<string>(nameof(Acronym)) && (device.ConvertField<int>("AccessID") != GroupAccessID || resultSet.Tables["MeasurementTable"].Select($"DeviceID = {device.ConvertField<int>(nameof(ID))}").Length > 0)
-                            select new RealTimeDevice
+                ObservableCollection<RealTimeStream> realTimeStreamList = new(resultSet.Tables["PdcTable"]
+                    .AsEnumerable()
+                    .GroupJoin(
+                        resultSet.Tables["DeviceTable"]
+                            .AsEnumerable()
+                            .GroupJoin(
+                                resultSet.Tables["MeasurementTable"].AsEnumerable(),
+                                device => device.ConvertNullableField<int>(nameof(RealTimeDevice.ID)),
+                                measurement => measurement.ConvertNullableField<int>(nameof(RealTimeMeasurement.DeviceID)),
+                                (Info, Measurements) => new { Info, Measurements }),
+                        pdc => pdc.Field<string>(nameof(Acronym)),
+                        device => device.Info.Field<string>(nameof(RealTimeDevice.ParentAcronym)).ToNonNullString(),
+                        (pdc, devices) =>
+                        {
+                            var settings = parseKeyValuePairs(pdc.Field<string>("ConnectionString").ToNonNullString());
+
+                            return new RealTimeStream
                             {
-                                ID = device.ConvertNullableField<int>(nameof(ID)),
-                                Acronym = device.Field<string>(nameof(Acronym)),
-                                Name = device.Field<string>(nameof(Name)),
-                                ProtocolName = device.Field<string>("ProtocolName"),
-                                VendorDeviceName = device.Field<string>("VendorDeviceName"),
-                                ParentAcronym = string.IsNullOrEmpty(device.Field<string>("ParentAcronym")) ? "DIRECT CONNECTED" : device.Field<string>("ParentAcronym"),
+                                ID = pdc.ConvertField<int>(nameof(ID)),
+                                Acronym = string.IsNullOrEmpty(pdc.Field<string>(nameof(Acronym))) ? "DIRECT CONNECTED" : pdc.Field<string>(nameof(Acronym)),
+                                Name = pdc.Field<string>(nameof(Name)),
+                                CompanyName = pdc.Field<string>(nameof(CompanyName)),
+                                StatusColor = string.IsNullOrEmpty(pdc.Field<string>(nameof(Acronym))) ? "Transparent" : "Gray",
+                                Enabled = Convert.ToBoolean(pdc.Field<object>(nameof(Enabled))),
                                 Expanded = false,
-                                StatusColor = device.ConvertNullableField<int>(nameof(ID)) is null ? "Transparent" : "Gray",
-                                Enabled = Convert.ToBoolean(device.Field<object>(nameof(Enabled))),
-                                MeasurementList = new ObservableCollection<RealTimeMeasurement>(
-                                    from measurement in resultSet.Tables["MeasurementTable"].AsEnumerable()
-                                    where measurement.ConvertNullableField<int>("DeviceID") == device.ConvertNullableField<int>(nameof(ID)) && (measurement.ConvertField<bool>("Subscribed") || measurement.ConvertField<bool>("Internal") || (settings.ContainsKey("securityMode") && settings["securityMode"].Equals("None", StringComparison.OrdinalIgnoreCase)))   //We will only display measurements which are internal or subscribed to avoid confusion.
-                                    select new RealTimeMeasurement
+                                DeviceList = new ObservableCollection<RealTimeDevice>(devices
+                                    .Select(device => new
+                                    {
+                                        device.Info,
+                                        MeasurementList = new ObservableCollection<RealTimeMeasurement>(device.Measurements
+                                            .Where(measurement => measurement.ConvertField<bool>("Subscribed") || measurement.ConvertField<bool>("Internal") || (settings.ContainsKey("securityMode") && settings["securityMode"].Equals("None", StringComparison.OrdinalIgnoreCase))) // We will only display measurements which are internal or subscribed to avoid confusion.
+                                            .Select(measurement => new RealTimeMeasurement
+                                            {
+                                                ID = measurement.Field<string>(nameof(ID)),
+                                                DeviceID = measurement.ConvertNullableField<int>("DeviceID"),
+                                                SignalID = Guid.Parse(measurement.Field<object>("SignalID").ToString()),
+                                                PointID = measurement.ConvertField<int>("PointID"),
+                                                PointTag = measurement.Field<string>("PointTag"),
+                                                SignalReference = measurement.Field<string>("SignalReference"),
+                                                Description = measurement.Field<string>("description"),
+                                                SignalName = measurement.Field<string>("SignalName"),
+                                                SignalAcronym = measurement.Field<string>("SignalAcronym"),
+                                                EngineeringUnit = measurement.Field<string>("SignalAcronym") == "FLAG" ? "Hex" : measurement.Field<string>("EngineeringUnits"),
+                                                Expanded = false,
+                                                Selected = false,
+                                                Selectable = measurement.Field<string>("SignalAcronym") == "IPHM" || measurement.Field<string>("SignalAcronym") == "IPHA" || measurement.Field<string>("SignalAcronym") == "VPHM" || measurement.Field<string>("SignalAcronym") == "VPHA" || measurement.Field<string>("SignalAcronym") == "FREQ",
+                                                LongTimeTag = "N/A",
+                                                TimeTag = "N/A",
+                                                Value = "--",
+                                                Quality = "N/A",
+                                                Foreground = new SolidColorBrush(Color.FromArgb(255, 0, 0, 0))
+                                            }))
+                                    })
+                                    .Where(device => device.Info.ConvertField<int>("AccessID") != GroupAccessID || device.MeasurementList.Count > 0)
+                                    .Select(device => new RealTimeDevice
+                                    {
+                                        ID = device.Info.ConvertNullableField<int>(nameof(ID)),
+                                        Acronym = device.Info.Field<string>(nameof(Acronym)),
+                                        Name = device.Info.Field<string>(nameof(Name)),
+                                        ProtocolName = device.Info.Field<string>("ProtocolName"),
+                                        VendorDeviceName = device.Info.Field<string>("VendorDeviceName"),
+                                        ParentAcronym = string.IsNullOrEmpty(device.Info.Field<string>("ParentAcronym")) ? "DIRECT CONNECTED" : device.Info.Field<string>("ParentAcronym"),
+                                        Expanded = false,
+                                        StatusColor = device.Info.ConvertNullableField<int>(nameof(ID)) is null ? "Transparent" : "Gray",
+                                        Enabled = Convert.ToBoolean(device.Info.Field<object>(nameof(Enabled))),
+                                        MeasurementList = device.MeasurementList
+                                    }))
+                            };
+                        }));
+
+                if (otherMeasurements.Rows.Count > 0)
+                {
+                    // Add subscribed measurements from other nodes
+                    realTimeStreamList.Add(new RealTimeStream
+                    {
+                        ID = 0,
+                        Acronym = "SUBSCRIBED",
+                        Name = "Subscribed Measurements",
+                        CompanyName = string.Empty,
+                        StatusColor = "Transparent",
+                        Enabled = false,
+                        Expanded = false,
+                        DeviceList = new ObservableCollection<RealTimeDevice>(otherMeasurements
+                            .AsEnumerable()
+                            .Where(measurement => measurement.ConvertNullableField<int>("DeviceID") is null)
+                            .GroupBy(measurement => GetSourceName(measurement.Field<string>("SignalReference")))
+                            .Select(grouping => new RealTimeDevice
+                            {
+                                ID = 0,
+                                Acronym = grouping.Key,
+                                Name = grouping.Key,
+                                ProtocolName = string.Empty,
+                                VendorDeviceName = string.Empty,
+                                ParentAcronym = "SUBSCRIBED",
+                                Expanded = false,
+                                StatusColor = "Gray",
+                                Enabled = false,
+                                MeasurementList = new ObservableCollection<RealTimeMeasurement>(grouping
+                                    .Select(measurement => new RealTimeMeasurement
                                     {
                                         ID = measurement.Field<string>(nameof(ID)),
                                         DeviceID = measurement.ConvertNullableField<int>("DeviceID"),
@@ -377,133 +446,62 @@ namespace GSF.PhasorProtocols.UI.DataModels
                                         Value = "--",
                                         Quality = "N/A",
                                         Foreground = new SolidColorBrush(Color.FromArgb(255, 0, 0, 0))
-                                    }
-                                )
-                            }
-                        )
-                    }
-                );
-
-                if (otherMeasurements.Rows.Count > 0)
-                {
-                    // Add subscribed measurements from other nodes
-                    realTimeStreamList.Add(new RealTimeStream
-                        {
-                            ID = 0,
-                            Acronym = "SUBSCRIBED",
-                            Name = "Subscribed Measurements",
-                            CompanyName = string.Empty,
-                            StatusColor = "Transparent",
-                            Enabled = false,
-                            Expanded = false,
-                            DeviceList = new ObservableCollection<RealTimeDevice>(
-                                otherMeasurements.Rows
-                                .Cast<DataRow>()
-                                .Where(measurement => measurement.ConvertNullableField<int>("DeviceID") is null)
-                                .Select(measurement => measurement.Field<string>("SignalReference"))
-                                .Select(GetSourceName)
-                                .Distinct()
-                                .Select(source => new RealTimeDevice
-                                    {
-                                        ID = 0,
-                                        Acronym = source,
-                                        Name = source,
-                                        ProtocolName = string.Empty,
-                                        VendorDeviceName = string.Empty,
-                                        ParentAcronym = "SUBSCRIBED",
-                                        Expanded = false,
-                                        StatusColor = "Gray",
-                                        Enabled = false,
-                                        MeasurementList = new ObservableCollection<RealTimeMeasurement>(
-                                            otherMeasurements.Rows
-                                            .Cast<DataRow>()
-                                            .Where(measurement => measurement.ConvertNullableField<int>("DeviceID") is null && measurement.Field<string>("SignalReference").StartsWith(source))
-                                            .Select(measurement => new RealTimeMeasurement
-                                                {
-                                                    ID = measurement.Field<string>(nameof(ID)),
-                                                    DeviceID = measurement.ConvertNullableField<int>("DeviceID"),
-                                                    SignalID = Guid.Parse(measurement.Field<object>("SignalID").ToString()),
-                                                    PointID = measurement.ConvertField<int>("PointID"),
-                                                    PointTag = measurement.Field<string>("PointTag"),
-                                                    SignalReference = measurement.Field<string>("SignalReference"),
-                                                    Description = measurement.Field<string>("description"),
-                                                    SignalName = measurement.Field<string>("SignalName"),
-                                                    SignalAcronym = measurement.Field<string>("SignalAcronym"),
-                                                    EngineeringUnit = measurement.Field<string>("SignalAcronym") == "FLAG" ? "Hex" : measurement.Field<string>("EngineeringUnits"),
-                                                    Expanded = false,
-                                                    Selected = false,
-                                                    Selectable = measurement.Field<string>("SignalAcronym") == "IPHM" || measurement.Field<string>("SignalAcronym") == "IPHA" || measurement.Field<string>("SignalAcronym") == "VPHM" || measurement.Field<string>("SignalAcronym") == "VPHA" || measurement.Field<string>("SignalAcronym") == "FREQ",
-                                                    LongTimeTag = "N/A",
-                                                    TimeTag = "N/A",
-                                                    Value = "--",
-                                                    Quality = "N/A",
-                                                    Foreground = new SolidColorBrush(Color.FromArgb(255, 0, 0, 0))
-                                                })
-                                        )
-                                    })
-                            )
-                        });
+                                    }))
+                            }))
+                    });
                 }
 
                 if (resultSet.Tables["MeasurementTable"].Select("DeviceID IS NULL").Length > 0)
                 {
                     // Add direct connected measurements with no associated device (DeviceID IS NULL)
                     realTimeStreamList.Add(new RealTimeStream
-                        {
-                            ID = 0,
-                            Acronym = "CALCULATED",
-                            Name = "Calculated Measurements",
-                            CompanyName = string.Empty,
-                            StatusColor = "Transparent",
-                            Enabled = false,
-                            Expanded = false,
-                            DeviceList = new ObservableCollection<RealTimeDevice>(
-                                resultSet.Tables["MeasurementTable"].Rows
-                                .Cast<DataRow>()
-                                .Where(measurement => measurement.ConvertNullableField<int>("DeviceID") is null)
-                                .Select(measurement => measurement.Field<string>("SignalReference"))
-                                .Select(GetSourceName)
-                                .Distinct()
-                                .Select(source => new RealTimeDevice
+                    {
+                        ID = 0,
+                        Acronym = "CALCULATED",
+                        Name = "Calculated Measurements",
+                        CompanyName = string.Empty,
+                        StatusColor = "Transparent",
+                        Enabled = false,
+                        Expanded = false,
+                        DeviceList = new ObservableCollection<RealTimeDevice>(resultSet.Tables["MeasurementTable"]
+                            .AsEnumerable()
+                            .Where(measurement => measurement.ConvertNullableField<int>("DeviceID") is null)
+                            .GroupBy(measurement => GetSourceName(measurement.Field<string>("SignalReference")))
+                            .Select(grouping => new RealTimeDevice
+                            {
+                                ID = 0,
+                                Acronym = grouping.Key,
+                                Name = grouping.Key,
+                                ProtocolName = string.Empty,
+                                VendorDeviceName = string.Empty,
+                                ParentAcronym = "CALCULATED",
+                                Expanded = false,
+                                StatusColor = "Gray",
+                                Enabled = false,
+                                MeasurementList = new ObservableCollection<RealTimeMeasurement>(grouping
+                                    .Select(measurement => new RealTimeMeasurement
                                     {
-                                        ID = 0,
-                                        Acronym = source,
-                                        Name = source,
-                                        ProtocolName = string.Empty,
-                                        VendorDeviceName = string.Empty,
-                                        ParentAcronym = "CALCULATED",
+                                        ID = measurement.Field<string>(nameof(ID)),
+                                        DeviceID = measurement.ConvertNullableField<int>("DeviceID"),
+                                        SignalID = Guid.Parse(measurement.Field<object>("SignalID").ToString()),
+                                        PointID = measurement.ConvertField<int>("PointID"),
+                                        PointTag = measurement.Field<string>("PointTag"),
+                                        SignalReference = measurement.Field<string>("SignalReference"),
+                                        Description = measurement.Field<string>("description"),
+                                        SignalName = measurement.Field<string>("SignalName"),
+                                        SignalAcronym = measurement.Field<string>("SignalAcronym"),
+                                        EngineeringUnit = measurement.Field<string>("SignalAcronym") == "FLAG" ? "Hex" : measurement.Field<string>("EngineeringUnits"),
                                         Expanded = false,
-                                        StatusColor = "Gray",
-                                        Enabled = false,
-                                        MeasurementList = new ObservableCollection<RealTimeMeasurement>(
-                                            resultSet.Tables["MeasurementTable"].Rows
-                                            .Cast<DataRow>()
-                                            .Where(measurement => measurement.ConvertNullableField<int>("DeviceID") is null && measurement.Field<string>("SignalReference").StartsWith(source))
-                                            .Select(measurement => new RealTimeMeasurement
-                                                {
-                                                    ID = measurement.Field<string>(nameof(ID)),
-                                                    DeviceID = measurement.ConvertNullableField<int>("DeviceID"),
-                                                    SignalID = Guid.Parse(measurement.Field<object>("SignalID").ToString()),
-                                                    PointID = measurement.ConvertField<int>("PointID"),
-                                                    PointTag = measurement.Field<string>("PointTag"),
-                                                    SignalReference = measurement.Field<string>("SignalReference"),
-                                                    Description = measurement.Field<string>("description"),
-                                                    SignalName = measurement.Field<string>("SignalName"),
-                                                    SignalAcronym = measurement.Field<string>("SignalAcronym"),
-                                                    EngineeringUnit = measurement.Field<string>("SignalAcronym") == "FLAG" ? "Hex" : measurement.Field<string>("EngineeringUnits"),
-                                                    Expanded = false,
-                                                    Selected = false,
-                                                    Selectable = measurement.Field<string>("SignalAcronym") == "IPHM" || measurement.Field<string>("SignalAcronym") == "IPHA" || measurement.Field<string>("SignalAcronym") == "VPHM" || measurement.Field<string>("SignalAcronym") == "VPHA" || measurement.Field<string>("SignalAcronym") == "FREQ",
-                                                    LongTimeTag = "N/A",
-                                                    TimeTag = "N/A",
-                                                    Value = "--",
-                                                    Quality = "N/A",
-                                                    Foreground = new SolidColorBrush(Color.FromArgb(255, 0, 0, 0))
-                                                })
-                                        )
-                                    })
-                            )
-                        });
+                                        Selected = false,
+                                        Selectable = measurement.Field<string>("SignalAcronym") == "IPHM" || measurement.Field<string>("SignalAcronym") == "IPHA" || measurement.Field<string>("SignalAcronym") == "VPHM" || measurement.Field<string>("SignalAcronym") == "VPHA" || measurement.Field<string>("SignalAcronym") == "FREQ",
+                                        LongTimeTag = "N/A",
+                                        TimeTag = "N/A",
+                                        Value = "--",
+                                        Quality = "N/A",
+                                        Foreground = new SolidColorBrush(Color.FromArgb(255, 0, 0, 0))
+                                    }))
+                            }))
+                    });
                 }
 
                 // Assign parent references for real-time measurements
