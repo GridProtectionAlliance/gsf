@@ -98,6 +98,7 @@ public class CsvInputAdapter : InputAdapterBase
     /// </summary>
     [ConnectionStringParameter]
     [Description("Define the name of the CSV file from which measurements will be read.")]
+    [CustomConfigurationEditor("GSF.TimeSeries.UI.WPF.dll", "GSF.TimeSeries.UI.Editors.FileDialogEditor", "type=open; checkFileExists=true; defaultExt=.csv; filter=CSV files|*.csv|AllFiles|*.*")]
     public string FileName { get; set; }
 
     /// <summary>
