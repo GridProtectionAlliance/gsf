@@ -268,13 +268,11 @@ public class PowerMultiCalculatorAdapter : ActionAdapterBase
 
         if (Settings.TryGetValue(nameof(TableName), out string tableName))
             TableName = tableName;
-
-        //                     0           1                    2                     3                   4                     5
+                       //  0              1                    2                     3                   4                     5
         string query = "SELECT ID, CircuitDescription, VoltageAngleSignalID, VoltageMagSignalID, CurrentAngleSignalID, CurrentMagSignalID, " +
                        //            6                          7                           8
                        "ActivePowerOutputSignalID, ReactivePowerOutputSignalID, ApparentPowerOutputSignalID " +
                        $"FROM {TableName} WHERE NodeId = {{0}} AND Enabled <> 0";
-
         using (AdoDataConnection database = new("systemSettings"))
         using (IDataReader reader = database.ExecuteReader(query, ConfigurationFile.Current.Settings["systemSettings"]["NodeID"].ValueAs<Guid>()))
         {

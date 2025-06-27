@@ -665,7 +665,8 @@ namespace GSF.TimeSeries.Statistics
 
                     // Get the statistic measurements from the database which have already been defined for this source
                     string args = string.Join(",", signalReferences.Select((_, index) => $"{{{index}}}"));
-                    List<DataRow> statisticMeasurements = helper.RetrieveData(string.Format(StatisticMeasurementSelectFormat, args), signalReferences.ToArray<object>()).Select().ToList();
+                    string sql = database.ParameterizedQueryString(StatisticMeasurementSelectFormat, "args");
+                    List<DataRow> statisticMeasurements = helper.RetrieveData(sql, args, signalReferences.ToArray<object>()).Select().ToList();
 
                     // If the number of statistics for the source category matches
                     // the number of statistic measurements for the source, assume
@@ -995,7 +996,7 @@ namespace GSF.TimeSeries.Statistics
 
             using AdoDataConnection database = new("systemSettings");
 
-            return database.Connection.ExecuteScalar($"SELECT Name FROM Node WHERE ID = '{database.Guid(GetNodeID())}'").ToNonNullString().ToUpper();
+            return database.Connection.ExecuteScalar("SELECT Name FROM Node WHERE ID = '{0}'", database.Guid(GetNodeID())).ToNonNullString().ToUpper();
         }
 
         private void RestartReloadStatisticsTimer()

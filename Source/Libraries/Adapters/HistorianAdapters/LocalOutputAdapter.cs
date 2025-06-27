@@ -1118,12 +1118,14 @@ public class LocalOutputAdapter : OutputAdapterBase
                     string archiveLocation = FilePath.GetDirectoryName(settings["FileName"].Value);
                     string adapterName = $"{instanceName}READER";
                     string connectionString = string.Format("archiveLocation={0}; instanceName={1}; sourceIDs={1}; publicationInterval=333333; connectOnDemand=true", archiveLocation, instanceName);
-                    string query = "INSERT INTO CustomInputAdapter(NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, LoadOrder, Enabled) " + $"VALUES({nodeIDQueryString}, @adapterName, 'HistorianAdapters.dll', 'HistorianAdapters.LocalInputAdapter', @connectionString, 0, 1)";
-
+                    string query = database.ParameterizedQueryString("INSERT INTO " +
+                        "CustomInputAdapter(NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, LoadOrder, Enabled) " +
+                        "VALUES({0}, @{1}, 'HistorianAdapters.dll', 'HistorianAdapters.LocalInputAdapter', @{2}, 0, 1)",
+                        "nodeIDQueryString", "adapterName", "connectionString");
                     if (database.IsOracle)
                         query = query.Replace('@', ':');
 
-                    database.Connection.ExecuteNonQuery(query, adapterName, connectionString);
+                    database.Connection.ExecuteNonQuery(query, nodeIDQueryString, adapterName, connectionString);
                 }
                 catch (Exception ex)
                 {
@@ -1205,7 +1207,7 @@ public class LocalOutputAdapter : OutputAdapterBase
         IEnumerable<DataRow> readers = database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM CustomInputAdapter WHERE NodeID = {nodeIDQueryString} AND TypeName = 'PIAdapters.PIPBInputAdapter'").AsEnumerable();
 
         // Also check for PI adapters loaded into CustomOutputAdapters
-        historians = historians.Concat(database.Connection.RetrieveData(database.AdapterType, $"SELECT AdapterName, ConnectionString FROM RuntimeCustomOutputAdapter WHERE NodeID = {nodeIDQueryString} AND TypeName = 'PIAdapters.PIOutputAdapter'").AsEnumerable());
+        historians = historians.Concat(database.Connection.RetrieveData(database.AdapterType, "SELECT AdapterName, ConnectionString FROM RuntimeCustomOutputAdapter WHERE NodeID = {0} AND TypeName = 'PIAdapters.PIOutputAdapter'", nodeIDQueryString).AsEnumerable());
 
         // Make sure a temporal reader is defined for each OSI-PI historian
         foreach (DataRow row in historians)
@@ -1251,7 +1253,10 @@ public class LocalOutputAdapter : OutputAdapterBase
 
                 string connectionString = string.IsNullOrEmpty(userName) ? $"ServerName={serverName}; ConnectTimeout={connectTimeout}; sourceIDs={instanceName}; connectOnDemand=true" : $"ServerName={serverName}; UserName={userName}; Password={password.ToNonNullString()}; ConnectTimeout={connectTimeout}; sourceIDs={instanceName}; connectOnDemand=true";
 
-                string query = "INSERT INTO CustomInputAdapter(NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, LoadOrder, Enabled) " + $"VALUES({nodeIDQueryString}, @adapterName, 'PIAdapters.dll', 'PIAdapters.PIPBInputAdapter', @connectionString, 0, 1)";
+                string query = database.ParameterizedQueryString("INSERT INTO " +
+                    "CustomInputAdapter(NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, LoadOrder, Enabled) " + 
+                    "VALUES({0}, @{1}, 'PIAdapters.dll', 'PIAdapters.PIPBInputAdapter', @{2}, 0, 1)",
+                    "nodeIDQueryString", "adapterName", "connectionString");
 
                 if (database.IsOracle)
                     query = query.Replace('@', ':');

@@ -303,7 +303,7 @@ namespace MetadataAdapters
                 DataSet metadata = new DataSet();
 
                 // Initialize active node ID
-                Guid nodeID = Guid.Parse(dbConnection.ExecuteScalar($"SELECT NodeID FROM IaonActionAdapter WHERE ID = {ID}").ToString());
+                Guid nodeID = Guid.Parse(dbConnection.ExecuteScalar("SELECT NodeID FROM IaonActionAdapter WHERE ID = {0}", ID).ToString());
 
                 // Copy key metadata tables
                 foreach (string tableExpression in MetadataTables.Split(';'))
