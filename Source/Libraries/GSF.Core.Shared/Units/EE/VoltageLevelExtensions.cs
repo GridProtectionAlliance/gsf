@@ -39,7 +39,7 @@ internal sealed class GenerateVoltageLevelsAttribute(string enumName, params int
 /// <summary>
 /// Defines common transmission voltage levels.
 /// </summary>
-[GenerateVoltageLevels("VoltageLevel", 44, 69, 115, 138, 161, 169, 230, 345, 500, 765, 1100)]
+[GenerateVoltageLevels("VoltageLevel", 34, 44, 69, 115, 138, 161, 169, 230, 345, 500, 765, 1100)]
 public static class CommonVoltageLevels
 {
     /// <summary>

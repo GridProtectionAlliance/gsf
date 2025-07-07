@@ -103,8 +103,8 @@ namespace GSF.TimeSeries
         #region [ Members ]
 
         // Constants
-        private const int DefaultMinThreadPoolSize = 25;
-        private const int DefaultMaxThreadPoolSize = 100;
+        private const int DefaultMinThreadPoolSize = -1;
+        private const int DefaultMaxThreadPoolSize = -1;
         private const int DefaultConfigurationBackups = 5;
         private const int DefaultMaxLogFiles = 300;
 
@@ -153,7 +153,7 @@ namespace GSF.TimeSeries
         /// Creates a new <see cref="ServiceHostBase"/> from specified parameters.
         /// </summary>
         /// <param name="container">Service host <see cref="IContainer"/>.</param>
-        public ServiceHostBase(IContainer container) : this() => 
+        public ServiceHostBase(IContainer container) : this() =>
             container?.Add(this);
 
         #endregion
@@ -399,16 +399,63 @@ namespace GSF.TimeSeries
                 IsBackground = true
             };
 
-            // Setup default thread pool size
-            try
+            // Get configuration settings for thread pool size
+            int targetMinThreadPoolSize = systemSettings["MinThreadPoolWorkerThreads"].ValueAs(DefaultMinThreadPoolSize);
+            int targetMaxThreadPoolSize = systemSettings["MaxThreadPoolWorkerThreads"].ValueAs(DefaultMaxThreadPoolSize);
+            int targetMinIOPortThreads = systemSettings["MinThreadPoolIOPortThreads"].ValueAs(DefaultMinThreadPoolSize);
+            int targetMaxIOPortThreads = systemSettings["MaxThreadPoolIOPortThreads"].ValueAs(DefaultMaxThreadPoolSize);
+
+            // If all thread pool sizes are set to -1, then do not change system defaults
+            if (targetMinThreadPoolSize > -1 || targetMaxThreadPoolSize > -1 || targetMinIOPortThreads > -1 || targetMaxIOPortThreads > -1)
             {
-                ThreadPool.SetMinThreads(systemSettings["MinThreadPoolWorkerThreads"].ValueAs(DefaultMinThreadPoolSize), systemSettings["MinThreadPoolIOPortThreads"].ValueAs(DefaultMinThreadPoolSize));
-                ThreadPool.SetMaxThreads(systemSettings["MaxThreadPoolWorkerThreads"].ValueAs(DefaultMaxThreadPoolSize), systemSettings["MaxThreadPoolIOPortThreads"].ValueAs(DefaultMaxThreadPoolSize));
-            }
-            catch (Exception ex)
-            {
-                DisplayStatusMessage("Failed to set desired thread pool size due to exception: {0}", UpdateType.Alarm, ex.Message);
-                LogException(ex);
+                ThreadPool.GetMinThreads(out int currentMinThreadPoolSize, out int currentMinIOPortThreads);
+                ThreadPool.GetMaxThreads(out int currentMaxThreadPoolSize, out int currentMaxIOPortThreads);
+
+                // Use current thread pool sizes for target sizes that are set to -1
+                if (targetMinThreadPoolSize < 0)
+                    targetMinThreadPoolSize = currentMinThreadPoolSize;
+
+                if (targetMinIOPortThreads < 0)
+                    targetMinIOPortThreads = currentMinIOPortThreads;
+
+                if (targetMaxThreadPoolSize < 0)
+                    targetMaxThreadPoolSize = currentMaxThreadPoolSize;
+
+                if (targetMaxIOPortThreads < 0)
+                    targetMaxIOPortThreads = currentMaxIOPortThreads;
+
+                // Min threads needs to be between 0 and maximum threads
+                // Max threads needs to be at least as large as both min threads and Environment.ProcessorCount
+                if (targetMaxThreadPoolSize == 0 || targetMaxThreadPoolSize < Environment.ProcessorCount)
+                    targetMaxThreadPoolSize = Environment.ProcessorCount;
+
+                if (targetMaxIOPortThreads == 0 || targetMaxIOPortThreads < Environment.ProcessorCount)
+                    targetMaxIOPortThreads = Environment.ProcessorCount;
+
+                if (targetMinThreadPoolSize > targetMaxThreadPoolSize)
+                    targetMinThreadPoolSize = targetMaxThreadPoolSize;
+
+                if (targetMinIOPortThreads > targetMaxIOPortThreads)
+                    targetMinIOPortThreads = targetMaxIOPortThreads;
+
+                // Update max before min to avoid constraint violations
+                bool success = ThreadPool.SetMaxThreads(targetMaxThreadPoolSize, targetMaxIOPortThreads);
+
+                if (!success)
+                {
+                    string message = $"Failed to set maximum thread pool size to {targetMaxThreadPoolSize} worker threads and {targetMaxIOPortThreads} I/O port threads.";
+                    DisplayStatusMessage(message, UpdateType.Alarm);
+                    LogException(new InvalidOperationException(message));
+                }
+
+                success = ThreadPool.SetMinThreads(targetMinThreadPoolSize, targetMinIOPortThreads);
+
+                if (!success)
+                {
+                    string message = $"Failed to set minimum thread pool size to {targetMinThreadPoolSize} worker threads and {targetMinIOPortThreads} I/O port threads.";
+                    DisplayStatusMessage(message, UpdateType.Alarm);
+                    LogException(new InvalidOperationException(message));
+                }
             }
 
             // Define guid with query string delimiters according to database needs
@@ -445,7 +492,7 @@ namespace GSF.TimeSeries
 
             m_reloadConfigQueue.Start();
 
-        #if !MONO
+#if !MONO
             try
             {
                 // Attempt to assign desired process priority. Note that process will require SeIncreaseBasePriorityPrivilege or 
@@ -456,7 +503,7 @@ namespace GSF.TimeSeries
             {
                 LogException(ex);
             }
-        #endif
+#endif
         }
 
         /// <summary>
@@ -585,7 +632,7 @@ namespace GSF.TimeSeries
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("Ping", "Shells out a process to perform a ping on the device.", PingRequestHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("GetInputMeasurements", "Gets adapter input measurements.", GetInputMeasurementsRequestHandler, false));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("GetOutputMeasurements", "Gets adapter output measurements.", GetOutputMeasurementsRequestHandler, false));
-            
+
             // Start system initialization on an independent thread so that service responds in a timely fashion...
             InitializeSystem();
         }
@@ -693,10 +740,10 @@ namespace GSF.TimeSeries
             Dispose();
         }
 
-        private void UpdatedStatusHandler(object sender, EventArgs<Guid, string, UpdateType> e) => 
+        private void UpdatedStatusHandler(object sender, EventArgs<Guid, string, UpdateType> e) =>
             UpdatedStatus?.Invoke(sender, new EventArgs<Guid, string, UpdateType>(e.Argument1, e.Argument2, e.Argument3));
 
-        private void LoggedExceptionHandler(object sender, EventArgs<Exception> e) => 
+        private void LoggedExceptionHandler(object sender, EventArgs<Exception> e) =>
             LoggedException?.Invoke(sender, new EventArgs<Exception>(e.Argument));
 
         #endregion
@@ -920,51 +967,51 @@ namespace GSF.TimeSeries
                         PropagateDataSource(configuration);
                 }
                 else switch (type)
-                {
-                    case "Augmented":
                     {
-                        DisplayStatusMessage("Augmenting current system configuration...", UpdateType.Information);
-                        configuration = AugmentConfigurationDataSet(DataSource);
+                        case "Augmented":
+                        {
+                            DisplayStatusMessage("Augmenting current system configuration...", UpdateType.Information);
+                            configuration = AugmentConfigurationDataSet(DataSource);
 
-                        // Update data source on all adapters in all collections
-                        if (configuration is not null)
-                            PropagateDataSource(configuration);
+                            // Update data source on all adapters in all collections
+                            if (configuration is not null)
+                                PropagateDataSource(configuration);
 
-                        break;
+                            break;
+                        }
+                        case "BinaryCache":
+                        {
+                            DisplayStatusMessage("Loading binary cached configuration...", UpdateType.Information);
+                            configuration = GetBinaryCachedConfigurationDataSet();
+
+                            // Update data source on all adapters in all collections
+                            if (configuration is not null)
+                                PropagateDataSource(configuration);
+
+                            break;
+                        }
+                        case "XmlCache":
+                        {
+                            DisplayStatusMessage("Loading XML cached configuration...", UpdateType.Information);
+                            configuration = GetXMLCachedConfigurationDataSet();
+
+                            // Update data source on all adapters in all collections
+                            if (configuration is not null)
+                                PropagateDataSource(configuration);
+
+                            break;
+                        }
+                        case "Startup":
+                            systemConfigurationLoaded = LoadStartupConfiguration();
+
+                            break;
+                        default:
+                            // No specific reload command was issued;
+                            // load system configuration as normal
+                            systemConfigurationLoaded = LoadSystemConfiguration();
+
+                            break;
                     }
-                    case "BinaryCache":
-                    {
-                        DisplayStatusMessage("Loading binary cached configuration...", UpdateType.Information);
-                        configuration = GetBinaryCachedConfigurationDataSet();
-
-                        // Update data source on all adapters in all collections
-                        if (configuration is not null)
-                            PropagateDataSource(configuration);
-
-                        break;
-                    }
-                    case "XmlCache":
-                    {
-                        DisplayStatusMessage("Loading XML cached configuration...", UpdateType.Information);
-                        configuration = GetXMLCachedConfigurationDataSet();
-
-                        // Update data source on all adapters in all collections
-                        if (configuration is not null)
-                            PropagateDataSource(configuration);
-
-                        break;
-                    }
-                    case "Startup":
-                        systemConfigurationLoaded = LoadStartupConfiguration();
-
-                        break;
-                    default:
-                        // No specific reload command was issued;
-                        // load system configuration as normal
-                        systemConfigurationLoaded = LoadSystemConfiguration();
-
-                        break;
-                }
 
                 foreach (Action<bool> callback in items.Where(tuple => tuple.Item1 == typeInner).Select(tuple => tuple.Item2))
                 {
@@ -1375,17 +1422,17 @@ namespace GSF.TimeSeries
             {
                 EventLog.WriteEntry(ServiceName, message, entryType, 0);
             }
-            catch {}
+            catch { }
         }
 
         #endregion
 
         #region [ Service Binding ]
 
-        internal void StartHostedService() => 
+        internal void StartHostedService() =>
             OnStart(Environment.CommandLine.Split(' '));
 
-        internal void StopHostedService() => 
+        internal void StopHostedService() =>
             OnStop();
 
         internal void SendRequest(IPrincipal principal, Guid clientID, string userInput)
@@ -1403,7 +1450,7 @@ namespace GSF.TimeSeries
             }
             else
             {
-                ClientInfo clientInfo = new() {ClientID = clientID};
+                ClientInfo clientInfo = new() { ClientID = clientID };
                 ClientRequestInfo clientRequestInfo = new(clientInfo, request);
                 clientInfo.SetClientUser(principal);
                 requestHandler.HandlerMethod(clientRequestInfo);
@@ -1418,9 +1465,9 @@ namespace GSF.TimeSeries
         {
             try
             {
-            #if !MONO
+#if !MONO
                 GenerateLocalCertificate();
-            #endif
+#endif
 
                 SetupTempPath();
 
@@ -1553,7 +1600,7 @@ namespace GSF.TimeSeries
         /// <remarks>
         /// The time-series framework <see cref="IaonSession"/> uses this event to report adapter status messages (e.g., to a log file or console window).
         /// </remarks>
-        private void StatusMessageHandler(object sender, EventArgs<string, UpdateType> e) => 
+        private void StatusMessageHandler(object sender, EventArgs<string, UpdateType> e) =>
             DisplayStatusMessage(e.Argument1, e.Argument2);
 
         /// <summary>
@@ -1564,7 +1611,7 @@ namespace GSF.TimeSeries
         /// <remarks>
         /// The time-series framework <see cref="IaonSession"/> uses this event to report exceptions.
         /// </remarks>
-        private void ProcessExceptionHandler(object sender, EventArgs<Exception> e) => 
+        private void ProcessExceptionHandler(object sender, EventArgs<Exception> e) =>
             LogException(e.Argument);
 
         /// <summary>
@@ -1575,8 +1622,8 @@ namespace GSF.TimeSeries
         /// <remarks>
         /// The time-series framework <see cref="IaonSession"/> uses this event to report configuration changes.
         /// </remarks>
-        private void ConfigurationChangedHandler(object sender, EventArgs e) => 
-            m_reloadConfigQueue.Add(Tuple.Create(nameof(System), (Action<bool>)(_ => {})));
+        private void ConfigurationChangedHandler(object sender, EventArgs e) =>
+            m_reloadConfigQueue.Add(Tuple.Create(nameof(System), (Action<bool>)(_ => { })));
 
         // Handle task scheduler exceptions
         private void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
@@ -1715,7 +1762,7 @@ namespace GSF.TimeSeries
         /// </summary>
         /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
         /// <returns>Requested <see cref="IAdapter"/>.</returns>
-        protected virtual IAdapter GetRequestedAdapter(ClientRequestInfo requestInfo) => 
+        protected virtual IAdapter GetRequestedAdapter(ClientRequestInfo requestInfo) =>
             GetRequestedAdapter(requestInfo, out IAdapterCollection _);
 
         /// <summary>
@@ -1887,14 +1934,14 @@ namespace GSF.TimeSeries
         /// Starts specified adapter.
         /// </summary>
         /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
-        protected virtual void StartRequestHandler(ClientRequestInfo requestInfo) => 
+        protected virtual void StartRequestHandler(ClientRequestInfo requestInfo) =>
             ActionRequestHandler(requestInfo, adapter => adapter.Start());
 
         /// <summary>
         /// Stops specified adapter.
         /// </summary>
         /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
-        protected virtual void StopRequestHandler(ClientRequestInfo requestInfo) => 
+        protected virtual void StopRequestHandler(ClientRequestInfo requestInfo) =>
             ActionRequestHandler(requestInfo, adapter => adapter.Stop());
 
         /// <summary>
@@ -2198,8 +2245,8 @@ namespace GSF.TimeSeries
             {
                 // See if specific ID for an adapter was requested
                 IAdapter adapter =
-                    requestInfo.Request.Arguments.Exists("OrderedArg1") ? 
-                    GetRequestedAdapter(requestInfo) : 
+                    requestInfo.Request.Arguments.Exists("OrderedArg1") ?
+                    GetRequestedAdapter(requestInfo) :
                     GetRequestedCollection(requestInfo);
 
                 if (adapter is null)
@@ -3626,7 +3673,7 @@ namespace GSF.TimeSeries
         /// </summary>
         /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
         /// <param name="success">Flag that determines if this response to client request was a success.</param>
-        protected virtual void SendResponse(ClientRequestInfo requestInfo, bool success) => 
+        protected virtual void SendResponse(ClientRequestInfo requestInfo, bool success) =>
             SendResponseWithAttachment(requestInfo, success, null, null);
 
         /// <summary>
@@ -3636,7 +3683,7 @@ namespace GSF.TimeSeries
         /// <param name="success">Flag that determines if this response to client request was a success.</param>
         /// <param name="status">Formatted status message to send with response.</param>
         /// <param name="args">Arguments of the formatted status message.</param>
-        protected virtual void SendResponse(ClientRequestInfo requestInfo, bool success, string status, params object[] args) => 
+        protected virtual void SendResponse(ClientRequestInfo requestInfo, bool success, string status, params object[] args) =>
             SendResponseWithAttachment(requestInfo, success, null, status, args);
 
         /// <summary>
@@ -3698,7 +3745,7 @@ namespace GSF.TimeSeries
         /// </summary>
         /// <param name="status">Status message to send to all clients.</param>
         /// <param name="type"><see cref="UpdateType"/> of message to send.</param>
-        protected virtual void DisplayStatusMessage(string status, UpdateType type) => 
+        protected virtual void DisplayStatusMessage(string status, UpdateType type) =>
             DisplayStatusMessage(status, type, true);
 
         /// <summary>
@@ -3728,7 +3775,7 @@ namespace GSF.TimeSeries
         /// <param name="status">Formatted status message to send to all clients.</param>
         /// <param name="type"><see cref="UpdateType"/> of message to send.</param>
         /// <param name="args">Arguments of the formatted status message.</param>
-        protected virtual void DisplayStatusMessage(string status, UpdateType type, params object[] args) => 
+        protected virtual void DisplayStatusMessage(string status, UpdateType type, params object[] args) =>
             DisplayStatusMessage(status, type, true, args);
 
         /// <summary>

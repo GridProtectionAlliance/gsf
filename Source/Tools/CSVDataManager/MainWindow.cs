@@ -81,6 +81,8 @@ namespace CSVDataManager
 
         private void MainWindow_Load(object sender, EventArgs e)
         {
+            HideErrors();
+
             Type sqliteConnectionType = typeof(System.Data.SQLite.SQLiteConnection);
             Type sqliteAdapterType = typeof(System.Data.SQLite.SQLiteDataAdapter);
             string assemblyName = sqliteConnectionType.Assembly.FullName;
@@ -283,16 +285,25 @@ namespace CSVDataManager
                 MainTabControl.Enabled = false;
                 Cursor = Cursors.WaitCursor;
                 ExportProgressBar.Value = 0;
+                ErrorsTextBox.Clear();
+                HideErrors();
             }
 
             void DoExport()
             {
-                // The DBSchema database connection was closed after loading the schema so
-                // it needs to be reopened before we can query the data to be exported
-                OpenDBConnectionAndExecute(() => ExportSelectionToFile(table, fields));
+                try
+                {
+                    // The DBSchema database connection was closed after loading the schema so
+                    // it needs to be reopened before we can query the data to be exported
+                    OpenDBConnectionAndExecute(() => ExportSelectionToFile(table, fields));
 
-                // Automatically open the exported file to upon completion
-                using (Process.Start(ExportFileDialog.FileName)) { }
+                    // Automatically open the exported file to upon completion
+                    using (Process.Start(ExportFileDialog.FileName)) { }
+                }
+                catch (Exception ex)
+                {
+                    Invoke(() => MessageBox.Show($"Export failed: {ex.Message}"));
+                }
             }
 
             void EndExport()
@@ -387,13 +398,22 @@ namespace CSVDataManager
                 MainTabControl.Enabled = false;
                 Cursor = Cursors.WaitCursor;
                 ImportProgressBar.Value = 0;
+                ErrorsTextBox.Clear();
+                HideErrors();
             }
 
             void DoImport()
             {
-                using (BulkDataOperationBase importer = GetImporter(sender))
+                try
                 {
-                    OpenBothConnectionsAndExecute(() => ImportSelectionFromFile(importer, table));
+                    using (BulkDataOperationBase importer = GetImporter(sender))
+                    {
+                        OpenBothConnectionsAndExecute(() => ImportSelectionFromFile(importer, table));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Invoke(() => MessageBox.Show($"Import failed: {ex.Message}"));
                 }
             }
 
@@ -408,7 +428,15 @@ namespace CSVDataManager
                 MainTabControl.Enabled = true;
                 Cursor = cursor;
                 ImportProgressBar.Value = 100;
-                MessageBox.Show($"Completed import from {fileName} to the {table.Name} table.");
+
+                string message = ErrorsTextBox.Text.Length == 0
+                    ? $"Completed import from {fileName} to the {table.Name} table."
+                    : $"Errors occurred while importing from {fileName} to the {table.Name} table. Check the Errors tab for details.";
+
+                MessageBox.Show(message);
+
+                if (ErrorsTextBox.Text.Length > 0)
+                    MainTabControl.SelectedTab = ErrorsTabPage;
             }
         }
 
@@ -417,6 +445,11 @@ namespace CSVDataManager
             int progress = args.Argument1;
             int total = args.Argument2;
             UpdateProgressBar(ImportProgressBar, 100 * progress / total);
+        }
+
+        private void Importer_SQLFailure(object sender, EventArgs<string, Exception> e)
+        {
+            AppendError(e.Argument1, e.Argument2);
         }
 
         private void DataProviderComboBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -539,6 +572,7 @@ namespace CSVDataManager
 
             UpdateProgressBar(ImportProgressBar, 0);
             importer.OverallProgress += Importer_OverallProgress;
+            importer.SQLFailure += Importer_SQLFailure;
             importer.UseFromSchemaReferentialIntegrity = false;
             importer.Execute();
             UpdateProgressBar(ImportProgressBar, 100);
@@ -725,6 +759,38 @@ namespace CSVDataManager
                 Invoke(updateAction, progressBar, progress);
             else
                 updateAction(progressBar, progress);
+        }
+
+        private void ShowErrors()
+        {
+            if (!MainTabControl.TabPages.Contains(ErrorsTabPage))
+                MainTabControl.TabPages.Add(ErrorsTabPage);
+        }
+
+        private void HideErrors()
+        {
+            if (MainTabControl.TabPages.Contains(ErrorsTabPage))
+                MainTabControl.TabPages.Remove(ErrorsTabPage);
+        }
+
+        private void AppendError(string sql, Exception ex)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(AppendError, sql, ex);
+                return;
+            }
+
+            if (ErrorsTextBox.Text.Length > 0)
+            {
+                ErrorsTextBox.AppendText(Environment.NewLine);
+                ErrorsTextBox.AppendText(Environment.NewLine);
+            }
+
+            ErrorsTextBox.AppendText($"Exception: {ex.Message}");
+            ErrorsTextBox.AppendText(Environment.NewLine);
+            ErrorsTextBox.AppendText($"SQL: {sql}");
+            ShowErrors();
         }
 
         #endregion

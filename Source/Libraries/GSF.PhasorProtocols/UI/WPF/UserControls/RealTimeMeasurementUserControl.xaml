@@ -596,7 +596,7 @@
             </StackPanel>
 
             <TreeView ItemsSource="{tsfBinding:Column Path=ItemsSource}" ItemTemplate="{StaticResource RootNodeTemplate}" ItemContainerStyle="{StaticResource ExpandedItemStyle}"
-                      Height="610" VerticalAlignment="Top" HorizontalAlignment="Left"/>
+                      Height="610" VerticalAlignment="Top" HorizontalAlignment="Left" VirtualizingStackPanel.IsVirtualizing="True" VirtualizingStackPanel.VirtualizationMode="Recycling" />
 
         </StackPanel>
 
