@@ -61,7 +61,7 @@ public class CsvInputAdapter : InputAdapterBase
     private readonly Dictionary<int, IMeasurement> m_columnMappings;
 
     private Timer? m_looseTimer;
-    private ShortSynchronizedOperation? m_readRow;
+    private LongSynchronizedOperation? m_readRow;
 
     private PrecisionInputTimer? m_precisionTimer;
     private long[]? m_subsecondDistribution;
@@ -307,7 +307,7 @@ public class CsvInputAdapter : InputAdapterBase
         if (!UseHighResolutionInputTimer)
         {
             m_looseTimer = new Timer();
-            m_readRow = new ShortSynchronizedOperation(ReadRow, ex => OnProcessException(MessageLevel.Warning, ex));
+            m_readRow = new LongSynchronizedOperation(ReadRow, ex => OnProcessException(MessageLevel.Warning, ex));
         }
 
         if (TransverseMode)
@@ -349,15 +349,18 @@ public class CsvInputAdapter : InputAdapterBase
                     return measurement;
                 }).ToArray();
 
-                int timestampColumn = columnMappings.First(kvp => string.Compare(kvp.Value, "Timestamp", StringComparison.OrdinalIgnoreCase) == 0).Key;
-
-                // Reserve a column mapping for timestamp value
-                IMeasurement timestampMeasurement = new Measurement
+                if (!SimulateTimestamp)
                 {
-                    Metadata = new MeasurementMetadata(null!, "Timestamp", 0, 1, null)
-                };
+                    int timestampColumn = columnMappings.First(kvp => string.Compare(kvp.Value, "Timestamp", StringComparison.OrdinalIgnoreCase) == 0).Key;
 
-                m_columnMappings[timestampColumn] = timestampMeasurement;
+                    // Reserve a column mapping for timestamp value
+                    IMeasurement timestampMeasurement = new Measurement
+                    {
+                        Metadata = new MeasurementMetadata(null!, "Timestamp", 0, 1, null)
+                    };
+
+                    m_columnMappings[timestampColumn] = timestampMeasurement;
+                }
             }
             else
             {
@@ -589,18 +592,20 @@ public class CsvInputAdapter : InputAdapterBase
                 if (TransverseMode)
                 {
                     // No measurement will be defined for timestamp column
-                    if (i == timestampColumn)
+                    if (!SimulateTimestamp && i == timestampColumn)
                         continue;
 
-                    if (m_columnMappings.TryGetValue(i, out measurement))
+                    if (!m_columnMappings.TryGetValue(i, out measurement))
+                        continue;
+
+                    measurement = Measurement.Clone(measurement);
+
+                    try
                     {
-                        measurement = Measurement.Clone(measurement);
                         measurement.Value = double.Parse(fields[i]);
                     }
-                    else
+                    catch
                     {
-                        measurement = new Measurement();
-                        measurement.Metadata = MeasurementKey.Undefined.Metadata;
                         measurement.Value = double.NaN;
                     }
 
