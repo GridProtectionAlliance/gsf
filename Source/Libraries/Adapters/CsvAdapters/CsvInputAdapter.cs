@@ -592,7 +592,7 @@ public class CsvInputAdapter : InputAdapterBase
                 if (TransverseMode)
                 {
                     // No measurement will be defined for timestamp column
-                    if (i == timestampColumn)
+                    if (!SimulateTimestamp && i == timestampColumn)
                         continue;
 
                     if (m_columnMappings.TryGetValue(i, out measurement))
