@@ -595,23 +595,17 @@ public class CsvInputAdapter : InputAdapterBase
                     if (!SimulateTimestamp && i == timestampColumn)
                         continue;
 
-                    if (m_columnMappings.TryGetValue(i, out measurement))
-                    {
-                        measurement = Measurement.Clone(measurement);
+                    if (!m_columnMappings.TryGetValue(i, out measurement))
+                        continue;
 
-                        try
-                        {
-                            measurement.Value = double.Parse(fields[i]);
-                        }
-                        catch
-                        {
-                            measurement.Value = double.NaN;
-                        }
-                    }
-                    else
+                    measurement = Measurement.Clone(measurement);
+
+                    try
                     {
-                        measurement = new Measurement();
-                        measurement.Metadata = MeasurementKey.Undefined.Metadata;
+                        measurement.Value = double.Parse(fields[i]);
+                    }
+                    catch
+                    {
                         measurement.Value = double.NaN;
                     }
 
