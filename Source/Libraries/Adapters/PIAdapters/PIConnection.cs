@@ -161,6 +161,9 @@ public class PIConnection : IComparable<PIConnection>, IComparable, IDisposable
             if (Server is null)
                 throw new InvalidOperationException("Server not found in the PI servers collection.");
 
+            if (ConnectTimeout > 0)
+                Server.ConnectionInfo.ConnectionTimeOut = TimeSpan.FromMilliseconds(ConnectTimeout);
+
             Server.ConnectChanged += PIConnection_ConnectChanged;
         }
         catch (Exception ex)
