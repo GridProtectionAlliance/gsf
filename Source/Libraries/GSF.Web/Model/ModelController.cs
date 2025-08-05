@@ -83,8 +83,11 @@ namespace GSF.Web.Model
             PrimaryKeyField = typeof(T).GetProperties().FirstOrDefault(p => p.GetCustomAttributes<PrimaryKeyAttribute>().Any())?.Name ?? "ID";
 
             ParentKey = typeof(T).GetProperties().FirstOrDefault(p => p.GetCustomAttributes<ParentKeyAttribute>().Any())?.Name ?? "";
-            Connection = typeof(T).GetCustomAttribute<SettingsCategoryAttribute>()?.SettingsCategory ?? "systemSettings";
 
+            // Prioritize Controller Attribute then Model Attribute
+            Connection = this.GetType().GetCustomAttribute<SettingsCategoryAttribute>()?.SettingsCategory
+                ?? typeof(T).GetCustomAttribute<SettingsCategoryAttribute>()?.SettingsCategory
+                ?? "systemSettings";
             PropertyInfo pi = typeof(T).GetProperties().FirstOrDefault(p => p.GetCustomAttributes<DefaultSortOrderAttribute>().Any());
             DefaultSortOrderAttribute dsoa = pi?.GetCustomAttribute<DefaultSortOrderAttribute>();
             if (dsoa != null)
