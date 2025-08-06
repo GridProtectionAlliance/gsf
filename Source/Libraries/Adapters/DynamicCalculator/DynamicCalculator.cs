@@ -707,10 +707,10 @@ namespace DynamicCalculator
                     if (string.IsNullOrEmpty(target))
                         continue;
 
-                    if (target.StartsWith("FILTER ", StringComparison.OrdinalIgnoreCase))
-                    {
-                        MeasurementKey[] keys = AdapterBase.ParseInputMeasurementKeys(DataSource, false, target);
+                    MeasurementKey[] keys = AdapterBase.ParseInputMeasurementKeys(DataSource, false, target);
 
+                    if (keys.Length > 0)
+                    {
                         foreach (MeasurementKey key in keys)
                             AddMapping(key, alias, index++);
                     }
