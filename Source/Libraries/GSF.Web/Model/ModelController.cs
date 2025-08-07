@@ -85,10 +85,15 @@ namespace GSF.Web.Model
             ParentKey = typeof(T).GetProperties().FirstOrDefault(p => p.GetCustomAttributes<ParentKeyAttribute>().Any())?.Name ?? "";
 
             // Prioritize Controller Attribute then Model Attribute
-            Connection = this.GetType().GetCustomAttribute<SettingsCategoryAttribute>()?.SettingsCategory
+            string connection = this.GetType().GetCustomAttribute<SettingsCategoryAttribute>()?.SettingsCategory
                 ?? typeof(T).GetCustomAttribute<SettingsCategoryAttribute>()?.SettingsCategory
                 ?? "systemSettings";
-            ConnectionFactory = () => new AdoDataConnection(Connection);
+            ConnectionFactory = () => new AdoDataConnection(connection);
+
+            // Suprressing obsolete warning to perform assignment
+            #pragma warning disable CS0618
+            Connection = connection;
+            #pragma warning restore CS0618
 
             PropertyInfo pi = typeof(T).GetProperties().FirstOrDefault(p => p.GetCustomAttributes<DefaultSortOrderAttribute>().Any());
             DefaultSortOrderAttribute dsoa = pi?.GetCustomAttribute<DefaultSortOrderAttribute>();
