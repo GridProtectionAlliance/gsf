@@ -83,7 +83,17 @@ namespace GSF.Web.Model
             PrimaryKeyField = typeof(T).GetProperties().FirstOrDefault(p => p.GetCustomAttributes<PrimaryKeyAttribute>().Any())?.Name ?? "ID";
 
             ParentKey = typeof(T).GetProperties().FirstOrDefault(p => p.GetCustomAttributes<ParentKeyAttribute>().Any())?.Name ?? "";
-            Connection = typeof(T).GetCustomAttribute<SettingsCategoryAttribute>()?.SettingsCategory ?? "systemSettings";
+
+            // Prioritize Controller Attribute then Model Attribute
+            string connection = this.GetType().GetCustomAttribute<SettingsCategoryAttribute>()?.SettingsCategory
+                ?? typeof(T).GetCustomAttribute<SettingsCategoryAttribute>()?.SettingsCategory
+                ?? "systemSettings";
+            ConnectionFactory = () => new AdoDataConnection(connection);
+
+            // Suprressing obsolete warning to perform assignment
+            #pragma warning disable CS0618
+            Connection = connection;
+            #pragma warning restore CS0618
 
             PropertyInfo pi = typeof(T).GetProperties().FirstOrDefault(p => p.GetCustomAttributes<DefaultSortOrderAttribute>().Any());
             DefaultSortOrderAttribute dsoa = pi?.GetCustomAttribute<DefaultSortOrderAttribute>();
@@ -156,7 +166,10 @@ namespace GSF.Web.Model
         protected string CustomView { get; } = "";
         protected string PrimaryKeyField { get; set; } = "ID";
         protected string ParentKey { get; set; } = "";
+
+        [Obsolete("Creating AdoDataConnection with this property may ignore DbTimeout Settings in some repositories, please use ConnectionFactory instead.")]
         protected string Connection { get; } = "systemSettings";
+        public Func<AdoDataConnection> ConnectionFactory { get; set; }
         protected string DefaultSort { get; } = null;
         protected string GetRoles { get; } = "";
         protected string PostRoles { get; } = "Administrator";
@@ -184,7 +197,7 @@ namespace GSF.Web.Model
             if (ViewOnly || !GetAuthCheck())
                 return Unauthorized();
 
-            using (AdoDataConnection connection = new AdoDataConnection(Connection))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 return Ok(new TableOperations<U>(connection).NewRecord());
             }
@@ -306,7 +319,7 @@ namespace GSF.Web.Model
             if (!PostAuthCheck() || ViewOnly)
                 return Unauthorized();
                 
-            using (AdoDataConnection connection = new AdoDataConnection(Connection))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 U newRecord = record.ToObject<U>();
                 int result = new TableOperations<U>(connection).AddNewRecord(newRecord);
@@ -326,7 +339,7 @@ namespace GSF.Web.Model
             if (!PatchAuthCheck() || ViewOnly)
                 return Unauthorized();
 
-            using (AdoDataConnection connection = new AdoDataConnection(Connection))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 int result = new TableOperations<U>(connection).AddNewOrUpdateRecord(record);
 
@@ -358,7 +371,7 @@ namespace GSF.Web.Model
             if (!DeleteAuthCheck() || ViewOnly)
                 return Unauthorized();
 
-            using (AdoDataConnection connection = new AdoDataConnection(Connection))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 string tableName = new TableOperations<U>(connection).TableName;
 
@@ -540,7 +553,7 @@ namespace GSF.Web.Model
             if (string.IsNullOrEmpty(orderBy) && !string.IsNullOrEmpty(DefaultSort))
                 orderString = DefaultSort;
 
-            using (AdoDataConnection connection = new AdoDataConnection(Connection))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 if (CustomView == String.Empty)
                 {
@@ -585,7 +598,7 @@ namespace GSF.Web.Model
         protected virtual T QueryRecordWhere(string filterExpression, params object[] parameters)
         {
             
-            using (AdoDataConnection connection = new AdoDataConnection(Connection))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 if (CustomView == String.Empty)
                     return new TableOperations<T>(connection).QueryRecordWhere(filterExpression, parameters);
@@ -621,7 +634,7 @@ namespace GSF.Web.Model
             if (string.IsNullOrEmpty(sortBy) && !string.IsNullOrEmpty(DefaultSort))
                 orderString = DefaultSort;
 
-            using (AdoDataConnection connection = new AdoDataConnection(Connection))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 if (CustomView == String.Empty)
                 {
@@ -750,7 +763,7 @@ namespace GSF.Web.Model
             else if (!string.IsNullOrEmpty(conditions))
                 whereClause += $" AND {conditions}";
 
-            using (AdoDataConnection connection = new AdoDataConnection(Connection))
+            using (AdoDataConnection connection = ConnectionFactory())
             {
                 string tableName = TableOperations<T>.GetTableName();
 
@@ -850,7 +863,7 @@ namespace GSF.Web.Model
             else if (!string.IsNullOrEmpty(conditions))
                 whereClause += $" AND {conditions}";
 
-            using AdoDataConnection connection = new(Connection);
+            using AdoDataConnection connection = ConnectionFactory();
             string tableName = TableOperations<T>.GetTableName();
 
             string sql = "";
