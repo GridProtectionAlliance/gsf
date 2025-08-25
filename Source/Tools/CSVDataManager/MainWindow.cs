@@ -748,6 +748,11 @@ namespace CSVDataManager
                 i++;
             }
 
+            // If the last character was a comma, the last i++ would have landed at the end of the line
+            // Otherwise, it would have landed beyond the end of the line
+            if (i == line.Length)
+                fields.Add(string.Empty);
+
             return fields.ToArray();
         }
 
