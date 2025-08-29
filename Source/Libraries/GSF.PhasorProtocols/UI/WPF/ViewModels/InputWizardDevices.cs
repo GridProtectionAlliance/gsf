@@ -38,9 +38,11 @@ using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Threading;
+using GSF.Collections;
 using GSF.Communication;
 using GSF.ComponentModel.DataAnnotations;
 using GSF.Data;
+using GSF.FuzzyStrings;
 using GSF.PhasorProtocols.BPAPDCstream;
 using GSF.PhasorProtocols.IEEEC37_118;
 using GSF.PhasorProtocols.UI.DataModels;
@@ -65,6 +67,246 @@ internal class InputWizardDevices : PagedViewModelBase<InputWizardDevice, string
 {
     #region [ Members ]
 
+    // Nested Types
+    private class DeviceMapping
+    {
+        #region [ Constructors ]
+
+        public DeviceMapping(Device device, IConfigurationCell cell, double ordinalDistance, string labelPrefix)
+        {
+            Device = device;
+            Cell = cell;
+            OrdinalDistance = ordinalDistance;
+            LabelPrefix = labelPrefix;
+
+            StationAcronym = cell.StationName?.Replace(" ", "_").Replace("'", "").ToUpper();
+            LabelMatchValue = device.Acronym.Equals(StationLabel, StringComparison.Ordinal) ? 1.0D : 0.0D;
+            MatchValue = ComputeMatchValue();
+        }
+
+        #endregion
+
+        #region [ Properties ]
+
+        public Device Device { get; }
+        public IConfigurationCell Cell { get; }
+        public int Rank => (int)Math.Round(MatchValue * 65536.0D);
+
+        // A match value below 1 indicates the
+        // mapping should probably be disregarded
+        public bool HasLowConfidence =>
+            (CanBeUpdated && MatchValue < 1.0D - InverseSquared(MinLabelDistance)) ||
+            (!CanBeUpdated && MatchValue < 1.0D);
+
+        private string LabelPrefix { get; }
+        private string StationAcronym { get; }
+        private double OrdinalDistance { get; }
+        private double LabelMatchValue { get; set; }
+        private double MatchValue { get; set; }
+
+        private string StationLabel =>
+            Device.Acronym.StartsWith(LabelPrefix, StringComparison.Ordinal)
+                ? $"{LabelPrefix}{StationAcronym}"
+                : StationAcronym;
+
+        // The minimum Levenshtein distance has to be at least one
+        // because we already checked if the strings are equal
+        private double MinLabelDistance =>
+            Math.Max(1.0D, Device.Acronym.LevenshteinDistanceLowerBounds(StationLabel));
+
+        // Indicates whether computing Levenshtein distance could change the ranking
+        private bool CanBeUpdated =>
+            MatchValue < 3.0D &&
+            LabelMatchValue == 0.0D &&
+            !string.IsNullOrEmpty(StationAcronym);
+
+        #endregion
+
+        #region [ Methods ]
+
+        // Indicates whether the given mapping can outrank
+        // this one if the Levenshtein distance is 1
+        public bool CanBeOutrankedBy(DeviceMapping mapping)
+        {
+            return
+                MatchValue < 3.0D &&
+                mapping.CanBeUpdated &&
+                MatchValue - mapping.MatchValue < InverseSquared(1.0D);
+        }
+
+        // Levenshtein distance can be expensive to compute
+        // for every mapping so only compute it if requested
+        public void UpdateRank()
+        {
+            if (!CanBeUpdated)
+                return;
+
+            double levenshtein = Device.Acronym.LevenshteinDistance(StationLabel);
+            LabelMatchValue = InverseSquared(levenshtein);
+            MatchValue = ComputeMatchValue();
+        }
+
+        private double ComputeMatchValue()
+        {
+            // The definitive match criterion, weighted far above the rest
+            if (Cell is ConfigurationCell3 cell3 && cell3.GlobalID == Device.UniqueID)
+                return 100;
+
+            // All other match criteria are weighted equally,
+            // producing values between 0 and 1
+            return
+                (Cell.IDCode == Device.AccessID ? 1.0D : 0.0D) +
+                (InverseSquared(OrdinalDistance)) +
+                LabelMatchValue;
+        }
+
+        private double InverseSquared(double distance)
+        {
+            const double Offset = 1.0D; // Distance of 0 produces inverse of 1
+            const double Scale = 0.15D; // Distance of 1 brings the inverse down to 0.75
+            double denominator = Math.Abs(distance * Scale) + Offset;
+            return 1.0D / (denominator * denominator);
+        }
+
+        #endregion
+    }
+
+    private class MappingQueue
+    {
+        #region [ Constructors ]
+
+        public MappingQueue(IEnumerable<Device> devices, IEnumerable<IConfigurationCell> cells, string labelPrefix)
+        {
+            foreach (DeviceMapping mapping in BuildInitialMappings(devices, cells, labelPrefix))
+                Enqueue(InitializedMappings, mapping);
+        }
+
+        #endregion
+
+        #region [ Properties ]
+
+        private PriorityQueue<DeviceMapping> InitializedMappings = [];
+        private PriorityQueue<DeviceMapping> UpdatedMappings = [];
+        private HashSet<Device> MappedDevices = [];
+        private HashSet<IConfigurationCell> MappedCells = [];
+
+        #endregion
+
+        #region [ Methods ]
+
+        public DeviceMapping Dequeue()
+        {
+            // Each device or cell can only be included in one mapping
+            // so make sure to flush lower priority mappings that have
+            // devices/cells that have already been mapped
+            Flush(InitializedMappings);
+            Flush(UpdatedMappings);
+
+            PriorityQueue<DeviceMapping> queue = SelectQueue();
+
+            if (queue.Count == 0)
+                return null;
+
+            DeviceMapping mapping = queue.Dequeue();
+
+            // If we just dequeued from InitializedMappings we'll need to flush
+            // it again in case there are lower-priority duplicates in the queue
+            Flush(InitializedMappings);
+
+            // Mappings that haven't been updated yet might be able to
+            // outrank the mapping that was dequeued the Levenshtein
+            // distance between the labels is computed
+            while (InitializedMappings.Count > 0)
+            {
+                DeviceMapping peek = InitializedMappings.Peek();
+
+                if (!mapping.CanBeOutrankedBy(peek))
+                    break;
+
+                DeviceMapping update = InitializedMappings.Dequeue();
+                Flush(InitializedMappings);
+                update.UpdateRank();
+                Enqueue(UpdatedMappings, update);
+            }
+
+            // Any newly updated mappings may have
+            // outranked the mapping that was dequeued
+            if (UpdatedMappings.Count > 0)
+            {
+                DeviceMapping updated = UpdatedMappings.Peek();
+
+                // The dequeued mapping may be able to retake first place
+                if (updated.Rank > mapping.Rank)
+                    mapping.UpdateRank();
+
+                if (updated.Rank > mapping.Rank)
+                {
+                    Enqueue(UpdatedMappings, mapping);
+                    mapping = UpdatedMappings.Dequeue();
+                }
+            }
+
+            MappedDevices.Add(mapping.Device);
+            MappedCells.Add(mapping.Cell);
+            return mapping;
+        }
+
+        private void Enqueue(PriorityQueue<DeviceMapping> queue, DeviceMapping mapping)
+        {
+            if (!mapping.HasLowConfidence)
+                queue.Enqueue(mapping.Rank, mapping);
+        }
+
+        private PriorityQueue<DeviceMapping> SelectQueue()
+        {
+            if (InitializedMappings.Count == 0)
+                return UpdatedMappings;
+
+            if (UpdatedMappings.Count == 0)
+                return InitializedMappings;
+
+            int initializedRank = InitializedMappings.Peek().Rank;
+            int updatedRank = UpdatedMappings.Peek().Rank;
+
+            return (initializedRank > updatedRank)
+                ? InitializedMappings
+                : UpdatedMappings;
+        }
+
+        private void Flush(PriorityQueue<DeviceMapping> queue)
+        {
+            while (queue.Count > 0)
+            {
+                DeviceMapping mapping = queue.Peek();
+
+                bool isMapped =
+                    MappedDevices.Contains(mapping.Device) ||
+                    MappedCells.Contains(mapping.Cell);
+
+                if (!isMapped)
+                    break;
+
+                queue.Dequeue();
+            }
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+        private static IEnumerable<DeviceMapping> BuildInitialMappings(IEnumerable<Device> devices, IEnumerable<IConfigurationCell> cells, string labelPrefix)
+        {
+            var indexedDevices = devices.Select((Instance, Index) => new { Instance, Index });
+            var indexedCells = cells.Select((Instance, Index) => new { Instance, Index });
+
+            return indexedDevices.SelectMany(_ => indexedCells, (device, cell) =>
+                new DeviceMapping(device.Instance, cell.Instance, device.Index - cell.Index, labelPrefix));
+        }
+
+        #endregion
+    }
+
     // Fields
     private RelayCommand m_launchWalkthroughCommand;
     private RelayCommand m_browseConnectionFileCommand;
@@ -83,7 +325,7 @@ internal class InputWizardDevices : PagedViewModelBase<InputWizardDevice, string
     private string m_connectionString;
     private string m_alternateCommandChannel;
     private int m_accessID;
-    private int[] m_deviceIDs;
+    private Device[] m_devices;
     private string[] m_deviceAcronyms;
     private int m_protocolID;
     private string m_protocolAcronym;
@@ -338,30 +580,24 @@ internal class InputWizardDevices : PagedViewModelBase<InputWizardDevice, string
     }
 
     /// <summary>
-    /// Gets or sets device IDs.
+    /// Gets or sets list of devices.
     /// </summary>
-    public int[] DeviceIDs
+    public Device[] Devices
     {
-        get => m_deviceIDs ??= [];
+        get => m_devices ??= [];
         set
         {
-            m_deviceIDs = value;
-            OnPropertyChanged(nameof(DeviceIDs));
+            m_devices = value;
+            OnPropertyChanged(nameof(Devices));
         }
     }
 
     /// <summary>
-    /// Gets or sets device acronyms.
+    /// Gets device acronyms.
     /// </summary>
-    public string[] DeviceAcronyms
-    {
-        get => m_deviceAcronyms ??= [];
-        set
-        {
-            m_deviceAcronyms = value;
-            OnPropertyChanged(nameof(DeviceAcronyms));
-        }
-    }
+    public string[] DeviceAcronyms => m_deviceAcronyms ??= ItemsSource?
+        .Select(item => item.Acronym)
+        .ToArray() ?? [];
 
     /// <summary>
     /// Gets or sets protocol id for devices to be configured.
@@ -467,7 +703,7 @@ internal class InputWizardDevices : PagedViewModelBase<InputWizardDevice, string
             {
                 for (int i = 0; i < ItemsSource.Count; i++)
                 {
-                    int indexOfExclamation = m_deviceAcronyms[i].IndexOf('!');
+                    int indexOfExclamation = DeviceAcronyms[i].IndexOf('!');
 
                     if (indexOfExclamation > 0)
                         ItemsSource[i].Acronym = ItemsSource[i].Acronym.Substring(indexOfExclamation + 1);
@@ -783,6 +1019,18 @@ internal class InputWizardDevices : PagedViewModelBase<InputWizardDevice, string
     /// <returns>The string based named identifier of the <see cref="PagedViewModelBase{T1, T2}.CurrentItem"/>.</returns>
     public override string GetCurrentItemName() => CurrentItem.Name;
 
+    /// <inheritdoc/>
+    protected override void OnPropertyChanged(string propertyName)
+    {
+        base.OnPropertyChanged(propertyName);
+
+        if (propertyName == nameof(ItemsSource))
+        {
+            m_deviceAcronyms = null;
+            OnPropertyChanged(nameof(DeviceAcronyms));
+        }
+    }
+
     /// <summary>
     /// Handles BrowseConnectionFileCommand.
     /// </summary>        
@@ -963,19 +1211,32 @@ internal class InputWizardDevices : PagedViewModelBase<InputWizardDevice, string
         {
             PdcFrameRate = m_configurationFrame.FrameRate;
 
+            // UseSourcePrefix may produce a false negative when
+            // updating config for an existing PDC so don't use it here
+            string labelPrefix = $"{m_pdcAcronym}!";
+            MappingQueue mappingQueue = new(Devices, m_configurationFrame.Cells, labelPrefix);
+            Dictionary<IConfigurationCell, Device> mappings = [];
+
+            while (true)
+            {
+                DeviceMapping mapping = mappingQueue.Dequeue();
+                if (mapping is null) break;
+                mappings.Add(mapping.Cell, mapping.Device);
+            }
+
             for (int i = 0; i < m_configurationFrame.Cells.Count; i++)
             {
                 IConfigurationCell cell = m_configurationFrame.Cells[i];
-                Device existingDevice = null;
+
+                if (!mappings.TryGetValue(cell, out Device existingDevice))
+                    existingDevice = null;
+
                 string stationAcronym = cell.StationName?.Replace(" ", "_").Replace("'", "").ToUpper() ?? "UNDEFINED";
                 string stationName = CultureInfo.CurrentUICulture.TextInfo.ToTitleCase(cell.StationName?.ToLower() ?? stationAcronym);
-                string deviceAcronym = i < DeviceAcronyms.Length ? DeviceAcronyms[i] : stationAcronym;
-                int deviceID = i < DeviceIDs.Length ? DeviceIDs[i] : 0;
+                string deviceAcronym = i < DeviceAcronyms.Length ? DeviceAcronyms[i] : (existingDevice?.Acronym ?? stationAcronym);
+                int deviceID = existingDevice?.ID ?? 0;
                 Guid? uniqueID = null;
                 decimal? longitude = null, latitude = null;
-
-                if (string.IsNullOrWhiteSpace(deviceAcronym))
-                    deviceAcronym = stationAcronym;
 
                 if (cell is ConfigurationCell3 configCell3)
                 {
@@ -983,11 +1244,6 @@ internal class InputWizardDevices : PagedViewModelBase<InputWizardDevice, string
                     longitude = configCell3.LongitudeM;
                     latitude = configCell3.LatitudeM;
                 }
-
-                if (deviceID > 0)
-                    existingDevice = Device.GetDevice(null, $"WHERE ID = {deviceID}");
-
-                existingDevice ??= Device.GetDevice(null, $"WHERE Acronym = '{deviceAcronym}'");
 
                 if (existingDevice is null && uniqueID is not null && uniqueID != Guid.Empty)
                 {

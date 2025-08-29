@@ -86,14 +86,14 @@ namespace GSF.PhasorProtocols.UI.UserControls
                 m_dataContext.PdcName = device.Name;
                 m_dataContext.PdcVendorDeviceID = device.VendorDeviceID ?? 0;
 
-                ObservableCollection<Device> devices = Device.GetDevices(null, "WHERE ParentID = " + device.ID);
-                m_dataContext.DeviceIDs = devices.Select(childDevice => childDevice.ID).ToArray();
-                m_dataContext.DeviceAcronyms = devices.Select(childDevice => childDevice.Acronym).ToArray();
+                m_dataContext.Devices = Device
+                    .GetDevices(null, "WHERE ParentID = " + device.ID)
+                    .OrderBy(device => device.LoadOrder)
+                    .ToArray();
             }
             else
             {
-                m_dataContext.DeviceIDs = new[] { device.ID };
-                m_dataContext.DeviceAcronyms = new[] { device.Acronym };
+                m_dataContext.Devices = [device];
             }
 
             m_dataContext.StepTwoExpanded = true;
