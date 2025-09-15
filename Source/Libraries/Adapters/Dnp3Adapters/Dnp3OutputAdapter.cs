@@ -29,6 +29,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using Automatak.DNP3.Adapter;
 using Automatak.DNP3.Interface;
 using GSF;
@@ -52,16 +53,10 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
     #region [ Members ]
 
     // Nested Types
-    private readonly struct PointKey : IEquatable<PointKey>
+    private readonly struct PointKey(PointType type, int index) : IEquatable<PointKey>
     {
-        public readonly PointType Type;
-        public readonly int Index;
-
-        public PointKey(PointType type, int index)
-        {
-            Type = type;
-            Index = index;
-        }
+        public readonly PointType Type = type;
+        public readonly int Index = index;
 
         public bool Equals(PointKey other) => Type == other.Type && Index == other.Index;
 
@@ -75,13 +70,64 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
                 return hash;
             }
         }
+
+        public override bool Equals(object? obj) => obj is PointKey other && Equals(other);
     }
 
-    private record Latest
+    /// <summary>
+    /// Simplified thread-safe cached value for DNP3 point data
+    /// </summary>
+    private sealed class CachedValue(double value, DNPTime timestamp, Flags quality)
     {
-        public double Value;
-        public DNPTime Timestamp;
-        public Flags Flags;
+        private readonly object m_lock = new object();
+
+        private double Value { get; set; } = value;
+        private DNPTime Timestamp { get; set; } = timestamp;
+        private Flags Quality { get; set; } = quality;
+        private long UpdateCounter { get; set; } = 1;
+
+        public void Update(double value, DNPTime timestamp, Flags quality)
+        {
+            lock (m_lock)
+            {
+                Value = value;
+                Timestamp = timestamp;
+                Quality = quality;
+                UpdateCounter++;
+            }
+        }
+
+        public (double Value, DNPTime Timestamp, Flags Quality, long UpdateCounter) GetSnapshot()
+        {
+            lock (m_lock)
+            {
+                return (Value, Timestamp, Quality, UpdateCounter);
+            }
+        }
+    }
+
+    // Custom command handler that populates database with static cached values
+    private sealed class CacheBasedCommandHandler(Dnp3OutputAdapter adapter) : ICommandHandler
+    {
+        public void Begin()
+        {
+            // Populate static data before responding to Class 0 reads
+            adapter.PopulateStaticDatabase();
+        }
+
+        public void End() { }
+
+        // All control operations rejected
+        public CommandStatus Select(ControlRelayOutputBlock command, ushort index) => CommandStatus.NOT_SUPPORTED;
+        public CommandStatus Select(AnalogOutputInt32 command, ushort index) => CommandStatus.NOT_SUPPORTED;
+        public CommandStatus Select(AnalogOutputInt16 command, ushort index) => CommandStatus.NOT_SUPPORTED;
+        public CommandStatus Select(AnalogOutputFloat32 command, ushort index) => CommandStatus.NOT_SUPPORTED;
+        public CommandStatus Select(AnalogOutputDouble64 command, ushort index) => CommandStatus.NOT_SUPPORTED;
+        public CommandStatus Operate(ControlRelayOutputBlock command, ushort index, IDatabase database, OperateType opType) => CommandStatus.NOT_SUPPORTED;
+        public CommandStatus Operate(AnalogOutputInt32 command, ushort index, IDatabase database, OperateType opType) => CommandStatus.NOT_SUPPORTED;
+        public CommandStatus Operate(AnalogOutputInt16 command, ushort index, IDatabase database, OperateType opType) => CommandStatus.NOT_SUPPORTED;
+        public CommandStatus Operate(AnalogOutputFloat32 command, ushort index, IDatabase database, OperateType opType) => CommandStatus.NOT_SUPPORTED;
+        public CommandStatus Operate(AnalogOutputDouble64 command, ushort index, IDatabase database, OperateType opType) => CommandStatus.NOT_SUPPORTED;
     }
 
     private enum PointType
@@ -94,11 +140,14 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
 
     private sealed class PointDef
     {
-        public MeasurementKey Key = MeasurementKey.Undefined;
         public PointType Type;
         public int Index;
         public int Class = 1;
         public double Deadband;
+
+        // Cached last event values for deadband comparison
+        public double LastEventValue;
+        public bool HasLastEventValue;
 
         // Resolved variations (defaults set in BuildDatabase)
         public StaticBinaryVariation StaticVariationBinary;
@@ -109,24 +158,6 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
         public EventAnalogVariation EventVariationAnalog;
         public StaticCounterVariation StaticVariationCounter;
         public EventCounterVariation EventVariationCounter;
-    }
-
-    // Implementation currently rejects control ops
-    private sealed class ReadOnlyCommandHandler : ICommandHandler
-    {
-        public void Begin() { }
-        public void End() { }
-        public CommandStatus Select(ControlRelayOutputBlock command, ushort index) => Reject;
-        public CommandStatus Select(AnalogOutputInt32 command, ushort index) => Reject;
-        public CommandStatus Select(AnalogOutputInt16 command, ushort index) => Reject;
-        public CommandStatus Select(AnalogOutputFloat32 command, ushort index) => Reject;
-        public CommandStatus Select(AnalogOutputDouble64 command, ushort index) => Reject;
-        public CommandStatus Operate(ControlRelayOutputBlock command, ushort index, IDatabase database, OperateType opType) => Reject;
-        public CommandStatus Operate(AnalogOutputInt32 command, ushort index, IDatabase database, OperateType opType) => Reject;
-        public CommandStatus Operate(AnalogOutputInt16 command, ushort index, IDatabase database, OperateType opType) => Reject;
-        public CommandStatus Operate(AnalogOutputFloat32 command, ushort index, IDatabase database, OperateType opType) => Reject;
-        public CommandStatus Operate(AnalogOutputDouble64 command, ushort index, IDatabase database, OperateType opType) => Reject;
-        private static CommandStatus Reject => CommandStatus.NOT_SUPPORTED;
     }
 
     // Constants
@@ -140,6 +171,7 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
     private const int DefaultKeepAliveTimeout = 60000;
     private const string DefaultUnsolClassMask = "false,true,true,true";
     private const bool DefaultMapQualityToStateFlags = true;
+    private const int DefaultStaticUpdateBatchSize = 100;
 
     // Regex for parsing AlternateTag configuration
     // Format: DNP3{Type=Analog;Index=0;Class=1;Deadband=0.001;StaticVar=Group30Var1;EventVar=Group32Var7}
@@ -150,11 +182,15 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
     private IChannel? m_channel;
     private IOutstation? m_outstation;
 
-    // Latest values by DNP3 mapping key
-    private readonly ConcurrentDictionary<PointKey, Latest> m_latest;
-    private readonly ConcurrentDictionary<MeasurementKey, PointDef> m_keyDefinitions;
+    // Static cache for Class 0 reads
+    private readonly ConcurrentDictionary<PointKey, CachedValue> m_staticCache;
+    private readonly ConcurrentDictionary<MeasurementKey, PointDef> m_pointDefinitions;
     private DatabaseTemplate? m_databaseTemplate;
     private readonly bool[] m_unsolClassMask;
+
+    // Statistics tracking
+    private long m_staticUpdatesCount;
+    private long m_eventsGeneratedCount;
     private bool m_disposed;
 
     #endregion
@@ -166,8 +202,8 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
     /// </summary>
     public Dnp3OutputAdapter()
     {
-        m_keyDefinitions = new ConcurrentDictionary<MeasurementKey, PointDef>();
-        m_latest = new ConcurrentDictionary<PointKey, Latest>();
+        m_pointDefinitions = new ConcurrentDictionary<MeasurementKey, PointDef>();
+        m_staticCache = new ConcurrentDictionary<PointKey, CachedValue>();
         m_unsolClassMask = new bool[4];
     }
 
@@ -255,6 +291,29 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
     [DefaultValue(DefaultMapQualityToStateFlags)]
     public bool MapQualityToStateFlags { get; set; }
 
+    /// <summary>
+    /// Gets or sets the batch size for static database updates.
+    /// </summary>
+    [Description("Defines the batch size for static database updates")]
+    [ConnectionStringParameter]
+    [DefaultValue(DefaultStaticUpdateBatchSize)]
+    public int StaticUpdateBatchSize { get; set; }
+
+    /// <summary>
+    /// Gets the count of static cache updates performed.
+    /// </summary>
+    public long StaticUpdatesCount => m_staticUpdatesCount;
+
+    /// <summary>
+    /// Gets the count of events generated.
+    /// </summary>
+    public long EventsGeneratedCount => m_eventsGeneratedCount;
+
+    /// <summary>
+    /// Gets the current size of the static cache.
+    /// </summary>
+    public int StaticCacheSize => m_staticCache.Count;
+
     /// <inheritdoc />
     public override bool OutputIsForArchive => false;
 
@@ -280,7 +339,6 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
                 return;
 
             Shutdown();
-
             s_logHandler.UnregisterAdapter(this);
         }
         finally
@@ -289,6 +347,15 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
             base.Dispose(disposing);
         }
     }
+
+    private void Shutdown()
+    {
+        m_outstation?.Shutdown();
+        m_outstation = null;
+        m_channel?.Shutdown();
+        m_channel = null;
+    }
+
 
     /// <inheritdoc />
     public override void Initialize()
@@ -349,15 +416,15 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
             databaseTemplate = m_databaseTemplate ?? new DatabaseTemplate()
         };
 
-        // Create outstation with initial database template
+        // Create outstation with cache-based command handler and default application
         m_outstation = m_channel.AddOutstation(
             $"gsf-dnp3-outstation:{Name}",
-            new ReadOnlyCommandHandler(),
-            DefaultOutstationApplication.Instance,
+            new CacheBasedCommandHandler(this),
+            DefaultOutstationApplication.Instance, // Using the default implementation
             outstationStackConfig
         );
 
-        m_outstation.Enable(); // begin accepting masters
+        m_outstation.Enable(); // Begin accepting masters
     }
 
     /// <inheritdoc />
@@ -366,18 +433,10 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
         Shutdown();
     }
 
-    private void Shutdown()
-    {
-        m_outstation?.Shutdown();
-        m_outstation = null;
-        m_channel?.Shutdown();
-        m_channel = null;
-    }
-
     /// <inheritdoc />
     public override string GetShortStatus(int maxLength)
     {
-        return $"Published {ProcessedMeasurements:N0} measurements so far...".CenterText(maxLength);
+        return $"Published {ProcessedMeasurements:N0} measurements, static updates: {m_staticUpdatesCount:N0}, events: {m_eventsGeneratedCount:N0}, cache size: {m_staticCache.Count:N0}".CenterText(maxLength);
     }
 
     /// <inheritdoc />
@@ -386,62 +445,279 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
         if (m_outstation is null)
             return;
 
-        // Use ChangeSet for atomic updates
-        ChangeSet changeSet = new();
+        ChangeSet? eventChangeSet = null;
+        int eventCount = 0;
 
-        foreach (IMeasurement m in measurements)
+        // Process measurements for cache updates and event generation
+        foreach (IMeasurement measurement in measurements)
         {
-            if (!m_keyDefinitions.TryGetValue(m.Key, out PointDef? def))
+            if (!m_pointDefinitions.TryGetValue(measurement.Key, out PointDef? pointDef))
                 continue;
 
-            DNPTime tsMs = new(new DateTime(m.Timestamp, DateTimeKind.Utc));
+            // Update static cache and check for events
+            bool eventGenerated = UpdateCacheAndCheckEvent(pointDef, measurement, ref eventChangeSet);
 
-            switch (def.Type)
+            Interlocked.Increment(ref m_staticUpdatesCount);
+
+            if (eventGenerated)
             {
-                case PointType.Analog:
-                {
-                    // Use AdjustedValue which already has GSF scaling applied
-                    Flags qualityFlags = MapAnalogFlags(m);
-                    Analog val = new(m.AdjustedValue, qualityFlags, tsMs);
-                    changeSet.Update(val, (ushort)def.Index);
-                    UpdateLatest(def, m.AdjustedValue, tsMs, qualityFlags);
-                    break;
-                }
-                case PointType.Binary:
-                {
-                    bool v = m.AdjustedValue != 0.0;
-                    Flags qualityFlags = MapBinaryFlags(m, v);
-                    Binary val = new(v, qualityFlags, tsMs);
-                    changeSet.Update(val, (ushort)def.Index);
-                    UpdateLatest(def, v ? 1.0 : 0.0, tsMs, qualityFlags);
-                    break;
-                }
-                case PointType.DoubleBitBinary:
-                {
-                    // Expect values: 0=INTERMEDIATE,1=DETERMINED_OFF,2=DETERMINED_ON,3=INDETERMINATE
-                    DoubleBit state = (DoubleBit)((int)m.AdjustedValue & 0x3);
-                    Flags qualityFlags = MapDoubleBitBinaryFlags(m, state);
-                    DoubleBitBinary val = new(state, qualityFlags, tsMs);
-                    changeSet.Update(val, (ushort)def.Index);
-                    UpdateLatest(def, (int)state, tsMs, qualityFlags);
-                    break;
-                }
-                case PointType.Counter:
-                {
-                    // AdjustedValue should be non-negative integral; clamp as needed
-                    uint count = (uint)Math.Max(0, (long)m.AdjustedValue);
-                    Flags qualityFlags = MapCounterFlags(m);
-                    Counter val = new(count, qualityFlags, tsMs);
-                    changeSet.Update(val, (ushort)def.Index);
-                    UpdateLatest(def, count, tsMs, qualityFlags);
-                    break;
-                }
+                eventCount++;
+                Interlocked.Increment(ref m_eventsGeneratedCount);
             }
         }
 
-        // Apply all updates at once
+        // Publish events if any were generated
+        if (eventChangeSet != null && !eventChangeSet.IsEmpty())
+        {
+            try
+            {
+                m_outstation.Load(eventChangeSet);
+                OnStatusMessage(MessageLevel.Debug, $"Published {eventCount} DNP3 events");
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to publish DNP3 events: {ex.Message}", ex));
+            }
+        }
+    }
+
+    // Updates static cache and generates events if criteria are met
+    private bool UpdateCacheAndCheckEvent(PointDef pointDef, IMeasurement measurement, ref ChangeSet? eventChangeSet)
+    {
+        DNPTime timestamp = new(new DateTime(measurement.Timestamp, DateTimeKind.Utc));
+        PointKey key = new(pointDef.Type, pointDef.Index);
+        bool eventGenerated = false;
+
+        switch (pointDef.Type)
+        {
+            case PointType.Analog:
+            {
+                Flags qualityFlags = MapAnalogFlags(measurement);
+                double value = measurement.AdjustedValue;
+
+                // Check for event before updating cache
+                bool shouldGenerateEvent = ShouldGenerateAnalogEvent(pointDef, value);
+
+                // Update cache
+                m_staticCache.AddOrUpdate(key,
+                    new CachedValue(value, timestamp, qualityFlags),
+                    (_, existing) =>
+                    {
+                        existing.Update(value, timestamp, qualityFlags);
+                        return existing;
+                    });
+
+                if (shouldGenerateEvent)
+                {
+                    eventChangeSet ??= new ChangeSet();
+                    eventChangeSet.Update(new Analog(value, qualityFlags, timestamp), (ushort)pointDef.Index, EventMode.Force);
+                    pointDef.LastEventValue = value;
+                    pointDef.HasLastEventValue = true;
+                    eventGenerated = true;
+                }
+                break;
+            }
+
+            case PointType.Binary:
+            {
+                bool boolValue = measurement.AdjustedValue != 0.0;
+                Flags qualityFlags = MapBinaryFlags(measurement, boolValue);
+                double numericValue = boolValue ? 1.0 : 0.0;
+
+                bool shouldGenerateEvent = ShouldGenerateBinaryEvent(pointDef, numericValue);
+
+                m_staticCache.AddOrUpdate(key,
+                    new CachedValue(numericValue, timestamp, qualityFlags),
+                    (_, existing) =>
+                    {
+                        existing.Update(numericValue, timestamp, qualityFlags);
+                        return existing;
+                    });
+
+                if (shouldGenerateEvent)
+                {
+                    eventChangeSet ??= new ChangeSet();
+                    eventChangeSet.Update(new Binary(boolValue, qualityFlags, timestamp), (ushort)pointDef.Index, EventMode.Force);
+                    pointDef.LastEventValue = numericValue;
+                    pointDef.HasLastEventValue = true;
+                    eventGenerated = true;
+                }
+                break;
+            }
+
+            case PointType.DoubleBitBinary:
+            {
+                DoubleBit state = (DoubleBit)((int)measurement.AdjustedValue & 0x3);
+                Flags qualityFlags = MapDoubleBitBinaryFlags(measurement, state);
+                double numericValue = (int)state;
+
+                bool shouldGenerateEvent = ShouldGenerateDoubleBitEvent(pointDef, numericValue);
+
+                m_staticCache.AddOrUpdate(key,
+                    new CachedValue(numericValue, timestamp, qualityFlags),
+                    (_, existing) =>
+                    {
+                        existing.Update(numericValue, timestamp, qualityFlags);
+                        return existing;
+                    });
+
+                if (shouldGenerateEvent)
+                {
+                    eventChangeSet ??= new ChangeSet();
+                    eventChangeSet.Update(new DoubleBitBinary(state, qualityFlags, timestamp), (ushort)pointDef.Index, EventMode.Force);
+                    pointDef.LastEventValue = numericValue;
+                    pointDef.HasLastEventValue = true;
+                    eventGenerated = true;
+                }
+                break;
+            }
+
+            case PointType.Counter:
+            {
+                uint count = (uint)Math.Max(0, (long)measurement.AdjustedValue);
+                Flags qualityFlags = MapCounterFlags(measurement);
+                double numericValue = count;
+
+                bool shouldGenerateEvent = ShouldGenerateCounterEvent(pointDef, numericValue);
+
+                m_staticCache.AddOrUpdate(key,
+                    new CachedValue(numericValue, timestamp, qualityFlags),
+                    (_, existing) =>
+                    {
+                        existing.Update(numericValue, timestamp, qualityFlags);
+                        return existing;
+                    });
+
+                if (shouldGenerateEvent)
+                {
+                    eventChangeSet ??= new ChangeSet();
+                    eventChangeSet.Update(new Counter(count, qualityFlags, timestamp), (ushort)pointDef.Index, EventMode.Force);
+                    pointDef.LastEventValue = numericValue;
+                    pointDef.HasLastEventValue = true;
+                    eventGenerated = true;
+                }
+                break;
+            }
+        }
+
+        return eventGenerated;
+    }
+
+    // Event generation logic simplified and moved to separate methods
+    private bool ShouldGenerateAnalogEvent(PointDef pointDef, double newValue)
+    {
+        if (!pointDef.HasLastEventValue)
+            return true; // First measurement always generates event
+
+        double deltaValue = Math.Abs(newValue - pointDef.LastEventValue);
+        return deltaValue >= pointDef.Deadband;
+    }
+
+    private bool ShouldGenerateBinaryEvent(PointDef pointDef, double newValue)
+    {
+        if (!pointDef.HasLastEventValue)
+            return true;
+
+        // Event on logical state change
+        bool currentState = pointDef.LastEventValue != 0.0;
+        bool newState = newValue != 0.0;
+        return currentState != newState;
+    }
+
+    private bool ShouldGenerateDoubleBitEvent(PointDef pointDef, double newValue)
+    {
+        if (!pointDef.HasLastEventValue)
+            return true;
+
+        // Event on state change
+        return Math.Abs(newValue - pointDef.LastEventValue) > 0.001; // Small tolerance for double comparison
+    }
+
+    private bool ShouldGenerateCounterEvent(PointDef pointDef, double newValue)
+    {
+        if (!pointDef.HasLastEventValue)
+            return true;
+
+        uint currentCount = (uint)Math.Max(0, (long)pointDef.LastEventValue);
+        uint newCount = (uint)Math.Max(0, (long)newValue);
+
+        // Check for rollover (newValue < currentValue)
+        if (newCount < currentCount)
+            return true;
+
+        // Check for increment >= deadband
+        uint increment = newCount - currentCount;
+        return increment >= pointDef.Deadband;
+    }
+
+    /// <summary>
+    /// Populates the DNP3 outstation database with current static cached values.
+    /// Called before Class 0 reads to ensure fresh data.
+    /// </summary>
+    internal void PopulateStaticDatabase()
+    {
+        if (m_outstation is null)
+            return;
+
+        ChangeSet changeSet = new();
+        int updateCount = 0;
+
+        // Efficiently populate from static cache
+        foreach (KeyValuePair<PointKey, CachedValue> kvp in m_staticCache)
+        {
+            PointKey pointKey = kvp.Key;
+            CachedValue cachedValue = kvp.Value;
+            (double value, DNPTime timestamp, Flags flags, _) = cachedValue.GetSnapshot();
+
+            switch (pointKey.Type)
+            {
+                case PointType.Analog:
+                    changeSet.Update(new Analog(value, flags, timestamp), (ushort)pointKey.Index);
+                    break;
+                case PointType.Binary:
+                    changeSet.Update(new Binary(value != 0.0, flags, timestamp), (ushort)pointKey.Index);
+                    break;
+                case PointType.DoubleBitBinary:
+                    changeSet.Update(new DoubleBitBinary((DoubleBit)((int)value & 0x3), flags, timestamp), (ushort)pointKey.Index);
+                    break;
+                case PointType.Counter:
+                    changeSet.Update(new Counter((uint)value, flags, timestamp), (ushort)pointKey.Index);
+                    break;
+            }
+
+            updateCount++;
+
+            // Apply in batches to avoid overwhelming the DNP3 stack
+            if (updateCount >= StaticUpdateBatchSize)
+            {
+                m_outstation.Load(changeSet);
+                changeSet.Clear();
+                updateCount = 0;
+            }
+        }
+
+        // Apply any remaining updates
         if (!changeSet.IsEmpty())
             m_outstation.Load(changeSet);
+    }
+
+    /// <summary>
+    /// Clears the static cache and resets statistics.
+    /// </summary>
+    [AdapterCommand("Clears the static cache and resets statistics")]
+    public void ClearStaticCache()
+    {
+        m_staticCache.Clear();
+
+        // Reset event state for all point definitions
+        foreach (PointDef pointDef in m_pointDefinitions.Values)
+        {
+            pointDef.HasLastEventValue = false;
+            pointDef.LastEventValue = 0.0;
+        }
+
+        Interlocked.Exchange(ref m_staticUpdatesCount, 0);
+        Interlocked.Exchange(ref m_eventsGeneratedCount, 0);
     }
 
     private void BuildDatabase()
@@ -496,7 +772,6 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
 
             PointDef definition = new()
             {
-                Key = key,
                 Type = type,
                 Index = index,
                 Class = classNum,
@@ -560,7 +835,7 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
                     break;
             }
 
-            m_keyDefinitions[key] = definition;
+            m_pointDefinitions[key] = definition;
         }
 
         m_databaseTemplate = template;
@@ -729,16 +1004,6 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
             qualityFlags |= LOCAL_FORCED;
 
         return qualityFlags;
-    }
-
-    private void UpdateLatest(PointDef pointDef, double value, DNPTime timestamp, Flags flags)
-    {
-        m_latest[new PointKey(pointDef.Type, pointDef.Index)] = new Latest
-        {
-            Value = value,
-            Timestamp = timestamp,
-            Flags = flags
-        };
     }
 
     void IDnp3Adapter.OnProcessException(MessageLevel level, Exception exception)
