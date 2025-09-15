@@ -22,6 +22,7 @@
 //******************************************************************************************************
 // ReSharper disable InconsistentNaming
 // ReSharper disable RedundantSwitchExpressionArms
+// ReSharper disable PreferConcreteValueOverDefault
 
 using System;
 using System.Collections.Concurrent;
@@ -44,6 +45,29 @@ using ConnectionStringParser = GSF.Configuration.ConnectionStringParser<GSF.Time
 #nullable enable
 
 namespace DNP3Adapters;
+
+/// <summary>
+/// DNP3 log levels.
+/// </summary>
+public enum LogLevel
+{
+    /// <summary>
+    /// No logging.
+    /// </summary>
+    None,
+    /// <summary>
+    /// All log messages.
+    /// </summary>
+    All,
+    /// <summary>
+    /// Normal log messages.
+    /// </summary>
+    Normal,
+    /// <summary>
+    /// Application communications log messages.
+    /// </summary>
+    AppComms
+}
 
 /// <summary>
 /// Output adapter that sends measurements to a remote DNP3 endpoint.
@@ -151,31 +175,51 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
         }
     }
 
-    // Custom command handler that populates initial database with static cached values
-    private sealed class CacheBasedCommandHandler(Dnp3OutputAdapter adapter) : ICommandHandler
+    // Implementation currently rejects control ops
+    private sealed class ReadOnlyCommandHandler : ICommandHandler
     {
-        public void Begin()
-        {
-            adapter.PopulateStaticDatabase();
-        }
-
+        public void Begin() { }
         public void End() { }
+        public CommandStatus Select(ControlRelayOutputBlock command, ushort index) => Reject;
+        public CommandStatus Select(AnalogOutputInt32 command, ushort index) => Reject;
+        public CommandStatus Select(AnalogOutputInt16 command, ushort index) => Reject;
+        public CommandStatus Select(AnalogOutputFloat32 command, ushort index) => Reject;
+        public CommandStatus Select(AnalogOutputDouble64 command, ushort index) => Reject;
+        public CommandStatus Operate(ControlRelayOutputBlock command, ushort index, IDatabase database, OperateType opType) => Reject;
+        public CommandStatus Operate(AnalogOutputInt32 command, ushort index, IDatabase database, OperateType opType) => Reject;
+        public CommandStatus Operate(AnalogOutputInt16 command, ushort index, IDatabase database, OperateType opType) => Reject;
+        public CommandStatus Operate(AnalogOutputFloat32 command, ushort index, IDatabase database, OperateType opType) => Reject;
+        public CommandStatus Operate(AnalogOutputDouble64 command, ushort index, IDatabase database, OperateType opType) => Reject;
+        private static CommandStatus Reject => CommandStatus.NOT_SUPPORTED;
+    }
 
-        // All control operations rejected
-        public CommandStatus Select(ControlRelayOutputBlock command, ushort index) => CommandStatus.NOT_SUPPORTED;
-        public CommandStatus Select(AnalogOutputInt32 command, ushort index) => CommandStatus.NOT_SUPPORTED;
-        public CommandStatus Select(AnalogOutputInt16 command, ushort index) => CommandStatus.NOT_SUPPORTED;
-        public CommandStatus Select(AnalogOutputFloat32 command, ushort index) => CommandStatus.NOT_SUPPORTED;
-        public CommandStatus Select(AnalogOutputDouble64 command, ushort index) => CommandStatus.NOT_SUPPORTED;
-        public CommandStatus Operate(ControlRelayOutputBlock command, ushort index, IDatabase database, OperateType opType) => CommandStatus.NOT_SUPPORTED;
-        public CommandStatus Operate(AnalogOutputInt32 command, ushort index, IDatabase database, OperateType opType) => CommandStatus.NOT_SUPPORTED;
-        public CommandStatus Operate(AnalogOutputInt16 command, ushort index, IDatabase database, OperateType opType) => CommandStatus.NOT_SUPPORTED;
-        public CommandStatus Operate(AnalogOutputFloat32 command, ushort index, IDatabase database, OperateType opType) => CommandStatus.NOT_SUPPORTED;
-        public CommandStatus Operate(AnalogOutputDouble64 command, ushort index, IDatabase database, OperateType opType) => CommandStatus.NOT_SUPPORTED;
+    private sealed class GSFOutstationApplication(Dnp3OutputAdapter adapter) : IOutstationApplication
+    {
+        void ILinkStatusListener.OnStateChange(LinkStatus value) => adapter.OnStatusMessage(MessageLevel.Info, $"Link state changed to: {value}");
+        void ILinkStatusListener.OnUnknownDestinationAddress(ushort destination) => adapter.OnStatusMessage(MessageLevel.Warning, $"Unknown destination address: {destination}");
+        void ILinkStatusListener.OnUnknownSourceAddress(ushort source) => adapter.OnStatusMessage(MessageLevel.Warning, $"Unknown source address: {source}");
+        void ILinkStatusListener.OnKeepAliveInitiated() => adapter.OnStatusMessage(MessageLevel.Debug, "Keep alive initiated");
+        void ILinkStatusListener.OnKeepAliveFailure() => adapter.OnStatusMessage(MessageLevel.Warning, "Keep alive failure");
+        void ILinkStatusListener.OnKeepAliveSuccess() => adapter.OnStatusMessage(MessageLevel.Debug, "Keep alive success");
+
+        bool IOutstationApplication.SupportsWriteAbsoluteTime => false;
+        bool IOutstationApplication.WriteAbsoluteTime(ulong millisecSinceEpoch) => false;
+        bool IOutstationApplication.SupportsWriteTimeAndInterval() => false;
+        bool IOutstationApplication.WriteTimeAndInterval(IEnumerable<IndexedValue<TimeAndInterval>> values) => false;
+        bool IOutstationApplication.SupportsAssignClass() => false;
+        void IOutstationApplication.RecordClassAssignment(AssignClassType type, PointClass clazz, ushort start, ushort stop) { }
+        ApplicationIIN IOutstationApplication.ApplicationIndications => new();
+        RestartMode IOutstationApplication.ColdRestartSupport => RestartMode.UNSUPPORTED;
+        RestartMode IOutstationApplication.WarmRestartSupport => RestartMode.UNSUPPORTED;
+        ushort IOutstationApplication.ColdRestart() => ushort.MaxValue;
+        ushort IOutstationApplication.WarmRestart() => ushort.MaxValue;
+        void IOutstationApplication.OnConfirmProcessed(bool is_unsolicited, uint num_class1, uint num_class2, uint num_class3) => adapter.OnStatusMessage(MessageLevel.Debug, $"Confirm processed - Unsolicited: {is_unsolicited}, Class1: {num_class1}, Class2: {num_class2}, Class3: {num_class3}");
+
+        DNPTime IDnpTimeSource.Now() => DNPTime.Now;
     }
 
     // Constants
-    private const ushort DefaultPort = 20000;
+    private const string DefaultPort = "20000";
     private const string DefaultInterface = "0.0.0.0";
     private const bool DefaultAllowUnsolicited = true;
     private const bool DefaultIsMaster = false;
@@ -184,8 +228,9 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
     private const int DefaultResponseTimeout = 1000;
     private const int DefaultKeepAliveTimeout = 60000;
     private const string DefaultUnsolicitedClassMask = "false,true,true,true";
-    private const bool DefaultMapQualityToStateFlags = true;
+    private const bool DefaultMapStateFlagsToQuality = true;
     private const int DefaultStaticUpdateBatchSize = 100;
+    private const string DefaultLogLevel = "Normal";
 
     // Regex for parsing AlternateTag configuration
     // Format: DNP3{Type=Analog;Index=0;Class=1;Deadband=0.001;StaticVar=Group30Var1;EventVar=Group32Var7}
@@ -232,7 +277,7 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
     /// </summary>
     [Description("Defines the port the DNP3 adapter will listen for master connections on")]
     [ConnectionStringParameter]
-    [DefaultValue(DefaultPort)]
+    [DefaultValue(typeof(ushort), DefaultPort)]
     public ushort Port { get; set; }
 
     /// <summary>
@@ -241,7 +286,7 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
     [Description("Defines the IP address of the interface the DNP3 adapter will bind to for listening for master connections")]
     [ConnectionStringParameter]
     [DefaultValue(DefaultInterface)]
-    public string Interface { get; set; } = string.Empty;
+    public string Interface { get; set; } = default!;
 
     /// <summary>
     /// Gets or sets a flag that determines if unsolicited responses are allowed.
@@ -297,15 +342,15 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
     [Description("Defines the unsolicited class mask. Format is four comma separated booleans, e.g.: false, true, true, true")]
     [ConnectionStringParameter]
     [DefaultValue(DefaultUnsolicitedClassMask)]
-    public string UnsolicitedClassMask { get; set; } = string.Empty;
+    public string UnsolicitedClassMask { get; set; } = default!;
 
     /// <summary>
     /// Gets or sets flag that determines if GSF measurement state flags should be mapped to DNP3 quality flags.
     /// </summary>
     [Description("Define flag that determines if GSF measurement state flags should be mapped to DNP3 quality flags.")]
     [ConnectionStringParameter]
-    [DefaultValue(DefaultMapQualityToStateFlags)]
-    public bool MapQualityToStateFlags { get; set; }
+    [DefaultValue(DefaultMapStateFlagsToQuality)]
+    public bool MapStateFlagsToQuality { get; set; }
 
     /// <summary>
     /// Gets or sets the batch size for static database updates.
@@ -314,6 +359,14 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
     [ConnectionStringParameter]
     [DefaultValue(DefaultStaticUpdateBatchSize)]
     public int StaticUpdateBatchSize { get; set; }
+
+    /// <summary>
+    /// Gets or sets the DNP3 log level for the server connection.
+    /// </summary>
+    [Description("Defines the DNP3 log level for the server connection")]
+    [ConnectionStringParameter]
+    [DefaultValue(typeof(LogLevel), DefaultLogLevel)]
+    public LogLevel LogLevel { get; set; }
 
     /// <summary>
     /// Gets the count of static cache updates performed.
@@ -411,7 +464,7 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
         // TCP server channel (listener)
         m_channel = s_manager.AddTCPServer(
             $"gsf-dnp3-outstation:{Name}",
-            filters: 0,
+            getLogLevel(),
             ServerAcceptMode.CloseExisting,
             new IPEndpoint(Interface, Port),
             listener: null
@@ -446,12 +499,28 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
         // Create outstation with cache-based command handler and default application
         m_outstation = m_channel.AddOutstation(
             $"gsf-dnp3-outstation:{Name}",
-            new CacheBasedCommandHandler(this),
-            DefaultOutstationApplication.Instance, // Using the default implementation
+            new ReadOnlyCommandHandler(),
+            new GSFOutstationApplication(this),
             outstationStackConfig
         );
 
         m_outstation.Enable(); // Begin accepting masters
+
+        InitializeStaticDatabase();
+        
+        return;
+
+        uint getLogLevel()
+        {
+            return LogLevel switch 
+            {
+                LogLevel.None => LogLevels.NONE,
+                LogLevel.All => LogLevels.ALL,
+                LogLevel.Normal => LogLevels.NORMAL,
+                LogLevel.AppComms => LogLevels.APP_COMMS,
+                _ => LogLevels.NORMAL
+            };
+        }
     }
 
     /// <inheritdoc />
@@ -481,7 +550,7 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
         lock (m_outstationLoadLock)
         {
             m_databaseInitialized = false;
-            PopulateStaticDatabase();
+            InitializeStaticDatabase();
         }
     }
 
@@ -567,7 +636,7 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
             }
         );
 
-        if (measurement.Timestamp < cachedValue.Timestamp || !shouldGenerateEvent(deadband, value, cachedValue))
+        if (measurement.Timestamp <= cachedValue.Timestamp || !shouldGenerateEvent(deadband, value, cachedValue))
             return false;
         
         eventChangeSet.Update(new Analog(value, qualityFlags, timestamp), key.Index, EventMode.Force);
@@ -576,8 +645,8 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
 
         Flags mapQualityFlags()
         {
-            if (!MapQualityToStateFlags)
-                return new Flags();
+            if (!MapStateFlagsToQuality)
+                return new Flags((byte)AnalogQuality.ONLINE);
 
             byte flags = MapCommonStateFlags(measurement.StateFlags);
             MeasurementStateFlags stateFlags = measurement.StateFlags;
@@ -621,7 +690,7 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
             }
         );
 
-        if (measurement.Timestamp < cachedValue.Timestamp || !shouldGenerateEvent(numericValue, cachedValue))
+        if (measurement.Timestamp <= cachedValue.Timestamp || !shouldGenerateEvent(numericValue, cachedValue))
             return false;
 
         eventChangeSet.Update(new Binary(boolValue, qualityFlags, timestamp), key.Index, EventMode.Force);
@@ -630,8 +699,8 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
         
         Flags mapQualityFlags()
         {
-            if (!MapQualityToStateFlags)
-                return new Flags();
+            if (!MapStateFlagsToQuality)
+                return new Flags((byte)BinaryQuality.ONLINE);
 
             byte flags = MapCommonStateFlags(measurement.StateFlags);
             MeasurementStateFlags stateFlags = measurement.StateFlags;
@@ -677,7 +746,7 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
             }
         );
 
-        if (measurement.Timestamp < cachedValue.Timestamp || !shouldGenerateEvent(numericValue, cachedValue))
+        if (measurement.Timestamp <= cachedValue.Timestamp || !shouldGenerateEvent(numericValue, cachedValue))
             return false;
         
         eventChangeSet.Update(new DoubleBitBinary(state, qualityFlags, timestamp), key.Index, EventMode.Force);
@@ -686,8 +755,8 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
 
         Flags mapQualityFlags()
         {
-            if (!MapQualityToStateFlags)
-                return new Flags();
+            if (!MapStateFlagsToQuality)
+                return new Flags((byte)DoubleBitBinaryQuality.ONLINE);
 
             byte flags = MapCommonStateFlags(measurement.StateFlags);
             MeasurementStateFlags stateFlags = measurement.StateFlags;
@@ -731,7 +800,7 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
             }
         );
 
-        if (measurement.Timestamp < cachedValue.Timestamp || !shouldGenerateEvent(deadband, numericValue, cachedValue))
+        if (measurement.Timestamp <= cachedValue.Timestamp || !shouldGenerateEvent(deadband, numericValue, cachedValue))
             return false;
         
         eventChangeSet.Update(new Counter(count, qualityFlags, timestamp), key.Index, EventMode.Force);
@@ -740,8 +809,8 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
 
         Flags mapQualityFlags()
         {
-            if (!MapQualityToStateFlags)
-                return new Flags();
+            if (!MapStateFlagsToQuality)
+                return new Flags((byte)CounterQuality.ONLINE);
 
             byte flags = MapCommonStateFlags(measurement.StateFlags);
             MeasurementStateFlags stateFlags = measurement.StateFlags;
@@ -778,7 +847,7 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
         }
     }
 
-    private void PopulateStaticDatabase()
+    private void InitializeStaticDatabase()
     {
         // Only populate with defaults on first initialization
         if (m_databaseInitialized)
