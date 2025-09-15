@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 // ReSharper disable InconsistentNaming
+// ReSharper disable RedundantSwitchExpressionArms
 
 using System;
 using System.Collections.Concurrent;
@@ -74,12 +75,10 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
         public override bool Equals(object? obj) => obj is PointKey other && Equals(other);
     }
 
-    /// <summary>
-    /// Simplified thread-safe cached value for DNP3 point data
-    /// </summary>
+    // Simplified thread-safe cached value for DNP3 point data
     private sealed class CachedValue(double value, DNPTime timestamp, Flags quality)
     {
-        private readonly object m_lock = new object();
+        private readonly object m_lock = new();
 
         private double Value { get; set; } = value;
         private DNPTime Timestamp { get; set; } = timestamp;
@@ -356,7 +355,6 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
         m_channel = null;
     }
 
-
     /// <inheritdoc />
     public override void Initialize()
     {
@@ -390,7 +388,7 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
         // TCP server channel (listener)
         m_channel = s_manager.AddTCPServer(
             $"gsf-dnp3-outstation:{Name}",
-            0,
+            filters: 0,
             ServerAcceptMode.CloseExisting,
             new IPEndpoint(Interface, Port),
             listener: null
@@ -412,7 +410,13 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
                     ))
                 }
             },
-            link = new LinkConfig(IsMaster, LocalAddress, RemoteAddress, TimeSpan.FromMilliseconds(ResponseTimeout), TimeSpan.FromMilliseconds(KeepAliveTimeout)),
+            link = new LinkConfig(
+                IsMaster, 
+                LocalAddress, 
+                RemoteAddress, 
+                TimeSpan.FromMilliseconds(ResponseTimeout), 
+                TimeSpan.FromMilliseconds(KeepAliveTimeout)
+            ),
             databaseTemplate = m_databaseTemplate ?? new DatabaseTemplate()
         };
 
@@ -459,25 +463,25 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
 
             Interlocked.Increment(ref m_staticUpdatesCount);
 
-            if (eventGenerated)
-            {
-                eventCount++;
-                Interlocked.Increment(ref m_eventsGeneratedCount);
-            }
+            if (!eventGenerated)
+                continue;
+            
+            eventCount++;
+            Interlocked.Increment(ref m_eventsGeneratedCount);
         }
 
         // Publish events if any were generated
-        if (eventChangeSet != null && !eventChangeSet.IsEmpty())
+        if (eventChangeSet == null || eventChangeSet.IsEmpty())
+            return;
+        
+        try
         {
-            try
-            {
-                m_outstation.Load(eventChangeSet);
-                OnStatusMessage(MessageLevel.Debug, $"Published {eventCount} DNP3 events");
-            }
-            catch (Exception ex)
-            {
-                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to publish DNP3 events: {ex.Message}", ex));
-            }
+            m_outstation.Load(eventChangeSet);
+            OnStatusMessage(MessageLevel.Debug, $"Published {eventCount:N0} DNP3 events");
+        }
+        catch (Exception ex)
+        {
+            OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to publish DNP3 events: {ex.Message}", ex));
         }
     }
 
@@ -505,7 +509,8 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
                     {
                         existing.Update(value, timestamp, qualityFlags);
                         return existing;
-                    });
+                    }
+                );
 
                 if (shouldGenerateEvent)
                 {
@@ -532,7 +537,8 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
                     {
                         existing.Update(numericValue, timestamp, qualityFlags);
                         return existing;
-                    });
+                    }
+                );
 
                 if (shouldGenerateEvent)
                 {
@@ -559,7 +565,8 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
                     {
                         existing.Update(numericValue, timestamp, qualityFlags);
                         return existing;
-                    });
+                    }
+                );
 
                 if (shouldGenerateEvent)
                 {
@@ -586,7 +593,8 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
                     {
                         existing.Update(numericValue, timestamp, qualityFlags);
                         return existing;
-                    });
+                    }
+                );
 
                 if (shouldGenerateEvent)
                 {
@@ -662,34 +670,57 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
         ChangeSet changeSet = new();
         int updateCount = 0;
 
-        // Efficiently populate from static cache
-        foreach (KeyValuePair<PointKey, CachedValue> kvp in m_staticCache)
+        // If cache has data, use it; otherwise populate with default values
+        if (m_staticCache.Count > 0)
         {
-            PointKey pointKey = kvp.Key;
-            CachedValue cachedValue = kvp.Value;
-            (double value, DNPTime timestamp, Flags flags, _) = cachedValue.GetSnapshot();
-
-            switch (pointKey.Type)
+            // Populate from cached values
+            foreach (KeyValuePair<PointKey, CachedValue> kvp in m_staticCache)
             {
-                case PointType.Analog:
-                    changeSet.Update(new Analog(value, flags, timestamp), (ushort)pointKey.Index);
-                    break;
-                case PointType.Binary:
-                    changeSet.Update(new Binary(value != 0.0, flags, timestamp), (ushort)pointKey.Index);
-                    break;
-                case PointType.DoubleBitBinary:
-                    changeSet.Update(new DoubleBitBinary((DoubleBit)((int)value & 0x3), flags, timestamp), (ushort)pointKey.Index);
-                    break;
-                case PointType.Counter:
-                    changeSet.Update(new Counter((uint)value, flags, timestamp), (ushort)pointKey.Index);
-                    break;
+                PointKey pointKey = kvp.Key;
+                CachedValue cachedValue = kvp.Value;
+                (double value, DNPTime timestamp, Flags flags, _) = cachedValue.GetSnapshot();
+
+                AddToChangeSet(changeSet, pointKey, value, timestamp, flags);
+                updateCount++;
+
+                // Apply in batches to avoid overwhelming the DNP3 stack
+                if (updateCount < StaticUpdateBatchSize)
+                    continue;
+                
+                m_outstation.Load(changeSet);
+                changeSet.Clear();
+                updateCount = 0;
             }
+        }
+        else
+        {
+            // Cache is empty - populate with default values and appropriate quality flags
+            // This handles the case where PopulateStaticDatabase is called before any measurements arrive
+            DNPTime defaultTime = DNPTime.Now;
 
-            updateCount++;
-
-            // Apply in batches to avoid overwhelming the DNP3 stack
-            if (updateCount >= StaticUpdateBatchSize)
+            foreach (PointDef pointDef in m_pointDefinitions.Values)
             {
+                PointKey pointKey = new(pointDef.Type, pointDef.Index);
+
+                // Create flags indicating data is not yet available (RESTART + not ONLINE)
+                Flags defaultFlags = new((byte)Bits.Bit01);
+
+                // Use default values appropriate for each type
+                double defaultValue = pointDef.Type switch
+                {
+                    PointType.Binary => 0.0,
+                    PointType.DoubleBitBinary => (double)DoubleBit.INDETERMINATE,
+                    PointType.Analog => 0.0,
+                    PointType.Counter => 0.0,
+                    _ => 0.0
+                };
+
+                AddToChangeSet(changeSet, pointKey, defaultValue, defaultTime, defaultFlags);
+                updateCount++;
+
+                if (updateCount < StaticUpdateBatchSize)
+                    continue;
+                
                 m_outstation.Load(changeSet);
                 changeSet.Clear();
                 updateCount = 0;
@@ -702,9 +733,30 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
     }
 
     /// <summary>
+    /// Helper method to add values to ChangeSet based on point type
+    /// </summary>
+    private static void AddToChangeSet(ChangeSet changeSet, PointKey pointKey, double value, DNPTime timestamp, Flags flags)
+    {
+        switch (pointKey.Type)
+        {
+            case PointType.Analog:
+                changeSet.Update(new Analog(value, flags, timestamp), (ushort)pointKey.Index);
+                break;
+            case PointType.Binary:
+                changeSet.Update(new Binary(value != 0.0, flags, timestamp), (ushort)pointKey.Index);
+                break;
+            case PointType.DoubleBitBinary:
+                changeSet.Update(new DoubleBitBinary((DoubleBit)((int)value & 0x3), flags, timestamp), (ushort)pointKey.Index);
+                break;
+            case PointType.Counter:
+                changeSet.Update(new Counter((uint)value, flags, timestamp), (ushort)pointKey.Index);
+                break;
+        }
+    }
+
+    /// <summary>
     /// Clears the static cache and resets statistics.
     /// </summary>
-    [AdapterCommand("Clears the static cache and resets statistics")]
     public void ClearStaticCache()
     {
         m_staticCache.Clear();
