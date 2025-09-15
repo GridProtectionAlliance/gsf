@@ -22,6 +22,7 @@
 //******************************************************************************************************
 // ReSharper disable InconsistentNaming
 // ReSharper disable RedundantSwitchExpressionArms
+// ReSharper disable UnusedTupleComponentInReturnValue
 
 using System;
 using System.Collections.Concurrent;
@@ -79,29 +80,26 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
     private sealed class CachedValue(double value, DNPTime timestamp, Flags quality)
     {
         private readonly object m_lock = new();
-
-        private double Value { get; set; } = value;
-        private DNPTime Timestamp { get; set; } = timestamp;
-        private Flags Quality { get; set; } = quality;
-        private long UpdateCounter { get; set; } = 1;
+        private double m_value = value;
+        private DNPTime m_timestamp = timestamp;
+        private Flags m_quality = quality;
+        private long m_updateCounter = 1;
 
         public void Update(double value, DNPTime timestamp, Flags quality)
         {
             lock (m_lock)
             {
-                Value = value;
-                Timestamp = timestamp;
-                Quality = quality;
-                UpdateCounter++;
+                m_value = value;
+                m_timestamp = timestamp;
+                m_quality = quality;
+                m_updateCounter++;
             }
         }
 
         public (double Value, DNPTime Timestamp, Flags Quality, long UpdateCounter) GetSnapshot()
         {
             lock (m_lock)
-            {
-                return (Value, Timestamp, Quality, UpdateCounter);
-            }
+                return (m_value, m_timestamp, m_quality, m_updateCounter);
         }
     }
 
@@ -110,7 +108,6 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
     {
         public void Begin()
         {
-            // Populate static data before responding to Class 0 reads
             adapter.PopulateStaticDatabase();
         }
 
@@ -139,14 +136,50 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
 
     private sealed class PointDef
     {
+        private readonly object m_lock = new();
+        private double m_lastEventValue;
+        private bool m_hasLastEventValue;
+
         public PointType Type;
         public int Index;
         public int Class = 1;
         public double Deadband;
 
-        // Cached last event values for deadband comparison
-        public double LastEventValue;
-        public bool HasLastEventValue;
+        public double LastEventValue
+        {
+            get
+            {
+                lock (m_lock)
+                    return m_lastEventValue;
+            }
+        }
+
+        public bool HasLastEventValue
+        {
+            get
+            {
+                lock (m_lock) 
+                    return m_hasLastEventValue;
+            }
+        }
+
+        public void SetLastEventValue(double value)
+        {
+            lock (m_lock)
+            {
+                m_lastEventValue = value;
+                m_hasLastEventValue = true;
+            }
+        }
+
+        public void ResetLastEventValue()
+        {
+            lock (m_lock)
+            {
+                m_lastEventValue = 0.0D;
+                m_hasLastEventValue = false;
+            }
+        }
 
         // Resolved variations (defaults set in BuildDatabase)
         public StaticBinaryVariation StaticVariationBinary;
@@ -168,14 +201,13 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
     private const string DefaultRemoteAddress = "1";
     private const int DefaultResponseTimeout = 1000;
     private const int DefaultKeepAliveTimeout = 60000;
-    private const string DefaultUnsolClassMask = "false,true,true,true";
+    private const string DefaultUnsolicitedClassMask = "false,true,true,true";
     private const bool DefaultMapQualityToStateFlags = true;
     private const int DefaultStaticUpdateBatchSize = 100;
 
     // Regex for parsing AlternateTag configuration
     // Format: DNP3{Type=Analog;Index=0;Class=1;Deadband=0.001;StaticVar=Group30Var1;EventVar=Group32Var7}
     private static readonly Regex s_alternateTagRegex = new(@"^DNP3\{(?<config>[^}]+)\}$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-    private static readonly Regex s_configItemRegex = new(@"(?<key>\w+)=(?<value>[^;]+)", RegexOptions.Compiled);
 
     // Fields
     private IChannel? m_channel;
@@ -185,7 +217,7 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
     private readonly ConcurrentDictionary<PointKey, CachedValue> m_staticCache;
     private readonly ConcurrentDictionary<MeasurementKey, PointDef> m_pointDefinitions;
     private DatabaseTemplate? m_databaseTemplate;
-    private readonly bool[] m_unsolClassMask;
+    private readonly bool[] m_unsolicitedClassMask;
 
     // Statistics tracking
     private long m_staticUpdatesCount;
@@ -203,7 +235,7 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
     {
         m_pointDefinitions = new ConcurrentDictionary<MeasurementKey, PointDef>();
         m_staticCache = new ConcurrentDictionary<PointKey, CachedValue>();
-        m_unsolClassMask = new bool[4];
+        m_unsolicitedClassMask = new bool[4];
     }
 
     #endregion
@@ -279,8 +311,8 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
     /// </summary>
     [Description("Defines the unsolicited class mask. Format is four comma separated booleans, e.g.: false, true, true, true")]
     [ConnectionStringParameter]
-    [DefaultValue(DefaultUnsolClassMask)]
-    public string UnsolClassMask { get; set; } = string.Empty;
+    [DefaultValue(DefaultUnsolicitedClassMask)]
+    public string UnsolicitedClassMask { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets flag that determines if GSF measurement state flags should be mapped to DNP3 quality flags.
@@ -362,18 +394,18 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
 
         base.Initialize();
 
-        if (string.IsNullOrWhiteSpace(UnsolClassMask))
-            UnsolClassMask = DefaultUnsolClassMask;
+        if (string.IsNullOrWhiteSpace(UnsolicitedClassMask))
+            UnsolicitedClassMask = DefaultUnsolicitedClassMask;
 
-        bool[] defaultMasks = DefaultUnsolClassMask.Split(',').Select(bool.Parse).ToArray();
-        string[] configuredMasks = UnsolClassMask.Split(',');
+        bool[] defaultMasks = DefaultUnsolicitedClassMask.Split(',').Select(bool.Parse).ToArray();
+        string[] configuredMasks = UnsolicitedClassMask.Split(',');
 
         for (int i = 0; i < 4; i++)
         {
             if (i <= configuredMasks.Length - 1)
-                m_unsolClassMask[i] = configuredMasks[i].ParseBoolean();
+                m_unsolicitedClassMask[i] = configuredMasks[i].ParseBoolean();
             else
-                m_unsolClassMask[i] = defaultMasks[i];
+                m_unsolicitedClassMask[i] = defaultMasks[i];
         }
 
         // Build mapping and database template from OutputMeasurements
@@ -403,10 +435,10 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
                 {
                     allowUnsolicited = AllowUnsolicited,
                     unsolClassMask = new ClassField((byte)(
-                        (byte)(m_unsolClassMask[0] ? PointClass.Class0 : 0) |
-                        (byte)(m_unsolClassMask[1] ? PointClass.Class1 : 0) |
-                        (byte)(m_unsolClassMask[2] ? PointClass.Class2 : 0) |
-                        (byte)(m_unsolClassMask[3] ? PointClass.Class3 : 0)
+                        (byte)(m_unsolicitedClassMask[0] ? PointClass.Class0 : 0) |
+                        (byte)(m_unsolicitedClassMask[1] ? PointClass.Class1 : 0) |
+                        (byte)(m_unsolicitedClassMask[2] ? PointClass.Class2 : 0) |
+                        (byte)(m_unsolicitedClassMask[3] ? PointClass.Class3 : 0)
                     ))
                 }
             },
@@ -435,6 +467,22 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
     protected override void AttemptDisconnection()
     {
         Shutdown();
+    }
+
+    /// <summary>
+    /// Clears the static cache and resets statistics.
+    /// </summary>
+    [AdapterCommand("Clears the static cache and resets statistics", "Administrator", "Editor")]
+    public void ClearStaticCache()
+    {
+        m_staticCache.Clear();
+
+        // Reset event state for all point definitions
+        foreach (PointDef pointDef in m_pointDefinitions.Values)
+            pointDef.ResetLastEventValue();
+
+        Interlocked.Exchange(ref m_staticUpdatesCount, 0);
+        Interlocked.Exchange(ref m_eventsGeneratedCount, 0);
     }
 
     /// <inheritdoc />
@@ -516,8 +564,7 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
                 {
                     eventChangeSet ??= new ChangeSet();
                     eventChangeSet.Update(new Analog(value, qualityFlags, timestamp), (ushort)pointDef.Index, EventMode.Force);
-                    pointDef.LastEventValue = value;
-                    pointDef.HasLastEventValue = true;
+                    pointDef.SetLastEventValue(value);
                     eventGenerated = true;
                 }
                 break;
@@ -525,9 +572,9 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
 
             case PointType.Binary:
             {
-                bool boolValue = measurement.AdjustedValue != 0.0;
+                bool boolValue = measurement.AdjustedValue != 0.0D;
                 Flags qualityFlags = MapBinaryFlags(measurement, boolValue);
-                double numericValue = boolValue ? 1.0 : 0.0;
+                double numericValue = boolValue ? 1.0D : 0.0D;
 
                 bool shouldGenerateEvent = ShouldGenerateBinaryEvent(pointDef, numericValue);
 
@@ -544,8 +591,7 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
                 {
                     eventChangeSet ??= new ChangeSet();
                     eventChangeSet.Update(new Binary(boolValue, qualityFlags, timestamp), (ushort)pointDef.Index, EventMode.Force);
-                    pointDef.LastEventValue = numericValue;
-                    pointDef.HasLastEventValue = true;
+                    pointDef.SetLastEventValue(numericValue);
                     eventGenerated = true;
                 }
                 break;
@@ -572,8 +618,7 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
                 {
                     eventChangeSet ??= new ChangeSet();
                     eventChangeSet.Update(new DoubleBitBinary(state, qualityFlags, timestamp), (ushort)pointDef.Index, EventMode.Force);
-                    pointDef.LastEventValue = numericValue;
-                    pointDef.HasLastEventValue = true;
+                    pointDef.SetLastEventValue(numericValue);
                     eventGenerated = true;
                 }
                 break;
@@ -581,7 +626,7 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
 
             case PointType.Counter:
             {
-                uint count = (uint)Math.Max(0, (long)measurement.AdjustedValue);
+                uint count = (uint)Math.Max(0L, (long)measurement.AdjustedValue);
                 Flags qualityFlags = MapCounterFlags(measurement);
                 double numericValue = count;
 
@@ -600,12 +645,13 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
                 {
                     eventChangeSet ??= new ChangeSet();
                     eventChangeSet.Update(new Counter(count, qualityFlags, timestamp), (ushort)pointDef.Index, EventMode.Force);
-                    pointDef.LastEventValue = numericValue;
-                    pointDef.HasLastEventValue = true;
+                    pointDef.SetLastEventValue(numericValue);
                     eventGenerated = true;
                 }
                 break;
             }
+            default:
+                throw new ArgumentOutOfRangeException($"Unsupported point type: {pointDef.Type}");
         }
 
         return eventGenerated;
@@ -627,8 +673,8 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
             return true;
 
         // Event on logical state change
-        bool currentState = pointDef.LastEventValue != 0.0;
-        bool newState = newValue != 0.0;
+        bool currentState = pointDef.LastEventValue != 0.0D;
+        bool newState = newValue != 0.0D;
         return currentState != newState;
     }
 
@@ -638,7 +684,7 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
             return true;
 
         // Event on state change
-        return Math.Abs(newValue - pointDef.LastEventValue) > 0.001; // Small tolerance for double comparison
+        return Math.Abs(newValue - pointDef.LastEventValue) > 0.001D; // Small tolerance for double comparison
     }
 
     private bool ShouldGenerateCounterEvent(PointDef pointDef, double newValue)
@@ -646,8 +692,8 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
         if (!pointDef.HasLastEventValue)
             return true;
 
-        uint currentCount = (uint)Math.Max(0, (long)pointDef.LastEventValue);
-        uint newCount = (uint)Math.Max(0, (long)newValue);
+        uint currentCount = (uint)Math.Max(0L, (long)pointDef.LastEventValue);
+        uint newCount = (uint)Math.Max(0L, (long)newValue);
 
         // Check for rollover (newValue < currentValue)
         if (newCount < currentCount)
@@ -655,12 +701,12 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
 
         // Check for increment >= deadband
         uint increment = newCount - currentCount;
-        return increment >= pointDef.Deadband;
+        uint deadbandThreshold = (uint)Math.Max(0.0D, pointDef.Deadband);
+        return increment >= deadbandThreshold;
     }
 
     /// <summary>
     /// Populates the DNP3 outstation database with current static cached values.
-    /// Called before Class 0 reads to ensure fresh data.
     /// </summary>
     internal void PopulateStaticDatabase()
     {
@@ -708,11 +754,11 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
                 // Use default values appropriate for each type
                 double defaultValue = pointDef.Type switch
                 {
-                    PointType.Binary => 0.0,
+                    PointType.Binary => 0.0D,
                     PointType.DoubleBitBinary => (double)DoubleBit.INDETERMINATE,
-                    PointType.Analog => 0.0,
-                    PointType.Counter => 0.0,
-                    _ => 0.0
+                    PointType.Analog => 0.0D,
+                    PointType.Counter => 0.0D,
+                    _ => 0.0D
                 };
 
                 AddToChangeSet(changeSet, pointKey, defaultValue, defaultTime, defaultFlags);
@@ -743,7 +789,7 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
                 changeSet.Update(new Analog(value, flags, timestamp), (ushort)pointKey.Index);
                 break;
             case PointType.Binary:
-                changeSet.Update(new Binary(value != 0.0, flags, timestamp), (ushort)pointKey.Index);
+                changeSet.Update(new Binary(value != 0.0D, flags, timestamp), (ushort)pointKey.Index);
                 break;
             case PointType.DoubleBitBinary:
                 changeSet.Update(new DoubleBitBinary((DoubleBit)((int)value & 0x3), flags, timestamp), (ushort)pointKey.Index);
@@ -751,25 +797,9 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
             case PointType.Counter:
                 changeSet.Update(new Counter((uint)value, flags, timestamp), (ushort)pointKey.Index);
                 break;
+            default:
+                throw new ArgumentOutOfRangeException($"Unsupported point type: {pointKey.Type}");
         }
-    }
-
-    /// <summary>
-    /// Clears the static cache and resets statistics.
-    /// </summary>
-    public void ClearStaticCache()
-    {
-        m_staticCache.Clear();
-
-        // Reset event state for all point definitions
-        foreach (PointDef pointDef in m_pointDefinitions.Values)
-        {
-            pointDef.HasLastEventValue = false;
-            pointDef.LastEventValue = 0.0;
-        }
-
-        Interlocked.Exchange(ref m_staticUpdatesCount, 0);
-        Interlocked.Exchange(ref m_eventsGeneratedCount, 0);
     }
 
     private void BuildDatabase()
@@ -780,11 +810,11 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
         if (dataSource == null)
             throw new InvalidOperationException("DataSource is not available");
 
-        // Use DataSourceLookups static methods to get ActiveMeasurementsTableLookup
         ActiveMeasurementsTableLookup activeMeasurements = DataSourceLookups.ActiveMeasurements(dataSource);
-
-        // Get measurements for this device
         IEnumerable<DataRow> deviceMeasurements = activeMeasurements.LookupByDeviceNameNoStat(Name);
+
+        // Track used indices to detect conflicts
+        HashSet<(PointType Type, int Index)> usedIndices = [];
 
         foreach (DataRow row in deviceMeasurements)
         {
@@ -799,13 +829,28 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
             if (!match.Success)
                 continue;
 
-            Dictionary<string, string> config = ParseConfig(match.Groups["config"].Value);
+            Dictionary<string, string> settings = match.Groups["config"].Value.ParseKeyValuePairs();
 
-            if (!config.TryGetValue("Type", out string? typeStr) || !Enum.TryParse(typeStr, true, out PointType type))
+            if (!settings.TryGetValue("Type", out string? setting) || !Enum.TryParse(setting, true, out PointType type))
+            {
+                OnStatusMessage(MessageLevel.Warning, $"Invalid or missing 'Type' in DNP3 configuration: {alternateTag}");
                 continue;
+            }
 
-            if (!config.TryGetValue("Index", out string? indexStr) || !int.TryParse(indexStr, out int index))
+            if (!settings.TryGetValue("Index", out setting) || !int.TryParse(setting, out int index) || index < 0 || index > ushort.MaxValue)
+            {
+                OnStatusMessage(MessageLevel.Warning, $"Invalid or missing 'Index' in DNP3 configuration: {alternateTag}");
                 continue;
+            }
+
+            // Check for duplicate indices
+            (PointType type, int index) indexKey = (type, index);
+
+            if (!usedIndices.Add(indexKey))
+            {
+                OnStatusMessage(MessageLevel.Warning, $"Duplicate DNP3 index {index} for type {type} in configuration: {alternateTag}");
+                continue;
+            }
 
             // Get measurement key
             Guid signalID = row.AsGuid("SignalID") ?? Guid.Empty;
@@ -818,9 +863,28 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
             if (key == MeasurementKey.Undefined)
                 continue;
 
-            // Parse optional parameters
-            int classNum = config.TryGetValue("Class", out string? classStr) && int.TryParse(classStr, out int c) ? c : 1;
-            double deadband = config.TryGetValue("Deadband", out string? deadStr) && double.TryParse(deadStr, out double d) ? d : 0.0;
+            // Parse optional parameters with validation
+            int classNum = 1;
+
+            if (settings.TryGetValue("Class", out setting))
+            {
+                if (!int.TryParse(setting, out classNum) || classNum < 0 || classNum > 3)
+                {
+                    OnStatusMessage(MessageLevel.Warning, $"Invalid Class value {setting} in DNP3 configuration: {alternateTag}, using default 1");
+                    classNum = 1;
+                }
+            }
+
+            double deadband = 0.0D;
+
+            if (settings.TryGetValue("Deadband", out setting))
+            {
+                if (!double.TryParse(setting, out deadband) || deadband < 0.0D)
+                {
+                    OnStatusMessage(MessageLevel.Warning, $"Invalid Deadband value {setting} in DNP3 configuration: {alternateTag}, using default 0.0");
+                    deadband = 0.0D;
+                }
+            }
 
             PointDef definition = new()
             {
@@ -831,42 +895,42 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
             };
 
             // Parse variation overrides if provided
-            string? staticVar = config.TryGetValue("StaticVar", out string? sv) ? sv : null;
-            string? eventVar = config.TryGetValue("EventVar", out string? ev) ? ev : null;
+            string? eventVariation = settings.TryGetValue("EventVar", out string? variation) ? variation : null;
+            string? staticVariation = settings.TryGetValue("StaticVar", out variation) ? variation : null;
 
             switch (type)
             {
                 case PointType.Binary:
-                    definition.EventVariationBinary = ParseEventBinaryVariation(eventVar) ?? EventBinaryVariation.Group2Var2;
-                    definition.StaticVariationBinary = ParseStaticBinaryVariation(staticVar) ?? StaticBinaryVariation.Group1Var2;
+                    definition.EventVariationBinary = ParseEventBinaryVariation(eventVariation) ?? EventBinaryVariation.Group2Var2;
+                    definition.StaticVariationBinary = ParseStaticBinaryVariation(staticVariation) ?? StaticBinaryVariation.Group1Var2;
 
                     template.binary.Add((ushort)index, new BinaryConfig
                     {
-                        clazz = GetPointClass(classNum),
+                        clazz = GetPointClass(definition.Class),
                         eventVariation = definition.EventVariationBinary,
                         staticVariation = definition.StaticVariationBinary
                     });
                     break;
 
                 case PointType.DoubleBitBinary:
-                    definition.EventVariationDoubleBit = ParseEventDoubleBinaryVariation(eventVar) ?? EventDoubleBinaryVariation.Group4Var2;
-                    definition.StaticVariationDoubleBit = ParseStaticDoubleBinaryVariation(staticVar) ?? StaticDoubleBinaryVariation.Group3Var2;
+                    definition.EventVariationDoubleBit = ParseEventDoubleBinaryVariation(eventVariation) ?? EventDoubleBinaryVariation.Group4Var2;
+                    definition.StaticVariationDoubleBit = ParseStaticDoubleBinaryVariation(staticVariation) ?? StaticDoubleBinaryVariation.Group3Var2;
 
                     template.doubleBinary.Add((ushort)index, new DoubleBinaryConfig
                     {
-                        clazz = GetPointClass(classNum),
+                        clazz = GetPointClass(definition.Class),
                         eventVariation = definition.EventVariationDoubleBit,
                         staticVariation = definition.StaticVariationDoubleBit
                     });
                     break;
 
                 case PointType.Analog:
-                    definition.EventVariationAnalog = ParseEventAnalogVariation(eventVar) ?? EventAnalogVariation.Group32Var7;
-                    definition.StaticVariationAnalog = ParseStaticAnalogVariation(staticVar) ?? StaticAnalogVariation.Group30Var1;
+                    definition.EventVariationAnalog = ParseEventAnalogVariation(eventVariation) ?? EventAnalogVariation.Group32Var8;
+                    definition.StaticVariationAnalog = ParseStaticAnalogVariation(staticVariation) ?? StaticAnalogVariation.Group30Var1;
 
                     template.analog.Add((ushort)index, new AnalogConfig
                     {
-                        clazz = GetPointClass(classNum),
+                        clazz = GetPointClass(definition.Class),
                         eventVariation = definition.EventVariationAnalog,
                         staticVariation = definition.StaticVariationAnalog,
                         deadband = deadband
@@ -874,68 +938,80 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
                     break;
 
                 case PointType.Counter:
-                    definition.EventVariationCounter = ParseEventCounterVariation(eventVar) ?? EventCounterVariation.Group22Var5;
-                    definition.StaticVariationCounter = ParseStaticCounterVariation(staticVar) ?? StaticCounterVariation.Group20Var1;
+                    definition.EventVariationCounter = ParseEventCounterVariation(eventVariation) ?? EventCounterVariation.Group22Var6;
+                    definition.StaticVariationCounter = ParseStaticCounterVariation(staticVariation) ?? StaticCounterVariation.Group20Var1;
 
                     template.counter.Add((ushort)index, new CounterConfig
                     {
-                        clazz = GetPointClass(classNum),
+                        clazz = GetPointClass(definition.Class),
                         eventVariation = definition.EventVariationCounter,
                         staticVariation = definition.StaticVariationCounter,
-                        deadband = (uint)deadband
+                        deadband = (uint)Math.Max(0, deadband)
                     });
                     break;
+                default:
+                    throw new ArgumentOutOfRangeException($"Unsupported PointType {type} in DNP3 configuration: {alternateTag}");
             }
 
             m_pointDefinitions[key] = definition;
         }
 
         m_databaseTemplate = template;
+        OnStatusMessage(MessageLevel.Info, $"Built DNP3 database with {m_pointDefinitions.Count:N0} points");
     }
 
-    private static Dictionary<string, string> ParseConfig(string configString)
+    private static PointClass GetPointClass(int classNum)
     {
-        Dictionary<string, string> config = new(StringComparer.OrdinalIgnoreCase);
-
-        foreach (Match match in s_configItemRegex.Matches(configString))
-            config[match.Groups["key"].Value] = match.Groups["value"].Value.Trim();
-
-        return config;
+        return classNum switch
+        {
+            0 => PointClass.Class0,
+            1 => PointClass.Class1,
+            2 => PointClass.Class2,
+            3 => PointClass.Class3,
+            _ => PointClass.Class1
+        };
     }
-
-    private static PointClass GetPointClass(int classNum) => classNum switch
-    {
-        0 => PointClass.Class0,
-        1 => PointClass.Class1,
-        2 => PointClass.Class2,
-        3 => PointClass.Class3,
-        _ => PointClass.Class1
-    };
 
     // Variation parsing helpers
-    private static EventBinaryVariation? ParseEventBinaryVariation(string? value) =>
-        string.IsNullOrWhiteSpace(value) ? null : Enum.TryParse(value, true, out EventBinaryVariation result) ? result : null;
+    private static EventBinaryVariation? ParseEventBinaryVariation(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? null : Enum.TryParse(value, true, out EventBinaryVariation result) ? result : null;
+    }
 
-    private static StaticBinaryVariation? ParseStaticBinaryVariation(string? value) =>
-        string.IsNullOrWhiteSpace(value) ? null : Enum.TryParse(value, true, out StaticBinaryVariation result) ? result : null;
+    private static StaticBinaryVariation? ParseStaticBinaryVariation(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? null : Enum.TryParse(value, true, out StaticBinaryVariation result) ? result : null;
+    }
 
-    private static EventDoubleBinaryVariation? ParseEventDoubleBinaryVariation(string? value) =>
-        string.IsNullOrWhiteSpace(value) ? null : Enum.TryParse(value, true, out EventDoubleBinaryVariation result) ? result : null;
+    private static EventDoubleBinaryVariation? ParseEventDoubleBinaryVariation(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? null : Enum.TryParse(value, true, out EventDoubleBinaryVariation result) ? result : null;
+    }
 
-    private static StaticDoubleBinaryVariation? ParseStaticDoubleBinaryVariation(string? value) =>
-        string.IsNullOrWhiteSpace(value) ? null : Enum.TryParse(value, true, out StaticDoubleBinaryVariation result) ? result : null;
+    private static StaticDoubleBinaryVariation? ParseStaticDoubleBinaryVariation(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? null : Enum.TryParse(value, true, out StaticDoubleBinaryVariation result) ? result : null;
+    }
 
-    private static EventAnalogVariation? ParseEventAnalogVariation(string? value) =>
-        string.IsNullOrWhiteSpace(value) ? null : Enum.TryParse(value, true, out EventAnalogVariation result) ? result : null;
+    private static EventAnalogVariation? ParseEventAnalogVariation(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? null : Enum.TryParse(value, true, out EventAnalogVariation result) ? result : null;
+    }
 
-    private static StaticAnalogVariation? ParseStaticAnalogVariation(string? value) =>
-        string.IsNullOrWhiteSpace(value) ? null : Enum.TryParse(value, true, out StaticAnalogVariation result) ? result : null;
+    private static StaticAnalogVariation? ParseStaticAnalogVariation(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? null : Enum.TryParse(value, true, out StaticAnalogVariation result) ? result : null;
+    }
 
-    private static EventCounterVariation? ParseEventCounterVariation(string? value) =>
-        string.IsNullOrWhiteSpace(value) ? null : Enum.TryParse(value, true, out EventCounterVariation result) ? result : null;
+    private static EventCounterVariation? ParseEventCounterVariation(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? null : Enum.TryParse(value, true, out EventCounterVariation result) ? result : null;
+    }
 
-    private static StaticCounterVariation? ParseStaticCounterVariation(string? value) =>
-        string.IsNullOrWhiteSpace(value) ? null : Enum.TryParse(value, true, out StaticCounterVariation result) ? result : null;
+    private static StaticCounterVariation? ParseStaticCounterVariation(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? null : Enum.TryParse(value, true, out StaticCounterVariation result) ? result : null;
+    }
 
     // Type-specific flag mapping methods that mirror the input adapter's MeasurementLookup implementation
     private Flags MapBinaryFlags(IMeasurement measurement, bool value)
