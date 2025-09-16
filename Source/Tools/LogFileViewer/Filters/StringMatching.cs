@@ -52,7 +52,7 @@ namespace LogFileViewer.Filters
                     MatchMode = (StringMatchingMode)stream.ReadNextByte();
                     MatchText = stream.ReadString();
                     if (MatchMode == StringMatchingMode.Regex)
-                        m_matchRegex = new Regex(MatchText);
+                        m_matchRegex = new Regex(MatchText, RegexOptions.IgnoreCase);
                     break;
                 default:
                     throw new VersionNotFoundException();
@@ -64,7 +64,7 @@ namespace LogFileViewer.Filters
             MatchText = value;
             MatchMode = mode;
             if (MatchMode == StringMatchingMode.Regex)
-                m_matchRegex = new Regex(MatchText);
+                m_matchRegex = new Regex(MatchText, RegexOptions.IgnoreCase);
         }
 
         public void Save(Stream stream)
@@ -79,13 +79,13 @@ namespace LogFileViewer.Filters
             switch (MatchMode)
             {
                 case StringMatchingMode.Exact:
-                    return value == MatchText;
+                    return value.Equals(MatchText, StringComparison.OrdinalIgnoreCase);
                 case StringMatchingMode.StartsWith:
-                    return value.StartsWith(MatchText);
+                    return value.StartsWith(MatchText, StringComparison.OrdinalIgnoreCase);
                 case StringMatchingMode.Contains:
-                    return value.Contains(MatchText);
+                    return value.IndexOf(MatchText, StringComparison.OrdinalIgnoreCase) >= 0;
                 case StringMatchingMode.EndsWith:
-                    return value.EndsWith(MatchText);
+                    return value.EndsWith(MatchText, StringComparison.OrdinalIgnoreCase);
                 case StringMatchingMode.Regex:
                     return m_matchRegex.IsMatch(value);
                 default:
