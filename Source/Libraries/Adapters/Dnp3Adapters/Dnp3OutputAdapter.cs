@@ -396,14 +396,6 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
     public int StaticUpdateBatchSize { get; set; }
 
     /// <summary>
-    /// Gets or sets the DNP3 log level for the server connection.
-    /// </summary>
-    [Description("Defines the DNP3 log level for the server connection")]
-    [ConnectionStringParameter]
-    [DefaultValue(typeof(LogLevel), DefaultLogLevel)]
-    public LogLevel LogLevel { get; set; }
-
-    /// <summary>
     /// Gets or sets the maximum publish rate in milliseconds. This is used to throttle
     /// event publishing to the master stations when many events are being generated.
     /// Set to zero to publish events as fast as possible.
@@ -412,6 +404,14 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
     [ConnectionStringParameter]
     [DefaultValue(DefaultMaxPublishRate)]
     public int MaxPublishRate { get; set; }
+
+    /// <summary>
+    /// Gets or sets the DNP3 log level for the server connection.
+    /// </summary>
+    [Description("Defines the DNP3 log level for the server connection")]
+    [ConnectionStringParameter]
+    [DefaultValue(typeof(LogLevel), DefaultLogLevel)]
+    public LogLevel LogLevel { get; set; }
 
     /// <summary>
     /// Gets the count of static cache updates performed.
@@ -1083,8 +1083,7 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
         }
     }
 
-    // Builds database on adapter initialization -- new or updated point definitions will require adapter
-    // to be reinitialized since outstation configuration is static for API
+    // Builds database when adapter connects or reconnects
     private void BuildDatabase()
     {
         DatabaseTemplate template = new();
