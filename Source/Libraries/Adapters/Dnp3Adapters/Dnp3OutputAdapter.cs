@@ -30,12 +30,12 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Automatak.DNP3.Adapter;
 using Automatak.DNP3.Interface;
 using GSF;
-using GSF.Data;
 using GSF.Diagnostics;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
@@ -66,7 +66,11 @@ public enum LogLevel
     /// <summary>
     /// Application communications log messages.
     /// </summary>
-    AppComms
+    AppComms,
+    /// <summary>
+    /// All log messages including debug.
+    /// </summary>
+    Debug
 }
 
 /// <summary>
@@ -140,8 +144,25 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
         private Flags m_quality = quality;
         private double m_lastEventValue = value;
         private bool m_hasLastEventValue; // First update will generate event
+        private long m_lastPublishTimestamp;
 
-        public Ticks Timestamp => m_timestamp.Value.Ticks;
+        public Ticks Timestamp
+        {
+            get
+            {
+                lock (m_lock)
+                    return m_timestamp.Value.Ticks;
+            }
+        }
+
+        public Ticks LastPublishTimestamp
+        {
+            get
+            {
+                lock (m_lock)
+                    return m_lastPublishTimestamp;
+            }
+        }
 
         public void Update(double value, DNPTime timestamp, Flags quality)
         {
@@ -165,12 +186,13 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
                 return (m_lastEventValue, m_hasLastEventValue);
         }
 
-        public void SetEventGenerated(double eventValue)
+        public void SetEvent(double eventValue, long timestamp)
         {
             lock (m_lock)
             {
                 m_lastEventValue = eventValue;
                 m_hasLastEventValue = true;
+                m_lastPublishTimestamp = timestamp;
             }
         }
     }
@@ -198,9 +220,9 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
         void ILinkStatusListener.OnStateChange(LinkStatus value) => adapter.OnStatusMessage(MessageLevel.Info, $"Link state changed to: {value}");
         void ILinkStatusListener.OnUnknownDestinationAddress(ushort destination) => adapter.OnStatusMessage(MessageLevel.Warning, $"Unknown destination address: {destination}");
         void ILinkStatusListener.OnUnknownSourceAddress(ushort source) => adapter.OnStatusMessage(MessageLevel.Warning, $"Unknown source address: {source}");
-        void ILinkStatusListener.OnKeepAliveInitiated() => adapter.OnStatusMessage(MessageLevel.Debug, "Keep alive initiated");
+        void ILinkStatusListener.OnKeepAliveInitiated() => adapter.OnStatusMessage(MessageLevel.Info, "Keep alive initiated");
         void ILinkStatusListener.OnKeepAliveFailure() => adapter.OnStatusMessage(MessageLevel.Warning, "Keep alive failure");
-        void ILinkStatusListener.OnKeepAliveSuccess() => adapter.OnStatusMessage(MessageLevel.Debug, "Keep alive success");
+        void ILinkStatusListener.OnKeepAliveSuccess() => adapter.OnStatusMessage(MessageLevel.Info, "Keep alive success");
 
         bool IOutstationApplication.SupportsWriteAbsoluteTime => false;
         bool IOutstationApplication.WriteAbsoluteTime(ulong millisecSinceEpoch) => false;
@@ -213,7 +235,13 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
         RestartMode IOutstationApplication.WarmRestartSupport => RestartMode.UNSUPPORTED;
         ushort IOutstationApplication.ColdRestart() => ushort.MaxValue;
         ushort IOutstationApplication.WarmRestart() => ushort.MaxValue;
-        void IOutstationApplication.OnConfirmProcessed(bool is_unsolicited, uint num_class1, uint num_class2, uint num_class3) => adapter.OnStatusMessage(MessageLevel.Debug, $"Confirm processed - Unsolicited: {is_unsolicited}, Class1: {num_class1}, Class2: {num_class2}, Class3: {num_class3}");
+        void IOutstationApplication.OnConfirmProcessed(bool is_unsolicited, uint num_class1, uint num_class2, uint num_class3)
+        {
+            if (adapter.LogLevel < LogLevel.Debug)
+                return;
+
+            adapter.OnStatusMessage(MessageLevel.Debug, $"Confirm processed - Unsolicited: {is_unsolicited}, Class1: {num_class1}, Class2: {num_class2}, Class3: {num_class3}");
+        }
 
         DNPTime IDnpTimeSource.Now() => DNPTime.Now;
     }
@@ -231,10 +259,17 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
     private const bool DefaultMapStateFlagsToQuality = true;
     private const int DefaultStaticUpdateBatchSize = 100;
     private const string DefaultLogLevel = "Normal";
+    private const int DefaultMaxPublishRate = 2000;
+    private const int DefaultClass = 1;
+    private const double DefaultDeadband = 0.0D;
+    private const int DoubleBitMask = 0x3;
 
-    // Regex for parsing AlternateTag configuration
-    // Format: DNP3{Type=Analog;Index=0;Class=1;Deadband=0.001;StaticVar=Group30Var1;EventVar=Group32Var7}
-    private static readonly Regex s_alternateTagRegex = new(@"^DNP3\{(?<config>[^}]+)\}$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    // Common DNP3 quality flags
+    private const byte ONLINE = (byte)Bits.Bit00;
+    private const byte RESTART = (byte)Bits.Bit01;
+    private const byte COMM_LOST = (byte)Bits.Bit02;
+    private const byte REMOTE_FORCED = (byte)Bits.Bit03;
+    private const byte LOCAL_FORCED = (byte)Bits.Bit04;
 
     // Fields
     private IChannel? m_channel;
@@ -369,6 +404,16 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
     public LogLevel LogLevel { get; set; }
 
     /// <summary>
+    /// Gets or sets the maximum publish rate in milliseconds. This is used to throttle
+    /// event publishing to the master stations when many events are being generated.
+    /// Set to zero to publish events as fast as possible.
+    /// </summary>
+    [Description("Defines the maximum publish frequency in milliseconds (0 for no limit)")]
+    [ConnectionStringParameter]
+    [DefaultValue(DefaultMaxPublishRate)]
+    public int MaxPublishRate { get; set; }
+
+    /// <summary>
     /// Gets the count of static cache updates performed.
     /// </summary>
     public long StaticUpdatesCount => m_staticUpdatesCount;
@@ -388,6 +433,71 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
 
     /// <inheritdoc />
     protected override bool UseAsyncConnect => false;
+
+    /// <inheritdoc />
+    public override string Status
+    {
+        get
+        {
+            StringBuilder status = new();
+
+            status.AppendLine("---- Configuration ----");
+            status.AppendLine();
+
+            status.AppendLine($"         TCP Server Config: {Port}/{Interface}");
+            status.AppendLine($"                 Is Master: {IsMaster}");
+            status.AppendLine($"             Local Address: {LocalAddress}");
+            status.AppendLine($"            Remote Address: {RemoteAddress}");
+            status.AppendLine($"          Response Timeout: {ResponseTimeout:N0}ms");
+            status.AppendLine($"        Keep Alive Timeout: {KeepAliveTimeout:N0}ms");
+            status.AppendLine($"         Allow Unsolicited: {AllowUnsolicited}");
+            status.AppendLine($"    Unsolicited Class Mask: {UnsolicitedClassMask}");
+            status.AppendLine($"Map State Flags to Quality: {MapStateFlagsToQuality}");
+            status.AppendLine($"  Static Update Batch Size: {StaticUpdateBatchSize:N0}");
+            status.AppendLine($"          Max Publish Rate: {(MaxPublishRate == 0 ? "No Limit" : $"{MaxPublishRate:N0}ms")}");
+            status.AppendLine($"                 Log Level: {LogLevel}");
+
+            status.AppendLine();
+            status.AppendLine("---- Current State ----");
+            status.AppendLine();
+
+            IChannelStatistics? channelStats = m_channel?.GetChannelStatistics();
+
+            if (channelStats is not null)
+            {
+                status.AppendLine($"           Channels Opened: {channelStats.NumOpen:N0}");
+                status.AppendLine($"     Channel Open Failures: {channelStats.NumOpenFail:N0}");
+                status.AppendLine($"           Channels Closed: {channelStats.NumClose:N0}");
+                status.AppendLine($"            Bytes Received: {channelStats.NumBytesRx:N0}");
+                status.AppendLine($"         Bytes Transmitted: {channelStats.NumBytesTx:N0}");
+                status.AppendLine($"                CRC Errors: {channelStats.NumCrcError:N0}");
+                status.AppendLine($"      Link Frames Received: {channelStats.NumLinkFrameRx:N0}");
+                status.AppendLine($"   Link Frames Transmitted: {channelStats.NumLinkFrameTx:N0}");
+                status.AppendLine($"  Bad Link Frames Received: {channelStats.NumBadLinkFrameRx:N0}");
+            }
+
+            IStackStatistics? stackStats = m_outstation?.GetStackStatistics();
+
+            if (stackStats is not null)
+            {
+                status.AppendLine($"            Stack Received: {stackStats.NumTransportRx:N0}");
+                status.AppendLine($"         Stack Transmitted: {stackStats.NumTransportTx:N0}");
+                status.AppendLine($"      Stack Receive Errors: {stackStats.NumTransportErrorRx:N0}");
+            }
+
+            status.AppendLine($"            Static Updates: {StaticUpdatesCount:N0}");
+            status.AppendLine($"          Events Generated: {EventsGeneratedCount:N0}");
+            status.AppendLine($"         Static Cache Size: {StaticCacheSize:N0}");
+
+            status.AppendLine();
+            status.AppendLine("---- Adapter Status ----");
+            status.AppendLine();
+
+            status.Append(base.Status);
+
+            return status.ToString();
+        }
+    }
 
     #endregion
 
@@ -452,8 +562,17 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
         if (m_unsolicitedClassMask[0])
             OnStatusMessage(MessageLevel.Warning, "Class 0 unsolicited responses enabled - this is not common and could cause network flooding");
 
-        // Build mapping and database template from OutputMeasurements
-        BuildDatabase();
+        // Attach to all defined DNP3 measurements if none were explicitly defined
+        if (InputMeasurementKeys is null || InputMeasurementKeys.Length == 0)
+        {
+            const string DNP3FilterExpression = "FILTER ActiveMeasurements WHERE AlternateTag LIKE '%DNP3{%'";
+            InputMeasurementKeys = ParseInputMeasurementKeys(DataSource, false, DNP3FilterExpression);
+
+            // Metadata refresh on output adapters forces a recalculation of input measurement keys using
+            // InputMeasurementKeys settings key so that system can automatically update routing tables,
+            // so assign InputMeasurementKeys settings value since it was not explicitly defined:
+            Settings[nameof(InputMeasurementKeys)] = DNP3FilterExpression;
+        }
 
         s_logHandler.RegisterAdapter(this);
     }
@@ -470,6 +589,10 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
             listener: null
         );
 
+        // Build mapping and database template from InputMeasurementKeys, an adapter reconnect
+        // operation will rebuild the database template in case point definitions have changed
+        BuildDatabase();
+
         // Outstation config
         OutstationStackConfig outstationStackConfig = new()
         {
@@ -478,12 +601,13 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
                 config = new OutstationParams
                 {
                     allowUnsolicited = AllowUnsolicited,
-                    unsolClassMask = new ClassField((byte)(
-                        (byte)(m_unsolicitedClassMask[0] ? PointClass.Class0 : 0) |
-                        (byte)(m_unsolicitedClassMask[1] ? PointClass.Class1 : 0) |
-                        (byte)(m_unsolicitedClassMask[2] ? PointClass.Class2 : 0) |
-                        (byte)(m_unsolicitedClassMask[3] ? PointClass.Class3 : 0)
-                    ))
+                    unsolClassMask = new ClassField
+                    {
+                        Class0 = m_unsolicitedClassMask[0],
+                        Class1 = m_unsolicitedClassMask[1],
+                        Class2 = m_unsolicitedClassMask[2],
+                        Class3 = m_unsolicitedClassMask[3]
+                    },
                 }
             },
             link = new LinkConfig(
@@ -496,7 +620,7 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
             databaseTemplate = m_databaseTemplate ?? new DatabaseTemplate()
         };
 
-        // Create outstation with cache-based command handler and default application
+        // Create a GSF outstation application that includes adapter logging
         m_outstation = m_channel.AddOutstation(
             $"gsf-dnp3-outstation:{Name}",
             new ReadOnlyCommandHandler(),
@@ -504,10 +628,12 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
             outstationStackConfig
         );
 
-        m_outstation.Enable(); // Begin accepting masters
+        // Begin accepting masters
+        m_outstation.Enable();
 
-        InitializeStaticDatabase();
-        
+        // Initialize static database with current or initial cached values
+        ReinitializeDatabase();
+
         return;
 
         uint getLogLevel()
@@ -518,6 +644,7 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
                 LogLevel.All => LogLevels.ALL,
                 LogLevel.Normal => LogLevels.NORMAL,
                 LogLevel.AppComms => LogLevels.APP_COMMS,
+                LogLevel.Debug => LogLevels.ALL,
                 _ => LogLevels.NORMAL
             };
         }
@@ -527,18 +654,6 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
     protected override void AttemptDisconnection()
     {
         Shutdown();
-    }
-
-    /// <summary>
-    /// Clears the static cache and resets statistics.
-    /// </summary>
-    [AdapterCommand("Clears the static cache and resets statistics", "Administrator", "Editor")]
-    public void ClearStaticCache()
-    {
-        m_staticCache.Clear();
-
-        Interlocked.Exchange(ref m_staticUpdatesCount, 0);
-        Interlocked.Exchange(ref m_eventsGeneratedCount, 0);
     }
 
     /// <summary>
@@ -554,10 +669,22 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
         }
     }
 
+    /// <summary>
+    /// Clears the static cache and resets statistics.
+    /// </summary>
+    [AdapterCommand("Clears the static cache and resets statistics", "Administrator", "Editor")]
+    public void ClearStaticCache()
+    {
+        m_staticCache.Clear();
+
+        Interlocked.Exchange(ref m_staticUpdatesCount, 0);
+        Interlocked.Exchange(ref m_eventsGeneratedCount, 0);
+    }
+
     /// <inheritdoc />
     public override string GetShortStatus(int maxLength)
     {
-        return $"Published {ProcessedMeasurements:N0} measurements, static updates: {m_staticUpdatesCount:N0}, events: {m_eventsGeneratedCount:N0}, cache size: {m_staticCache.Count:N0}".CenterText(maxLength);
+        return $"Published {ProcessedMeasurements:N0} measurements, events: {m_eventsGeneratedCount:N0}, cache size: {m_staticCache.Count:N0}".CenterText(maxLength);
     }
 
     /// <inheritdoc />
@@ -566,8 +693,8 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
         if (m_outstation is null)
             return;
 
-        ChangeSet? eventChangeSet = null;
-        int eventCount = 0;
+        ChangeSet changeSet = new();
+        int updateCount = 0;
 
         // Process measurements for cache updates and event generation
         foreach (IMeasurement measurement in measurements)
@@ -576,71 +703,73 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
                 continue;
 
             // Update static cache and check for events
-            bool eventGenerated = UpdateCacheAndCheckEvent(definition, measurement, ref eventChangeSet);
+            bool eventGenerated = UpdateCacheAndCheckEvent(definition, measurement, ref changeSet);
 
             Interlocked.Increment(ref m_staticUpdatesCount);
 
             if (!eventGenerated)
                 continue;
             
-            eventCount++;
             Interlocked.Increment(ref m_eventsGeneratedCount);
+
+            updateCount++;
+
+            if (updateCount < StaticUpdateBatchSize || changeSet.IsEmpty())
+                continue;
+
+            // Publish next batch of events
+            lock (m_outstationLoadLock)
+                m_outstation.Load(changeSet);
+
+            changeSet = new ChangeSet();
+            updateCount = 0;
         }
 
-        if (eventChangeSet == null || eventChangeSet.IsEmpty())
+        if (updateCount == 0 || changeSet.IsEmpty())
             return;
         
-        try
-        {
-            // Publish events
-            lock (m_outstationLoadLock)
-                m_outstation.Load(eventChangeSet);
-            
-            OnStatusMessage(MessageLevel.Debug, $"Published {eventCount:N0} DNP3 events");
-        }
-        catch (Exception ex)
-        {
-            OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to publish DNP3 events: {ex.Message}", ex));
-        }
+        // Publish remaining events
+        lock (m_outstationLoadLock)
+            m_outstation.Load(changeSet);
     }
 
     // Updates static cache and generates events if criteria are met
-    private bool UpdateCacheAndCheckEvent(PointDefinition definition, IMeasurement measurement, ref ChangeSet? eventChangeSet)
+    private bool UpdateCacheAndCheckEvent(PointDefinition definition, IMeasurement measurement, ref ChangeSet changeSet)
     {
         PointKey key = definition.Key;
         DNPTime timestamp = new(new DateTime(measurement.Timestamp, DateTimeKind.Utc));
 
-        eventChangeSet ??= new ChangeSet();
-
         return key.Type switch
         {
-            PointType.Analog => ProcessAnalogMeasurement(measurement, key, timestamp, definition.Deadband, ref eventChangeSet),
-            PointType.Binary => ProcessBinaryMeasurement(measurement, key, timestamp, ref eventChangeSet),
-            PointType.DoubleBitBinary => ProcessDoubleBitMeasurement(measurement, key, timestamp, ref eventChangeSet),
-            PointType.Counter => ProcessCounterMeasurement(measurement, key, timestamp, (uint)definition.Deadband, ref eventChangeSet),
+            PointType.Analog => ProcessAnalogMeasurement(measurement, key, timestamp, definition.Deadband, ref changeSet),
+            PointType.Binary => ProcessBinaryMeasurement(measurement, key, timestamp, ref changeSet),
+            PointType.DoubleBitBinary => ProcessDoubleBitMeasurement(measurement, key, timestamp, ref changeSet),
+            PointType.Counter => ProcessCounterMeasurement(measurement, key, timestamp, (uint)definition.Deadband, ref changeSet),
             _ => throw new ArgumentOutOfRangeException($"Unsupported point type: {key.Type}")
         };
     }
 
-    private bool ProcessAnalogMeasurement(IMeasurement measurement, PointKey key, DNPTime timestamp, double deadband, ref ChangeSet eventChangeSet)
+    private bool ProcessAnalogMeasurement(IMeasurement measurement, PointKey key, DNPTime timestamp, double deadband, ref ChangeSet changeSet)
     {
         Flags qualityFlags = mapQualityFlags();
         double value = measurement.AdjustedValue;
+        long previousTimestamp = 0L;
 
         CachedValue cachedValue = m_staticCache.AddOrUpdate(key,
             _ => new CachedValue(value, timestamp, qualityFlags),
             (_, existing) =>
             {
+                previousTimestamp = existing.Timestamp.Value;
                 existing.Update(value, timestamp, qualityFlags);
                 return existing;
             }
         );
 
-        if (measurement.Timestamp <= cachedValue.Timestamp || !shouldGenerateEvent(deadband, value, cachedValue))
+        if (!IsValidTimestamp(measurement.Timestamp.Value, previousTimestamp, cachedValue) || !shouldGenerateEvent(deadband, value, cachedValue))
             return false;
         
-        eventChangeSet.Update(new Analog(value, qualityFlags, timestamp), key.Index, EventMode.Force);
-        cachedValue.SetEventGenerated(value);
+        changeSet.Update(new Analog(value, qualityFlags, timestamp), key.Index, EventMode.Force);
+        cachedValue.SetEvent(value, measurement.Timestamp.Value);
         return true;
 
         Flags mapQualityFlags()
@@ -675,26 +804,28 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
         }
     }
     
-    private bool ProcessBinaryMeasurement(IMeasurement measurement, PointKey key, DNPTime timestamp, ref ChangeSet eventChangeSet)
+    private bool ProcessBinaryMeasurement(IMeasurement measurement, PointKey key, DNPTime timestamp, ref ChangeSet changeSet)
     {
         bool boolValue = measurement.AdjustedValue != 0.0D;
         Flags qualityFlags = mapQualityFlags();
         double numericValue = measurement.AdjustedValue != 0.0D ? 1.0D : 0.0D;
+        long previousTimestamp = 0L;
 
         CachedValue cachedValue = m_staticCache.AddOrUpdate(key,
             _ => new CachedValue(numericValue, timestamp, qualityFlags),
             (_, existing) =>
             {
+                previousTimestamp = existing.Timestamp.Value;
                 existing.Update(numericValue, timestamp, qualityFlags);
                 return existing;
             }
         );
 
-        if (measurement.Timestamp <= cachedValue.Timestamp || !shouldGenerateEvent(numericValue, cachedValue))
+        if (!IsValidTimestamp(measurement.Timestamp.Value, previousTimestamp, cachedValue) || !shouldGenerateEvent(numericValue, cachedValue))
             return false;
 
-        eventChangeSet.Update(new Binary(boolValue, qualityFlags, timestamp), key.Index, EventMode.Force);
-        cachedValue.SetEventGenerated(numericValue);
+        changeSet.Update(new Binary(boolValue, qualityFlags, timestamp), key.Index, EventMode.Force);
+        cachedValue.SetEvent(numericValue, measurement.Timestamp.Value);
         return true;
         
         Flags mapQualityFlags()
@@ -731,26 +862,28 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
         }
     }
 
-    private bool ProcessDoubleBitMeasurement(IMeasurement measurement, PointKey key, DNPTime timestamp, ref ChangeSet eventChangeSet)
+    private bool ProcessDoubleBitMeasurement(IMeasurement measurement, PointKey key, DNPTime timestamp, ref ChangeSet changeSet)
     {
-        DoubleBit state = (DoubleBit)((int)measurement.AdjustedValue & 0x3);
+        DoubleBit state = (DoubleBit)((int)measurement.AdjustedValue & DoubleBitMask);
         Flags qualityFlags = mapQualityFlags();
         double numericValue = (int)state;
+        long previousTimestamp = 0L;
 
         CachedValue cachedValue = m_staticCache.AddOrUpdate(key,
             _ => new CachedValue(numericValue, timestamp, qualityFlags),
             (_, existing) =>
             {
+                previousTimestamp = existing.Timestamp.Value;
                 existing.Update(numericValue, timestamp, qualityFlags);
                 return existing;
             }
         );
 
-        if (measurement.Timestamp <= cachedValue.Timestamp || !shouldGenerateEvent(numericValue, cachedValue))
+        if (!IsValidTimestamp(measurement.Timestamp.Value, previousTimestamp, cachedValue) || !shouldGenerateEvent(numericValue, cachedValue))
             return false;
         
-        eventChangeSet.Update(new DoubleBitBinary(state, qualityFlags, timestamp), key.Index, EventMode.Force);
-        cachedValue.SetEventGenerated(numericValue);
+        changeSet.Update(new DoubleBitBinary(state, qualityFlags, timestamp), key.Index, EventMode.Force);
+        cachedValue.SetEvent(numericValue, measurement.Timestamp.Value);
         return true;
 
         Flags mapQualityFlags()
@@ -785,26 +918,28 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
         }
     }
 
-    private bool ProcessCounterMeasurement(IMeasurement measurement, PointKey key, DNPTime timestamp, uint deadband, ref ChangeSet eventChangeSet)
+    private bool ProcessCounterMeasurement(IMeasurement measurement, PointKey key, DNPTime timestamp, uint deadband, ref ChangeSet changeSet)
     {
         uint count = (uint)Math.Max(0L, (long)measurement.AdjustedValue);
         Flags qualityFlags = mapQualityFlags();
         double numericValue = count;
+        long previousTimestamp = 0L;
 
         CachedValue cachedValue = m_staticCache.AddOrUpdate(key,
             _ => new CachedValue(numericValue, timestamp, qualityFlags),
             (_, existing) =>
             {
+                previousTimestamp = existing.Timestamp.Value;
                 existing.Update(numericValue, timestamp, qualityFlags);
                 return existing;
             }
         );
 
-        if (measurement.Timestamp <= cachedValue.Timestamp || !shouldGenerateEvent(deadband, numericValue, cachedValue))
+        if (!IsValidTimestamp(measurement.Timestamp.Value, previousTimestamp, cachedValue) || !shouldGenerateEvent(deadband, numericValue, cachedValue))
             return false;
         
-        eventChangeSet.Update(new Counter(count, qualityFlags, timestamp), key.Index, EventMode.Force);
-        cachedValue.SetEventGenerated(numericValue);
+        changeSet.Update(new Counter(count, qualityFlags, timestamp), key.Index, EventMode.Force);
+        cachedValue.SetEvent(numericValue, measurement.Timestamp.Value);
         return true;
 
         Flags mapQualityFlags()
@@ -847,6 +982,14 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
         }
     }
 
+    private bool IsValidTimestamp(long currentTimestamp, long previousTimestamp, CachedValue cachedValue)
+    {
+        if (previousTimestamp == 0L)
+            return true; // First measurement always valid
+
+        return currentTimestamp > previousTimestamp && (currentTimestamp - cachedValue.LastPublishTimestamp).ToMilliseconds() >= MaxPublishRate;
+    }
+
     private void InitializeStaticDatabase()
     {
         // Only populate with defaults on first initialization
@@ -881,7 +1024,7 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
                 else
                 {
                     // Use default values for points that haven't received measurements yet
-                    Flags defaultFlags = new((byte)Bits.Bit01); // RESTART + not ONLINE
+                    Flags defaultFlags = new(RESTART); // RESTART + not ONLINE
 
                     double defaultValue = key.Type switch
                     {
@@ -929,7 +1072,7 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
                     changeSet.Update(new Binary(value != 0.0D, flags, timestamp), key.Index);
                     break;
                 case PointType.DoubleBitBinary:
-                    changeSet.Update(new DoubleBitBinary((DoubleBit)((int)value & 0x3), flags, timestamp), key.Index);
+                    changeSet.Update(new DoubleBitBinary((DoubleBit)((int)value & DoubleBitMask), flags, timestamp), key.Index);
                     break;
                 case PointType.Counter:
                     changeSet.Update(new Counter((uint)value, flags, timestamp), key.Index);
@@ -940,23 +1083,29 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
         }
     }
 
+    // Builds database on adapter initialization -- new or updated point definitions will require adapter
+    // to be reinitialized since outstation configuration is static for API
     private void BuildDatabase()
     {
         DatabaseTemplate template = new();
         DataSet dataSource = DataSource;
 
-        if (dataSource == null)
+        if (dataSource is null)
             throw new InvalidOperationException("DataSource is not available");
-
-        ActiveMeasurementsTableLookup activeMeasurements = DataSourceLookups.ActiveMeasurements(dataSource);
-        IEnumerable<DataRow> deviceMeasurements = activeMeasurements.LookupByDeviceNameNoStat(Name);
 
         // Track used indices to detect conflicts
         HashSet<PointKey> usedIndices = [];
 
-        foreach (DataRow row in deviceMeasurements)
+        // Reset point definitions
+        m_pointDefinitions.Clear();
+
+        foreach (MeasurementKey key in InputMeasurementKeys)
         {
-            string? alternateTag = row.AsString("AlternateTag");
+            DataRow record = DataSource.LookupMetadata(key.SignalID);
+            string? alternateTag = null;
+
+            if (record is not null)
+                alternateTag = record["AlternateTag"].ToString();
 
             if (string.IsNullOrWhiteSpace(alternateTag))
                 continue;
@@ -984,45 +1133,32 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
             // Check for duplicate indices
             if (!usedIndices.Add(new PointKey(type, index)))
             {
-                OnStatusMessage(MessageLevel.Warning, $"Duplicate DNP3 index {index} for type {type} in configuration: {alternateTag}");
+                OnStatusMessage(MessageLevel.Warning, $"Duplicate DNP3 index {index} for {type} type in configuration: {alternateTag}");
                 continue;
             }
 
-            // Get measurement key
-            Guid signalID = row.AsGuid("SignalID") ?? Guid.Empty;
-
-            if (signalID == Guid.Empty)
-                continue;
-
-            MeasurementKey key = MeasurementKey.LookUpBySignalID(signalID);
-
-            if (key == MeasurementKey.Undefined)
-                continue;
-
             // Parse optional parameters with validation
-            int classNum = 1;
+            int classNum = DefaultClass;
 
             if (settings.TryGetValue("Class", out setting))
             {
                 if (!int.TryParse(setting, out classNum) || classNum < 0 || classNum > 3)
                 {
-                    OnStatusMessage(MessageLevel.Warning, $"Invalid Class value {setting} in DNP3 configuration: {alternateTag}, using default 1");
-                    classNum = 1;
+                    OnStatusMessage(MessageLevel.Warning, $"Invalid Class value {setting} in DNP3 configuration: {alternateTag}, using default {DefaultClass}");
+                    classNum = DefaultClass;
                 }
             }
 
-            double deadband = 0.0D;
+            double deadband = DefaultDeadband;
 
             if (settings.TryGetValue("Deadband", out setting))
             {
                 if (!double.TryParse(setting, out deadband) || deadband < 0.0D)
                 {
-                    OnStatusMessage(MessageLevel.Warning, $"Invalid Deadband value {setting} in DNP3 configuration: {alternateTag}, using default 0.0");
-                    deadband = 0.0D;
+                    OnStatusMessage(MessageLevel.Warning, $"Invalid Deadband value {setting} in DNP3 configuration: {alternateTag}, using default {DefaultDeadband:N2}");
+                    deadband = DefaultDeadband;
                 }
             }
-
-            deadband = Math.Max(0.0D, deadband);
 
             PointDefinition definition = new()
             {
@@ -1119,6 +1255,10 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
     // DNP3 manager shared across all the DNP3 output adapters, concurrency level defaults to number of processors
     private static readonly IDNP3Manager s_manager;
 
+    // Regex for parsing AlternateTag configuration
+    // Format: DNP3{Type=Analog;Index=0;Class=1;Deadband=0.001;StaticVar=Group30Var1;EventVar=Group32Var7}
+    private static readonly Regex s_alternateTagRegex = new(@"^DNP3\{(?<config>[^}]+)\}$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
     // Static Constructor
     static Dnp3OutputAdapter()
     {
@@ -1143,12 +1283,6 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
     // Common flag mapping shared by all types - mirrors MeasurementLookup.MapCommonStateFlags
     private static byte MapCommonStateFlags(MeasurementStateFlags stateFlags)
     {
-        const byte ONLINE = (byte)Bits.Bit00;
-        const byte RESTART = (byte)Bits.Bit01;
-        const byte COMM_LOST = (byte)Bits.Bit02;
-        const byte REMOTE_FORCED = (byte)Bits.Bit03;
-        const byte LOCAL_FORCED = (byte)Bits.Bit04;
-
         byte qualityFlags = 0;
 
         // ONLINE bit: 1 = ONLINE, 0 = NOT ONLINE
