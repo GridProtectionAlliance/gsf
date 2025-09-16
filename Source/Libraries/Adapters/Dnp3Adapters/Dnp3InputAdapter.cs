@@ -29,7 +29,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using Automatak.DNP3.Adapter;
@@ -42,10 +41,10 @@ using GSF.TimeSeries.Adapters;
 namespace DNP3Adapters;
 
 /// <summary>
-/// Input adapter that reads measurements from a remote dnp3 endpoint.
+/// Input adapter that reads measurements from a remote DNP3 endpoint.
 /// </summary>
-[Description("DNP3: Reads measurements from a remote dnp3 endpoint")]
-public class DNP3InputAdapter : InputAdapterBase
+[Description("DNP3: Acts as a DNP3 master client which reads measurements from a remote DNP3 endpoint.")]
+public class DNP3InputAdapter : InputAdapterBase, IDnp3Adapter
 {
     #region [ Members ]
 
@@ -59,55 +58,6 @@ public class DNP3InputAdapter : InputAdapterBase
     }
 
     // Class used to proxy dnp3 manager log entries to Iaon session
-    private class IaonProxyLogHandler : ILogHandler
-    {
-        /// <summary>
-        /// Handler for log entries.
-        /// </summary>
-        /// <param name="entry"><see cref="LogEntry"/> to handle.</param>
-        public void Log(LogEntry entry)
-        {
-            // We avoid race conditions by always making sure access to status proxy is locked - this only
-            // contends with adapter initialization and disposal so contention will not be the normal case
-            lock (s_adapters)
-            {
-                if (s_statusProxy is null || s_statusProxy.m_disposed)
-                    return;
-
-                if ((entry.filter.Flags & LogFilters.ERROR) > 0)
-                {
-                    // Expose errors through exception processor
-                    InvalidOperationException exception = new(FormatLogEntry(entry));
-                    s_statusProxy.OnProcessException(MessageLevel.Error, exception);
-                }
-                else
-                {
-                    // For other messages, we just expose as a normal status
-                    string message = FormatLogEntry(entry);
-
-                    if ((entry.filter.Flags & LogFilters.WARNING) > 0)
-                        s_statusProxy.OnStatusMessage(MessageLevel.Warning, message);
-                    else if ((entry.filter.Flags & LogFilters.DEBUG) > 0)
-                        s_statusProxy.OnStatusMessage(MessageLevel.Debug, message);
-                    else
-                        s_statusProxy.OnStatusMessage(MessageLevel.Info, message);
-                }
-            }
-        }
-
-        private static string FormatLogEntry(LogEntry entry)
-        {
-            StringBuilder entryText = new();
-
-            entryText.Append(entry.message);
-            entryText.Append($" ({LogFilters.GetFilterString(entry.filter.Flags)})");
-
-            if (!string.IsNullOrWhiteSpace(entry.location))
-                entryText.Append($" @ {entry.location}");
-
-            return entryText.ToString();
-        }
-    }
 
     // Constants
     private const double DefaultPollingInterval = 2.0D;
@@ -273,18 +223,7 @@ public class DNP3InputAdapter : InputAdapterBase
                 m_soeHandler = null;
             }
 
-            lock (s_adapters)
-            {
-                // Remove this adapter from the available list
-                s_adapters.Remove(this);
-
-                // See if we are disposing the status proxy instance
-                if (ReferenceEquals(s_statusProxy, this))
-                {
-                    // Attempt to find a new status proxy
-                    s_statusProxy = s_adapters.Count > 0 ? s_adapters[0] : null;
-                }
-            }
+            s_logHandler.UnregisterAdapter(this);
         }
         finally
         {
@@ -359,14 +298,7 @@ public class DNP3InputAdapter : InputAdapterBase
         if (OutputMeasurements is null || OutputMeasurements.Length == 0)
             OutputMeasurements = ParseOutputMeasurements(DataSource, false, $"FILTER ActiveMeasurements WHERE Device = '{Name}'");
 
-        lock (s_adapters)
-        {
-            // Add adapter to list of available adapters 
-            s_adapters.Add(this);
-
-            // If no adapter has been designated as the status proxy, assign this one
-            s_statusProxy ??= this;
-        }
+        s_logHandler.RegisterAdapter(this);
     }
 
     /// <summary>
@@ -429,24 +361,33 @@ public class DNP3InputAdapter : InputAdapterBase
         return $"Received {ProcessedMeasurements:N0} measurements so far...".CenterText(maxLength);
     }
 
+    void IDnp3Adapter.OnProcessException(MessageLevel level, Exception exception)
+    {
+        OnProcessException(level, exception);
+    }
+
+    void IDnp3Adapter.OnStatusMessage(MessageLevel level, string status)
+    {
+        OnStatusMessage(level, status);
+    }
+
     #endregion
 
     #region [ Static ]
 
     // Static Fields
 
+    // Proxy log handler with registered DNP3 input adapters instances
+    private static readonly IaonProxyLogHandler<DNP3InputAdapter> s_logHandler;
+
     // DNP3 manager shared across all the DNP3 input adapters, concurrency level defaults to number of processors
     private static readonly IDNP3Manager s_manager;
-
-    // We maintain a list of dnp3 adapters that can be used as status adapters for proxying messages from manager
-    private static readonly List<DNP3InputAdapter> s_adapters;
-    private static DNP3InputAdapter s_statusProxy;
 
     // Static Constructor
     static DNP3InputAdapter()
     {
-        s_adapters = [];
-        s_manager = DNP3ManagerFactory.CreateManager(Environment.ProcessorCount, new IaonProxyLogHandler());
+        s_logHandler = new IaonProxyLogHandler<DNP3InputAdapter>();
+        s_manager = DNP3ManagerFactory.CreateManager(Environment.ProcessorCount, s_logHandler);
     }
 
     // Static Methods
