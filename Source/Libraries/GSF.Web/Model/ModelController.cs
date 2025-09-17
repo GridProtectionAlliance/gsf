@@ -804,7 +804,7 @@ namespace GSF.Web.Model
                     if (SearchSettings.Condition != String.Empty)
                         joinCondition = $"{joinCondition} AND ";
                     joinCondition = joinCondition + $"SRC.{PrimaryKeyField} = AF.{SearchSettings.PrimaryKeyField}";
-
+                    
                     string sqlPivotColumns = $@"
                         SELECT '[AFV_' + [Key] + ']'
                             FROM (Select DISTINCT {SearchSettings.FieldKeyField} AS [Key] FROM {SearchSettings.AdditionalFieldTable} AS AF WHERE {collumnCondition}  ) AS [Fields]";
