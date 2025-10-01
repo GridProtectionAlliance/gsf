@@ -499,6 +499,10 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                     {
                         concentrator.ID = Convert.ToUInt32(RuntimeID);
                         concentrator.DataSource = dataSource;
+
+                        if (Enum.TryParse(CurrentItem.DataFormat, true, out DataFormat dataFormat))
+                            concentrator.DataFormat = dataFormat;
+
                         concentrator.UpdateConfiguration();
 
                         frameSize = C37Concentrator.CreateDataFrame(DateTime.UtcNow.Ticks, concentrator.ConfigurationFrame as IEEEC37_118.ConfigurationFrame1).BinaryLength;
