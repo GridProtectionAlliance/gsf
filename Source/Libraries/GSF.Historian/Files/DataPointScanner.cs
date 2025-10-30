@@ -116,10 +116,10 @@ internal class DataPointScanner
                 // Attach to data read exception event for the data block
                 dataBlock.DataReadException += m_dataReadExceptionHandler;
 
-                IEnumerable<IDataPoint> dataPoints = dataBlock.Read();
+                List<IDataPoint> dataPoints = dataBlock.Read().ToList();
 
                 if (ReverseQuery)
-                    dataPoints = dataPoints.Reverse();
+                    dataPoints.Reverse();
 
                 if (isFirst || isLast)
                 {
