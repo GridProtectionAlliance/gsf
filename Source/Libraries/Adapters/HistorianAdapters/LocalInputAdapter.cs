@@ -325,6 +325,12 @@ namespace HistorianAdapters
                             m_readTimer = null;
                         }
 
+                        if ((object)m_dataReader != null)
+                        {
+                            m_dataReader.Dispose();
+                            m_dataReader = null;
+                        }
+
                         if ((object)m_archiveReader != null)
                         {
                             m_archiveReader.HistoricFileListBuildStart -= m_archiveReader_HistoricFileListBuildStart;
@@ -521,6 +527,17 @@ namespace HistorianAdapters
             }
         }
 
+        // Finished reading all available data
+        private void RestartOrFinish()
+        {
+            m_readTimer.Enabled = false;
+
+            if (m_autoRepeat)
+                ThreadPool.QueueUserWorkItem(StartDataReader);
+            else
+                OnProcessingComplete();
+        }
+
         // Process next data read
         private void m_readTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
@@ -530,6 +547,12 @@ namespace HistorianAdapters
             {
                 try
                 {
+                    if (m_dataReader == null)
+                    {
+                        RestartOrFinish();
+                        return;
+                    }
+
                     IDataPoint currentPoint = m_dataReader.Current;
                     long timestamp = currentPoint.Time.ToDateTime().Ticks;
                     MeasurementKey key;
@@ -564,6 +587,9 @@ namespace HistorianAdapters
                         }
                         else
                         {
+                            m_dataReader.Dispose();
+                            m_dataReader = null;
+
                             if (timestamp < m_stopTime.ToDateTime().Ticks && m_startTime.ToDateTime().Ticks < timestamp)
                             {
                                 // Could be attempting read with a future end time - in these cases attempt to re-read current data
@@ -572,25 +598,11 @@ namespace HistorianAdapters
                                 m_dataReader = m_archiveReader.ReadData(m_historianIDs, m_startTime, m_stopTime).GetEnumerator();
 
                                 if (!m_dataReader.MoveNext())
-                                {
-                                    // Finished reading all available data
-                                    m_readTimer.Enabled = false;
-
-                                    if (m_autoRepeat)
-                                        ThreadPool.QueueUserWorkItem(StartDataReader);
-                                    else
-                                        OnProcessingComplete();
-                                }
+                                    RestartOrFinish();
                             }
                             else
                             {
-                                // Finished reading all available data
-                                m_readTimer.Enabled = false;
-
-                                if (m_autoRepeat)
-                                    ThreadPool.QueueUserWorkItem(StartDataReader);
-                                else
-                                    OnProcessingComplete();
+                                RestartOrFinish();
                             }
 
                             break;
