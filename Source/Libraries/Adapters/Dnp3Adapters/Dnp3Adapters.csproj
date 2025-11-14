@@ -97,6 +97,14 @@
       <Link>VC_redist.x64.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="..\..\..\Dependencies\OpenSSL\libcrypto-1_1-x64.dll">
+      <Link>libcrypto-1_1-x64.dll</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\..\Dependencies\OpenSSL\libssl-1_1-x64.dll">
+      <Link>libssl-1_1-x64.dll</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="ExampleConfigurations\comms.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
