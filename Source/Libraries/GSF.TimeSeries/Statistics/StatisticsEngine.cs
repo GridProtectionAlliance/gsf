@@ -303,20 +303,17 @@ namespace GSF.TimeSeries.Statistics
 
             public T ExecuteScalar<T>(string queryFormat, params object[] parameters)
             {
-                string query = m_database.ParameterizedQueryString(queryFormat, parameters.Select((_, index) => $"p{index}").ToArray());
-                return (T)Convert.ChangeType(m_database.Connection.ExecuteScalar(query, DataExtensions.DefaultTimeoutDuration, parameters), typeof(T));
+                return m_database.ExecuteScalar<T>(DataExtensions.DefaultTimeoutDuration, queryFormat, parameters);
             }
 
             public void ExecuteNonQuery(string queryFormat, params object[] parameters)
             {
-                string query = m_database.ParameterizedQueryString(queryFormat, parameters.Select((_, index) => $"p{index}").ToArray());
-                m_database.Connection.ExecuteNonQuery(query, DataExtensions.DefaultTimeoutDuration, parameters);
+                m_database.ExecuteNonQuery(DataExtensions.DefaultTimeoutDuration, queryFormat, parameters);
             }
 
             public DataTable RetrieveData(string queryFormat, params object[] parameters)
             {
-                string query = m_database.ParameterizedQueryString(queryFormat, parameters.Select((_, index) => $"p{index}").ToArray());
-                return m_database.Connection.RetrieveData(m_database.AdapterType, query, DataExtensions.DefaultTimeoutDuration, parameters);
+                return m_database.RetrieveData(DataExtensions.DefaultTimeoutDuration, queryFormat, parameters);
             }
 
             #endregion

@@ -168,10 +168,15 @@ namespace GSF.Data
     {
         #region [ Members ]
 
+        // Nested Types
+        private class VarChar(string text) { public string Text { get; } = text; }
+        private class NVarChar(string text) { public string Text { get; } = text; }
+
         // Fields
         private readonly string m_connectionString;
         private readonly Type m_connectionType;
         private readonly bool m_disposeConnection;
+        private DbType? m_defaultStringType = DbType.AnsiString;
         private bool m_disposed;
 
         #endregion
@@ -404,6 +409,23 @@ namespace GSF.Data
         /// Gets or sets default timeout for <see cref="AdoDataConnection"/> data operations.
         /// </summary>
         public int DefaultTimeout { get; set; } = DataExtensions.DefaultTimeoutDuration;
+
+        /// <summary>
+        /// Gets or sets a value to indicate whether queries should default to ANSI strings instead of Unicode strings.
+        /// </summary>
+        public DbType? DefaultStringType
+        {
+            get => m_defaultStringType;
+            set
+            {
+                DbType?[] validTypes = [DbType.AnsiString, DbType.String, null];
+
+                if (!validTypes.Contains(value))
+                    throw new ArgumentOutOfRangeException(nameof(value), "DB strings can only be AnsiString or String");
+
+                m_defaultStringType = value;
+            }
+        }
 
         /// <summary>
         /// Gets current UTC date-time in an implementation that is proper for the connected <see cref="AdoDataConnection"/> database type.
@@ -940,6 +962,26 @@ namespace GSF.Data
         }
 
         /// <summary>
+        /// Instructs <see cref="AdoDataConnection"/> to treat this string as an ANSI string in parameterized queries.
+        /// </summary>
+        /// <param name="value">The string to be treated as ANSI.</param>
+        /// <returns>The value to be used in parameterized queries.</returns>
+        public object ANSI(string value)
+        {
+            return new VarChar(value);
+        }
+
+        /// <summary>
+        /// Instructs <see cref="AdoDataConnection"/> to treat this string as a Unicode string in parameterized queries.
+        /// </summary>
+        /// <param name="value">The string to be treated as Unicode.</param>
+        /// <returns>The value to be used in parameterized queries.</returns>
+        public object Unicode(string value)
+        {
+            return new NVarChar(value);
+        }
+
+        /// <summary>
         /// Retrieves <see cref="System.Guid"/> from a <see cref="DataRow"/> field based on database type.
         /// </summary>
         /// <param name="row"><see cref="DataRow"/> from which value needs to be retrieved.</param>
@@ -1020,31 +1062,41 @@ namespace GSF.Data
                 {
                     for (int i = 0; i < parameters.Length; i++)
                     {
-                        object value = parameters[i];
-                        DbType? type = null;
+                        object parameter = parameters[i];
 
-                        if (value is IDbDataParameter dataParameter)
+                        DbType? type  = parameter switch
                         {
-                            type = dataParameter.DbType;
-                            value = dataParameter.Value;
-                        }
+                            string _           => DefaultStringType,
+                            VarChar _          => DbType.AnsiString,
+                            NVarChar _         => DbType.String,
+                            IDbDataParameter p => p.DbType,
+                            _                  => null
+                        };
 
-                        value = value switch
+                        object value = parameter switch
+                        {
+                            VarChar s          => s.Text,
+                            NVarChar s         => s.Text,
+                            IDbDataParameter p => p.Value,
+                            _                  => parameter
+                        };
+
+                        parameter = value switch
                         {
                             null      => DBNull.Value,
                             bool b    => Bool(b),
                             Guid guid => Guid(guid),
-                            _         => value
+                            _         => parameter
                         };
 
-                        IDbDataParameter parameter = command.CreateParameter();
+                        IDbDataParameter dataParameter = command.CreateParameter();
 
                         if (type.HasValue)
-                            parameter.DbType = type.Value;
+                            dataParameter.DbType = type.Value;
 
-                        parameter.ParameterName = "@p" + i;
-                        parameter.Value = value;
-                        dataParameters[i] = parameter;
+                        dataParameter.ParameterName = "@p" + i;
+                        dataParameter.Value = parameter;
+                        dataParameters[i] = dataParameter;
                     }
                 }
             }
