@@ -140,7 +140,7 @@ public class PIBufferInputAdapter : InputAdapterBase
         }
     }
 
-    protected override bool UseAsyncConnect => throw new NotImplementedException();
+    protected override bool UseAsyncConnect => false;
 
     #endregion
 
@@ -243,17 +243,21 @@ public class PIBufferInputAdapter : InputAdapterBase
             .Read(PageFactor);
     }
 
-    
 
     /// <summary>
     /// Commnad that reads the PI Buffer for the specified time range and tags.
     /// </summary>
     /// <param name="start"> The start Time of the requested data.</param>
     /// <param name="end">The end time for the data requested.</param>
-    /// <param name="tags">The list of PI Tags of the data requested sep[perated by ;.</param>
-    /// <returns>A string representing the read buffer data as commasepperated values in form tag:data1,time1,data2,time2 \newLine</returns>
+    /// <param name="tags">The list of PI Tags of the data requested separated by ;.</param>
+    /// <returns>A string representing the read buffer data as comma-separated values in form tag:data1,time1,data2,time2 \newLine</returns>
     public string ReadBuffer(DateTime start, DateTime end, string tags)
     {
+        if (start.Kind == DateTimeKind.Unspecified)
+            start = DateTime.SpecifyKind(start, DateTimeKind.Utc);
+        if (end.Kind == DateTimeKind.Unspecified)
+            end = DateTime.SpecifyKind(end, DateTimeKind.Utc);
+
         string[] tagArray = tags.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
 
         if (!Enabled || m_connection is null || tagArray.Length == 0)
