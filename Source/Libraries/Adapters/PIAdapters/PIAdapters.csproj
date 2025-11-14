@@ -55,6 +55,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="PIOutputAdapter.cs" />
+    <Compile Include="PIBufferInputAdapter.cs" />
     <Compile Include="PIPBInputAdapter.cs" />
     <Compile Include="PIRTInputAdapter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
