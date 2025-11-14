@@ -250,7 +250,7 @@ public class PIBufferInputAdapter : InputAdapterBase
     /// <param name="start"> The start Time of the requested data.</param>
     /// <param name="end">The end time for the data requested.</param>
     /// <param name="tags">The list of PI Tags of the data requested separated by ;.</param>
-    /// <returns>A string representing the read buffer data as comma-separated values in form tag:data1,time1,data2,time2 \newLine</returns>
+    /// <returns>A string representing the read buffer data as comma-separated values in form tag:data1,time1;data2,time2 \newLine</returns>
     public string ReadBuffer(DateTime start, DateTime end, string tags)
     {
         if (start.Kind == DateTimeKind.Unspecified)
@@ -313,7 +313,7 @@ public class PIBufferInputAdapter : InputAdapterBase
         }
 
         return string.Join(Environment.NewLine,
-            tagList.Select(item => $"{item.Key}:{string.Join(",", item.Value.Select(v => $"{v.Item2},{v.Item1}"))}"));
+            tagList.Select(item => $"{item.Key}:{string.Join(";", item.Value.Select(v => $"{v.Item2},{v.Item1}"))}"));
     }
 
     /// <inheritdoc/>
