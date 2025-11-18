@@ -231,17 +231,21 @@ public class PIBufferInputAdapter : InputAdapterBase
             m_connection.Open();
     }
 
-    private IEnumerable<AFValue> ReadData(AFTime startTime, AFTime endTime, PIPointList points)
+    private IEnumerable<AFValue> ReadData(AFTime startTime, AFTime endTime, PIPointList points, int sampleRate)
     {
-        return new TimeSortedValueScanner
-            {
-                Points = points,
-                StartTime = startTime,
-                EndTime = endTime,
-                DataReadExceptionHandler = ex => OnProcessException(MessageLevel.Warning, ex)
-            }
-            .Read(PageFactor);
-    }
+        TimeSortedValueScanner scanner = new TimeSortedValueScanner
+        {
+            Points = points,
+            StartTime = startTime,
+            EndTime = endTime,
+            DataReadExceptionHandler = ex => OnProcessException(MessageLevel.Warning, ex)
+        };
+
+        if (sampleRate <= 0)
+            return scanner.Read(PageFactor);
+        else
+            return scanner.ReadInterpolated(new AFTimeSpan(new TimeSpan(0,0,sampleRate)), PageFactor);
+     }
 
 
     /// <summary>
@@ -251,7 +255,7 @@ public class PIBufferInputAdapter : InputAdapterBase
     /// <param name="end">The end time for the data requested.</param>
     /// <param name="tags">The list of PI Tags of the data requested separated by ;.</param>
     /// <returns>A string representing the read buffer data as comma-separated values in form tag:data1,time1;data2,time2 \newLine</returns>
-    public string ReadBuffer(DateTime start, DateTime end, string tags)
+    public string ReadBuffer(DateTime start, DateTime end, string tags, int interpolationInterval)
     {
         if (start.Kind == DateTimeKind.Unspecified)
             start = DateTime.SpecifyKind(start, DateTimeKind.Utc);
@@ -294,7 +298,7 @@ public class PIBufferInputAdapter : InputAdapterBase
         m_startTime = start < DateTime.MinValue ? DateTime.MinValue : start > DateTime.MaxValue ? DateTime.MaxValue : start;
         m_stopTime = end < DateTime.MinValue ? DateTime.MinValue : end > DateTime.MaxValue ? DateTime.MaxValue : end;
 
-        m_dataReader = ReadData(m_startTime, m_stopTime, points).GetEnumerator();
+        m_dataReader = ReadData(m_startTime, m_stopTime, points, interpolationInterval).GetEnumerator();
 
         while (m_dataReader.MoveNext())
         {
@@ -316,6 +320,7 @@ public class PIBufferInputAdapter : InputAdapterBase
             tagList.Select(item => $"{item.Key}:{string.Join(";", item.Value.Select(v => $"{v.Item2},{v.Item1}"))}"));
     }
 
+    
     /// <inheritdoc/>
     protected override void AttemptConnection() {}
 
