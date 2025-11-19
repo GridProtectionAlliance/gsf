@@ -165,5 +165,112 @@ public class TimeSortedValueScanner
         while (enumerators.Count > 0);
     }
 
+    /// <summary>
+    /// Reads all <see cref="AFValue"/> instances in time sorted order as a yielding enumerable using PI InterpolatedValues API.
+    /// </summary>
+    /// <param name="pageFactor">Defines a paging factor used to load more data into a page.</param>
+    /// <param name="interval">Defines the interval used for interpolation.</param>
+    /// <returns>Each recorded <see cref="AFValue"/> in time-sorted order for the specified <see cref="Points"/> and time-range.</returns>
+    /// 
+    public IEnumerable<AFValue> ReadInterpolated(AFTimeSpan interval, int pageFactor = 1)
+    {
+        PIPagingConfiguration config = new(PIPageType.TagCount, Points.Count * pageFactor < 1 ? 1 : pageFactor);
+        List<IEnumerator<AFValue>> enumerators = [];
+
+        try
+        {
+            // Setup enumerators for each set of points that have data
+            foreach (AFValues scanner in Points.InterpolatedValues(new AFTimeRange(StartTime, EndTime), interval,  null, false, config))
+            {
+                IEnumerator<AFValue> enumerator = scanner.GetEnumerator();
+
+                // Add enumerator to the list if it has at least one value
+                if (enumerator.MoveNext())
+                    enumerators.Add(enumerator);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Errors that occur during bulk calls get trapped here, actual error is stored on the PIPagingConfiguration object
+            DataReadExceptionHandler(config.Error);
+        }
+        catch (Exception ex)
+        {
+            DataReadExceptionHandler(ex);
+        }
+
+        if (enumerators.Count == 0)
+            yield break;
+
+        List<int> completed = [];
+
+        // Start publishing data points in time-sorted order
+        do
+        {
+            AFTime publishTime = AFTime.MaxValue;
+            AFValue dataPoint;
+
+            // Find minimum publication time for current values
+            foreach (IEnumerator<AFValue> enumerator in enumerators)
+            {
+                dataPoint = enumerator.Current;
+
+                if (dataPoint?.Timestamp < publishTime)
+                    publishTime = dataPoint.Timestamp;
+            }
+
+            int index = 0;
+
+            // Publish all values at the current time
+            foreach (IEnumerator<AFValue> enumerator in enumerators)
+            {
+                bool enumerationComplete = false;
+                dataPoint = enumerator.Current;
+
+                if (dataPoint?.Timestamp <= publishTime)
+                {
+                    // Attempt to advance to next data point, tracking completed enumerators
+                    if (!enumerator.MoveNext())
+                    {
+                        enumerationComplete = true;
+                        completed.Add(index);
+                    }
+
+                    yield return dataPoint;
+
+                    // Make sure any point IDs with duplicated times directly follow
+                    if (!enumerationComplete)
+                    {
+                        while (enumerator.Current?.Timestamp <= publishTime)
+                        {
+                            yield return enumerator.Current;
+
+                            if (!enumerator.MoveNext())
+                            {
+                                completed.Add(index);
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                index++;
+            }
+
+            if (completed.Count == 0)
+                continue;
+
+            // Remove completed enumerators
+            completed.Sort();
+
+            for (int i = completed.Count - 1; i >= 0; i--)
+                enumerators.RemoveAt(completed[i]);
+
+            completed.Clear();
+        }
+        while (enumerators.Count > 0);
+    }
+
+
     #endregion
 }
