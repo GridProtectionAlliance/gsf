@@ -202,7 +202,7 @@ public class PIBufferInputAdapter : InputAdapterBase
         else
             PageFactor = DefaultPageFactor;
 
-        GetPIConnection();
+        OpenPIConnection();
     }
 
     /// <summary>
@@ -218,7 +218,7 @@ public class PIBufferInputAdapter : InputAdapterBase
     /// <summary>
     /// Attempts to connect to this <see cref="PIAdapters.PIPBInputAdapter"/>.
     /// </summary>
-    private void GetPIConnection()
+    private void OpenPIConnection()
     {
             m_connection = new PIConnection
             {
@@ -295,10 +295,10 @@ public class PIBufferInputAdapter : InputAdapterBase
             return string.Empty;
         }
 
-        m_startTime = start < DateTime.MinValue ? DateTime.MinValue : start > DateTime.MaxValue ? DateTime.MaxValue : start;
-        m_stopTime = end < DateTime.MinValue ? DateTime.MinValue : end > DateTime.MaxValue ? DateTime.MaxValue : end;
+        m_startTime = start;
+        m_stopTime = end;
 
-        m_dataReader = ReadData(m_startTime, m_stopTime, points, interpolationInterval).GetEnumerator();
+        m_dataReader = ReadData(start, end, points, interpolationInterval).GetEnumerator();
 
         while (m_dataReader.MoveNext())
         {
