@@ -2089,7 +2089,13 @@ namespace GSF.TimeSeries
                     try
                     {
                         // See if method exists with specified name using reflection
-                        MethodInfo method = adapter.GetType().GetMethod(command, BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance | BindingFlags.IgnoreCase);
+                        MethodInfo method = adapter
+                            .GetType()
+                            .GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance | BindingFlags.IgnoreCase)
+                            .Where(method => method.Name == command)
+                            .Where(method => method.TryGetAttribute(out AdapterCommandAttribute _))
+                            .Select((method, index) => index == 0 ? method : throw new AmbiguousMatchException())
+                            .LastOrDefault();
 
                         // Invoke method
                         if (method is not null)
