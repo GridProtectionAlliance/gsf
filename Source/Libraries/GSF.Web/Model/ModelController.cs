@@ -823,7 +823,7 @@ namespace GSF.Web.Model
                                 FROM tempdb.sys.columns WHERE  object_id = Object_id('tempdb..#Tbl') AND name NOT LIKE 'AFV%';";
                     sqlNoPivot = string.Join(",", connection.RetrieveData(sqlNoPivot).Select().Select(r => r[0].ToString()));
                     sql = $@"
-                        SELECT {limit} {sqlNoPivot} FROM {tblSelect}
+                        SELECT {limit} * FROM {tblSelect}
                         {whereClause}
                         ORDER BY {postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")}";
                 }
