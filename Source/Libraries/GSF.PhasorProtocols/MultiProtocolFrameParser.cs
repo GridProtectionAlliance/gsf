@@ -139,7 +139,11 @@ namespace GSF.PhasorProtocols
         /// <summary>
         /// IEC 61850-90-5 protocol.
         /// </summary>
-        IEC61850_90_5
+        IEC61850_90_5,
+        /// <summary>
+        /// SEL CWS protocol.
+        /// </summary>
+        SelCWS
     }
 
     #endregion
@@ -2538,6 +2542,9 @@ namespace GSF.PhasorProtocols
                         if (settings.TryGetValue("refreshConfigFileOnChange", out setting))
                             macrodyneParameters.RefreshConfigurationFileOnChange = setting.ParseBoolean();
                     }
+                    break;
+                case PhasorProtocol.SelCWS:
+                    m_frameParser = new SelCWS.FrameParser(m_checkSumValidationFrameTypes, TrustHeaderLength);
                     break;
                 default:
                     throw new InvalidOperationException($"Phasor protocol \"{m_phasorProtocol}\" is not recognized, failed to initialize frame parser");

@@ -156,6 +156,7 @@ namespace GSF.PhasorProtocols
                 PhasorProtocol.SelFastMessage => "SEL Fast Message",
                 PhasorProtocol.Macrodyne => "Macrodyne",
                 PhasorProtocol.IEC61850_90_5 => "IEC 61850-90-5",
+                PhasorProtocol.SelCWS => "SEL CWS",
                 _ => protocol.ToString().Replace('_', '.').ToUpper(),
             };
         }
