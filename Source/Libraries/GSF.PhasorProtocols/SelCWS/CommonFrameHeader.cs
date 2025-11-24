@@ -38,7 +38,7 @@ namespace GSF.PhasorProtocols.SelCWS;
 /// </summary>
 public class CommonFrameHeader : CommonHeaderBase<FrameType>
 {
-    #region [ Constructors ]
+    #region [ Members ]
 
     // Constants
 
@@ -47,13 +47,20 @@ public class CommonFrameHeader : CommonHeaderBase<FrameType>
     /// </summary>
     public const ushort FixedLength = 16;
 
+    // Fields
+    private FrameType m_frameType;
+
+    #endregion
+
+    #region [ Constructors ]
+
     /// <summary>
     /// Creates a new <see cref="CommonFrameHeader"/> from <paramref name="frameType"/>.
     /// </summary>
     /// <param name="frameType">Type of the frame.</param>
     public CommonFrameHeader(FrameType frameType)
     {
-        FrameType = frameType;
+        m_frameType = frameType;
     }
 
     /// <summary>
@@ -69,22 +76,22 @@ public class CommonFrameHeader : CommonHeaderBase<FrameType>
 
         // Validate SEL CWS data image
         if (buffer[startIndex + 1] != Common.Version)
-            throw new InvalidOperationException($"Bad data stream, expected version byte 0x01 as second byte in SEL CWS frame, got 0x{buffer[startIndex + 1].ToString("X").PadLeft(2, '0')}");
+            throw new InvalidOperationException($"Bad data stream, expected version byte 0x01 as second byte in SEL CWS frame, got 0x{buffer[startIndex + 1]:X2}");
 
         // Validate frame type
         if (buffer[startIndex] != (byte)FrameType.ConfigurationFrame && buffer[startIndex] != (byte)FrameType.DataFrame)
-            throw new InvalidOperationException($"Bad data stream, expected frame type of 0x00 or 0x021 as first byte in SEL CWS frame, got 0x{buffer[startIndex].ToString("X").PadLeft(2, '0')}");
+            throw new InvalidOperationException($"Bad data stream, expected frame type of 0x00 or 0x01 as first byte in SEL CWS frame, got 0x{buffer[startIndex]:X2}");
 
-        FrameType = (FrameType)buffer[startIndex];
+        m_frameType = (FrameType)buffer[startIndex];
 
         // Parse frame length
-        FrameLength = LittleEndian.ToUInt32(buffer, startIndex + 2);
+        FrameLength = (int)BigEndian.ToUInt32(buffer, startIndex + 2) + 6;
 
         // Parse channel ID
-        ChannelID = LittleEndian.ToUInt64(buffer, startIndex + 6);
+        ChannelID = BigEndian.ToUInt64(buffer, startIndex + 6);
 
         // Parse packet count
-        PacketCount = LittleEndian.ToUInt16(buffer, startIndex + 14);
+        PacketCount = BigEndian.ToUInt16(buffer, startIndex + 14);
     }
 
     /// <summary>
@@ -95,8 +102,8 @@ public class CommonFrameHeader : CommonHeaderBase<FrameType>
     protected CommonFrameHeader(SerializationInfo info, StreamingContext context)
     {
         // Deserialize common frame header
-        FrameType = (FrameType)info.GetValue("frameType", typeof(FrameType));
-        FrameLength = info.GetUInt32("frameLength");
+        m_frameType = (FrameType)info.GetValue("frameType", typeof(FrameType));
+        FrameLength = info.GetInt32("frameLength");
         ChannelID = info.GetUInt64("channelID");
         PacketCount = info.GetUInt16("packetCount");
     }
@@ -106,14 +113,18 @@ public class CommonFrameHeader : CommonHeaderBase<FrameType>
     #region [ Properties ]
 
     /// <summary>
-    /// Gets the <see cref="FrameType"/> of this SEL CWS frame.
+    /// Gets the <see cref="TypeID"/> of this SEL CWS frame.
     /// </summary>
-    public FrameType FrameType { get; }
+    public override FrameType TypeID
+    {
+        get => m_frameType;
+        set => m_frameType = value;
+    }
 
     /// <summary>
     /// Gets the length of this SEL CWS frame.
     /// </summary>
-    public uint FrameLength { get; }
+    public int FrameLength { get; }
 
     /// <summary>
     /// Gets the channel ID associated with this SEL CWS frame.
@@ -136,7 +147,7 @@ public class CommonFrameHeader : CommonHeaderBase<FrameType>
         get
         {
             // Translate specific frame type to fundamental frame type
-            return FrameType switch
+            return TypeID switch
             {
                 FrameType.DataFrame => FundamentalFrameType.DataFrame,
                 FrameType.ConfigurationFrame  => FundamentalFrameType.ConfigurationFrame,
@@ -155,9 +166,9 @@ public class CommonFrameHeader : CommonHeaderBase<FrameType>
     /// <param name="attributes">Dictionary to append header specific attributes to.</param>
     internal void AppendHeaderAttributes(Dictionary<string, string> attributes)
     {
-        attributes.Add("Frame Type", $"{(ushort)FrameType}: {FrameType}");
+        attributes.Add("Frame Type", $"{(ushort)m_frameType}: {m_frameType}");
         attributes.Add("Frame Length", FrameLength.ToString());
-        attributes.Add("Version", Common.Version.ToString("X2"));
+        attributes.Add("Version", $"0x{Common.Version:X2}");
         attributes.Add("Channel ID", ChannelID.ToString());
         attributes.Add("Packet Count", PacketCount.ToString());
     }
@@ -170,7 +181,7 @@ public class CommonFrameHeader : CommonHeaderBase<FrameType>
     public virtual void GetObjectData(SerializationInfo info, StreamingContext context)
     {
         // Serialize unique common frame header values
-        info.AddValue("frameType", FrameType, typeof(FrameType));
+        info.AddValue("frameType", m_frameType, typeof(FrameType));
         info.AddValue("frameLength", FrameLength);
         info.AddValue("channelID", ChannelID);
         info.AddValue("packetCount", PacketCount);

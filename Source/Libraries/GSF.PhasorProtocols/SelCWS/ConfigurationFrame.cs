@@ -97,8 +97,12 @@ public class ConfigurationFrame : ConfigurationFrameBase, ISupportSourceIdentifi
     {
         // Since SEL CWS only supports a single device there will only be one cell, so we just share this value
         // with our only child and expose the value at the parent level for convenience
-        get => Cells[0].NominalFrequency;
-        set => Cells[0].NominalFrequency = value;
+        get => Cells.Count == 0 ? Common.DefaultNominalFrequency : Cells[0].NominalFrequency;
+        set
+        {
+            if (Cells.Count > 0)
+                Cells[0].NominalFrequency = value;
+        }
     }
 
     /// <summary>
@@ -113,7 +117,13 @@ public class ConfigurationFrame : ConfigurationFrameBase, ISupportSourceIdentifi
     {
         // Make sure frame header exists
         get => m_frameHeader ??= new CommonFrameHeader(SelCWS.FrameType.ConfigurationFrame);
-        set => m_frameHeader = value;
+        set
+        {
+            m_frameHeader = value;
+
+            if (m_frameHeader is not null)
+                State = m_frameHeader.State as IConfigurationFrameParsingState;
+        }
     }
 
     // This interface implementation satisfies ISupportFrameImage<FrameType>.CommonHeader
@@ -170,21 +180,21 @@ public class ConfigurationFrame : ConfigurationFrameBase, ISupportSourceIdentifi
             {
                 // Version 1 of the SEL CWS protocol has fixed configuration values
                 // Note: We interpret analogs as phasor magnitudes
-                ushort analogCount = LittleEndian.ToUInt16(buffer, startIndex);
+                ushort analogCount = BigEndian.ToUInt16(buffer, startIndex);
 
                 if (analogCount != 6)
                     throw new InvalidOperationException($"SEL CWS version 1 configuration frame expected six phasor points, got {analogCount:N0}.");
 
                 startIndex += 2;
 
-                ushort digitalCount = LittleEndian.ToUInt16(buffer, startIndex);
+                ushort digitalCount = BigEndian.ToUInt16(buffer, startIndex);
 
                 if (digitalCount != 0)
                     throw new InvalidOperationException($"SEL CWS version 1 configuration frame expected zero digital points, got {digitalCount:N0}.");
 
                 startIndex += 2;
 
-                int sampleRate = LittleEndian.ToInt32(buffer, startIndex);
+                int sampleRate = BigEndian.ToInt32(buffer, startIndex);
 
                 if (sampleRate != Common.DefaultFrameRate)
                     throw new InvalidOperationException($"SEL CWS version 1 configuration frame expected sample rate of {Common.DefaultFrameRate:N0} SPS, got {sampleRate:N0} SPS.");
@@ -206,7 +216,7 @@ public class ConfigurationFrame : ConfigurationFrameBase, ISupportSourceIdentifi
 
         for (int i = 0; i < Common.MaximumPhasorValues; i++)
         {
-            scalars[i] = LittleEndian.ToSingle(buffer, index);
+            scalars[i] = BigEndian.ToSingle(buffer, index);
             index += 4;
         }
 
@@ -225,7 +235,7 @@ public class ConfigurationFrame : ConfigurationFrameBase, ISupportSourceIdentifi
         }
 
         // SEL CWS configuration frames only support a single cell/device
-        ConfigurationCell cell = new(this, NominalFrequency, scalars, stationName, phasorNames);
+        ConfigurationCell cell = new(this, Common.DefaultNominalFrequency, scalars, stationName, phasorNames);
         Cells.Add(cell);
 
         return index - startIndex;

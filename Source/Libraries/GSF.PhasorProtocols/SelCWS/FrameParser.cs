@@ -26,9 +26,7 @@
 //******************************************************************************************************
 
 using System;
-using System.Text;
 using GSF.Parsing;
-using GSF.PhasorProtocols.IEEEC37_118;
 using GSF.Units.EE;
 
 namespace GSF.PhasorProtocols.SelCWS;
@@ -63,6 +61,7 @@ public class FrameParser : FrameParserBase<FrameType>
 
     // Fields
     private ConfigurationFrame m_configurationFrame;
+    private DataFrame m_initialDataFrame;
 
     #endregion
 
@@ -108,23 +107,6 @@ public class FrameParser : FrameParserBase<FrameType>
     /// </summary>
     public LineFrequency NominalFrequency { get; set; }
 
-    /// <summary>
-    /// Gets current descriptive status of the <see cref="FrameParser"/>.
-    /// </summary>
-    public override string Status
-    {
-        get
-        {
-            if (m_configurationFrame is null)
-                return base.Status;
-
-            StringBuilder status = new();
-            status.Append(base.Status);
-
-            return status.ToString();
-        }
-    }
-
     #endregion
 
     #region [ Methods ]
@@ -168,11 +150,71 @@ public class FrameParser : FrameParserBase<FrameType>
         // Parse common frame header
         CommonFrameHeader parsedFrameHeader = new(buffer, offset, length);
 
-        // TODO: Determine if this is useful:
         // Expose the frame buffer image in case client needs this data for any reason
-        //OnReceivedFrameBufferImage(parsedFrameHeader.FundamentalFrameType, buffer, offset, parsedFrameHeader.FrameLength);
+        OnReceivedFrameBufferImage(parsedFrameHeader.FundamentalFrameType, buffer, offset, parsedFrameHeader.FrameLength);
+
+        // As an optimization, we also make sure entire frame buffer image is available to be parsed - by doing this
+        // we eliminate the need to validate length on all subsequent data elements that comprise the frame
+        if (length < parsedFrameHeader.FrameLength)
+            return null;
+
+        // Handle special parsing states
+        parsedFrameHeader.State = parsedFrameHeader.TypeID switch
+        {
+            FrameType.DataFrame =>
+                new DataFrameParsingState(parsedFrameHeader.FrameLength, ConfigurationFrame, DataCell.CreateNewCell, TrustHeaderLength, ValidateDataFrameCheckSum),
+            FrameType.ConfigurationFrame =>
+                new ConfigurationFrameParsingState(parsedFrameHeader.FrameLength, null, TrustHeaderLength, ValidateConfigurationFrameCheckSum),
+            _ => parsedFrameHeader.State
+        };
+
+        m_initialDataFrame = null;
 
         return parsedFrameHeader;
+    }
+
+    /// <inheritdoc/>
+    protected override int ParseFrame(byte[] buffer, int offset, int length)
+    {
+        int parsedLength = base.ParseFrame(buffer, offset, length);
+
+        if (buffer[offset] != (byte)FrameType.DataFrame || m_initialDataFrame is null)
+            return parsedLength;
+
+        const long NanosecondsPerFrame = Common.DefaultFrameRate / 50;
+        long nanosecondsTimestamp = m_initialDataFrame.NanosecondTimestamp;
+
+        // In the case of data frames in CWS, the source buffer has 49 more frames to parse after the first
+        for (int i = 0; i < 49; i++)
+        {
+            nanosecondsTimestamp += NanosecondsPerFrame;
+
+            DataFrame dataFrame = new(nanosecondsTimestamp, m_initialDataFrame.ConfigurationFrame)
+            {
+                CommonHeader = m_initialDataFrame.CommonHeader
+            };
+
+            parsedLength += dataFrame.ParseBinaryImage(buffer, offset, length);
+
+            OnReceivedDataFrame(dataFrame);
+
+            // If event for native data frame is subscribed, raise it
+            ReceivedDataFrame?.Invoke(this, new EventArgs<DataFrame>(dataFrame));
+        }
+
+        return parsedLength;
+    }
+
+    /// <summary>
+    /// Raises the <see cref="FrameParserBase{TypeIndentifier}.ReceivedConfigurationFrame"/> event.
+    /// </summary>
+    /// <param name="frame"><see cref="IConfigurationFrame"/> to send to <see cref="FrameParserBase{TypeIndentifier}.ReceivedConfigurationFrame"/> event.</param>
+    protected override void OnReceivedConfigurationFrame(IConfigurationFrame frame)
+    {
+        // Cache new configuration frame for parsing subsequent data frames...
+        m_configurationFrame = frame as ConfigurationFrame;
+
+        base.OnReceivedConfigurationFrame(frame);
     }
 
     /// <summary>
@@ -183,6 +225,10 @@ public class FrameParser : FrameParserBase<FrameType>
     {
         // Raise abstract channel frame events as a priority (i.e., IDataFrame, IConfigurationFrame, etc.)
         base.OnReceivedChannelFrame(frame);
+
+        // Keep reference to initial data frame (1 of 50 frames in SEL CWS)
+        if (frame is DataFrame initialDataFrame)
+            m_initialDataFrame = initialDataFrame;
 
         // Raise SEL CWS specific channel frame events, if any have been subscribed
         if (frame is null || ReceivedDataFrame is null && ReceivedConfigurationFrame is null)

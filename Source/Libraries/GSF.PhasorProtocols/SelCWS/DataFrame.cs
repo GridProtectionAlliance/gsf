@@ -43,6 +43,8 @@ public class DataFrame : DataFrameBase, ISupportSourceIdentifiableFrameImage<Sou
 
     // Fields
     private CommonFrameHeader m_frameHeader;
+    private long m_nanosecondTimestamp;
+    private bool m_initialDataFrame;
 
     #endregion
 
@@ -58,19 +60,22 @@ public class DataFrame : DataFrameBase, ISupportSourceIdentifiableFrameImage<Sou
     public DataFrame()
         : base(new DataCellCollection(), 0, null)
     {
+        // Only DataFrame that is automatically parsed is the initial one that contains the nanosecond timestamp
+        m_initialDataFrame = true;
     }
 
     /// <summary>
     /// Creates a new <see cref="DataFrame"/> from specified parameters.
     /// </summary>
-    /// <param name="timestamp">The exact timestamp, in <see cref="Ticks"/>, of the data represented by this <see cref="DataFrame"/>.</param>
+    /// <param name="nanosecondTimestamp">The exact timestamp, in nanoseconds, of the data represented by this <see cref="DataFrame"/>.</param>
     /// <param name="configurationFrame">The <see cref="ConfigurationFrame"/> associated with this <see cref="DataFrame"/>.</param>
     /// <remarks>
     /// This constructor is used by a consumer to generate a SEL CWS data frame.
     /// </remarks>
-    public DataFrame(Ticks timestamp, ConfigurationFrame configurationFrame)
-        : base(new DataCellCollection(), timestamp, configurationFrame)
+    public DataFrame(long nanosecondTimestamp, ConfigurationFrame configurationFrame)
+        : base(new DataCellCollection(), nanosecondTimestamp / 100 + UnixTimeTag.BaseTicks.Value, configurationFrame)
     {
+        m_nanosecondTimestamp = nanosecondTimestamp;
     }
 
     /// <summary>
@@ -83,6 +88,7 @@ public class DataFrame : DataFrameBase, ISupportSourceIdentifiableFrameImage<Sou
     {
         // Deserialize configuration frame
         m_frameHeader = (CommonFrameHeader)info.GetValue("frameHeader", typeof(CommonFrameHeader));
+        NanosecondTimestamp = info.GetInt64("nanosecondTimestamp");
     }
 
     #endregion
@@ -101,6 +107,19 @@ public class DataFrame : DataFrameBase, ISupportSourceIdentifiableFrameImage<Sou
     {
         get => base.ConfigurationFrame as ConfigurationFrame;
         set => base.ConfigurationFrame = value;
+    }
+
+    /// <summary>
+    /// Gets or sets the nanosecond timestamp.
+    /// </summary>
+    public long NanosecondTimestamp
+    {
+        get => m_nanosecondTimestamp;
+        set
+        {
+            m_nanosecondTimestamp = value;
+            Timestamp = m_nanosecondTimestamp / 100 + UnixTimeTag.BaseTicks.Value;
+        }
     }
 
     /// <summary>
@@ -140,6 +159,7 @@ public class DataFrame : DataFrameBase, ISupportSourceIdentifiableFrameImage<Sou
             Dictionary<string, string> baseAttributes = base.Attributes;
 
             CommonHeader.AppendHeaderAttributes(baseAttributes);
+            baseAttributes.Add("Nanosecond Timestamp", $"{m_nanosecondTimestamp:N0}");
 
             return baseAttributes;
         }
@@ -158,8 +178,23 @@ public class DataFrame : DataFrameBase, ISupportSourceIdentifiableFrameImage<Sou
     /// <returns>The length of the data that was parsed.</returns>
     protected override int ParseHeaderImage(byte[] buffer, int startIndex, int length)
     {
-        // We already parsed the frame header, so we just skip past it...
-        return CommonFrameHeader.FixedLength;
+        // We already parsed the frame header for initial data frame, so we just skip past it...
+        return m_initialDataFrame ? CommonFrameHeader.FixedLength : 0;
+    }
+
+    /// <inheritdoc/>
+    protected override int ParseBodyImage(byte[] buffer, int startIndex, int length)
+    {
+        int index = startIndex;
+
+        if (m_initialDataFrame)
+        {
+            // Parse nanosecond timestamp
+            NanosecondTimestamp = BigEndian.ToInt64(buffer, index);
+            index += 8;
+        }
+
+        return base.ParseBodyImage(buffer, index, length - (index - startIndex));
     }
 
     /// <summary>
@@ -200,6 +235,7 @@ public class DataFrame : DataFrameBase, ISupportSourceIdentifiableFrameImage<Sou
 
         // Serialize configuration frame
         info.AddValue("frameHeader", m_frameHeader, typeof(CommonFrameHeader));
+        info.AddValue("nanosecondTimestamp", m_nanosecondTimestamp);
     }
 
     #endregion

@@ -26,10 +26,8 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
-using System.Text;
 using GSF.Units;
 
 // ReSharper disable RedundantOverriddenMember
@@ -42,13 +40,6 @@ namespace GSF.PhasorProtocols.SelCWS;
 [Serializable]
 public class DataCell : DataCellBase
 {
-    #region [ Members ]
-
-    // Fields
-    private double m_analogValue;
-
-    #endregion
-
     #region [ Constructors ]
 
     /// <summary>
@@ -99,9 +90,7 @@ public class DataCell : DataCellBase
         set => base.ConfigurationCell = value;
     }
 
-    /// <summary>
-    /// Gets or sets flag that determines if data of this <see cref="DataCell"/> is valid.
-    /// </summary>
+    /// <inheritdoc/>
     public override bool DataIsValid
     {
         get => true;
@@ -111,9 +100,17 @@ public class DataCell : DataCellBase
         }
     }
 
-    /// <summary>
-    /// Gets or sets <see cref="PhasorProtocols.DataSortingType"/> of this <see cref="DataCell"/>.
-    /// </summary>
+    /// <inheritdoc/>
+    public override bool SynchronizationIsValid
+    {
+        get => true;
+        set
+        {
+            // We just ignore updates to this value; SEL CWS defines no flags to determine if data is synchronized
+        }
+    }
+
+    /// <inheritdoc/>
     public override DataSortingType DataSortingType
     {
         get => SynchronizationIsValid ? DataSortingType.ByTimestamp : DataSortingType.ByArrival;
@@ -123,10 +120,7 @@ public class DataCell : DataCellBase
         }
     }
 
-    /// <summary>
-    /// Gets or sets flag that determines if source device of this <see cref="DataCell"/> is reporting an error.
-    /// </summary>
-    /// <remarks>SEL CWS doesn't define any flags for device errors.</remarks>
+    /// <inheritdoc/>
     [EditorBrowsable(EditorBrowsableState.Never)]
     public override bool DeviceError
     {
@@ -148,14 +142,8 @@ public class DataCell : DataCellBase
     /// <param name="startIndex">Start index into <paramref name="buffer"/> to begin parsing.</param>
     /// <param name="length">Length of valid data within <paramref name="buffer"/>.</param>
     /// <returns>The length of the data that was parsed.</returns>
-    /// <remarks>
-    /// The longitude, latitude and number of satellites arrive at the top of minute in SEL CWS data as the analog
-    /// data in a single row, each on their own row, as sample 1, 2, and 3 respectively.
-    /// </remarks>
     protected override int ParseBodyImage(byte[] buffer, int startIndex, int length)
     {
-        DataFrame parent = Parent;
-        CommonFrameHeader commonHeader = parent.CommonHeader;
         ConfigurationCell configurationCell = ConfigurationCell;
         int index = startIndex;
 
@@ -170,7 +158,7 @@ public class DataCell : DataCellBase
         {
             Angle angle = 0.0D; // TODO: Calculate this
             
-            double magnitude = LittleEndian.ToInt32(buffer, index);
+            double magnitude = BigEndian.ToInt32(buffer, index);
             index += 4;
 
             PhasorValue phasor = null;
@@ -190,7 +178,7 @@ public class DataCell : DataCellBase
             }
         }
 
-        return startIndex - index;
+        return index - startIndex;
     }
 
     /// <summary>
@@ -206,27 +194,6 @@ public class DataCell : DataCellBase
     #endregion
 
     #region [ Static ]
-
-    // Static Methods
-
-    // Converts SEL CWS date (mm/dd/yy), time (hh:mm:ss) and subsecond to time in ticks
-    internal static Ticks ParseTimestamp(string fnetDate, string fnetTime, uint sampleIndex, int frameRate)
-    {
-        fnetDate = fnetDate.PadLeft(6, '0');
-        fnetTime = fnetTime.PadLeft(6, '0');
-
-        DateTime timestamp = new(
-            /*  year */ 2000 + int.Parse(fnetDate.Substring(4, 2)), 
-            /* month */ int.Parse(fnetDate.Substring(0, 2).Trim()), 
-            /*  day  */ int.Parse(fnetDate.Substring(2, 2)), 
-            /*  hour */ int.Parse(fnetTime.Substring(0, 2)), 
-            /*  min  */ int.Parse(fnetTime.Substring(2, 2)), 
-            /*  sec  */ int.Parse(fnetTime.Substring(4, 2)));
-
-        return sampleIndex == 10 ? 
-            timestamp.AddSeconds(1.0D).Ticks :
-            timestamp.AddMilliseconds((int)(sampleIndex / (double)frameRate * 1000.0D) % 1000).Ticks;
-    }
 
     // Delegate handler to create a new SEL CWS data cell
     internal static IDataCell CreateNewCell(IChannelFrame parent, IChannelFrameParsingState<IDataCell> state, int index, byte[] buffer, int startIndex, out int parsedLength)

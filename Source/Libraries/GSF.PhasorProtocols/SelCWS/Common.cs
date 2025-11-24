@@ -39,13 +39,13 @@ namespace GSF.PhasorProtocols.SelCWS;
 public enum FrameType : byte
 {
     /// <summary>
-    /// Configuration frame.
-    /// </summary>
-    ConfigurationFrame = 0x00,
-    /// <summary>
     /// Data frame.
     /// </summary>
-    DataFrame = 0x01,
+    DataFrame = 0x00,
+    /// <summary>
+    /// Configuration frame.
+    /// </summary>
+    ConfigurationFrame = 0x01
 }
 
 #endregion
