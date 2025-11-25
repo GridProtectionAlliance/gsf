@@ -62,6 +62,7 @@ public class FrameParser : FrameParserBase<FrameType>
     // Fields
     private ConfigurationFrame m_configurationFrame;
     private DataFrame m_initialDataFrame;
+    private RollingPhaseEstimator m_phaseEstimator;
 
     #endregion
 
@@ -72,12 +73,12 @@ public class FrameParser : FrameParserBase<FrameType>
     /// </summary>
     /// <param name="checkSumValidationFrameTypes">Frame types that should perform check-sum validation; default to <see cref="CheckSumValidationFrameTypes.AllFrames"/></param>
     /// <param name="trustHeaderLength">Determines if header lengths should be trusted over parsed byte count.</param>
-    /// <param name="frameRate">The defined frame rate of this <see cref="ConfigurationFrame"/>.</param>
-    /// <param name="nominalFrequency">The nominal <see cref="LineFrequency"/> of this <see cref="ConfigurationFrame"/>.</param>
-    public FrameParser(CheckSumValidationFrameTypes checkSumValidationFrameTypes = CheckSumValidationFrameTypes.AllFrames, bool trustHeaderLength = true, ushort frameRate = Common.DefaultFrameRate, LineFrequency nominalFrequency = Common.DefaultNominalFrequency)
+    public FrameParser(CheckSumValidationFrameTypes checkSumValidationFrameTypes = CheckSumValidationFrameTypes.AllFrames, bool trustHeaderLength = true)
         : base(checkSumValidationFrameTypes, trustHeaderLength)
     {
-        NominalFrequency = nominalFrequency;
+        CalculatePhaseEstimates = SelCWS.ConnectionParameters.DefaultCalculatePhaseEstimates;
+        NominalFrequency = Common.DefaultNominalFrequency;
+        FrameRate = Common.DefaultFrameRate;
     }
 
     #endregion
@@ -103,9 +104,19 @@ public class FrameParser : FrameParserBase<FrameType>
     public override bool ProtocolUsesSyncBytes => false;
 
     /// <summary>
-    /// Gets or sets the nominal <see cref="LineFrequency"/> of the SEL CWS device.
+    /// Gets flag that determines if phase estimates should be calculated for phasor measurements.
+    /// </summary>
+    public bool CalculatePhaseEstimates { get; set; }
+
+    /// <summary>
+    /// Gets the nominal <see cref="LineFrequency"/> of the SEL CWS device.
     /// </summary>
     public LineFrequency NominalFrequency { get; set; }
+
+    /// <summary>
+    /// Gets or sets the configured frame rate for the SEL CWS device.
+    /// </summary>
+    public ushort FrameRate { get; set; }
 
     #endregion
 
@@ -181,13 +192,13 @@ public class FrameParser : FrameParserBase<FrameType>
         if (buffer[offset] != (byte)FrameType.DataFrame || m_initialDataFrame is null)
             return parsedLength;
 
-        const long NanosecondsPerFrame = Common.DefaultFrameRate / 50;
+        long nanosecondsPerFrame = FrameRate / 50;
         long nanosecondsTimestamp = m_initialDataFrame.NanosecondTimestamp;
 
         // In the case of data frames in CWS, the source buffer has 49 more frames to parse after the first
         for (int i = 0; i < 49; i++)
         {
-            nanosecondsTimestamp += NanosecondsPerFrame;
+            nanosecondsTimestamp += nanosecondsPerFrame;
 
             DataFrame dataFrame = new(nanosecondsTimestamp, m_initialDataFrame.ConfigurationFrame)
             {
@@ -196,13 +207,51 @@ public class FrameParser : FrameParserBase<FrameType>
 
             parsedLength += dataFrame.ParseBinaryImage(buffer, offset, length);
 
+            ApplyEstimatedPhases(dataFrame);
+
             OnReceivedDataFrame(dataFrame);
 
-            // If event for native data frame is subscribed, raise it
+            // If event for native data frame is subscribed, raise it also
             ReceivedDataFrame?.Invoke(this, new EventArgs<DataFrame>(dataFrame));
         }
 
         return parsedLength;
+    }
+
+    private void ApplyEstimatedPhases(DataFrame dataFrame)
+    {
+        if (!CalculatePhaseEstimates || dataFrame.Cells.Count == 0)
+            return;
+
+        long timestamp = dataFrame.NanosecondTimestamp;
+
+        if (timestamp <= 0)
+            return;
+
+        DataCell cell = dataFrame.Cells[0];
+
+        if (cell?.PhasorValues.Count != 6)
+            return;
+
+        // Expected order defined by SEL CWS protocol:
+        double ia = cell.PhasorValues[0].Magnitude;
+        double ib = cell.PhasorValues[1].Magnitude;
+        double ic = cell.PhasorValues[2].Magnitude;
+        double va = cell.PhasorValues[3].Magnitude;
+        double vb = cell.PhasorValues[4].Magnitude;
+        double vc = cell.PhasorValues[5].Magnitude;
+
+        // Ensure phase estimator is created
+        m_phaseEstimator ??= new RollingPhaseEstimator(FrameRate, NominalFrequency);
+
+        // Calculate next phase estimation, returns false if not enough data yet
+        if (!m_phaseEstimator.Step(ia, ib, ic, va, vb, vc, timestamp, out PhaseEstimate result))
+            return;
+
+        cell.FrequencyValue.Frequency = result.Frequency;
+
+        for (int i = 0; i < 6; i++)
+            cell.PhasorValues[i].Angle = result.Angles[i];
     }
 
     /// <summary>
@@ -223,12 +272,15 @@ public class FrameParser : FrameParserBase<FrameType>
     /// <param name="frame"><see cref="IChannelFrame"/> that was parsed by <see cref="FrameImageParserBase{TTypeIdentifier,TOutputType}"/> that implements protocol specific common frame header interface.</param>
     protected override void OnReceivedChannelFrame(IChannelFrame frame)
     {
-        // Raise abstract channel frame events as a priority (i.e., IDataFrame, IConfigurationFrame, etc.)
-        base.OnReceivedChannelFrame(frame);
-
         // Keep reference to initial data frame (1 of 50 frames in SEL CWS)
         if (frame is DataFrame initialDataFrame)
+        {
+            ApplyEstimatedPhases(initialDataFrame);
             m_initialDataFrame = initialDataFrame;
+        }
+
+        // Raise abstract channel frame events as a priority (i.e., IDataFrame, IConfigurationFrame, etc.)
+        base.OnReceivedChannelFrame(frame);
 
         // Raise SEL CWS specific channel frame events, if any have been subscribed
         if (frame is null || ReceivedDataFrame is null && ReceivedConfigurationFrame is null)
@@ -246,6 +298,26 @@ public class FrameParser : FrameParserBase<FrameType>
                 ReceivedConfigurationFrame?.Invoke(this, new EventArgs<ConfigurationFrame>(configFrame));
                 break;
             }
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets any connection specific <see cref="IConnectionParameters"/> that may be needed for parsing.
+    /// </summary>
+    public override IConnectionParameters ConnectionParameters
+    {
+        get => base.ConnectionParameters;
+        set
+        {
+            if (value is not ConnectionParameters parameters)
+                return;
+
+            base.ConnectionParameters = parameters;
+
+            // Assign new incoming connection parameter values
+            CalculatePhaseEstimates = parameters.CalculatePhaseEstimates;
+            FrameRate = parameters.FrameRate;
+            NominalFrequency = parameters.NominalFrequency;
         }
     }
 

@@ -296,6 +296,7 @@
     <Compile Include="SelCWS\ConfigurationCell.cs" />
     <Compile Include="SelCWS\ConfigurationCellCollection.cs" />
     <Compile Include="SelCWS\ConfigurationFrame.cs" />
+    <Compile Include="SelCWS\ConnectionParameters.cs" />
     <Compile Include="SelCWS\DataCell.cs" />
     <Compile Include="SelCWS\DataCellCollection.cs" />
     <Compile Include="SelCWS\DataFrame.cs" />
@@ -305,6 +306,7 @@
     <Compile Include="SelCWS\NamespaceDoc.cs" />
     <Compile Include="SelCWS\PhasorDefinition.cs" />
     <Compile Include="SelCWS\PhasorValue.cs" />
+    <Compile Include="SelCWS\RollingPhaseEstimator.cs" />
     <Compile Include="SelFastMessage\CommandFrame.cs" />
     <Compile Include="SelFastMessage\Common.cs" />
     <Compile Include="SelFastMessage\CommonFrameHeader.cs" />

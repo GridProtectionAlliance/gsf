@@ -1539,6 +1539,7 @@ namespace GSF.PhasorProtocols
                     PhasorProtocol.SelFastMessage => new SelFastMessage.ConnectionParameters(),
                     PhasorProtocol.IEC61850_90_5 => new IEC61850_90_5.ConnectionParameters(),
                     PhasorProtocol.Macrodyne => new Macrodyne.ConnectionParameters(),
+                    PhasorProtocol.SelCWS => new SelCWS.ConnectionParameters(),
                     _ => null,
                 };
             }
@@ -2545,6 +2546,19 @@ namespace GSF.PhasorProtocols
                     break;
                 case PhasorProtocol.SelCWS:
                     m_frameParser = new SelCWS.FrameParser(m_checkSumValidationFrameTypes, TrustHeaderLength);
+
+                    // Check for SEL CWS protocol specific parameters in connection string
+                    if (m_connectionParameters is SelCWS.ConnectionParameters selCWSParameters)
+                    {
+                        if (settings.TryGetValue("calculatePhaseEstimates", out setting))
+                            selCWSParameters.CalculatePhaseEstimates = setting.ParseBoolean();
+
+                        if (settings.TryGetValue("frameRate", out setting) && ushort.TryParse(setting, out ushort frameRate))
+                            selCWSParameters.FrameRate = frameRate;
+
+                        if (settings.TryGetValue("nominalFrequency", out setting) && Enum.TryParse(setting, true, out LineFrequency nominalFrequency))
+                            selCWSParameters.NominalFrequency = nominalFrequency;
+                    }
                     break;
                 default:
                     throw new InvalidOperationException($"Phasor protocol \"{m_phasorProtocol}\" is not recognized, failed to initialize frame parser");

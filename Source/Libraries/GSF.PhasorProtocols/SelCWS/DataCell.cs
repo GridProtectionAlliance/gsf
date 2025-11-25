@@ -147,17 +147,15 @@ public class DataCell : DataCellBase
         ConfigurationCell configurationCell = ConfigurationCell;
         int index = startIndex;
 
-        // TODO: Calculate this
         if (FrequencyValue is null)
-            FrequencyValue = new FrequencyValue(this, configurationCell.FrequencyDefinition as FrequencyDefinition, (double)Common.DefaultNominalFrequency, 0.0D);
+            FrequencyValue = new FrequencyValue(this, configurationCell.FrequencyDefinition as FrequencyDefinition, double.NaN, double.NaN);
         else
-            FrequencyValue.Frequency = (double)Common.DefaultNominalFrequency;
+            FrequencyValue.Frequency = double.NaN;
 
         // Update (or create) phasor values
         for (int i = 0; i < Common.MaximumPhasorValues; i++)
         {
-            Angle angle = 0.0D; // TODO: Calculate this
-            
+            Angle angle = double.NaN;
             double magnitude = BigEndian.ToInt32(buffer, index);
             index += 4;
 
