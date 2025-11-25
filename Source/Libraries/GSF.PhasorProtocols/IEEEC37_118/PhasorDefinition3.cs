@@ -56,6 +56,10 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         public PhasorDefinition3(IConfigurationCell parent)
             : base(parent)
         {
+            // In CFG-3, ConversionFactor for phasors is replaced by MagnitudeMultiplier.
+            // MagnitudeMultiplier should be applied to measurement metadata during stream configuration.
+            // The value of 1 exposes the raw, unscaled phasor magnitudes from the data stream
+            ConversionFactor = 1.0D;
         }
 
         /// <summary>
@@ -71,6 +75,13 @@ namespace GSF.PhasorProtocols.IEEEC37_118
         public PhasorDefinition3(ConfigurationCell3 parent, string label, uint scale, double offset, PhasorType type, PhasorDefinition3 voltageReference, char phase)
             : base(parent, label, scale, offset)
         {
+            if (DataFormat == DataFormat.FixedInteger)
+            {
+                // ConversionFactor represents the multiplier used to encode values.
+                // This needs to be assigned to MagnitudeMultiplier so it can be encoded into the configuration cell
+                MagnitudeMultiplier = (float)ConversionFactor;
+            }
+
             PhasorType = type;
             m_voltageReference = type == PhasorType.Voltage ? this : voltageReference;
 
