@@ -82,8 +82,10 @@ public class PhasorDefinition : PhasorDefinitionBase
         set => base.Parent = value;
     }
 
-    /// <inheritdoc/>
-    public override double ScalePerBit => 1.0D;
+    /// <summary>
+    /// Gets or set scalar for this phasor.
+    /// </summary>
+    public double Scalar { get; set; }
 
     #endregion
 }

@@ -150,7 +150,7 @@ public class DataCell : DataCellBase
         // Update phasor values
         foreach (PhasorValue phasor in PhasorValues.Cast<PhasorValue>())
         {
-            phasor.Magnitude = BigEndian.ToInt32(buffer, index);
+            phasor.Magnitude = BigEndian.ToInt32(buffer, index) * phasor.Definition.Scalar;
             index += 4;
         }
 

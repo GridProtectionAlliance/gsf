@@ -59,7 +59,7 @@ public class ConfigurationCell : ConfigurationCellBase
         {
             PhasorDefinitions.Add(new PhasorDefinition(this, phasorNames[i], i < 3 ? PhasorType.Current : PhasorType.Voltage)
             {
-                ConversionFactor = scalars[i]
+                Scalar = scalars[i]
             });
         }
     }
