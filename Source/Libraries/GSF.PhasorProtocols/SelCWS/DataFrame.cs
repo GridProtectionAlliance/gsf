@@ -194,7 +194,8 @@ public class DataFrame : DataFrameBase, ISupportSourceIdentifiableFrameImage<Sou
             index += 8;
         }
 
-        return base.ParseBodyImage(buffer, index, length - (index - startIndex));
+        index += base.ParseBodyImage(buffer, index, length - (index - startIndex));
+        return index - startIndex;
     }
 
     /// <summary>
