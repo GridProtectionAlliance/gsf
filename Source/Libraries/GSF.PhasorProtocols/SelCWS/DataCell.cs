@@ -24,14 +24,15 @@
 //       Modified Header.
 //
 //******************************************************************************************************
+// ReSharper disable RedundantOverriddenMember
+// ReSharper disable VirtualMemberCallInConstructor
 
 using System;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.Serialization;
 using GSF.Units;
 
-// ReSharper disable RedundantOverriddenMember
-// ReSharper disable VirtualMemberCallInConstructor
 namespace GSF.PhasorProtocols.SelCWS;
 
 /// <summary>
@@ -51,11 +52,11 @@ public class DataCell : DataCellBase
         : base(parent, configurationCell, 0x0000, Common.MaximumPhasorValues, Common.MaximumAnalogValues, Common.MaximumDigitalValues)
     {
         // Initialize frequency and df/dt
-        FrequencyValue = new FrequencyValue(this, configurationCell.FrequencyDefinition);
+        FrequencyValue = new FrequencyValue(this, configurationCell.FrequencyDefinition as FrequencyDefinition, double.NaN, double.NaN);
 
         // Initialize phasor values
-        for (int i = 0; i < configurationCell.PhasorDefinitions.Count; i++)
-            PhasorValues.Add(new PhasorValue(this, configurationCell.PhasorDefinitions[i]));
+        foreach (IPhasorDefinition definition in configurationCell.PhasorDefinitions)
+            PhasorValues.Add(new PhasorValue(this, definition as PhasorDefinition, (Angle)double.NaN, double.NaN));
     }
 
     /// <summary>
@@ -144,36 +145,13 @@ public class DataCell : DataCellBase
     /// <returns>The length of the data that was parsed.</returns>
     protected override int ParseBodyImage(byte[] buffer, int startIndex, int length)
     {
-        ConfigurationCell configurationCell = ConfigurationCell;
         int index = startIndex;
 
-        if (FrequencyValue is null)
-            FrequencyValue = new FrequencyValue(this, configurationCell.FrequencyDefinition as FrequencyDefinition, double.NaN, double.NaN);
-        else
-            FrequencyValue.Frequency = double.NaN;
-
-        // Update (or create) phasor values
-        for (int i = 0; i < Common.MaximumPhasorValues; i++)
+        // Update phasor values
+        foreach (PhasorValue phasor in PhasorValues.Cast<PhasorValue>())
         {
-            Angle angle = double.NaN;
-            double magnitude = BigEndian.ToInt32(buffer, index);
+            phasor.Magnitude = BigEndian.ToInt32(buffer, index);
             index += 4;
-
-            PhasorValue phasor = null;
-
-            if (PhasorValues.Count > i)
-                phasor = PhasorValues[i] as PhasorValue;
-
-            if (phasor is null)
-            {
-                phasor = new PhasorValue(this, configurationCell.PhasorDefinitions[i] as PhasorDefinition, angle, magnitude);
-                PhasorValues.Add(phasor);
-            }
-            else
-            {
-                phasor.Angle = angle;
-                phasor.Magnitude = magnitude;
-            }
         }
 
         return index - startIndex;

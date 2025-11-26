@@ -248,7 +248,7 @@ public class FrameParser : FrameParserBase<FrameType>
         if (!m_phaseEstimator.Step(ia, ib, ic, va, vb, vc, timestamp, out PhaseEstimate result))
             return;
 
-        cell.FrequencyValue.Frequency = result.Frequency;
+        cell.FrequencyValue.Frequency = (int)NominalFrequency + result.Frequency;
 
         for (int i = 0; i < 6; i++)
             cell.PhasorValues[i].Angle = result.Angles[i];

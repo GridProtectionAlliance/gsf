@@ -26,10 +26,12 @@
 //       Modified Header.
 //
 //******************************************************************************************************
+// ReSharper disable VirtualMemberCallInConstructor
 
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.Serialization;
 using System.Text;
 using GSF.Parsing;
@@ -48,7 +50,7 @@ public class ConfigurationFrame : ConfigurationFrameBase, ISupportSourceIdentifi
     /// <summary>
     /// Represents the Length of the fixed part of this header.
     /// </summary>
-    protected const int FixedHeaderLength = CommonFrameHeader.FixedLength + 6;
+    protected const int FixedHeaderLength = CommonFrameHeader.FixedLength + 8;
 
     // Fields
     private CommonFrameHeader m_frameHeader;
@@ -67,6 +69,7 @@ public class ConfigurationFrame : ConfigurationFrameBase, ISupportSourceIdentifi
     public ConfigurationFrame()
         : base(0, new ConfigurationCellCollection(), 0, 0)
     {
+        FrameRate = Common.DefaultFrameRate;
     }
 
     /// <summary>
@@ -171,8 +174,10 @@ public class ConfigurationFrame : ConfigurationFrameBase, ISupportSourceIdentifi
     /// <returns>The length of the data that was parsed.</returns>
     protected override int ParseHeaderImage(byte[] buffer, int startIndex, int length)
     {
+        int index = startIndex;
+        
         // Skip past header that was already parsed...
-        startIndex += CommonFrameHeader.FixedLength;
+        index += CommonFrameHeader.FixedLength;
 
         switch (Version)
         {
@@ -180,28 +185,32 @@ public class ConfigurationFrame : ConfigurationFrameBase, ISupportSourceIdentifi
             {
                 // Version 1 of the SEL CWS protocol has fixed configuration values
                 // Note: We interpret analogs as phasor magnitudes
-                ushort analogCount = BigEndian.ToUInt16(buffer, startIndex);
+                ushort analogCount = BigEndian.ToUInt16(buffer, index);
 
                 if (analogCount != 6)
                     throw new InvalidOperationException($"SEL CWS version 1 configuration frame expected six phasor points, got {analogCount:N0}.");
 
-                startIndex += 2;
+                index += 2;
 
-                ushort digitalCount = BigEndian.ToUInt16(buffer, startIndex);
+                ushort digitalCount = BigEndian.ToUInt16(buffer, index);
 
                 if (digitalCount != 0)
                     throw new InvalidOperationException($"SEL CWS version 1 configuration frame expected zero digital points, got {digitalCount:N0}.");
 
-                startIndex += 2;
+                index += 2;
 
-                int sampleRate = BigEndian.ToInt32(buffer, startIndex);
+                int sampleRate = BigEndian.ToInt32(buffer, index);
 
                 if (sampleRate != Common.DefaultFrameRate)
                     throw new InvalidOperationException($"SEL CWS version 1 configuration frame expected sample rate of {Common.DefaultFrameRate:N0} SPS, got {sampleRate:N0} SPS.");
 
+                index += 4;
+                
                 break;
             }
         }
+
+        Debug.Assert(index - startIndex == FixedHeaderLength, "Length mismatch during SEL CWS configuration frame header parsing.");
 
         return FixedHeaderLength;
     }
@@ -222,7 +231,7 @@ public class ConfigurationFrame : ConfigurationFrameBase, ISupportSourceIdentifi
 
         // Parse station name (defined as ChannelName in documentation), up to null terminator
         (string stationName, int parsedLength) = ParseNullTerminatedString(buffer, index, 21);
-        index = parsedLength;
+        index += parsedLength;
 
         string[] phasorNames = new string[Common.MaximumPhasorValues];
 
@@ -231,7 +240,7 @@ public class ConfigurationFrame : ConfigurationFrameBase, ISupportSourceIdentifi
         {
             (string phasorName, int phasorParsedLength) = ParseNullTerminatedString(buffer, index, 21);
             phasorNames[i] = phasorName;
-            index = phasorParsedLength;
+            index += phasorParsedLength;
         }
 
         // SEL CWS configuration frames only support a single cell/device
@@ -248,7 +257,9 @@ public class ConfigurationFrame : ConfigurationFrameBase, ISupportSourceIdentifi
         while (index < startIndex + maxLength && buffer[index] != 0)
             index++;
 
-        return (Encoding.UTF8.GetString(buffer, startIndex, index - startIndex), index + 1);
+        int parsedLength = index - startIndex;
+
+        return (Encoding.UTF8.GetString(buffer, startIndex, parsedLength), parsedLength + 1);
     }
 
     /// <summary>
