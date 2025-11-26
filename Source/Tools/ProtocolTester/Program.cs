@@ -57,6 +57,7 @@ namespace ProtocolTester
         private static uint measurementID;
         private static long frameCount;
         private static long byteCount;
+        private static long lastBytesProcessedTime;
 
         public static void Main(string[] args)
         {
@@ -99,7 +100,7 @@ namespace ProtocolTester
 
             // Define the connection string
             //parser.ConnectionString = @"phasorProtocol=IeeeC37_118V1; transportProtocol=UDP; localport=5000; server=233.123.123.123:5000; interface=0.0.0.0";
-            parser.ConnectionString = @"phasorProtocol=Ieee1344; transportProtocol=File; file=D:\Projects\openPDC\Source\Applications\openPDC\openPDC\Sample1344.PmuCapture";
+            //parser.ConnectionString = @"phasorProtocol=Ieee1344; transportProtocol=File; file=D:\Projects\openPDC\Source\Applications\openPDC\openPDC\Sample1344.PmuCapture";
             //parser.ConnectionString = @"phasorProtocol=Macrodyne; accessID=1; transportProtocol=File; skipDisableRealTimeData = true; file=C:\Users\Ritchie\Desktop\Development\Macrodyne\ING.out; iniFileName=C:\Users\Ritchie\Desktop\Development\Macrodyne\BCH18Aug2011.ini; deviceLabel=ING1; protocolVersion=G";
             //parser.ConnectionString = @"phasorProtocol=Iec61850_90_5; accessID=1; transportProtocol=UDP; skipDisableRealTimeData = true; localPort=102; interface=0.0.0.0; commandChannel={transportProtocol=TCP; server=172.21.1.201:4712; interface=0.0.0.0}";
             //parser.ConnectionString = @"phasorProtocol=FNET; transportProtocol=TCP; server=172.21.4.100:4001; interface=0.0.0.0; isListener=false";
@@ -110,6 +111,7 @@ namespace ProtocolTester
             //parser.ConnectionString = @"phasorProtocol=IEEEC37_118V1; transportProtocol=Serial; port=COM6; baudRate=115200; dataBits=8; stopBits=One; parity=None; dtrEnable=false; rtsEnable=false; autoStartDataParsingSequence=false; disableRealTimeDataOnStop=false";
             //parser.ConnectionString = @"phasorProtocol=IEEEC37_118V2; transportProtocol=tcp; accessID=1; server=localhost:4713; interface=0.0.0.0; isListener=false";
             //parser.ConnectionString = @"phasorProtocol=IEEEC37_118V2; transportProtocol=File; file=D:\Projects\gsf\Build\Output\Debug\Tools\ProtocolTester\Capture.PmuCapture";
+            parser.ConnectionString = @"phasorProtocol=SelCWS; transportProtocol=UDP; localport=1347; interface=0.0.0.0";
 
             Dictionary<string, string> settings = parser.ConnectionString.ParseKeyValuePairs();
 
@@ -167,14 +169,13 @@ namespace ProtocolTester
             if (BinaryCapture)
                 m_capture.Write(e.Argument2, e.Argument3, e.Argument4);
 
-            const int interval = (int)SI.Kilo * 2;
-
-            bool showMessage = byteCount + e.Argument4 >= (byteCount / interval + 1) * interval;
-
             byteCount += e.Argument4;
 
-            if (showMessage)
-                Console.WriteLine("{0:N0} bytes of data have been processed so far...", byteCount);
+            if (!(TimeSpan.FromTicks(DateTime.UtcNow.Ticks - lastBytesProcessedTime).TotalSeconds >= 4))
+                return;
+            
+            Console.WriteLine("{0:N0} bytes of data have been processed so far...", byteCount);
+            lastBytesProcessedTime = DateTime.UtcNow.Ticks;
         }
 
         private static void parser_ReceivedDataFrame(object sender, EventArgs<IDataFrame> e)

@@ -1224,7 +1224,10 @@ namespace PhasorWebUI
 
         public IEnumerable<SynchrophasorProtocol> GetSynchrophasorProtocols()
         {
-            return Enum.GetValues(typeof(PhasorProtocol)).Cast<PhasorProtocol>().Select(protocol => new SynchrophasorProtocol
+            return Enum.GetValues(typeof(PhasorProtocol))
+                .Cast<PhasorProtocol>()
+                .Where(phasorProtocol => phasorProtocol != PhasorProtocol.SelCWS)
+                .Select(protocol => new SynchrophasorProtocol
             {
                 Acronym = protocol.ToString(),
                 Name = protocol.GetFormattedProtocolName()
