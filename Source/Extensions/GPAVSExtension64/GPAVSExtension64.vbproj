@@ -119,6 +119,9 @@
     <PackageReference Include="Microsoft.VSSDK.Vsixsigntool">
       <Version>16.2.29116.78</Version>
     </PackageReference>
+    <PackageReference Include="System.Diagnostics.DiagnosticSource">
+      <Version>8.0.1</Version>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />
