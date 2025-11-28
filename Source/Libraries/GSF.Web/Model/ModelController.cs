@@ -61,6 +61,7 @@ namespace GSF.Web.Model
             public IEnumerable<SQLSearchFilter> Searches { get; set; }
             public string OrderBy { get; set; }
             public bool Ascending { get; set; }
+            public bool? ReturnPivotCols { get; set; }
         }
 
         public class PagedResults
@@ -823,7 +824,7 @@ namespace GSF.Web.Model
                                 FROM tempdb.sys.columns WHERE  object_id = Object_id('tempdb..#Tbl') AND name NOT LIKE 'AFV%';";
                     sqlNoPivot = string.Join(",", connection.RetrieveData(sqlNoPivot).Select().Select(r => r[0].ToString()));
                     sql = $@"
-                        SELECT {limit} * FROM {tblSelect}
+                        SELECT {limit} {((postData?.ReturnPivotCols ?? false) ? "*" : sqlNoPivot)} FROM {tblSelect}
                         {whereClause}
                         ORDER BY {postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")}";
                 }
