@@ -61,7 +61,6 @@ namespace GSF.Web.Model
             public IEnumerable<SQLSearchFilter> Searches { get; set; }
             public string OrderBy { get; set; }
             public bool Ascending { get; set; }
-            public bool? ReturnPivotCols { get; set; }
         }
 
         public class PagedResults
@@ -164,12 +163,13 @@ namespace GSF.Web.Model
         #region [ Properties ]
         protected bool ViewOnly { get; } = false;
         protected bool AllowSearch { get; } = false;
+        protected bool ReturnPivots { get; set; } = false;
         protected string CustomView { get; } = "";
         protected string PrimaryKeyField { get; set; } = "ID";
         protected string ParentKey { get; set; } = "";
 
         [Obsolete("Creating AdoDataConnection with this property may ignore DbTimeout Settings in some repositories, please use ConnectionFactory instead.")]
-        protected string Connection { get; } = "systemSettings";
+        protected string Connection { get; } = "systemSettings"; 
         public Func<AdoDataConnection> ConnectionFactory { get; set; }
         protected string DefaultSort { get; } = null;
         protected string GetRoles { get; } = "";
@@ -824,7 +824,7 @@ namespace GSF.Web.Model
                                 FROM tempdb.sys.columns WHERE  object_id = Object_id('tempdb..#Tbl') AND name NOT LIKE 'AFV%';";
                     sqlNoPivot = string.Join(",", connection.RetrieveData(sqlNoPivot).Select().Select(r => r[0].ToString()));
                     sql = $@"
-                        SELECT {limit} {((postData?.ReturnPivotCols ?? false) ? "*" : sqlNoPivot)} FROM {tblSelect}
+                        SELECT {limit} {(ReturnPivots ? "*" : sqlNoPivot)} FROM {tblSelect}
                         {whereClause}
                         ORDER BY {postData.OrderBy} {(postData.Ascending ? "ASC" : "DESC")}";
                 }
