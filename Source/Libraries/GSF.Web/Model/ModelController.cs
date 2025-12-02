@@ -163,7 +163,7 @@ namespace GSF.Web.Model
         #region [ Properties ]
         protected bool ViewOnly { get; } = false;
         protected bool AllowSearch { get; } = false;
-        protected bool ReturnPivots { get; set; } = false;
+        protected virtual bool ReturnPivots { get; set; } = false;
         protected string CustomView { get; } = "";
         protected string PrimaryKeyField { get; set; } = "ID";
         protected string ParentKey { get; set; } = "";
