@@ -1081,12 +1081,12 @@ namespace GSF.Data
                             _                  => parameter
                         };
 
-                        parameter = value switch
+                        value = value switch
                         {
                             null      => DBNull.Value,
                             bool b    => Bool(b),
                             Guid guid => Guid(guid),
-                            _         => parameter
+                            _         => value
                         };
 
                         IDbDataParameter dataParameter = command.CreateParameter();
@@ -1095,7 +1095,7 @@ namespace GSF.Data
                             dataParameter.DbType = type.Value;
 
                         dataParameter.ParameterName = "@p" + i;
-                        dataParameter.Value = parameter;
+                        dataParameter.Value = value;
                         dataParameters[i] = dataParameter;
                     }
                 }
