@@ -1912,9 +1912,9 @@ namespace GSF.Data
             {
                 int count = 0;
 
-                foreach (Field field in m_fields)
+                foreach (Field @field in m_fields)
                 {
-                    if (field.IsPrimaryKey)
+                    if (@field.IsPrimaryKey)
                         count += 1;
                 }
 
@@ -1929,9 +1929,9 @@ namespace GSF.Data
         {
             get
             {
-                foreach (Field field in m_fields)
+                foreach (Field @field in m_fields)
                 {
-                    if (field.IsPrimaryKey && field.ForeignKeys.Count > 0)
+                    if (@field.IsPrimaryKey && @field.ForeignKeys.Count > 0)
                         return true;
                 }
                 return false;
@@ -1945,9 +1945,9 @@ namespace GSF.Data
         {
             get
             {
-                foreach (Field field in m_fields)
+                foreach (Field @field in m_fields)
                 {
-                    if (field.IsForeignKey)
+                    if (@field.IsForeignKey)
                         return true;
                 }
                 return false;
@@ -1972,10 +1972,10 @@ namespace GSF.Data
         {
             get
             {
-                foreach (Field field in m_fields)
+                foreach (Field @field in m_fields)
                 {
-                    if (field.AutoIncrement)
-                        return field;
+                    if (@field.AutoIncrement)
+                        return @field;
                 }
 
                 return null;
