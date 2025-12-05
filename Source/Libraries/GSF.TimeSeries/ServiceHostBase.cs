@@ -220,6 +220,11 @@ namespace GSF.TimeSeries
         /// </summary>
         protected ConfigurationType ConfigurationType { get; private set; }
 
+        /// <summary>
+        /// Gets or sets flag that determines if the local certificate's private key should be verified upon service start.
+        /// </summary>
+        protected bool VerifyLocalCertificatePrivateKey { get; set; } = true;
+
         #endregion
 
         #region [ Methods ]
@@ -774,7 +779,12 @@ namespace GSF.TimeSeries
                 };
 
                 if (File.Exists(certificatePath))
-                    certificate = new X509Certificate2(certificatePath);
+                {
+                    if (VerifyLocalCertificatePrivateKey)
+                        certificate = new X509Certificate2(certificatePath);
+                    else
+                        return;
+                }
 
                 if (Equals(certificate, certificateGenerator.GenerateCertificate()))
                     return;
