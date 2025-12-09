@@ -291,6 +291,8 @@
     <Compile Include="Macrodyne\FrequencyValue.cs" />
     <Compile Include="Macrodyne\PhasorDefinition.cs" />
     <Compile Include="Macrodyne\PhasorValue.cs" />
+    <Compile Include="SelCWS\AnalogDefinition.cs" />
+    <Compile Include="SelCWS\AnalogValue.cs" />
     <Compile Include="SelCWS\Common.cs" />
     <Compile Include="SelCWS\CommonFrameHeader.cs" />
     <Compile Include="SelCWS\ConfigurationCell.cs" />

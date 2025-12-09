@@ -76,7 +76,7 @@ public class FrequencyDefinition : FrequencyDefinitionBase
     /// </summary>
     public new virtual ConfigurationCell Parent
     {
-        get => base.Parent as ConfigurationCell;
+        get => (base.Parent as ConfigurationCell)!;
         set => base.Parent = value;
     }
 

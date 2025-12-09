@@ -92,7 +92,7 @@ public class PhasorValue : PhasorValueBase
     /// </summary>
     public new virtual DataCell Parent
     {
-        get => base.Parent as DataCell;
+        get => (base.Parent as DataCell)!;
         set => base.Parent = value;
     }
 
@@ -101,7 +101,7 @@ public class PhasorValue : PhasorValueBase
     /// </summary>
     public new virtual PhasorDefinition Definition
     {
-        get => base.Definition as PhasorDefinition;
+        get => (base.Definition as PhasorDefinition)!;
         set => base.Definition = value;
     }
 

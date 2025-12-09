@@ -78,14 +78,9 @@ public class PhasorDefinition : PhasorDefinitionBase
     /// </summary>
     public new virtual ConfigurationCell Parent
     {
-        get => base.Parent as ConfigurationCell;
+        get => (base.Parent as ConfigurationCell)!;
         set => base.Parent = value;
     }
-
-    /// <summary>
-    /// Gets or set scalar for this phasor.
-    /// </summary>
-    public double Scalar { get; set; }
 
     #endregion
 }

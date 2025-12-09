@@ -47,20 +47,25 @@ public class ConfigurationCell : ConfigurationCellBase
     /// <param name="nominalFrequency">The nominal <see cref="LineFrequency"/> of the <see cref="FrequencyDefinition"/> of this <see cref="ConfigurationCell"/>.</param>
     /// <param name="scalars">The scalar values for this <see cref="ConfigurationCell"/>.</param>
     /// <param name="stationName">The name of the station for this <see cref="ConfigurationCell"/>.</param>
-    /// <param name="phasorNames">The names of the phasors for this <see cref="ConfigurationCell"/>.</param>
-    internal ConfigurationCell(ConfigurationFrame parent, LineFrequency nominalFrequency, float[] scalars, string stationName, string[] phasorNames)
+    /// <param name="analogNames">The names of the analog POW points for this <see cref="ConfigurationCell"/>.</param>
+    internal ConfigurationCell(ConfigurationFrame parent, LineFrequency nominalFrequency, float[] scalars, string stationName, string[] analogNames)
         : base(parent, parent.IDCode, Common.MaximumPhasorValues, Common.MaximumAnalogValues, Common.MaximumDigitalValues)
     {
         NominalFrequency = nominalFrequency;
         StationName = stationName;
         FrequencyDefinition = new FrequencyDefinition(this, "Frequency");
 
-        for (int i = 0; i < Common.MaximumPhasorValues; i++)
+        for (int i = 0; i < Common.MaximumAnalogValues; i++)
         {
-            PhasorDefinitions.Add(new PhasorDefinition(this, phasorNames[i], i < 3 ? PhasorType.Current : PhasorType.Voltage)
+            AnalogDefinitions.Add(new AnalogDefinition(this, $"POW Analog {analogNames[i]}", 1, 0.0, AnalogType.SinglePointOnWave)
             {
                 Scalar = scalars[i]
             });
+        }
+
+        for (int i = 0; i < Common.MaximumPhasorValues; i++)
+        {
+            PhasorDefinitions.Add(new PhasorDefinition(this, analogNames[i], i < 3 ? PhasorType.Current : PhasorType.Voltage));
         }
     }
 
@@ -84,7 +89,7 @@ public class ConfigurationCell : ConfigurationCellBase
     /// </summary>
     public new ConfigurationFrame Parent
     {
-        get => base.Parent as ConfigurationFrame;
+        get => (base.Parent as ConfigurationFrame)!;
         set => base.Parent = value;
     }
 

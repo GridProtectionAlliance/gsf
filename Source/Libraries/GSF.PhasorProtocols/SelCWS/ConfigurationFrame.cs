@@ -125,7 +125,7 @@ public class ConfigurationFrame : ConfigurationFrameBase, ISupportSourceIdentifi
             m_frameHeader = value;
 
             if (m_frameHeader is not null)
-                State = m_frameHeader.State as IConfigurationFrameParsingState;
+                State = (m_frameHeader.State as IConfigurationFrameParsingState)!;
         }
     }
 
@@ -133,7 +133,7 @@ public class ConfigurationFrame : ConfigurationFrameBase, ISupportSourceIdentifi
     ICommonHeader<FrameType> ISupportFrameImage<FrameType>.CommonHeader
     {
         get => CommonHeader;
-        set => CommonHeader = value as CommonFrameHeader;
+        set => CommonHeader = (value as CommonFrameHeader)!;
     }
 
     /// <summary>
@@ -188,7 +188,7 @@ public class ConfigurationFrame : ConfigurationFrameBase, ISupportSourceIdentifi
                 ushort analogCount = BigEndian.ToUInt16(buffer, index);
 
                 if (analogCount != 6)
-                    throw new InvalidOperationException($"SEL CWS version 1 configuration frame expected six phasor points, got {analogCount:N0}.");
+                    throw new InvalidOperationException($"SEL CWS version 1 configuration frame expected six analog POW points, got {analogCount:N0}.");
 
                 index += 2;
 
@@ -221,9 +221,9 @@ public class ConfigurationFrame : ConfigurationFrameBase, ISupportSourceIdentifi
         int index = startIndex;
 
         // Parse scalars
-        float[] scalars = new float[Common.MaximumPhasorValues];
+        float[] scalars = new float[Common.MaximumAnalogValues];
 
-        for (int i = 0; i < Common.MaximumPhasorValues; i++)
+        for (int i = 0; i < Common.MaximumAnalogValues; i++)
         {
             scalars[i] = BigEndian.ToSingle(buffer, index);
             index += 4;
@@ -233,18 +233,18 @@ public class ConfigurationFrame : ConfigurationFrameBase, ISupportSourceIdentifi
         (string stationName, int parsedLength) = ParseNullTerminatedString(buffer, index, 21);
         index += parsedLength;
 
-        string[] phasorNames = new string[Common.MaximumPhasorValues];
+        string[] analogNames = new string[Common.MaximumAnalogValues];
 
-        // Parse phasor names (defined as SignalNames in documentation), up to null terminators
-        for (int i = 0; i < Common.MaximumPhasorValues; i++)
+        // Parse analog names (defined as SignalNames in documentation), up to null terminators
+        for (int i = 0; i < Common.MaximumAnalogValues; i++)
         {
-            (string phasorName, int phasorParsedLength) = ParseNullTerminatedString(buffer, index, 21);
-            phasorNames[i] = phasorName;
-            index += phasorParsedLength;
+            (string analogName, int analogParsedLength) = ParseNullTerminatedString(buffer, index, 21);
+            analogNames[i] = analogName;
+            index += analogParsedLength;
         }
 
         // SEL CWS configuration frames only support a single cell/device
-        ConfigurationCell cell = new(this, Common.DefaultNominalFrequency, scalars, stationName, phasorNames);
+        ConfigurationCell cell = new(this, Common.DefaultNominalFrequency, scalars, stationName, analogNames);
         Cells.Add(cell);
 
         return index - startIndex;

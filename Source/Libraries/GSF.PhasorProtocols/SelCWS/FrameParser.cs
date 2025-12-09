@@ -94,7 +94,7 @@ public class FrameParser : FrameParserBase<FrameType>
     /// </remarks>
     public override IConfigurationFrame ConfigurationFrame
     {
-        get => m_configurationFrame;
+        get => m_configurationFrame!;
         set => throw new NotImplementedException("Type casting configuration frame is not implemented.");
     }
 
@@ -230,28 +230,35 @@ public class FrameParser : FrameParserBase<FrameType>
 
         DataCell cell = dataFrame.Cells[0];
 
-        if (cell?.PhasorValues.Count != 6)
+        if (cell.AnalogValues.Count != 6)
             return;
 
         // Expected order defined by SEL CWS protocol:
-        double ia = cell.PhasorValues[0].Magnitude;
-        double ib = cell.PhasorValues[1].Magnitude;
-        double ic = cell.PhasorValues[2].Magnitude;
-        double va = cell.PhasorValues[3].Magnitude;
-        double vb = cell.PhasorValues[4].Magnitude;
-        double vc = cell.PhasorValues[5].Magnitude;
+        double ia = cell.AnalogValues[0].Value;
+        double ib = cell.AnalogValues[1].Value;
+        double ic = cell.AnalogValues[2].Value;
+        double va = cell.AnalogValues[3].Value;
+        double vb = cell.AnalogValues[4].Value;
+        double vc = cell.AnalogValues[5].Value;
 
         // Ensure phase estimator is created
         m_phaseEstimator ??= new RollingPhaseEstimator(FrameRate, NominalFrequency);
 
         // Calculate next phase estimation, returns false if not enough data yet
-        if (!m_phaseEstimator.Step(ia, ib, ic, va, vb, vc, timestamp, out PhaseEstimate result))
+        if (!m_phaseEstimator.Step(ia, ib, ic, va, vb, vc, timestamp, out PhaseEstimate? result))
             return;
 
-        cell.FrequencyValue.Frequency = (int)NominalFrequency + result.Frequency;
+        PhaseEstimate estimate = result.GetValueOrDefault();
+
+        cell.FrequencyValue.Frequency = estimate.Frequency;
+        cell.FrequencyValue.DfDt = estimate.dFdt;
 
         for (int i = 0; i < 6; i++)
-            cell.PhasorValues[i].Angle = result.Angles[i];
+        {
+            PhasorValue phasorValue = (cell.PhasorValues[i] as PhasorValue)!;
+            phasorValue.Angle = estimate.Angles[i];
+            phasorValue.Magnitude = estimate.Magnitudes[i];
+        }
     }
 
     /// <summary>
@@ -283,7 +290,7 @@ public class FrameParser : FrameParserBase<FrameType>
         base.OnReceivedChannelFrame(frame);
 
         // Raise SEL CWS specific channel frame events, if any have been subscribed
-        if (frame is null || ReceivedDataFrame is null && ReceivedConfigurationFrame is null)
+        if (ReceivedDataFrame is null && ReceivedConfigurationFrame is null)
             return;
 
         switch (frame)

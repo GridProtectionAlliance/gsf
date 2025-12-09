@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  DataCellCollection.cs - Gbtc
+//  AnalogDefinition.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -31,28 +31,48 @@ using System.Runtime.Serialization;
 namespace GSF.PhasorProtocols.SelCWS;
 
 /// <summary>
-/// Represents a SEL CWS implementation of a collection of <see cref="IDataCell"/> objects.
+/// Represents the SEL CWS implementation of an <see cref="IAnalogDefinition"/>.
 /// </summary>
 [Serializable]
-public class DataCellCollection : PhasorProtocols.DataCellCollection
+public class AnalogDefinition : AnalogDefinitionBase
 {
+    #region [ Members ]
+
+    // Constants        
+    internal const int ConversionFactorLength = 4;
+
+    #endregion
+
     #region [ Constructors ]
 
     /// <summary>
-    /// Creates a new <see cref="DataCellCollection"/>.
+    /// Creates a new <see cref="AnalogDefinition"/> from specified parameters.
     /// </summary>
-    public DataCellCollection()
-        : base(0, true)
+    /// <param name="parent">The <see cref="IConfigurationCell"/> parent of this <see cref="AnalogDefinition"/>.</param>
+    public AnalogDefinition(IConfigurationCell parent)
+        : base(parent)
     {
-        // SEL CWS only supports a single device - so there should only be one cell - since there's only one cell, cell lengths will be constant :)
     }
 
     /// <summary>
-    /// Creates a new <see cref="DataCellCollection"/> from serialization parameters.
+    /// Creates a new <see cref="AnalogDefinition"/> from specified parameters.
+    /// </summary>
+    /// <param name="parent">The <see cref="ConfigurationCell"/> parent of this <see cref="AnalogDefinition"/>.</param>
+    /// <param name="label">The label of this <see cref="AnalogDefinition"/>.</param>
+    /// <param name="scale">The integer scaling value of this <see cref="AnalogDefinition"/>.</param>
+    /// <param name="offset">The offset of this <see cref="AnalogDefinition"/>.</param>
+    /// <param name="type">The <see cref="AnalogType"/> of this <see cref="AnalogDefinition"/>.</param>
+    public AnalogDefinition(ConfigurationCell parent, string label, uint scale, double offset, AnalogType type)
+        : base(parent, label, scale, offset, type)
+    {
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="AnalogDefinition"/> from serialization parameters.
     /// </summary>
     /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
     /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
-    protected DataCellCollection(SerializationInfo info, StreamingContext context)
+    protected AnalogDefinition(SerializationInfo info, StreamingContext context)
         : base(info, context)
     {
     }
@@ -62,14 +82,18 @@ public class DataCellCollection : PhasorProtocols.DataCellCollection
     #region [ Properties ]
 
     /// <summary>
-    /// Gets or sets <see cref="DataCell"/> at specified <paramref name="index"/>.
+    /// Gets or sets the <see cref="ConfigurationCell"/> parent of this <see cref="AnalogDefinition"/>.
     /// </summary>
-    /// <param name="index">Index of value to get or set.</param>
-    public new DataCell this[int index]
+    public new virtual ConfigurationCell Parent
     {
-        get => (base[index] as DataCell)!;
-        set => base[index] = value;
+        get => (base.Parent as ConfigurationCell)!;
+        set => base.Parent = value;
     }
+
+    /// <summary>
+    /// Gets or set scalar for this POW analog.
+    /// </summary>
+    public double Scalar { get; set; }
 
     #endregion
 }
