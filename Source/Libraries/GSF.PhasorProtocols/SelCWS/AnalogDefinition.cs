@@ -91,7 +91,7 @@ public class AnalogDefinition : AnalogDefinitionBase
     }
 
     /// <summary>
-    /// Gets or set scalar for this POW analog.
+    /// Gets or sets the scalar for this Point-on-Wave (POW) analog.
     /// </summary>
     public double Scalar { get; set; }
 
