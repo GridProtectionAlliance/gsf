@@ -1,5 +1,5 @@
 ﻿using System;
-using GSF.Numeric.EE;
+using GSF.Units.EE;
 
 namespace GSF.PhasorProtocols.SelCWS;
 
