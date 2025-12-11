@@ -2689,7 +2689,7 @@ namespace PhasorProtocolAdapters
             ResetStatistics();
 
             // Enable data stream monitor for connections that support commands
-            m_dataStreamMonitor.Enabled = m_frameParser.DeviceSupportsCommands || AllowUseOfCachedConfiguration;
+            m_dataStreamMonitor.Enabled = m_frameParser.TransportProtocol != TransportProtocol.File && (m_frameParser.DeviceSupportsCommands || AllowUseOfCachedConfiguration);
 
             // Reinitialize proxy connection if needed...
             if (Enabled && m_clientBasedPublishChannel is not null && m_clientBasedPublishChannel.CurrentState != ClientState.Connected)
