@@ -98,14 +98,14 @@ public class DataFrame : DataFrameBase, ISupportSourceIdentifiableFrameImage<Sou
     /// <summary>
     /// Gets reference to the <see cref="DataCellCollection"/> for this <see cref="DataFrame"/>.
     /// </summary>
-    public new DataCellCollection Cells => base.Cells as DataCellCollection;
+    public new DataCellCollection Cells => (base.Cells as DataCellCollection)!;
 
     /// <summary>
     /// Gets or sets <see cref="ConfigurationFrame"/> associated with this <see cref="DataFrame"/>.
     /// </summary>
     public new ConfigurationFrame ConfigurationFrame
     {
-        get => base.ConfigurationFrame as ConfigurationFrame;
+        get => (base.ConfigurationFrame as ConfigurationFrame)!;
         set => base.ConfigurationFrame = value;
     }
 
@@ -132,13 +132,13 @@ public class DataFrame : DataFrameBase, ISupportSourceIdentifiableFrameImage<Sou
     /// </summary>
     public CommonFrameHeader CommonHeader
     {
-        get => m_frameHeader;
+        get => m_frameHeader!;
         set
         {
             m_frameHeader = value;
 
             if (m_frameHeader is not null)
-                State = m_frameHeader.State as IDataFrameParsingState;
+                State = (m_frameHeader.State as IDataFrameParsingState)!;
         }
     }
 
@@ -146,7 +146,7 @@ public class DataFrame : DataFrameBase, ISupportSourceIdentifiableFrameImage<Sou
     ICommonHeader<FrameType> ISupportFrameImage<FrameType>.CommonHeader
     {
         get => CommonHeader;
-        set => CommonHeader = value as CommonFrameHeader;
+        set => CommonHeader = (value as CommonFrameHeader)!;
     }
 
     /// <summary>

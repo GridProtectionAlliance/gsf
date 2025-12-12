@@ -41,8 +41,7 @@ public class ConfigurationCellCollection : PhasorProtocols.ConfigurationCellColl
     /// <summary>
     /// Creates a new <see cref="ConfigurationCellCollection"/>.
     /// </summary>
-    public ConfigurationCellCollection()
-        : base(0, true)
+    public ConfigurationCellCollection() : base(0, true)
     {
         // SEL CWS only supports a single device - so there should only be one cell - since there's only one cell, cell lengths will be constant :)
     }
@@ -52,8 +51,7 @@ public class ConfigurationCellCollection : PhasorProtocols.ConfigurationCellColl
     /// </summary>
     /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
     /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
-    protected ConfigurationCellCollection(SerializationInfo info, StreamingContext context)
-        : base(info, context)
+    protected ConfigurationCellCollection(SerializationInfo info, StreamingContext context) : base(info, context)
     {
     }
 
@@ -67,7 +65,7 @@ public class ConfigurationCellCollection : PhasorProtocols.ConfigurationCellColl
     /// <param name="index">Index of value to get or set.</param>
     public new ConfigurationCell this[int index]
     {
-        get => base[index] as ConfigurationCell;
+        get => (base[index] as ConfigurationCell)!;
         set => base[index] = value;
     }
 

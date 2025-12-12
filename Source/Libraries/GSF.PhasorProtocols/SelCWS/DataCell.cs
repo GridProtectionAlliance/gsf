@@ -25,6 +25,7 @@
 //
 //******************************************************************************************************
 // ReSharper disable RedundantOverriddenMember
+// ReSharper disable ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
 // ReSharper disable VirtualMemberCallInConstructor
 
 using System;
@@ -52,11 +53,15 @@ public class DataCell : DataCellBase
         : base(parent, configurationCell, 0x0000, Common.MaximumPhasorValues, Common.MaximumAnalogValues, Common.MaximumDigitalValues)
     {
         // Initialize frequency and df/dt
-        FrequencyValue = new FrequencyValue(this, configurationCell.FrequencyDefinition as FrequencyDefinition, double.NaN, double.NaN);
+        FrequencyValue = new FrequencyValue(this, (configurationCell.FrequencyDefinition as FrequencyDefinition)!, double.NaN, double.NaN);
+
+        // Initialize analog values
+        foreach (IAnalogDefinition definition in configurationCell.AnalogDefinitions)
+            AnalogValues.Add(new AnalogValue(this, (definition as AnalogDefinition)!, double.NaN));
 
         // Initialize phasor values
         foreach (IPhasorDefinition definition in configurationCell.PhasorDefinitions)
-            PhasorValues.Add(new PhasorValue(this, definition as PhasorDefinition, (Angle)double.NaN, double.NaN));
+            PhasorValues.Add(new PhasorValue(this, (definition as PhasorDefinition)!, (Angle)double.NaN, double.NaN));
     }
 
     /// <summary>
@@ -78,7 +83,7 @@ public class DataCell : DataCellBase
     /// </summary>
     public new DataFrame Parent
     {
-        get => base.Parent as DataFrame;
+        get => (base.Parent as DataFrame)!;
         set => base.Parent = value;
     }
 
@@ -87,7 +92,7 @@ public class DataCell : DataCellBase
     /// </summary>
     public new ConfigurationCell ConfigurationCell
     {
-        get => base.ConfigurationCell as ConfigurationCell;
+        get => (base.ConfigurationCell as ConfigurationCell)!;
         set => base.ConfigurationCell = value;
     }
 
@@ -147,10 +152,10 @@ public class DataCell : DataCellBase
     {
         int index = startIndex;
 
-        // Update phasor values
-        foreach (PhasorValue phasor in PhasorValues.Cast<PhasorValue>())
+        // Update analog values
+        foreach (AnalogValue analog in AnalogValues.Cast<AnalogValue>())
         {
-            phasor.Magnitude = BigEndian.ToInt32(buffer, index) * phasor.Definition.Scalar;
+            analog.Value = BigEndian.ToInt32(buffer, index) * analog.Definition.Scalar;
             index += 4;
         }
 
@@ -174,7 +179,7 @@ public class DataCell : DataCellBase
     // Delegate handler to create a new SEL CWS data cell
     internal static IDataCell CreateNewCell(IChannelFrame parent, IChannelFrameParsingState<IDataCell> state, int index, byte[] buffer, int startIndex, out int parsedLength)
     {
-        DataCell dataCell = new(parent as IDataFrame, (state as IDataFrameParsingState)?.ConfigurationFrame.Cells[index]);
+        DataCell dataCell = new((parent as IDataFrame)!, (state as IDataFrameParsingState)?.ConfigurationFrame.Cells[index]!);
 
         parsedLength = dataCell.ParseBinaryImage(buffer, startIndex, 0);
 

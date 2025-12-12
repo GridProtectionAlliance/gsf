@@ -102,7 +102,7 @@ public class CommonFrameHeader : CommonHeaderBase<FrameType>
     protected CommonFrameHeader(SerializationInfo info, StreamingContext context)
     {
         // Deserialize common frame header
-        m_frameType = (FrameType)info.GetValue("frameType", typeof(FrameType));
+        m_frameType = (FrameType)(info.GetValue("frameType", typeof(FrameType)) ?? FrameType.DataFrame);
         FrameLength = info.GetInt32("frameLength");
         ChannelID = info.GetUInt64("channelID");
         PacketCount = info.GetUInt16("packetCount");

@@ -69,7 +69,7 @@ public static class Common
     /// Absolute maximum number of possible analog values that could fit into a data frame.
     /// </summary>
     /// <remarks>SEL CWS doesn't support analog values.</remarks>
-    public const int MaximumAnalogValues = 0;
+    public const int MaximumAnalogValues = 6;
 
     /// <summary>
     /// Absolute maximum number of possible digital values that could fit into a data frame.

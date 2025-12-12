@@ -23,114 +23,182 @@
 // ReSharper disable IdentifierTypo
 // ReSharper disable CommentTypo
 // ReSharper disable GrammarMistakeInComment
+// ReSharper disable InconsistentNaming
 
 using System;
+using System.Runtime.CompilerServices;
 using GSF.Units;
 using GSF.Units.EE;
 
 namespace GSF.PhasorProtocols.SelCWS;
 
-internal enum TimestampMode
-{
-    // Center alignment: "phasor-correct"
-    Center,
-    // End alignment: "stream-instant"
-    End
-}
-
+/// <summary>
+/// Represents the output of the phase estimation algorithm.
+/// </summary>
 internal struct PhaseEstimate
 {
-    public double Frequency;    // Smoothed frequency estimate in hertz
-    public Angle[] Angles;      // Angles, length 6: IA, IB, IC, VA, VB, VC
-    public long Timestamp;      // Nanoseconds timestamp aligned per TimestampMode
-    public int WindowSamples;   // N used for this estimate
+    /// <summary>Smoothed frequency estimate in hertz.</summary>
+    public double Frequency;
+
+    /// <summary>Rate of change of frequency in Hz/s.</summary>
+    public double dFdt;
+
+    /// <summary>Angles in radians, length 6: IA, IB, IC, VA, VB, VC.</summary>
+    public Angle[] Angles;
+
+    /// <summary>RMS Magnitudes, length 6: IA, IB, IC, VA, VB, VC.</summary>
+    public double[] Magnitudes;
 }
 
 /// <summary>
-/// Represents a rolling six-phase estimator.
+/// Represents a rolling six-phase estimator using a sliding DFT algorithm.
 /// </summary>
+/// <remarks>
+/// <para>
+/// This class implements a real-time phasor measurement algorithm suitable for
+/// power system applications. It uses a sliding Discrete Fourier Transform (SDFT)
+/// approach to efficiently compute phasors at each sample with O(1) complexity.
+/// </para>
+/// <para>
+/// Frequency estimation is performed by tracking the rate of change of phase angle
+/// from the reference channel (VA by default). The frequency and ROCOF outputs
+/// are smoothed using exponential moving average filters.
+/// </para>
+/// <para>
+/// The algorithm is designed for nominal 50Hz or 60Hz systems sampled at 3000 Hz,
+/// but can be configured for other sample rates.
+/// </para>
+/// </remarks>
 internal sealed class RollingPhaseEstimator
 {
     #region [ Members ]
 
-    // Nested Types
-
     // Constants
-    private const double TwoThirds = 2.0D / 3.0D;
-    private const double Half = 0.5D;
-    private const double Rt32 = 0.86602540378443864676D; // sqrt(3)/2
-    private const double TwoPI = Math.PI * 2.0D;
+    private const int NumChannels = 6;
+    private const int ReferenceChannel = 3; // VA used for frequency tracking
+    private const double TwoPi = 2.0 * Math.PI;
+    private const double NanosecondsPerSecond = 1e9;
+
+    // Channel indices for clarity
+    public const int IA = 0;
+    public const int IB = 1;
+    public const int IC = 2;
+    public const int VA = 3;
+    public const int VB = 4;
+    public const int VC = 5;
 
     // Fields
-    private readonly double m_sampleRate;
-    private readonly double m_alpha;    // EMA smoothing for ω (0..1)
-    private readonly TimestampMode m_timestampMode;
+    private readonly double m_samplePeriodSeconds;
+    private readonly int m_recalculationInterval;
 
-    private readonly int m_targetCycles;
+    // Circular sample buffers for each channel
+    private readonly double[][] m_sampleBuffers;
+    private int m_bufferWriteIndex;
 
-    private int m_windowSamples;    // current window length (samples), cycle-locked
-    private int m_cap;              // ring capacity (>= m_windowSamples)
-    private int m_head;             // ring head index
-    private int m_count;            // number of valid entries in ring
+    // DFT twiddle factor for sliding update: e^(j*2π/N)
+    private readonly double m_twiddleReal;  // cos(2π/N)
+    private readonly double m_twiddleImag;  // sin(2π/N)
 
-    // Running sums for synchronous detection: Σ x·cosθ, Σ x·sinθ
-    private readonly double[] m_sumC = new double[6];
-    private readonly double[] m_sumS = new double[6];
+    // Accumulated DFT phasors (real and imaginary parts) for each channel
+    private readonly double[] m_phasorReal;
+    private readonly double[] m_phasorImag;
 
-    // Ring buffers holding per-sample contributions for quick subtract
-    private double[] m_rc0, m_rc1, m_rc2, m_rc3, m_rc4, m_rc5;
-    private double[] m_rs0, m_rs1, m_rs2, m_rs3, m_rs4, m_rs5;
+    // Precomputed cosine/sine tables for full DFT recalculation
+    private readonly double[] m_cosTable;
+    private readonly double[] m_sinTable;
 
-    // Frequency tracking
-    private double[] m_phase;
-    private double m_phiCurrent;    // current unwrapped phase
-    private double m_prevTheta = double.NaN;
-    private double m_omegaFiltered;
-    private bool m_omegaInit;
+    // Previous phase angle for frequency calculation (from reference channel)
+    private double m_prevPhaseAngle;
+    private bool m_hasPrevPhase;
 
-    // Timestamp calculation
-    private readonly double m_samplePeriodNs; // double to avoid overflow
-    private long m_lastEpochNs;
+    // Frequency smoothing (exponential moving average)
+    private readonly double m_frequencyAlpha;
+    private double m_smoothedFrequency;
+    private bool m_frequencyInitialized;
+
+    // ROCOF smoothing
+    private readonly double m_rocofAlpha;
+    private double m_prevSmoothedFrequency;
+    private double m_smoothedRocof;
+    private bool m_rocofInitialized;
+
+    // Timing
+    private long m_prevEpochNs;
 
     #endregion
 
     #region [ Constructors ]
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RollingPhaseEstimator"/> class.
+    /// </summary>
+    /// <param name="sampleRateHz">Sample rate in Hz (e.g., 3000).</param>
+    /// <param name="nominalFrequency">Nominal line frequency (50 or 60 Hz).</param>
+    /// <param name="targetCycles">Number of cycles in the analysis window (default: 2).</param>
+    /// <param name="frequencySmoothingFactor">EMA alpha for frequency smoothing (0-1, default: 0.1).</param>
+    /// <param name="rocofSmoothingFactor">EMA alpha for ROCOF smoothing (0-1, default: 0.05).</param>
+    /// <param name="recalculationCycles">Number of cycles between full DFT recalculations for numerical stability (default: 10).</param>
     public RollingPhaseEstimator(
         double sampleRateHz,
         LineFrequency nominalFrequency,
-        int targetCycles = 5,
-        TimestampMode timestampMode = TimestampMode.Center,
-        double smoothing = 0.15,
-        int maxCyclesForCapacity = 12) // pre-allocate a comfortable upper bound
+        int targetCycles = 2,
+        double frequencySmoothingFactor = 0.1,
+        double rocofSmoothingFactor = 0.05,
+        int recalculationCycles = 10)
     {
+        // Validate parameters
         if (sampleRateHz <= 0)
-            throw new ArgumentOutOfRangeException(nameof(sampleRateHz));
+            throw new ArgumentOutOfRangeException(nameof(sampleRateHz), "Sample rate must be positive.");
+        
+        if (targetCycles < 1)
+            throw new ArgumentOutOfRangeException(nameof(targetCycles), "Target cycles must be at least 1.");
+        
+        if (frequencySmoothingFactor is < 0 or > 1)
+            throw new ArgumentOutOfRangeException(nameof(frequencySmoothingFactor), "Smoothing factor must be between 0 and 1.");
+        
+        if (rocofSmoothingFactor is < 0 or > 1)
+            throw new ArgumentOutOfRangeException(nameof(rocofSmoothingFactor), "Smoothing factor must be between 0 and 1.");
 
-        if (targetCycles is < 2 or > 30)
-            throw new ArgumentOutOfRangeException(nameof(targetCycles));
+        // Store configuration
+        SampleRateHz = sampleRateHz;
+        NominalFrequencyHz = (double)nominalFrequency;
+        m_samplePeriodSeconds = 1.0 / sampleRateHz;
+        int samplesPerNominalCycle = (int)Math.Round(sampleRateHz / NominalFrequencyHz);
+        WindowSamples = samplesPerNominalCycle * targetCycles;
+        m_recalculationInterval = samplesPerNominalCycle * recalculationCycles;
 
-        if (smoothing is <= 0 or >= 1)
-            throw new ArgumentOutOfRangeException(nameof(smoothing));
+        // Initialize sample buffers
+        m_sampleBuffers = new double[NumChannels][];
 
-        if (maxCyclesForCapacity < targetCycles)
-            throw new ArgumentOutOfRangeException(nameof(maxCyclesForCapacity));
+        for (int ch = 0; ch < NumChannels; ch++)
+            m_sampleBuffers[ch] = new double[WindowSamples];
 
-        m_sampleRate = sampleRateHz;
-        m_alpha = smoothing;
-        m_timestampMode = timestampMode;
-        m_targetCycles = targetCycles;
-        m_samplePeriodNs = 1e9 / m_sampleRate;
+        // Precompute sliding DFT twiddle factor: e^(j*2π*k/N) where k = targetCycles
+        // For a window of targetCycles complete cycles, bin k corresponds to the fundamental
+        double twiddleAngle = TwoPi * targetCycles / WindowSamples;
+        m_twiddleReal = Math.Cos(twiddleAngle);
+        m_twiddleImag = Math.Sin(twiddleAngle);
 
-        // initial window: assume nominal Hz to bootstrap
-        int spc0 = (int)Math.Round(m_sampleRate / (int)nominalFrequency);
+        // Precompute cosine/sine tables for full DFT calculation at bin k = targetCycles
+        m_cosTable = new double[WindowSamples];
+        m_sinTable = new double[WindowSamples];
+        
+        for (int n = 0; n < WindowSamples; n++)
+        {
+            double angle = TwoPi * targetCycles * n / WindowSamples;
+            m_cosTable[n] = Math.Cos(angle);
+            m_sinTable[n] = Math.Sin(angle);
+        }
 
-        // Future: these are sane bounds for 3kS/s (target use case), but should be made adjustable
-        m_windowSamples = Clamp(targetCycles * spc0, 60, 2000); 
+        // Initialize phasor accumulators
+        m_phasorReal = new double[NumChannels];
+        m_phasorImag = new double[NumChannels];
 
-        m_cap = Clamp(maxCyclesForCapacity * spc0, m_windowSamples, 10000);
-
-        AllocateRings(m_cap);
+        // Initialize frequency tracking
+        m_smoothedFrequency = NominalFrequencyHz;
+        m_prevSmoothedFrequency = NominalFrequencyHz;
+        m_frequencyAlpha = frequencySmoothingFactor;
+        m_rocofAlpha = rocofSmoothingFactor;
     }
 
     #endregion
@@ -138,274 +206,299 @@ internal sealed class RollingPhaseEstimator
     #region [ Properties ]
 
     /// <summary>
-    /// Gets the current window length in samples.
+    /// Gets the configured sample rate in Hz.
     /// </summary>
-    public int WindowSamples => m_windowSamples;
+    public double SampleRateHz { get; }
 
     /// <summary>
-    /// Gets the current filtered frequency estimate in hertz.
+    /// Gets the nominal frequency in Hz.
     /// </summary>
-    /// <remarks>
-    /// Returns <c>NaN</c> if window not yet full.
-    /// </remarks>
-    public double CurrentFrequency => m_omegaInit ? m_omegaFiltered / TwoPI : double.NaN;
+    public double NominalFrequencyHz { get; }
+
+    /// <summary>
+    /// Gets the number of samples in the analysis window.
+    /// </summary>
+    public int WindowSamples { get; }
+
+    /// <summary>
+    /// Gets the total number of samples processed.
+    /// </summary>
+    public long TotalSamplesProcessed { get; private set; }
+
+    /// <summary>
+    /// Gets whether the estimator has filled its window and is producing valid estimates.
+    /// </summary>
+    public bool IsReady => TotalSamplesProcessed >= WindowSamples;
 
     #endregion
 
     #region [ Methods ]
 
     /// <summary>
-    /// Push one interleaved sample-group (IA,IB,IC,VA,VB,VC) with its epoch nanoseconds.
-    /// Returns <c>true</c> when an estimate is available, i.e., window has filled.
+    /// Push one interleaved sample-group (IA, IB, IC, VA, VB, VC) with its epoch nanoseconds.
     /// </summary>
-    public bool Step(double ia, double ib, double ic, double va, double vb, double vc, long epochNanoseconds, out PhaseEstimate estimate)
+    /// <param name="ia">Current sample for phase A current.</param>
+    /// <param name="ib">Current sample for phase B current.</param>
+    /// <param name="ic">Current sample for phase C current.</param>
+    /// <param name="va">Current sample for phase A voltage.</param>
+    /// <param name="vb">Current sample for phase B voltage.</param>
+    /// <param name="vc">Current sample for phase C voltage.</param>
+    /// <param name="epochNanoseconds">Timestamp in nanoseconds since epoch.</param>
+    /// <param name="estimate">Output estimate; valid only when method returns true.</param>
+    /// <returns><c>true</c> when an estimate is available (window has filled); otherwise, <c>false</c>.</returns>
+    public bool Step(
+        double ia, 
+        double ib, 
+        double ic, 
+        double va, 
+        double vb, 
+        double vc, 
+        long epochNanoseconds,
+        out PhaseEstimate? estimate)
     {
-        estimate = default;
-        m_lastEpochNs = epochNanoseconds;
+        // Pack samples for processing
+        double[] samples = new double[NumChannels];
 
-        // --- Voltage space-vector angle θ (Clarke αβ) ---
-        double alpha = TwoThirds * (va - Half * vb - Half * vc);
-        double beta = TwoThirds * (Rt32 * (vb - vc));
-        double theta = Math.Atan2(beta, alpha);
+        samples[0] = ia;
+        samples[1] = ib;
+        samples[2] = ic;
+        samples[3] = va;
+        samples[4] = vb;
+        samples[5] = vc;
 
-        // --- Unwrap phase and maintain global ϕ(k) ---
-        if (double.IsNaN(m_prevTheta))
+        // Determine if we're in fill-up mode or sliding mode
+        bool isFillingUp = TotalSamplesProcessed < WindowSamples;
+        int oldestIndex = m_bufferWriteIndex;
+
+        // Store the new sample in the buffer
+        for (int ch = 0; ch < NumChannels; ch++)
         {
-            // first sample: initialize unwrapped phase
-            m_phiCurrent = 0.0D;
-        }
-        else
-        {
-            double dtheta = theta - m_prevTheta;
+            double oldSample = m_sampleBuffers[ch][oldestIndex];
+            double newSample = samples[ch];
+            m_sampleBuffers[ch][oldestIndex] = newSample;
 
-            switch (dtheta)
+            if (isFillingUp)
             {
-                case > Math.PI:
-                    dtheta -= TwoPI;
-                    break;
-                case < -Math.PI:
-                    dtheta += TwoPI;
-                    break;
+                // During fill-up, add contribution of new sample to DFT at correct phase
+                // DFT coefficient for position m_totalSampleCount in window
+                int dftIndex = (int)(TotalSamplesProcessed % WindowSamples);
+                m_phasorReal[ch] += newSample * m_cosTable[dftIndex];
+                m_phasorImag[ch] -= newSample * m_sinTable[dftIndex];
             }
-
-            m_phiCurrent += dtheta; // global unwrapped phase
-        }
-
-        m_prevTheta = theta;
-
-        double c = Math.Cos(theta);
-        double s = Math.Sin(theta);
-
-        // --- Contributions for this sample ---
-        double c0 = ia * c, s0 = ia * s;
-        double c1 = ib * c, s1 = ib * s;
-        double c2 = ic * c, s2 = ic * s;
-        double c3 = va * c, s3 = va * s;
-        double c4 = vb * c, s4 = vb * s;
-        double c5 = vc * c, s5 = vc * s;
-
-        // --- If window is full, pop oldest (subtract its contributions) ---
-        if (m_count == m_windowSamples)
-        {
-            int idx = m_head;
-            SubtractOld(idx);
-            m_head = (m_head + 1) % m_cap;
-            m_count--; // will re-increment below
-        }
-
-        // --- Ensure capacity in case of later window growth ---
-        if (m_count == m_cap)
-            GrowCapacity(m_cap * 2);
-
-        // --- Push new contributions and phase into ring ---
-        int write = (m_head + m_count) % m_cap;
-
-        m_rc0[write] = c0; m_rs0[write] = s0; m_sumC[0] += c0; m_sumS[0] += s0;
-        m_rc1[write] = c1; m_rs1[write] = s1; m_sumC[1] += c1; m_sumS[1] += s1;
-        m_rc2[write] = c2; m_rs2[write] = s2; m_sumC[2] += c2; m_sumS[2] += s2;
-        m_rc3[write] = c3; m_rs3[write] = s3; m_sumC[3] += c3; m_sumS[3] += s3;
-        m_rc4[write] = c4; m_rs4[write] = s4; m_sumC[4] += c4; m_sumS[4] += s4;
-        m_rc5[write] = c5; m_rs5[write] = s5; m_sumC[5] += c5; m_sumS[5] += s5;
-
-        m_phase[write] = m_phiCurrent;
-
-        m_count++;
-
-        // --- Update frequency estimate from whole-window phase change ---
-        if (m_count >= 2)
-        {
-            int oldest = m_head;
-            int newest = (m_head + m_count - 1) % m_cap;
-
-            double dphi = m_phase[newest] - m_phase[oldest];
-            double totalTimeSec = (m_count - 1) / m_sampleRate;
-
-            if (totalTimeSec > 0.0D)
+            else
             {
-                double omegaRaw = dphi / totalTimeSec; // rad/s over window
+                // Sliding DFT update: X_new = (X_old - x_oldest + x_new) * e^(j*2π/N)
+                // First, remove the oldest sample's contribution and add the new sample
+                double deltaReal = m_phasorReal[ch] + (newSample - oldSample);
+                double deltaImag = m_phasorImag[ch];
 
-                if (m_omegaInit)
-                {
-                    m_omegaFiltered = (1.0D - m_alpha) * m_omegaFiltered + m_alpha * omegaRaw;
-                }
-                else
-                {
-                    m_omegaFiltered = omegaRaw;
-                    m_omegaInit = true;
-                }
+                // Then rotate by the twiddle factor
+                // Complex multiplication: (a + bi)(c + di) = (ac - bd) + (ad + bc)i
+                m_phasorReal[ch] = deltaReal * m_twiddleReal - deltaImag * m_twiddleImag;
+                m_phasorImag[ch] = deltaReal * m_twiddleImag + deltaImag * m_twiddleReal;
             }
         }
 
-        // --- Cycle-lock window length to current f̂ (after updating ω) ---
-        if (m_omegaInit)
-            RetuneWindow();
+        // Advance buffer write index
+        m_bufferWriteIndex = (m_bufferWriteIndex + 1) % WindowSamples;
+        TotalSamplesProcessed++;
 
-        // Not enough samples yet?
-        if (m_count < m_windowSamples)
+        // Periodic full recalculation for numerical stability (only after fill-up)
+        // Also recalculate immediately after fill-up to ensure consistency
+        bool justFilled = TotalSamplesProcessed == WindowSamples;
+
+        if (!isFillingUp && (justFilled || TotalSamplesProcessed % m_recalculationInterval == 0))
+            RecalculateFullDft();
+
+        // Check if window has filled
+        if (TotalSamplesProcessed < WindowSamples)
+        {
+            estimate = null;
             return false;
-
-        // --- Build result ---
-        double frequency = m_omegaFiltered / TwoPI;
-
-        Angle[] angles = new Angle[6];
-
-        for (int k = 0; k < 6; k++)
-        {
-            Angle phi = Math.Atan2(-m_sumS[k], m_sumC[k]); // radians
-            angles[k] = phi.ToRange(-Math.PI, false).ToDegrees();
         }
 
-        long timestamp = m_timestampMode == TimestampMode.End
-            ? m_lastEpochNs
-            : CenterTimestampNs();
-
-        estimate = new PhaseEstimate
-        {
-            Frequency = frequency,
-            Angles = angles,    // IA, IB, IC, VA, VB, VC
-            Timestamp = timestamp,
-            WindowSamples = m_windowSamples
-        };
-
+        // Compute output estimate
+        estimate = ComputeEstimate(epochNanoseconds);
         return true;
     }
 
-    private void RetuneWindow()
+    /// <summary>
+    /// Resets the estimator to its initial state.
+    /// </summary>
+    public void Reset()
     {
-        // clamp f̂ to [30, 90] Hz to be sane
-        double fhat = Math.Max(30.0D, Math.Min(90.0D, m_omegaFiltered / TwoPI));
-        int spc = (int)Math.Round(m_sampleRate / fhat);
-        int desired = Clamp(m_targetCycles * spc, 90, 4000);
+        // Clear sample buffers
+        for (int ch = 0; ch < NumChannels; ch++)
+            Array.Clear(m_sampleBuffers[ch], 0, WindowSamples);
 
-        if (desired == m_windowSamples)
-            return;
+        // Reset indices and counters
+        m_bufferWriteIndex = 0;
+        TotalSamplesProcessed = 0;
 
-        m_windowSamples = desired;
+        // Reset phasor accumulators
+        Array.Clear(m_phasorReal, 0, NumChannels);
+        Array.Clear(m_phasorImag, 0, NumChannels);
 
-        // If window shrank, drop oldest until count <= window
-        while (m_count > m_windowSamples)
+        // Reset frequency tracking state
+        m_prevPhaseAngle = 0;
+        m_hasPrevPhase = false;
+        m_smoothedFrequency = NominalFrequencyHz;
+        m_prevSmoothedFrequency = NominalFrequencyHz;
+        m_smoothedRocof = 0;
+        m_frequencyInitialized = false;
+        m_rocofInitialized = false;
+        m_prevEpochNs = 0;
+    }
+
+    // Performs a full DFT recalculation from the sample buffers for numerical stability.
+    private void RecalculateFullDft()
+    {
+        // The buffer write index points to the oldest sample (next to be overwritten)
+        // So we read starting from that index
+        int startIndex = m_bufferWriteIndex;
+
+        for (int ch = 0; ch < NumChannels; ch++)
         {
-            SubtractOld(m_head);
-            m_head = (m_head + 1) % m_cap;
-            m_count--;
+            double sumReal = 0;
+            double sumImag = 0;
+
+            for (int i = 0; i < WindowSamples; i++)
+            {
+                int sampleIndex = (startIndex + i) % WindowSamples;
+                double sample = m_sampleBuffers[ch][sampleIndex];
+
+                // DFT at bin k = m_targetCycles: X_k = Σ x[n] * e^(-j*2π*k*n/N)
+                // Using pre-computed tables which already incorporate the bin number
+                sumReal += sample * m_cosTable[i];
+                sumImag -= sample * m_sinTable[i];
+            }
+
+            m_phasorReal[ch] = sumReal;
+            m_phasorImag[ch] = sumImag;
+        }
+    }
+
+    // Computes the phase estimate from current phasor values.
+    private PhaseEstimate ComputeEstimate(long epochNanoseconds)
+    {
+        Angle[] angles = new Angle[NumChannels];
+        double[] magnitudes = new double[NumChannels];
+
+        // Scaling factor for RMS magnitude from DFT
+        // For a pure sinusoid: DFT magnitude = N * A / 2, where A is peak amplitude
+        // RMS = A / sqrt(2), so RMS = (2 * |X|) / (N * sqrt(2)) = sqrt(2) * |X| / N
+        double magnitudeScale = Math.Sqrt(2.0) / WindowSamples;
+
+        // Reference angle for phase normalization (typically VA)
+        double referenceAngle = Math.Atan2(m_phasorImag[ReferenceChannel], m_phasorReal[ReferenceChannel]);
+
+        for (int ch = 0; ch < NumChannels; ch++)
+        {
+            double real = m_phasorReal[ch];
+            double imag = m_phasorImag[ch];
+
+            // Calculate magnitude (RMS)
+            double magnitude = Math.Sqrt(real * real + imag * imag) * magnitudeScale;
+            magnitudes[ch] = magnitude;
+
+            // Calculate angle relative to reference (VA)
+            double rawAngle = Math.Atan2(imag, real);
+            double relativeAngle = NormalizeAngle(rawAngle - referenceAngle);
+            angles[ch] = new Angle(relativeAngle);
         }
 
-        // If window grew, just wait for natural filling. Ensure capacity.
-        if (m_cap < m_windowSamples)
-            GrowCapacity(Math.Max(m_windowSamples, m_cap * 2));
+        // Calculate time delta since last sample
+        double deltaTimeSeconds = m_samplePeriodSeconds; // Default to one sample period
+        if (m_prevEpochNs > 0)
+        {
+            double measuredDelta = (epochNanoseconds - m_prevEpochNs) / NanosecondsPerSecond;
+            
+            if (measuredDelta is > 0 and < 1.0) // Sanity check
+                deltaTimeSeconds = measuredDelta;
+        }
+
+        // Calculate frequency from reference channel phase progression
+        // The sliding DFT output phase changes by 2π*k/N per sample for a signal at bin k
+        // For our nominal frequency, this corresponds to 2π*f_nom*dt
+        double currentPhase = Math.Atan2(m_phasorImag[ReferenceChannel], m_phasorReal[ReferenceChannel]);
+        double instantaneousFrequency = NominalFrequencyHz;
+
+        if (m_hasPrevPhase)
+        {
+            // Phase change (unwrapped)
+            double deltaPhase = NormalizeAngle(currentPhase - m_prevPhaseAngle);
+
+            // Expected phase change for nominal frequency
+            double expectedDeltaPhase = TwoPi * NominalFrequencyHz * deltaTimeSeconds;
+
+            // Frequency deviation
+            double phaseDeviation = deltaPhase - expectedDeltaPhase;
+            double frequencyDeviation = phaseDeviation / (TwoPi * deltaTimeSeconds);
+            instantaneousFrequency = NominalFrequencyHz + frequencyDeviation;
+
+            // Clamp to reasonable range (±10% of nominal)
+            double minFreq = NominalFrequencyHz * 0.9;
+            double maxFreq = NominalFrequencyHz * 1.1;
+            instantaneousFrequency = Math.Max(minFreq, Math.Min(maxFreq, instantaneousFrequency));
+        }
+
+        // Update previous phase for next iteration
+        m_prevPhaseAngle = currentPhase;
+        m_hasPrevPhase = true;
+
+        // Apply exponential smoothing to frequency
+        if (!m_frequencyInitialized)
+        {
+            m_smoothedFrequency = instantaneousFrequency;
+            m_frequencyInitialized = true;
+        }
+        else
+        {
+            m_smoothedFrequency = m_frequencyAlpha * instantaneousFrequency +
+                                  (1.0 - m_frequencyAlpha) * m_smoothedFrequency;
+        }
+
+        // Calculate ROCOF (rate of change of frequency)
+        double rocof = 0;
+
+        if (m_rocofInitialized)
+        {
+            // ROCOF from smoothed frequency change
+            double instantaneousRocof = (m_smoothedFrequency - m_prevSmoothedFrequency) / deltaTimeSeconds;
+
+            // Smooth ROCOF
+            m_smoothedRocof = m_rocofAlpha * instantaneousRocof + (1.0 - m_rocofAlpha) * m_smoothedRocof;
+            rocof = m_smoothedRocof;
+        }
+        else
+        {
+            m_rocofInitialized = true;
+        }
+
+        m_prevSmoothedFrequency = m_smoothedFrequency;
+        m_prevEpochNs = epochNanoseconds;
+
+        return new PhaseEstimate
+        {
+            Frequency = m_smoothedFrequency,
+            dFdt = rocof,
+            Angles = angles,
+            Magnitudes = magnitudes
+        };
     }
 
-    private void SubtractOld(int idx)
+    /// <summary>
+    /// Normalizes an angle to the range [-π, π].
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static double NormalizeAngle(double angle)
     {
-        m_sumC[0] -= m_rc0[idx]; m_sumS[0] -= m_rs0[idx];
-        m_sumC[1] -= m_rc1[idx]; m_sumS[1] -= m_rs1[idx];
-        m_sumC[2] -= m_rc2[idx]; m_sumS[2] -= m_rs2[idx];
-        m_sumC[3] -= m_rc3[idx]; m_sumS[3] -= m_rs3[idx];
-        m_sumC[4] -= m_rc4[idx]; m_sumS[4] -= m_rs4[idx];
-        m_sumC[5] -= m_rc5[idx]; m_sumS[5] -= m_rs5[idx];
+        while (angle > Math.PI)
+            angle -= TwoPi;
+        while (angle < -Math.PI)
+            angle += TwoPi;
+        return angle;
     }
-
-    private long CenterTimestampNs()
-    {
-        // center offset = ((N-1)/2) * Ts
-        double half = (m_count - 1) * 0.5D * m_samplePeriodNs;
-        double t = m_lastEpochNs - half;
-
-        // round to nearest integer ns
-        return (long)Math.Round(t);
-    }
-
-    private static int Clamp(int v, int lo, int hi)
-    {
-        return v < lo ? lo : v > hi ? hi : v;
-    }
-
-    private void AllocateRings(int capacity)
-    {
-        m_rc0 = new double[capacity]; m_rs0 = new double[capacity];
-        m_rc1 = new double[capacity]; m_rs1 = new double[capacity];
-        m_rc2 = new double[capacity]; m_rs2 = new double[capacity];
-        m_rc3 = new double[capacity]; m_rs3 = new double[capacity];
-        m_rc4 = new double[capacity]; m_rs4 = new double[capacity];
-        m_rc5 = new double[capacity]; m_rs5 = new double[capacity];
-
-        m_phase = new double[capacity];
-    }
-
-    private void GrowCapacity(int newCap)
-    {
-        // Copy current ring into new contiguous [0.._count)
-        double[] nc = new double[newCap]; double[] ns = new double[newCap];
-        CopyRing(m_rc0, nc); m_rc0 = nc; CopyRing(m_rs0, ns); m_rs0 = ns;
-
-        nc = new double[newCap]; ns = new double[newCap];
-        CopyRing(m_rc1, nc); m_rc1 = nc; CopyRing(m_rs1, ns); m_rs1 = ns;
-
-        nc = new double[newCap]; ns = new double[newCap];
-        CopyRing(m_rc2, nc); m_rc2 = nc; CopyRing(m_rs2, ns); m_rs2 = ns;
-
-        nc = new double[newCap]; ns = new double[newCap];
-        CopyRing(m_rc3, nc); m_rc3 = nc; CopyRing(m_rs3, ns); m_rs3 = ns;
-
-        nc = new double[newCap]; ns = new double[newCap];
-        CopyRing(m_rc4, nc); m_rc4 = nc; CopyRing(m_rs4, ns); m_rs4 = ns;
-
-        nc = new double[newCap]; ns = new double[newCap];
-        CopyRing(m_rc5, nc); m_rc5 = nc; CopyRing(m_rs5, ns); m_rs5 = ns;
-
-        // phase ring
-        double[] pNew = new double[newCap];
-        CopyRing(m_phase, pNew);
-        m_phase = pNew;
-
-        m_cap = newCap;
-        m_head = 0; // reset ring indexing (we’ve packed at start)
-    }
-
-    private void CopyRing(double[] src, double[] dst)
-    {
-        if (m_count == 0)
-            return;
-
-        int tailCount = Math.Min(m_count, src.Length - m_head);
-        Array.Copy(src, m_head, dst, 0, tailCount);
-
-        if (m_count > tailCount)
-            Array.Copy(src, 0, dst, tailCount, m_count - tailCount);
-    }
-
-    // Future: change target cycles on the fly
-    //public void SetTargetCycles(int cycles)
-    //{
-    //    if (cycles is < 2 or > 30)
-    //        throw new ArgumentOutOfRangeException(nameof(cycles));
-
-    //    m_targetCycles = cycles;
-
-    //    // Re-tune immediately with current f̂ if available
-    //    if (m_omegaInit)
-    //        RetuneWindow();
-    //}
 
     #endregion
 }

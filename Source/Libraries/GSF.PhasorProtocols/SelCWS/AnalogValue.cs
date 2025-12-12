@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  FrequencyValue.cs - Gbtc
+//  AnalogValue.cs - Gbtc
 //
 //  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,7 +16,7 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  02/08/2007 - J. Ritchie Carroll & Jian Ryan Zuo
+//  11/12/2004 - J. Ritchie Carroll
 //       Generated original version of source code.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
@@ -31,41 +31,40 @@ using System.Runtime.Serialization;
 namespace GSF.PhasorProtocols.SelCWS;
 
 /// <summary>
-/// Represents the SEL CWS implementation of a <see cref="IFrequencyValue"/>.
+/// Represents the SEL CWS implementation of an <see cref="IAnalogValue"/>.
 /// </summary>
 [Serializable]
-public class FrequencyValue : FrequencyValueBase
+public class AnalogValue : AnalogValueBase
 {
     #region [ Constructors ]
 
     /// <summary>
-    /// Creates a new <see cref="FrequencyValue"/>.
+    /// Creates a new <see cref="AnalogValue"/>.
     /// </summary>
-    /// <param name="parent">The <see cref="IDataCell"/> parent of this <see cref="FrequencyValue"/>.</param>
-    /// <param name="frequencyDefinition">The <see cref="IFrequencyDefinition"/> associated with this <see cref="FrequencyValue"/>.</param>
-    public FrequencyValue(IDataCell parent, IFrequencyDefinition frequencyDefinition)
-        : base(parent, frequencyDefinition)
+    /// <param name="parent">The <see cref="IDataCell"/> parent of this <see cref="AnalogValue"/>.</param>
+    /// <param name="analogDefinition">The <see cref="IAnalogDefinition"/> associated with this <see cref="AnalogValue"/>.</param>
+    public AnalogValue(IDataCell parent, IAnalogDefinition analogDefinition)
+        : base(parent, analogDefinition)
     {
     }
 
     /// <summary>
-    /// Creates a new <see cref="FrequencyValue"/> from specified parameters.
+    /// Creates a new <see cref="AnalogValue"/> from specified parameters.
     /// </summary>
-    /// <param name="parent">The <see cref="DataCell"/> parent of this <see cref="FrequencyValue"/>.</param>
-    /// <param name="frequencyDefinition">The <see cref="FrequencyDefinition"/> associated with this <see cref="FrequencyValue"/>.</param>
-    /// <param name="frequency">The floating point value that represents this <see cref="FrequencyValue"/>.</param>
-    /// <param name="dfdt">The floating point value that represents the change in this <see cref="FrequencyValue"/> over time.</param>
-    public FrequencyValue(DataCell parent, FrequencyDefinition frequencyDefinition, double frequency, double dfdt)
-        : base(parent, frequencyDefinition, frequency, dfdt)
+    /// <param name="parent">The <see cref="DataCell"/> parent of this <see cref="AnalogValue"/>.</param>
+    /// <param name="analogDefinition">The <see cref="AnalogDefinition"/> associated with this <see cref="AnalogValue"/>.</param>
+    /// <param name="value">The floating point value that represents this <see cref="AnalogValue"/>.</param>
+    public AnalogValue(DataCell parent, AnalogDefinition analogDefinition, double value)
+        : base(parent, analogDefinition, value)
     {
     }
 
     /// <summary>
-    /// Creates a new <see cref="FrequencyValue"/> from serialization parameters.
+    /// Creates a new <see cref="AnalogValue"/> from serialization parameters.
     /// </summary>
     /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
     /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
-    protected FrequencyValue(SerializationInfo info, StreamingContext context)
+    protected AnalogValue(SerializationInfo info, StreamingContext context)
         : base(info, context)
     {
     }
@@ -75,7 +74,7 @@ public class FrequencyValue : FrequencyValueBase
     #region [ Properties ]
 
     /// <summary>
-    /// Gets or sets the <see cref="DataCell"/> parent of this <see cref="FrequencyValue"/>.
+    /// Gets or sets the <see cref="DataCell"/> parent of this <see cref="AnalogValue"/>.
     /// </summary>
     public new virtual DataCell Parent
     {
@@ -84,12 +83,28 @@ public class FrequencyValue : FrequencyValueBase
     }
 
     /// <summary>
-    /// Gets or sets the <see cref="FrequencyDefinition"/> associated with this <see cref="FrequencyValue"/>.
+    /// Gets or sets the <see cref="AnalogDefinition"/> associated with this <see cref="AnalogValue"/>.
     /// </summary>
-    public new virtual FrequencyDefinition Definition
+    public new virtual AnalogDefinition Definition
     {
-        get => (base.Definition as FrequencyDefinition)!;
+        get => (base.Definition as AnalogDefinition)!;
         set => base.Definition = value;
+    }
+
+    #endregion
+
+    #region [ Static ]
+
+    // Static Methods
+
+    // Delegate handler to create a new SEL CWS analog value
+    internal static IAnalogValue CreateNewValue(IDataCell parent, IAnalogDefinition definition, byte[] buffer, int startIndex, out int parsedLength)
+    {
+        IAnalogValue analog = new AnalogValue(parent, definition);
+
+        parsedLength = analog.ParseBinaryImage(buffer, startIndex, 0);
+
+        return analog;
     }
 
     #endregion
