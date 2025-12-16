@@ -337,6 +337,9 @@ public class FrameParser : FrameParserBase<FrameType>
         // Keep reference to initial data frame (1 of 50 frames in SEL CWS)
         if (frame is DataFrame initialDataFrame)
         {
+            if (initialDataFrame.CommonHeader.ChannelID != m_configurationFrame.CommonHeader.ChannelID)
+                throw new InvalidOperationException("Data frame channel ID does not match that of the current configuration frame.");
+
             ApplyEstimatedPhases(initialDataFrame);
             m_initialDataFrame = initialDataFrame;
         }
