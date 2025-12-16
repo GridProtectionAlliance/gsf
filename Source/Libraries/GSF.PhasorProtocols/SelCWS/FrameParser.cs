@@ -240,6 +240,10 @@ public class FrameParser : FrameParserBase<FrameType>
         long nanosecondsPerFrame = FrameRate / 50;
         long nanosecondsTimestamp = m_initialDataFrame.NanosecondTimestamp;
 
+        // Move offset past initial data frame which includes 64-bit nanosecond timestamp
+        offset = 32;
+        length -= 32;
+
         // In the case of data frames in CWS, the source buffer has 49 more frames to parse after the first
         for (int i = 0; i < 49; i++)
         {
@@ -250,10 +254,12 @@ public class FrameParser : FrameParserBase<FrameType>
                 CommonHeader = m_initialDataFrame.CommonHeader
             };
 
-            parsedLength += dataFrame.ParseBinaryImage(buffer, offset, length);
+            dataFrame.ParseBinaryImage(buffer, offset, length);
+
+            offset += 24;
+            length -= 24;
 
             ApplyEstimatedPhases(dataFrame);
-
             OnReceivedDataFrame(dataFrame);
 
             // If event for native data frame is subscribed, raise it also

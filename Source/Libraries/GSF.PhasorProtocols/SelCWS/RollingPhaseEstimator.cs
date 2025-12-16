@@ -409,6 +409,7 @@ internal sealed class RollingPhaseEstimator
 
         // Calculate time delta since last sample
         double deltaTimeSeconds = m_samplePeriodSeconds; // Default to one sample period
+
         if (m_prevEpochNs > 0)
         {
             double measuredDelta = (epochNanoseconds - m_prevEpochNs) / NanosecondsPerSecond;
@@ -454,8 +455,7 @@ internal sealed class RollingPhaseEstimator
         }
         else
         {
-            m_smoothedFrequency = m_frequencyAlpha * instantaneousFrequency +
-                                  (1.0 - m_frequencyAlpha) * m_smoothedFrequency;
+            m_smoothedFrequency = m_frequencyAlpha * instantaneousFrequency + (1.0 - m_frequencyAlpha) * m_smoothedFrequency;
         }
 
         // Calculate ROCOF (rate of change of frequency)
@@ -493,11 +493,7 @@ internal sealed class RollingPhaseEstimator
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static double NormalizeAngle(double angle)
     {
-        while (angle > Math.PI)
-            angle -= TwoPi;
-        while (angle < -Math.PI)
-            angle += TwoPi;
-        return angle;
+        return new Angle(angle).ToRange(-Math.PI, false);
     }
 
     #endregion
