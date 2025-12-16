@@ -128,6 +128,11 @@ public class DataFrame : DataFrameBase, ISupportSourceIdentifiableFrameImage<Sou
     public virtual FrameType TypeID => SelCWS.FrameType.DataFrame;
 
     /// <summary>
+    /// Gets flag that determines if frame image can be queued for publication or should be processed immediately.
+    /// </summary>
+    public override bool AllowQueuedPublication => false;
+
+    /// <summary>
     /// Gets or sets current <see cref="CommonFrameHeader"/>.
     /// </summary>
     public CommonFrameHeader CommonHeader

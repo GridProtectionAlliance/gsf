@@ -129,6 +129,9 @@ public class FrameParser : FrameParserBase<FrameType>
     {
         // We narrow down parsing types to just those needed...
         base.Start([typeof(ConfigurationFrame), typeof(DataFrame)]);
+
+        // Make sure we mark stream an initialized even though base class doesn't think we use sync-bytes
+        StreamInitialized = false;
     }
 
     /// <summary>
@@ -182,6 +185,48 @@ public class FrameParser : FrameParserBase<FrameType>
         m_initialDataFrame = null;
 
         return parsedFrameHeader;
+    }
+
+    /// <inheritdoc/>
+    public override void Parse(SourceChannel source, byte[] buffer, int offset, int count)
+    {
+        const byte DataFrameByte = (byte)FrameType.DataFrame;
+        const byte ConfigFrameByte = (byte)FrameType.ConfigurationFrame;
+
+        // Since the SEL CWS implementation supports both 0x00 and 0x01 as sync-bytes, we manually check for both
+        // during stream initialization, base class handles a single set of sync-bytes, not variable.
+        if (!Enabled)
+            return;
+
+        if (StreamInitialized)
+        {
+            base.Parse(source, buffer, offset, count);
+        }
+        else
+        {
+            // Initial stream may technically be anywhere in the middle of a frame, so we attempt to
+            // locate sync-bytes to "line-up" data stream,
+
+            // First we look for data frame sync-byte:
+            int syncBytePosition = buffer.IndexOfSequence([DataFrameByte], offset, count);
+
+            if (syncBytePosition > -1)
+            {
+                StreamInitialized = true;
+                base.Parse(source, buffer, syncBytePosition, count - (syncBytePosition - offset));
+            }
+            else
+            {
+                // Second we look for configuration frame sync-byte:
+                syncBytePosition = buffer.IndexOfSequence([ConfigFrameByte], offset, count);
+
+                if (syncBytePosition > -1)
+                {
+                    StreamInitialized = true;
+                    base.Parse(source, buffer, syncBytePosition, count - (syncBytePosition - offset));
+                }
+            }
+        }
     }
 
     /// <inheritdoc/>
@@ -259,6 +304,16 @@ public class FrameParser : FrameParserBase<FrameType>
             phasorValue.Angle = estimate.Angles[i];
             phasorValue.Magnitude = estimate.Magnitudes[i];
         }
+    }
+
+    /// <inheritdoc/>
+    protected override void OnParsingException(Exception ex)
+    {
+        base.OnParsingException(ex);
+
+        // At the first sign of an error, we need to reset stream initialization flag - could just be looping
+        // a saved file source, or we missed some data, just need to re-sync to next 0x00 or 0x01 byte...
+        StreamInitialized = false;
     }
 
     /// <summary>
