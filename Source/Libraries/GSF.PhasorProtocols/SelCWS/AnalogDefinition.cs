@@ -75,6 +75,8 @@ public class AnalogDefinition : AnalogDefinitionBase
     protected AnalogDefinition(SerializationInfo info, StreamingContext context)
         : base(info, context)
     {
+        // Deserialize analog definition
+        Scalar = info.GetDouble(nameof(Scalar));
     }
 
     #endregion
@@ -94,6 +96,19 @@ public class AnalogDefinition : AnalogDefinitionBase
     /// Gets or sets the scalar for this Point-on-Wave (POW) analog.
     /// </summary>
     public double Scalar { get; set; }
+
+    #endregion
+
+    #region [ Methods ]
+
+    /// <inheritdoc/>
+    public override void GetObjectData(SerializationInfo info, StreamingContext context)
+    {
+        base.GetObjectData(info, context);
+
+        // Serialize analog definition
+        info.AddValue(nameof(Scalar), Scalar);
+    }
 
     #endregion
 }

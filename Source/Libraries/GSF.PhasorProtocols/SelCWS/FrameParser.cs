@@ -28,6 +28,7 @@
 using System;
 using GSF.Parsing;
 using GSF.Units.EE;
+using static GSF.PhasorProtocols.SelCWS.Common;
 
 namespace GSF.PhasorProtocols.SelCWS;
 
@@ -40,6 +41,9 @@ namespace GSF.PhasorProtocols.SelCWS;
 public class FrameParser : FrameParserBase<FrameType>
 {
     #region [ Members ]
+
+    // Constants
+    private const long NanosecondsPerSecond = 1_000_000_000L;
 
     // Events
 
@@ -77,8 +81,8 @@ public class FrameParser : FrameParserBase<FrameType>
         : base(checkSumValidationFrameTypes, trustHeaderLength)
     {
         CalculatePhaseEstimates = SelCWS.ConnectionParameters.DefaultCalculatePhaseEstimates;
-        NominalFrequency = Common.DefaultNominalFrequency;
-        FrameRate = Common.DefaultFrameRate;
+        NominalFrequency = DefaultNominalFrequency;
+        FrameRate = DefaultFramePerSecond;
     }
 
     #endregion
@@ -101,6 +105,10 @@ public class FrameParser : FrameParserBase<FrameType>
     /// <summary>
     /// Gets flag that determines if SEL CWS protocol parsing implementation uses synchronization bytes.
     /// </summary>
+    /// <remarks>
+    /// Protocol technically uses sync-bytes, but since they vary (0x00 or 0x01) we handle stream initialization
+    /// manually in the <see cref="Parse"/> method.
+    /// </remarks>
     public override bool ProtocolUsesSyncBytes => false;
 
     /// <summary>
@@ -114,8 +122,13 @@ public class FrameParser : FrameParserBase<FrameType>
     public LineFrequency NominalFrequency { get; set; }
 
     /// <summary>
-    /// Gets or sets the configured frame rate for the SEL CWS device.
+    /// Gets or sets the configured frames per second for the SEL CWS device.
     /// </summary>
+    /// <remarks>
+    /// SEL CWS "FrameRate" is the device's data frame rate (frames/sec),
+    /// which is also the PoW sample-set rate (samples/sec).
+    /// Default value is 3000.
+    /// </remarks>
     public ushort FrameRate { get; set; }
 
     #endregion
@@ -129,6 +142,9 @@ public class FrameParser : FrameParserBase<FrameType>
     {
         // We narrow down parsing types to just those needed...
         base.Start([typeof(ConfigurationFrame), typeof(DataFrame)]);
+
+        // Make sure we mark stream an initialized even though base class doesn't think we use sync-bytes
+        StreamInitialized = false;
     }
 
     /// <summary>
@@ -185,6 +201,49 @@ public class FrameParser : FrameParserBase<FrameType>
     }
 
     /// <inheritdoc/>
+    public override void Parse(SourceChannel source, byte[] buffer, int offset, int count)
+    {
+        const byte DataFrameByte = (byte)FrameType.DataFrame;
+        const byte ConfigFrameByte = (byte)FrameType.ConfigurationFrame;
+        const byte ProtocolVersion = Common.Version;
+
+        // Since the SEL CWS implementation supports both 0x00 and 0x01 as sync-bytes, we manually check for both
+        // during stream initialization, base class handles a single set of sync-bytes, not variable.
+        if (!Enabled)
+            return;
+
+        if (StreamInitialized)
+        {
+            base.Parse(source, buffer, offset, count);
+        }
+        else
+        {
+            // Initial stream may technically be anywhere in the middle of a frame, especially in a file
+            // capture replay scenario, so we attempt to locate sync-bytes to "line-up" data stream
+
+            // First we look for data frame / protocol version sync-bytes:
+            int syncBytesPosition = buffer.IndexOfSequence([DataFrameByte, ProtocolVersion], offset, count);
+
+            if (syncBytesPosition > -1)
+            {
+                StreamInitialized = true;
+                base.Parse(source, buffer, syncBytesPosition, count - (syncBytesPosition - offset));
+            }
+            else
+            {
+                // Second we look for configuration frame / protocol version sync-bytes:
+                syncBytesPosition = buffer.IndexOfSequence([ConfigFrameByte, ProtocolVersion], offset, count);
+
+                if (syncBytesPosition > -1)
+                {
+                    StreamInitialized = true;
+                    base.Parse(source, buffer, syncBytesPosition, count - (syncBytesPosition - offset));
+                }
+            }
+        }
+    }
+
+    /// <inheritdoc/>
     protected override int ParseFrame(byte[] buffer, int offset, int length)
     {
         int parsedLength = base.ParseFrame(buffer, offset, length);
@@ -192,23 +251,29 @@ public class FrameParser : FrameParserBase<FrameType>
         if (buffer[offset] != (byte)FrameType.DataFrame || m_initialDataFrame is null)
             return parsedLength;
 
-        long nanosecondsPerFrame = FrameRate / 50;
-        long nanosecondsTimestamp = m_initialDataFrame.NanosecondTimestamp;
+        // Ensure static nanosecond frame distribution is initialized
+        s_nanosecondPacketFrameOffsets ??= CalculateNanosecondPacketFrameOffsets(FrameRate, FramesPerPacket);
+
+        // Move offset past initial data frame which includes 64-bit nanosecond timestamp
+        offset += 32;
+        length -= 32;
 
         // In the case of data frames in CWS, the source buffer has 49 more frames to parse after the first
-        for (int i = 0; i < 49; i++)
+        for (int i = 1; i < FramesPerPacket; i++)
         {
-            nanosecondsTimestamp += nanosecondsPerFrame;
+            long nanosecondsTimestamp = m_initialDataFrame.NanosecondTimestamp + s_nanosecondPacketFrameOffsets[i];
 
             DataFrame dataFrame = new(nanosecondsTimestamp, m_initialDataFrame.ConfigurationFrame)
             {
                 CommonHeader = m_initialDataFrame.CommonHeader
             };
 
-            parsedLength += dataFrame.ParseBinaryImage(buffer, offset, length);
+            dataFrame.ParseBinaryImage(buffer, offset, length);
+
+            offset += 24;
+            length -= 24;
 
             ApplyEstimatedPhases(dataFrame);
-
             OnReceivedDataFrame(dataFrame);
 
             // If event for native data frame is subscribed, raise it also
@@ -261,6 +326,16 @@ public class FrameParser : FrameParserBase<FrameType>
         }
     }
 
+    /// <inheritdoc/>
+    protected override void OnParsingException(Exception ex)
+    {
+        base.OnParsingException(ex);
+
+        // At the first sign of an error, we need to reset stream initialization flag - could just be looping
+        // a saved file source, or we missed some data, just need to re-sync to next 0x00 or 0x01 byte...
+        StreamInitialized = false;
+    }
+
     /// <summary>
     /// Raises the <see cref="FrameParserBase{TypeIndentifier}.ReceivedConfigurationFrame"/> event.
     /// </summary>
@@ -282,6 +357,9 @@ public class FrameParser : FrameParserBase<FrameType>
         // Keep reference to initial data frame (1 of 50 frames in SEL CWS)
         if (frame is DataFrame initialDataFrame)
         {
+            if (m_configurationFrame is not null && initialDataFrame.CommonHeader.ChannelID != m_configurationFrame.CommonHeader.ChannelID)
+                throw new InvalidOperationException("Data frame channel ID does not match that of the current configuration frame.");
+
             ApplyEstimatedPhases(initialDataFrame);
             m_initialDataFrame = initialDataFrame;
         }
@@ -326,6 +404,27 @@ public class FrameParser : FrameParserBase<FrameType>
             FrameRate = parameters.FrameRate;
             NominalFrequency = parameters.NominalFrequency;
         }
+    }
+
+    #endregion
+
+    #region [ Static ]
+
+    private static long[] s_nanosecondPacketFrameOffsets;
+
+    private static long[] CalculateNanosecondPacketFrameOffsets(long framesPerSecond, int framesPerPacket)
+    {
+        if (framesPerSecond <= 0)
+            throw new ArgumentOutOfRangeException(nameof(framesPerSecond));
+
+        // Offsets from frame start for sample i, in ns
+        long[] offsets = new long[framesPerPacket];
+
+        // Total time spanned by one frame = framesPerPacket samples at framesPerSecond rate
+        for (int i = 0; i < framesPerPacket; i++)
+            offsets[i] = i * NanosecondsPerSecond / framesPerSecond;
+
+        return offsets;
     }
 
     #endregion

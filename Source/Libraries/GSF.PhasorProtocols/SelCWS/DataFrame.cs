@@ -87,7 +87,7 @@ public class DataFrame : DataFrameBase, ISupportSourceIdentifiableFrameImage<Sou
         : base(info, context)
     {
         // Deserialize configuration frame
-        m_frameHeader = (CommonFrameHeader)info.GetValue("frameHeader", typeof(CommonFrameHeader));
+        m_frameHeader = info.GetValue("frameHeader", typeof(CommonFrameHeader)) as CommonFrameHeader;
         NanosecondTimestamp = info.GetInt64("nanosecondTimestamp");
     }
 
@@ -128,6 +128,11 @@ public class DataFrame : DataFrameBase, ISupportSourceIdentifiableFrameImage<Sou
     public virtual FrameType TypeID => SelCWS.FrameType.DataFrame;
 
     /// <summary>
+    /// Gets flag that determines if frame image can be queued for publication or should be processed immediately.
+    /// </summary>
+    public override bool AllowQueuedPublication => false;
+
+    /// <summary>
     /// Gets or sets current <see cref="CommonFrameHeader"/>.
     /// </summary>
     public CommonFrameHeader CommonHeader
@@ -139,6 +144,24 @@ public class DataFrame : DataFrameBase, ISupportSourceIdentifiableFrameImage<Sou
 
             if (m_frameHeader is not null)
                 State = (m_frameHeader.State as IDataFrameParsingState)!;
+        }
+    }
+
+    /// <summary>
+    /// Gets the length of the <see cref="DataFrame"/>.
+    /// </summary>
+    /// <remarks>
+    /// This property is overridden so the length can be adjusted for lack of a checksum.
+    /// </remarks>
+    public override int BinaryLength
+    {
+        get
+        {
+            if (TrustHeaderLength && ParsedBinaryLength > 0)
+                return ParsedBinaryLength;
+
+            // Subtract two bytes for no CRC
+            return base.BinaryLength - 2;
         }
     }
 

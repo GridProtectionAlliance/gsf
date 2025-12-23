@@ -57,7 +57,7 @@ public class ConfigurationCell : ConfigurationCellBase
 
         for (int i = 0; i < Common.MaximumAnalogValues; i++)
         {
-            AnalogDefinitions.Add(new AnalogDefinition(this, $"POW Analog {analogNames[i]}", 1, 0.0, AnalogType.SinglePointOnWave)
+            AnalogDefinitions.Add(new AnalogDefinition(this, $"PoW Analog {analogNames[i]}", 1, 0.0, AnalogType.SinglePointOnWave)
             {
                 Scalar = scalars[i]
             });

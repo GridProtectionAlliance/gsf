@@ -69,7 +69,7 @@ public class ConfigurationFrame : ConfigurationFrameBase, ISupportSourceIdentifi
     public ConfigurationFrame()
         : base(0, new ConfigurationCellCollection(), 0, 0)
     {
-        FrameRate = Common.DefaultFrameRate;
+        FrameRate = Common.DefaultFramePerSecond;
     }
 
     /// <summary>
@@ -81,7 +81,7 @@ public class ConfigurationFrame : ConfigurationFrameBase, ISupportSourceIdentifi
         : base(info, context)
     {
         // Deserialize configuration frame
-        m_frameHeader = (CommonFrameHeader)info.GetValue("frameHeader", typeof(CommonFrameHeader));
+        m_frameHeader = info.GetValue("frameHeader", typeof(CommonFrameHeader)) as CommonFrameHeader;
     }
 
     #endregion
@@ -184,7 +184,6 @@ public class ConfigurationFrame : ConfigurationFrameBase, ISupportSourceIdentifi
             case 0x01:
             {
                 // Version 1 of the SEL CWS protocol has fixed configuration values
-                // Note: We interpret analogs as phasor magnitudes
                 ushort analogCount = BigEndian.ToUInt16(buffer, index);
 
                 if (analogCount != 6)
@@ -201,8 +200,8 @@ public class ConfigurationFrame : ConfigurationFrameBase, ISupportSourceIdentifi
 
                 int sampleRate = BigEndian.ToInt32(buffer, index);
 
-                if (sampleRate != Common.DefaultFrameRate)
-                    throw new InvalidOperationException($"SEL CWS version 1 configuration frame expected sample rate of {Common.DefaultFrameRate:N0} SPS, got {sampleRate:N0} SPS.");
+                if (sampleRate != Common.DefaultFramePerSecond)
+                    throw new InvalidOperationException($"SEL CWS version 1 configuration frame expected sample rate of {Common.DefaultFramePerSecond:N0} SPS, got {sampleRate:N0} SPS.");
 
                 index += 4;
                 
@@ -250,18 +249,6 @@ public class ConfigurationFrame : ConfigurationFrameBase, ISupportSourceIdentifi
         return index - startIndex;
     }
 
-    private (string, int) ParseNullTerminatedString(byte[] buffer, int startIndex, int maxLength)
-    {
-        int index = startIndex;
-
-        while (index < startIndex + maxLength && buffer[index] != 0)
-            index++;
-
-        int parsedLength = index - startIndex;
-
-        return (Encoding.UTF8.GetString(buffer, startIndex, parsedLength), parsedLength + 1);
-    }
-
     /// <summary>
     /// Determines if checksum in the <paramref name="buffer"/> is valid.
     /// </summary>
@@ -300,6 +287,22 @@ public class ConfigurationFrame : ConfigurationFrameBase, ISupportSourceIdentifi
 
         // Serialize configuration frame
         info.AddValue("frameHeader", m_frameHeader, typeof(CommonFrameHeader));
+    }
+
+    #endregion
+
+    #region [ Static ]
+
+    private static (string, int) ParseNullTerminatedString(byte[] buffer, int startIndex, int maxLength)
+    {
+        int index = startIndex;
+
+        while (index < startIndex + maxLength && buffer[index] != 0)
+            index++;
+
+        int parsedLength = index - startIndex;
+
+        return (Encoding.UTF8.GetString(buffer, startIndex, parsedLength), parsedLength + 1);
     }
 
     #endregion

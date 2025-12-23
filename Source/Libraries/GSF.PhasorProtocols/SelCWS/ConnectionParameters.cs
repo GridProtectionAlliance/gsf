@@ -67,7 +67,7 @@ public class ConnectionParameters : ConnectionParametersBase
     public ConnectionParameters()
     {
         m_calculatePhaseEstimates = DefaultCalculatePhaseEstimates;
-        m_frameRate = Common.DefaultFrameRate;
+        m_frameRate = Common.DefaultFramePerSecond;
         m_nominalFrequency = Common.DefaultNominalFrequency;
     }
 
@@ -80,7 +80,7 @@ public class ConnectionParameters : ConnectionParametersBase
     {
         // Deserialize connection parameters
         m_calculatePhaseEstimates = info.GetOrDefault("calculatePhaseEstimates", DefaultCalculatePhaseEstimates);
-        m_frameRate = info.GetOrDefault("frameRate", Common.DefaultFrameRate);
+        m_frameRate = info.GetOrDefault("frameRate", Common.DefaultFramePerSecond);
         m_nominalFrequency = info.GetOrDefault("nominalFrequency", Common.DefaultNominalFrequency);
     }
 
@@ -105,11 +105,11 @@ public class ConnectionParameters : ConnectionParametersBase
     /// </summary>
     [Category("Optional Connection Parameters")]
     [Description("Configured frame rate for SEL CWS device.")]
-    [DefaultValue(Common.DefaultFrameRate)]
+    [DefaultValue(Common.DefaultFramePerSecond)]
     public ushort FrameRate
     {
         get => m_frameRate;
-        set => m_frameRate = value < 1 ? Common.DefaultFrameRate : value;
+        set => m_frameRate = value < 1 ? Common.DefaultFramePerSecond : value;
     }
 
     /// <summary>
