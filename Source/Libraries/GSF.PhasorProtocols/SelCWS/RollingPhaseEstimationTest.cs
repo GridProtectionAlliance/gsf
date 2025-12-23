@@ -28,7 +28,7 @@ internal class Program
         System.Console.WriteLine("\nAll tests completed.");
     }
 
-    static void TestNominalFrequency()
+    private static void TestNominalFrequency()
     {
         System.Console.WriteLine("Test 1: Nominal Frequency Operation (60 Hz)");
         System.Console.WriteLine("-------------------------------------------");
@@ -82,7 +82,7 @@ internal class Program
         System.Console.WriteLine();
     }
 
-    static void TestFrequencyDeviation()
+    private static void TestFrequencyDeviation()
     {
         System.Console.WriteLine("Test 2: Frequency Deviation Detection (61 Hz vs 60 Hz nominal)");
         System.Console.WriteLine("--------------------------------------------------------------");
@@ -129,7 +129,7 @@ internal class Program
         System.Console.WriteLine();
     }
 
-    static void TestMagnitudeMeasurement()
+    private static void TestMagnitudeMeasurement()
     {
         System.Console.WriteLine("Test 3: Magnitude Measurement (various amplitudes)");
         System.Console.WriteLine("--------------------------------------------------");
@@ -140,7 +140,7 @@ internal class Program
         RollingPhaseEstimator estimator = new(sampleRate, LineFrequency.Hz60);
 
         // Different amplitudes for each channel
-        double[] peakAmplitudes = { 100.0, 150.0, 200.0, 120.0, 180.0, 90.0 };
+        double[] peakAmplitudes = [100.0, 150.0, 200.0, 120.0, 180.0, 90.0];
         double[] expectedRms = new double[6];
         
         for (int i = 0; i < 6; i++)
@@ -177,7 +177,7 @@ internal class Program
 
         if (gotEstimate)
         {
-            string[] names = { "IA", "IB", "IC", "VA", "VB", "VC" };
+            string[] names = ["IA", "IB", "IC", "VA", "VB", "VC"];
             for (int i = 0; i < 6; i++)
             {
                 double error = Math.Abs(lastEstimate.Magnitudes[i] - expectedRms[i]);
@@ -188,7 +188,7 @@ internal class Program
         System.Console.WriteLine();
     }
 
-    static void TestPhaseAngles()
+    private static void TestPhaseAngles()
     {
         System.Console.WriteLine("Test 4: Phase Angle Relationships");
         System.Console.WriteLine("----------------------------------");
@@ -203,6 +203,7 @@ internal class Program
         const double CurrentLeadRad = 30.0 * Math.PI / 180.0;
         const int TotalSamples = (int)(sampleRate / nominalFreq * 5);
         const long SamplePeriodNs = (long)(1e9 / sampleRate);
+        const double Omega = 2.0 * Math.PI * nominalFreq;
         long epochNs = 0;
 
         PhaseEstimate lastEstimate = new();
@@ -211,17 +212,16 @@ internal class Program
         for (int i = 0; i < TotalSamples; i++)
         {
             double t = i / sampleRate;
-            double omega = 2.0 * Math.PI * nominalFreq;
 
             // Currents with 30° lead
-            double ia = amplitude * Math.Sin(omega * t + CurrentLeadRad);
-            double ib = amplitude * Math.Sin(omega * t - 2.0 * Math.PI / 3.0 + CurrentLeadRad);
-            double ic = amplitude * Math.Sin(omega * t + 2.0 * Math.PI / 3.0 + CurrentLeadRad);
+            double ia = amplitude * Math.Sin(Omega * t + CurrentLeadRad);
+            double ib = amplitude * Math.Sin(Omega * t - 2.0 * Math.PI / 3.0 + CurrentLeadRad);
+            double ic = amplitude * Math.Sin(Omega * t + 2.0 * Math.PI / 3.0 + CurrentLeadRad);
 
             // Voltages (reference)
-            double va = amplitude * Math.Sin(omega * t);
-            double vb = amplitude * Math.Sin(omega * t - 2.0 * Math.PI / 3.0);
-            double vc = amplitude * Math.Sin(omega * t + 2.0 * Math.PI / 3.0);
+            double va = amplitude * Math.Sin(Omega * t);
+            double vb = amplitude * Math.Sin(Omega * t - 2.0 * Math.PI / 3.0);
+            double vc = amplitude * Math.Sin(Omega * t + 2.0 * Math.PI / 3.0);
 
             if (estimator.Step(ia, ib, ic, va, vb, vc, epochNs, out PhaseEstimate? estimate))
             {
@@ -234,7 +234,7 @@ internal class Program
 
         if (gotEstimate)
         {
-            string[] names = { "IA", "IB", "IC", "VA", "VB", "VC" };
+            string[] names = ["IA", "IB", "IC", "VA", "VB", "VC"];
             
             System.Console.WriteLine("  Angles relative to VA:");
             

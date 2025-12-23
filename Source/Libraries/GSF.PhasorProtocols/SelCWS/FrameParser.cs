@@ -43,7 +43,7 @@ public class FrameParser : FrameParserBase<FrameType>
     #region [ Members ]
 
     // Constants
-    private const long NanoSecondsPerSecond = 1_000_000_000L;
+    private const long NanosecondsPerSecond = 1_000_000_000L;
 
     // Events
 
@@ -420,9 +420,9 @@ public class FrameParser : FrameParserBase<FrameType>
         // Offsets from frame start for sample i, in ns
         long[] offsets = new long[framesPerPacket];
 
-        // Total time spanned by one frame = samplesPerPacket samples at samplesPerSecond rate
+        // Total time spanned by one frame = framesPerPacket samples at framesPerSecond rate
         for (int i = 0; i < framesPerPacket; i++)
-            offsets[i] = i * NanoSecondsPerSecond / framesPerSecond;
+            offsets[i] = i * NanosecondsPerSecond / framesPerSecond;
 
         return offsets;
     }

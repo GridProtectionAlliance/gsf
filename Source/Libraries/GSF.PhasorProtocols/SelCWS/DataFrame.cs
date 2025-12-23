@@ -87,7 +87,7 @@ public class DataFrame : DataFrameBase, ISupportSourceIdentifiableFrameImage<Sou
         : base(info, context)
     {
         // Deserialize configuration frame
-        m_frameHeader = (CommonFrameHeader)info.GetValue("frameHeader", typeof(CommonFrameHeader));
+        m_frameHeader = info.GetValue("frameHeader", typeof(CommonFrameHeader)) as CommonFrameHeader;
         NanosecondTimestamp = info.GetInt64("nanosecondTimestamp");
     }
 

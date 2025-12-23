@@ -197,8 +197,8 @@ namespace ProtocolTester
                         {
                             DataCell cell = cwsDataFrame.Cells[i];
 
-                            for (int index = 0; index < cell.AnalogValues.Count; index++)
-                                m_exportFile.Write($", {cell.IDLabel} Analog {index + 1}");
+                            for (int j = 0; j < cell.AnalogValues.Count; j++)
+                                m_exportFile.Write($", {cell.AnalogValues[j].Label} [Analog {j + 1}]");
                         }
 
                         m_exportFile.WriteLine();
