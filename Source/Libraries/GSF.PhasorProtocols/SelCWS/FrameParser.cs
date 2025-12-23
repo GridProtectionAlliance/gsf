@@ -28,6 +28,7 @@
 using System;
 using GSF.Parsing;
 using GSF.Units.EE;
+using static GSF.PhasorProtocols.SelCWS.Common;
 
 namespace GSF.PhasorProtocols.SelCWS;
 
@@ -40,6 +41,9 @@ namespace GSF.PhasorProtocols.SelCWS;
 public class FrameParser : FrameParserBase<FrameType>
 {
     #region [ Members ]
+
+    // Constants
+    private const long NanoSecondsPerSecond = 1_000_000_000L;
 
     // Events
 
@@ -77,8 +81,8 @@ public class FrameParser : FrameParserBase<FrameType>
         : base(checkSumValidationFrameTypes, trustHeaderLength)
     {
         CalculatePhaseEstimates = SelCWS.ConnectionParameters.DefaultCalculatePhaseEstimates;
-        NominalFrequency = Common.DefaultNominalFrequency;
-        FrameRate = Common.DefaultFrameRate;
+        NominalFrequency = DefaultNominalFrequency;
+        FrameRate = DefaultFramePerSecond;
     }
 
     #endregion
@@ -101,6 +105,10 @@ public class FrameParser : FrameParserBase<FrameType>
     /// <summary>
     /// Gets flag that determines if SEL CWS protocol parsing implementation uses synchronization bytes.
     /// </summary>
+    /// <remarks>
+    /// Protocol technically uses sync-bytes, but since they vary (0x00 or 0x01) we handle stream initialization
+    /// manually in the <see cref="Parse"/> method.
+    /// </remarks>
     public override bool ProtocolUsesSyncBytes => false;
 
     /// <summary>
@@ -114,8 +122,13 @@ public class FrameParser : FrameParserBase<FrameType>
     public LineFrequency NominalFrequency { get; set; }
 
     /// <summary>
-    /// Gets or sets the configured frame rate for the SEL CWS device.
+    /// Gets or sets the configured frames per second for the SEL CWS device.
     /// </summary>
+    /// <remarks>
+    /// SEL CWS "FrameRate" is the device's data frame rate (frames/sec),
+    /// which is also the PoW sample-set rate (samples/sec).
+    /// Default value is 3000.
+    /// </remarks>
     public ushort FrameRate { get; set; }
 
     #endregion
@@ -192,6 +205,7 @@ public class FrameParser : FrameParserBase<FrameType>
     {
         const byte DataFrameByte = (byte)FrameType.DataFrame;
         const byte ConfigFrameByte = (byte)FrameType.ConfigurationFrame;
+        const byte ProtocolVersion = Common.Version;
 
         // Since the SEL CWS implementation supports both 0x00 and 0x01 as sync-bytes, we manually check for both
         // during stream initialization, base class handles a single set of sync-bytes, not variable.
@@ -204,26 +218,26 @@ public class FrameParser : FrameParserBase<FrameType>
         }
         else
         {
-            // Initial stream may technically be anywhere in the middle of a frame, so we attempt to
-            // locate sync-bytes to "line-up" data stream,
+            // Initial stream may technically be anywhere in the middle of a frame, especially in a file
+            // capture replay scenario, so we attempt to locate sync-bytes to "line-up" data stream
 
-            // First we look for data frame sync-byte:
-            int syncBytePosition = buffer.IndexOfSequence([DataFrameByte], offset, count);
+            // First we look for data frame / protocol version sync-bytes:
+            int syncBytesPosition = buffer.IndexOfSequence([DataFrameByte, ProtocolVersion], offset, count);
 
-            if (syncBytePosition > -1)
+            if (syncBytesPosition > -1)
             {
                 StreamInitialized = true;
-                base.Parse(source, buffer, syncBytePosition, count - (syncBytePosition - offset));
+                base.Parse(source, buffer, syncBytesPosition, count - (syncBytesPosition - offset));
             }
             else
             {
-                // Second we look for configuration frame sync-byte:
-                syncBytePosition = buffer.IndexOfSequence([ConfigFrameByte], offset, count);
+                // Second we look for configuration frame / protocol version sync-bytes:
+                syncBytesPosition = buffer.IndexOfSequence([ConfigFrameByte, ProtocolVersion], offset, count);
 
-                if (syncBytePosition > -1)
+                if (syncBytesPosition > -1)
                 {
                     StreamInitialized = true;
-                    base.Parse(source, buffer, syncBytePosition, count - (syncBytePosition - offset));
+                    base.Parse(source, buffer, syncBytesPosition, count - (syncBytesPosition - offset));
                 }
             }
         }
@@ -237,17 +251,17 @@ public class FrameParser : FrameParserBase<FrameType>
         if (buffer[offset] != (byte)FrameType.DataFrame || m_initialDataFrame is null)
             return parsedLength;
 
-        long nanosecondsPerFrame = FrameRate / 50;
-        long nanosecondsTimestamp = m_initialDataFrame.NanosecondTimestamp;
+        // Ensure static nanosecond frame distribution is initialized
+        s_nanosecondPacketFrameOffsets ??= CalculateNanosecondPacketFrameOffsets(FrameRate, FramesPerPacket);
 
         // Move offset past initial data frame which includes 64-bit nanosecond timestamp
-        offset = 32;
+        offset += 32;
         length -= 32;
 
         // In the case of data frames in CWS, the source buffer has 49 more frames to parse after the first
-        for (int i = 0; i < 49; i++)
+        for (int i = 1; i < FramesPerPacket; i++)
         {
-            nanosecondsTimestamp += nanosecondsPerFrame;
+            long nanosecondsTimestamp = m_initialDataFrame.NanosecondTimestamp + s_nanosecondPacketFrameOffsets[i];
 
             DataFrame dataFrame = new(nanosecondsTimestamp, m_initialDataFrame.ConfigurationFrame)
             {
@@ -390,6 +404,27 @@ public class FrameParser : FrameParserBase<FrameType>
             FrameRate = parameters.FrameRate;
             NominalFrequency = parameters.NominalFrequency;
         }
+    }
+
+    #endregion
+
+    #region [ Static ]
+
+    private static long[] s_nanosecondPacketFrameOffsets;
+
+    private static long[] CalculateNanosecondPacketFrameOffsets(long framesPerSecond, int framesPerPacket)
+    {
+        if (framesPerSecond <= 0)
+            throw new ArgumentOutOfRangeException(nameof(framesPerSecond));
+
+        // Offsets from frame start for sample i, in ns
+        long[] offsets = new long[framesPerPacket];
+
+        // Total time spanned by one frame = samplesPerPacket samples at samplesPerSecond rate
+        for (int i = 0; i < framesPerPacket; i++)
+            offsets[i] = i * NanoSecondsPerSecond / framesPerSecond;
+
+        return offsets;
     }
 
     #endregion

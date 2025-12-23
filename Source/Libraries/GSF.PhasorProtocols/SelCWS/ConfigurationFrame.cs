@@ -69,7 +69,7 @@ public class ConfigurationFrame : ConfigurationFrameBase, ISupportSourceIdentifi
     public ConfigurationFrame()
         : base(0, new ConfigurationCellCollection(), 0, 0)
     {
-        FrameRate = Common.DefaultFrameRate;
+        FrameRate = Common.DefaultFramePerSecond;
     }
 
     /// <summary>
@@ -201,8 +201,8 @@ public class ConfigurationFrame : ConfigurationFrameBase, ISupportSourceIdentifi
 
                 int sampleRate = BigEndian.ToInt32(buffer, index);
 
-                if (sampleRate != Common.DefaultFrameRate)
-                    throw new InvalidOperationException($"SEL CWS version 1 configuration frame expected sample rate of {Common.DefaultFrameRate:N0} SPS, got {sampleRate:N0} SPS.");
+                if (sampleRate != Common.DefaultFramePerSecond)
+                    throw new InvalidOperationException($"SEL CWS version 1 configuration frame expected sample rate of {Common.DefaultFramePerSecond:N0} SPS, got {sampleRate:N0} SPS.");
 
                 index += 4;
                 

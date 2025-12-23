@@ -27,14 +27,13 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using GSF;
 using GSF.IO;
 using GSF.PhasorProtocols;
-using GSF.PhasorProtocols.Anonymous;
+using GSF.PhasorProtocols.SelCWS;
 using GSF.TimeSeries;
-using GSF.Units;
 using GSF.Units.EE;
+using ConfigurationCell = GSF.PhasorProtocols.Anonymous.ConfigurationCell;
 
 namespace ProtocolTester
 {
@@ -44,7 +43,7 @@ namespace ProtocolTester
     // ReSharper disable ConvertToConstant.Local
     public class Program
     {
-        private static readonly bool WriteLogs = false;
+        private static readonly bool WriteLogs = true;
         private static readonly bool TestConcentrator = false;
         private static readonly bool BinaryCapture = false;
 
@@ -58,6 +57,8 @@ namespace ProtocolTester
         private static long frameCount;
         private static long byteCount;
         private static long lastBytesProcessedTime;
+        private static long lastFrameDisplayTime;
+        private static bool wroteHeader;
 
         public static void Main(string[] args)
         {
@@ -183,7 +184,44 @@ namespace ProtocolTester
             IDataFrame dataFrame = e.Argument;
 
             if (WriteLogs)
-                m_exportFile.WriteLine(dataFrame.Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff") + string.Concat(dataFrame.Cells.Select(cell => "," + cell.FrequencyValue.Frequency.ToString())));
+            {
+                if (dataFrame.Cells.Count > 0 && dataFrame is DataFrame cwsDataFrame)
+                {
+                    if (!wroteHeader)
+                    {
+                        wroteHeader = true;
+
+                        m_exportFile.Write("Timestamp, Nanoseconds, Short Time");
+
+                        for (int i = 0; i < cwsDataFrame.Cells.Count; i++)
+                        {
+                            DataCell cell = cwsDataFrame.Cells[i];
+
+                            for (int index = 0; index < cell.AnalogValues.Count; index++)
+                                m_exportFile.Write($", {cell.IDLabel} Analog {index + 1}");
+                        }
+
+                        m_exportFile.WriteLine();
+                    }
+
+                    m_exportFile.Write($"{cwsDataFrame.Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff")}");
+                    m_exportFile.Write($", '{cwsDataFrame.NanosecondTimestamp}");
+
+                    // Get last 10 characters of timestamp string to fit Excel numeric limits
+                    string timestampString = cwsDataFrame.NanosecondTimestamp.ToString();
+                    m_exportFile.Write($", {timestampString.Substring(timestampString.Length - 10)}");
+
+                    for (int i = 0; i < cwsDataFrame.Cells.Count; i++)
+                    {
+                        DataCell cell = cwsDataFrame.Cells[i];
+
+                        foreach (IAnalogValue analog in cell.AnalogValues)
+                            m_exportFile.Write($", {analog.Value}");
+                    }
+
+                    m_exportFile.WriteLine();
+                }
+            }
 
             // Pass frame measurements to concentrator...
             if (TestConcentrator)
@@ -195,29 +233,30 @@ namespace ProtocolTester
             //IDataCell device = dataFrame.Cells[0];
             //Console.Write(device.FrequencyValue.Frequency.ToString("0.000Hz "));
 
-            // Print information each time we receive 60 frames (every 2 seconds for 30 frames per second)
-            // Also check to assure the DataFrame has at least one Cell
-            if (frameCount % 60 == 0)
+            // Print information each time we receive, every 2 seconds or so
+            if (DateTime.UtcNow.Ticks - lastFrameDisplayTime < TimeSpan.FromSeconds(2).Ticks)
+                return;
+
+            lastFrameDisplayTime = DateTime.UtcNow.Ticks;
+
+            Console.WriteLine($"Received {frameCount:N0} data frames so far - parsed timestamp = \"{dataFrame.Timestamp:yyyy-MM-dd HH:mm:ss.fff}\"...");
+
+            if (dataFrame.Cells.Count > 0)
             {
-                Console.WriteLine("Received {0} data frames so far - parsed timestamp = \"{1}\"...", frameCount, dataFrame.Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+                IDataCell device = dataFrame.Cells[0];
+                Console.WriteLine("    Last frequency: {0}Hz", device.FrequencyValue.Frequency);
 
-                if (dataFrame.Cells.Count > 0)
+                for (int x = 0; x < device.PhasorValues.Count; x++)
                 {
-                    IDataCell device = dataFrame.Cells[0];
-                    Console.WriteLine("    Last frequency: {0}Hz", device.FrequencyValue.Frequency);
-
-                    for (int x = 0; x < device.PhasorValues.Count; x++)
-                    {
-                        Console.WriteLine("      PMU {0} Phasor {1} Angle = {2}", device.IDCode, x, device.PhasorValues[x].Angle);
-                        Console.WriteLine("      PMU {0} Phasor {1} Magnitude = {2}", device.IDCode, x, device.PhasorValues[x].Magnitude);
-                    }
-
-                    Console.WriteLine("    Last Timestamp: {0}", device.GetStatusFlagsMeasurement().Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+                    Console.WriteLine("      PMU {0} Phasor {1} Angle = {2}", device.IDCode, x, device.PhasorValues[x].Angle);
+                    Console.WriteLine("      PMU {0} Phasor {1} Magnitude = {2}", device.IDCode, x, device.PhasorValues[x].Magnitude);
                 }
 
-                if ((object)concentrator != null)
-                    Console.WriteLine(concentrator.Status);
+                Console.WriteLine("    Last Timestamp: {0}", device.GetStatusFlagsMeasurement().Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff"));
             }
+
+            if (concentrator is not null)
+                Console.WriteLine(concentrator.Status);
         }
 
         private static void parser_ReceivedConfigurationFrame(object sender, EventArgs<IConfigurationFrame> e)

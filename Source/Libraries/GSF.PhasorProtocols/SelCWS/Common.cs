@@ -80,7 +80,12 @@ public static class Common
     /// <summary>
     /// Default frame rate for SEL CWS devices is 3000 frames per second.
     /// </summary>
-    public const ushort DefaultFrameRate = 3000;
+    public const ushort DefaultFramePerSecond = 3000;
+
+    /// <summary>
+    /// Frames per UDP packet for SEL CWS devices is 50 samples.
+    /// </summary>
+    public const int FramesPerPacket = 50;
 
     /// <summary>
     /// Default nominal frequency for SEL CWS devices is 60Hz.

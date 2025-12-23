@@ -147,6 +147,24 @@ public class DataFrame : DataFrameBase, ISupportSourceIdentifiableFrameImage<Sou
         }
     }
 
+    /// <summary>
+    /// Gets the length of the <see cref="DataFrame"/>.
+    /// </summary>
+    /// <remarks>
+    /// This property is overridden so the length can be adjusted for lack of a checksum.
+    /// </remarks>
+    public override int BinaryLength
+    {
+        get
+        {
+            if (TrustHeaderLength && ParsedBinaryLength > 0)
+                return ParsedBinaryLength;
+
+            // Subtract two bytes for no CRC
+            return base.BinaryLength - 2;
+        }
+    }
+
     // This interface implementation satisfies ISupportFrameImage<FrameType>.CommonHeader
     ICommonHeader<FrameType> ISupportFrameImage<FrameType>.CommonHeader
     {
