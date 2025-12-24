@@ -243,7 +243,7 @@ public class ConfigurationFrame : ConfigurationFrameBase, ISupportSourceIdentifi
         }
 
         // SEL CWS configuration frames only support a single cell/device
-        ConfigurationCell cell = new(this, Common.DefaultNominalFrequency, scalars, stationName, analogNames);
+        ConfigurationCell cell = new(this, CommonHeader.NominalFrequency, scalars, stationName, analogNames);
         Cells.Add(cell);
 
         return index - startIndex;

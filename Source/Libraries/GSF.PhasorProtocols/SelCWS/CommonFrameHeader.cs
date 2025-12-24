@@ -30,6 +30,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using GSF.Parsing;
+using GSF.Units.EE;
 
 namespace GSF.PhasorProtocols.SelCWS;
 
@@ -106,6 +107,7 @@ public class CommonFrameHeader : CommonHeaderBase<FrameType>
         FrameLength = info.GetInt32("frameLength");
         ChannelID = info.GetUInt64("channelID");
         PacketCount = info.GetUInt16("packetCount");
+        NominalFrequency = (LineFrequency)(info.GetValue("nominalFrequency", typeof(LineFrequency)) ?? Common.DefaultNominalFrequency);
     }
 
     #endregion
@@ -135,6 +137,11 @@ public class CommonFrameHeader : CommonHeaderBase<FrameType>
     /// Gets the packet count for this SEL CWS frame.
     /// </summary>
     public ushort PacketCount { get; }
+
+    /// <summary>
+    /// Gets the nominal <see cref="LineFrequency"/> of the SEL CWS device.
+    /// </summary>
+    public LineFrequency NominalFrequency { get; set; }
 
     /// <summary>
     /// Gets the fundamental frame type of this frame.
@@ -171,6 +178,7 @@ public class CommonFrameHeader : CommonHeaderBase<FrameType>
         attributes.Add("Version", $"0x{Common.Version:X2}");
         attributes.Add("Channel ID", ChannelID.ToString());
         attributes.Add("Packet Count", PacketCount.ToString());
+        attributes.Add("Nominal Frequency", NominalFrequency.ToString());
     }
 
     /// <summary>
@@ -185,6 +193,7 @@ public class CommonFrameHeader : CommonHeaderBase<FrameType>
         info.AddValue("frameLength", FrameLength);
         info.AddValue("channelID", ChannelID);
         info.AddValue("packetCount", PacketCount);
+        info.AddValue("nominalFrequency", NominalFrequency, typeof(LineFrequency));
     }
 
     #endregion

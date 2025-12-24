@@ -104,6 +104,7 @@ internal class Program
         for (int i = 0; i < TotalSamples; i++)
         {
             double t = i / sampleRate;
+
             double ia = amplitude * Math.Sin(Omega * t);
             double ib = amplitude * Math.Sin(Omega * t - 2.0 * Math.PI / 3.0);
             double ic = amplitude * Math.Sin(Omega * t + 2.0 * Math.PI / 3.0);
@@ -158,7 +159,7 @@ internal class Program
         for (int i = 0; i < TotalSamples; i++)
         {
             double t = i / sampleRate;
-
+            
             double ia = peakAmplitudes[0] * Math.Sin(Omega * t);
             double ib = peakAmplitudes[1] * Math.Sin(Omega * t - 2.0 * Math.PI / 3.0);
             double ic = peakAmplitudes[2] * Math.Sin(Omega * t + 2.0 * Math.PI / 3.0);
