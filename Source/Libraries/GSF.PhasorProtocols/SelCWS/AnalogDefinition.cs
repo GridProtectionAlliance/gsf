@@ -26,6 +26,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.Runtime.Serialization;
 
 namespace GSF.PhasorProtocols.SelCWS;
@@ -76,7 +77,7 @@ public class AnalogDefinition : AnalogDefinitionBase
         : base(info, context)
     {
         // Deserialize analog definition
-        Scalar = info.GetDouble(nameof(Scalar));
+        Scalar = info.GetDouble("scalar");
     }
 
     #endregion
@@ -102,12 +103,25 @@ public class AnalogDefinition : AnalogDefinitionBase
     #region [ Methods ]
 
     /// <inheritdoc/>
+    public override Dictionary<string, string> Attributes
+    {
+        get
+        {
+            Dictionary<string, string> baseAttributes = base.Attributes;
+
+            baseAttributes.Add("Scalar", Scalar.ToString("G6"));
+
+            return baseAttributes;
+        }
+    }
+
+    /// <inheritdoc/>
     public override void GetObjectData(SerializationInfo info, StreamingContext context)
     {
         base.GetObjectData(info, context);
 
         // Serialize analog definition
-        info.AddValue(nameof(Scalar), Scalar);
+        info.AddValue("scalar", Scalar);
     }
 
     #endregion

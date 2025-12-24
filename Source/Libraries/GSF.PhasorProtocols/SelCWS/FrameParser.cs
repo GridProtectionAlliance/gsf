@@ -176,7 +176,7 @@ public class FrameParser : FrameParserBase<FrameType>
             return null;
 
         // Parse common frame header
-        CommonFrameHeader parsedFrameHeader = new(buffer, offset, length);
+        CommonFrameHeader parsedFrameHeader = new(buffer, offset, length) { NominalFrequency = NominalFrequency };
 
         // Expose the frame buffer image in case client needs this data for any reason
         OnReceivedFrameBufferImage(parsedFrameHeader.FundamentalFrameType, buffer, offset, parsedFrameHeader.FrameLength);

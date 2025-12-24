@@ -77,7 +77,6 @@ public class ConfigurationCell : ConfigurationCellBase
     protected ConfigurationCell(SerializationInfo info, StreamingContext context)
         : base(info, context)
     {
-        // Deserialize configuration frame
     }
 
     #endregion
