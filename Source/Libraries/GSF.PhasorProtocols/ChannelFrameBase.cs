@@ -454,7 +454,14 @@ namespace GSF.PhasorProtocols
         /// </remarks>
         protected virtual void AppendChecksum(byte[] buffer, int startIndex)
         {
-            BigEndian.CopyBytes(CalculateChecksum(buffer, 0, startIndex), buffer, startIndex);
+            try
+            {
+                BigEndian.CopyBytes(CalculateChecksum(buffer, 0, startIndex), buffer, startIndex);
+            }
+            catch (NotImplementedException)
+            {
+                // Ignore unimplemented checksum calculations
+            }
         }
 
         /// <summary>

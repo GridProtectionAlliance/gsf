@@ -161,6 +161,17 @@ public class ConfigurationFrame : ConfigurationFrameBase, ISupportSourceIdentifi
         }
     }
 
+    // SEL CWS is currently a parse-only protocol implementation
+
+    /// <inheritdoc/>
+    protected override int HeaderLength => 0;
+
+    /// <inheritdoc/>
+    protected override int BodyLength => 0;
+
+    /// <inheritdoc/>
+    protected override int FooterLength => 0;
+
     #endregion
 
     #region [ Methods ]
