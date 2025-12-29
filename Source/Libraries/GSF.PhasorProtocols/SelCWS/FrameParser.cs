@@ -343,6 +343,9 @@ public class FrameParser : FrameParserBase<FrameType>
     /// <param name="frame"><see cref="IConfigurationFrame"/> to send to <see cref="FrameParserBase{TypeIndentifier}.ReceivedConfigurationFrame"/> event.</param>
     protected override void OnReceivedConfigurationFrame(IConfigurationFrame frame)
     {
+        // Assign frame rate as defined by user configuration
+        frame.FrameRate = FrameRate;
+
         // Cache new configuration frame for parsing subsequent data frames...
         m_configurationFrame = frame as ConfigurationFrame;
 
