@@ -112,7 +112,7 @@ namespace ProtocolTester
             //parser.ConnectionString = @"phasorProtocol=IEEEC37_118V1; transportProtocol=Serial; port=COM6; baudRate=115200; dataBits=8; stopBits=One; parity=None; dtrEnable=false; rtsEnable=false; autoStartDataParsingSequence=false; disableRealTimeDataOnStop=false";
             //parser.ConnectionString = @"phasorProtocol=IEEEC37_118V2; transportProtocol=tcp; accessID=1; server=localhost:4713; interface=0.0.0.0; isListener=false";
             //parser.ConnectionString = @"phasorProtocol=IEEEC37_118V2; transportProtocol=File; file=D:\Projects\gsf\Build\Output\Debug\Tools\ProtocolTester\Capture.PmuCapture";
-            parser.ConnectionString = @"phasorProtocol=SelCWS; transportProtocol=UDP; localport=1347; interface=0.0.0.0";
+            parser.ConnectionString = @"phasorProtocol=SelCWS; transportProtocol=UDP; localport=1347; interface=0.0.0.0"; // ; frameRate=1500
 
             Dictionary<string, string> settings = parser.ConnectionString.ParseKeyValuePairs();
 
@@ -262,7 +262,7 @@ namespace ProtocolTester
         private static void parser_ReceivedConfigurationFrame(object sender, EventArgs<IConfigurationFrame> e)
         {
             // Notify the user when a configuration frame is received
-            Console.WriteLine("Received configuration frame with {0} device(s)", e.Argument.Cells.Count);
+            Console.WriteLine("Received configuration frame with {0:N0} device(s) at frame rate {1:N0}", e.Argument.Cells.Count, e.Argument.FrameRate);
         }
 
         private static void parser_ParsingException(object sender, EventArgs<Exception> e)
@@ -274,8 +274,7 @@ namespace ProtocolTester
         private static void parser_ConnectionException(object sender, EventArgs<Exception, int> e)
         {
             // Display which connection attempt failed and the exception that occurred
-            Console.WriteLine("Connection attempt {0} failed due to exception: {1}",
-                e.Argument2, e.Argument1);
+            Console.WriteLine("Connection attempt {0} failed due to exception: {1}", e.Argument2, e.Argument1);
         }
 
         private static void parser_ConnectionEstablished(object sender, EventArgs e)
