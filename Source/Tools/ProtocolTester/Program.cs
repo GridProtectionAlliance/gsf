@@ -112,7 +112,7 @@ namespace ProtocolTester
             //parser.ConnectionString = @"phasorProtocol=IEEEC37_118V1; transportProtocol=Serial; port=COM6; baudRate=115200; dataBits=8; stopBits=One; parity=None; dtrEnable=false; rtsEnable=false; autoStartDataParsingSequence=false; disableRealTimeDataOnStop=false";
             //parser.ConnectionString = @"phasorProtocol=IEEEC37_118V2; transportProtocol=tcp; accessID=1; server=localhost:4713; interface=0.0.0.0; isListener=false";
             //parser.ConnectionString = @"phasorProtocol=IEEEC37_118V2; transportProtocol=File; file=D:\Projects\gsf\Build\Output\Debug\Tools\ProtocolTester\Capture.PmuCapture";
-            parser.ConnectionString = @"phasorProtocol=SelCWS; transportProtocol=UDP; localport=1347; interface=0.0.0.0; frameRate=1500";
+            parser.ConnectionString = @"phasorProtocol=SelCWS; transportProtocol=UDP; localport=1347; interface=0.0.0.0"; // ; frameRate=1500
 
             Dictionary<string, string> settings = parser.ConnectionString.ParseKeyValuePairs();
 
