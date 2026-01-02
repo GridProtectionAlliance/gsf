@@ -83,6 +83,7 @@ using GSF.IO;
 using GSF.Parsing;
 using GSF.PhasorProtocols.IEEEC37_118;
 using GSF.PhasorProtocols.Macrodyne;
+using GSF.PhasorProtocols.SelCWS;
 using GSF.PhasorProtocols.SelFastMessage;
 using GSF.Threading;
 using GSF.TimeSeries;
@@ -1460,6 +1461,7 @@ namespace GSF.PhasorProtocols
         private IClient m_commandChannel;
         private IPAddress m_receiveFromAddress;
         private IPAddress m_multicastServerAddress;
+        private ReplayTimer m_replayTimer;
         private PrecisionInputTimer m_inputTimer;
         private ShortSynchronizedOperation m_readNextBuffer;
         private SharedTimer m_rateCalcTimer;
@@ -1467,7 +1469,6 @@ namespace GSF.PhasorProtocols
         private CheckSumValidationFrameTypes m_checkSumValidationFrameTypes;
         private long m_dataStreamStartTime;
         private long m_missingFramesOverflow;
-        private long m_lastFrameReceivedTime;
         private int m_frameRateTotal;
         private int m_byteRateTotal;
         private int m_parsingExceptionCount;
@@ -2553,11 +2554,41 @@ namespace GSF.PhasorProtocols
                         if (settings.TryGetValue("calculatePhaseEstimates", out setting))
                             selCWSParameters.CalculatePhaseEstimates = setting.ParseBoolean();
 
-                        if (settings.TryGetValue("frameRate", out setting) && ushort.TryParse(setting, out ushort frameRate))
-                            selCWSParameters.FrameRate = frameRate;
-
                         if (settings.TryGetValue("nominalFrequency", out setting) && Enum.TryParse(setting, true, out LineFrequency nominalFrequency))
                             selCWSParameters.NominalFrequency = nominalFrequency;
+
+                        if (settings.TryGetValue("calculationFrameRate", out setting) && ushort.TryParse(setting, out ushort calculationFrameRate))
+                            selCWSParameters.CalculationFrameRate = calculationFrameRate;
+
+                        if (settings.TryGetValue("repeatLastCalculatedValueWhenDownSampling", out setting))
+                            selCWSParameters.RepeatLastCalculatedValueWhenDownSampling = setting.ParseBoolean();
+
+                        if (settings.TryGetValue("referenceChannel", out setting) && Enum.TryParse(setting, true, out PhaseChannel referenceChannel))
+                            selCWSParameters.ReferenceChannel = referenceChannel;
+
+                        if (settings.TryGetValue("targetCycles", out setting) && int.TryParse(setting, out int targetCycles))
+                            selCWSParameters.TargetCycles = targetCycles;
+
+                        if (settings.TryGetValue("publishAnglesTauSeconds", out setting) && double.TryParse(setting, out double publishAnglesTauSeconds))
+                            selCWSParameters.PublishAnglesTauSeconds = publishAnglesTauSeconds;
+
+                        if (settings.TryGetValue("publishMagnitudesTauSeconds", out setting) && double.TryParse(setting, out double publishMagnitudesTauSeconds))
+                            selCWSParameters.PublishMagnitudesTauSeconds = publishMagnitudesTauSeconds;
+
+                        if (settings.TryGetValue("publishFrequencyTauSeconds", out setting) && double.TryParse(setting, out double publishFrequencyTauSeconds))
+                            selCWSParameters.PublishFrequencyTauSeconds = publishFrequencyTauSeconds;
+
+                        if (settings.TryGetValue("publishRocofTauSeconds", out setting) && double.TryParse(setting, out double publishRocofTauSeconds))
+                            selCWSParameters.PublishRocofTauSeconds = publishRocofTauSeconds;
+
+                        if (settings.TryGetValue("sampleFrequencyTauSeconds", out setting) && double.TryParse(setting, out double sampleFrequencyTauSeconds))
+                            selCWSParameters.SampleFrequencyTauSeconds = sampleFrequencyTauSeconds;
+
+                        if (settings.TryGetValue("sampleRocofTauSeconds", out setting) && double.TryParse(setting, out double sampleRocofTauSeconds))
+                            selCWSParameters.SampleRocofTauSeconds = sampleRocofTauSeconds;
+
+                        if (settings.TryGetValue("recalculationCycles", out setting) && int.TryParse(setting, out int recalculationCycles))
+                            selCWSParameters.RecalculationCycles = recalculationCycles;
                     }
                     break;
                 default:
@@ -3574,19 +3605,12 @@ namespace GSF.PhasorProtocols
         {
             if (m_inputTimer is null)
             {
-                if (m_lastFrameReceivedTime > 0L)
-                {
-                    // To maintain timing on "frames per second", we wait for defined frame rate interval
-                    double sleepTime = 1.0D / m_definedFrameRate - (DateTime.UtcNow.Ticks - m_lastFrameReceivedTime) / (double)Ticks.PerSecond;
+                if (m_replayTimer?.DefinedFrameRate != m_definedFrameRate)
+                    m_replayTimer = new ReplayTimer(m_definedFrameRate);
 
-                    // Thread sleep time is a minimum suggested sleep time depending on system activity, when not using high-resolution
-                    // input timer we assume getting close is good enough
-                    if (sleepTime > 0.0D)
-                        Thread.Sleep((int)(sleepTime * 1000.0D));
-                }
-
-                m_lastFrameReceivedTime = DateTime.UtcNow.Ticks;
-                return Ticks.AlignToMillisecondDistribution(m_lastFrameReceivedTime, m_definedFrameRate).Value;
+                m_replayTimer.WaitNext();
+                
+                return Ticks.AlignToMillisecondDistribution(DateTime.UtcNow.Ticks, m_definedFrameRate).Value;
             }
 
             // When high resolution input timing is requested, we only need to wait for the next signal...
@@ -3608,7 +3632,7 @@ namespace GSF.PhasorProtocols
                     frame.Timestamp = Ticks.AlignToMillisecondDistribution(DateTime.UtcNow.Ticks, m_definedFrameRate);
 
                 // Keep reading file data
-                if (m_transportProtocol == TransportProtocol.File && QueuedOutputs < 2 && QueuedBuffers < 10)
+                if (m_transportProtocol == TransportProtocol.File && (QueuedOutputs < 2 || QueuedBuffers < 10))
                     m_readNextBuffer?.RunOnceAsync();
 
                 if (ReceivedChannelFrame is not null && e.Argument2)
