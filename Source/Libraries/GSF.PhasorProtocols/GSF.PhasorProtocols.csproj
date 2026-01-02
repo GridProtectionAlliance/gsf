@@ -60,6 +60,10 @@
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Memory, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Dependencies\NuGet\System.Memory.4.5.5\lib\net461\System.Memory.dll</HintPath>
+    </Reference>
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Runtime.Serialization.Formatters.Soap" />
     <Reference Include="System.Windows.Forms" />
@@ -157,6 +161,7 @@
     <Compile Include="IHeaderFrameParsingState.cs" />
     <Compile Include="IPhasorDefinition.cs" />
     <Compile Include="IPhasorValue.cs" />
+    <Compile Include="IsExternalInit.cs" />
     <Compile Include="MultiProtocolFrameParser.cs" />
     <Compile Include="NamespaceDoc.cs" />
     <Compile Include="PhasorDefinitionBase.cs" />
@@ -291,6 +296,8 @@
     <Compile Include="Macrodyne\FrequencyValue.cs" />
     <Compile Include="Macrodyne\PhasorDefinition.cs" />
     <Compile Include="Macrodyne\PhasorValue.cs" />
+    <Compile Include="ReplayTimer.cs" />
+    <Compile Include="RequiredMemberAttribute.cs" />
     <Compile Include="SelCWS\AnalogDefinition.cs" />
     <Compile Include="SelCWS\AnalogValue.cs" />
     <Compile Include="SelCWS\Common.cs" />

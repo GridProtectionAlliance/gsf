@@ -24,6 +24,7 @@
 //       Modified Header.
 //
 //******************************************************************************************************
+// ReSharper disable InconsistentNaming
 
 using System;
 using GSF.Units.EE;
@@ -46,6 +47,37 @@ public enum FrameType : byte
     /// Configuration frame.
     /// </summary>
     ConfigurationFrame = 0x01
+}
+
+/// <summary>
+/// Phase channels for SEL CWS PoW analogs.
+/// </summary>
+public enum PhaseChannel
+{ 
+    /// <summary>
+    /// Phase A current (IA).
+    /// </summary>
+    IA = 0,
+    /// <summary>
+    /// Phase B current (IB).
+    /// </summary>
+    IB = 1,
+    /// <summary>
+    /// Phase C current (IC).
+    /// </summary>
+    IC = 2,
+    /// <summary>
+    /// Phase A voltage (VA).
+    /// </summary>
+    VA = 3,
+    /// <summary>
+    /// Phase B voltage (VB).
+    /// </summary>
+    VB = 4,
+    /// <summary>
+    /// Phase C voltage (VC).
+    /// </summary>
+    VC = 5
 }
 
 #endregion

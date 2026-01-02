@@ -37,7 +37,8 @@ namespace GSF.PhasorProtocols.SelCWS;
 /// <summary>
 /// Represents the common header for a SEL CWS frame of data.
 /// </summary>
-public class CommonFrameHeader : CommonHeaderBase<FrameType>
+[Serializable]
+public class CommonFrameHeader : CommonHeaderBase<FrameType>, ISerializable
 {
     #region [ Members ]
 
@@ -173,7 +174,7 @@ public class CommonFrameHeader : CommonHeaderBase<FrameType>
     /// <param name="attributes">Dictionary to append header specific attributes to.</param>
     internal void AppendHeaderAttributes(Dictionary<string, string> attributes)
     {
-        attributes.Add("Frame Type", $"{(ushort)m_frameType}: {m_frameType}");
+        attributes.Add("Frame Type", $"{(byte)m_frameType}: {m_frameType}");
         attributes.Add("Frame Length", FrameLength.ToString());
         attributes.Add("Version", $"0x{Common.Version:X2}");
         attributes.Add("Channel ID", ChannelID.ToString());

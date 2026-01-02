@@ -24,11 +24,16 @@
 //       Modified Header.
 //
 //******************************************************************************************************
+// ReSharper disable StringLiteralTypo
+// ReSharper disable CommentTypo
+// ReSharper disable IdentifierTypo
+// ReSharper disable InconsistentNaming
 
 using System;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 using GSF.Units.EE;
+using static GSF.PhasorProtocols.SelCWS.RollingPhaseEstimator;
 
 namespace GSF.PhasorProtocols.SelCWS;
 
@@ -52,10 +57,10 @@ public class ConnectionParameters : ConnectionParametersBase
     /// </summary>
     public const bool DefaultCalculatePhaseEstimates = true;
 
-    // Fields
-    private bool m_calculatePhaseEstimates;
-    private ushort m_frameRate;
-    private LineFrequency m_nominalFrequency;
+    /// <summary>
+    /// Default value for <see cref="RepeatLastCalculatedValueWhenDownSampling"/>.
+    /// </summary>
+    public const bool DefaultRepeatLastCalculatedValueWhenDownSampling = true;
 
     #endregion
 
@@ -66,9 +71,21 @@ public class ConnectionParameters : ConnectionParametersBase
     /// </summary>
     public ConnectionParameters()
     {
-        m_calculatePhaseEstimates = DefaultCalculatePhaseEstimates;
-        m_frameRate = Common.DefaultFramePerSecond;
-        m_nominalFrequency = Common.DefaultNominalFrequency;
+        CalculatePhaseEstimates = DefaultCalculatePhaseEstimates;
+        NominalFrequency = Common.DefaultNominalFrequency;
+        CalculationFrameRate = Common.DefaultFramePerSecond;
+        RepeatLastCalculatedValueWhenDownSampling = DefaultRepeatLastCalculatedValueWhenDownSampling;
+        ReferenceChannel = DefaultReferenceChannel;
+        TargetCycles = DefaultTargetCycles;
+        EnableIntervalAveraging = DefaultEnableIntervalAveraging;
+        EnablePublishEMA = DefaultEnablePublishEMA;
+        PublishAnglesTauSeconds = DefaultPublishAnglesTauSeconds;
+        PublishMagnitudesTauSeconds = DefaultPublishMagnitudesTauSeconds;
+        PublishFrequencyTauSeconds = DefaultPublishFrequencyTauSeconds;
+        PublishRocofTauSeconds = DefaultPublishRocofTauSeconds;
+        SampleFrequencyTauSeconds = DefaultSampleFrequencyTauSeconds;
+        SampleRocofTauSeconds = DefaultSampleRocofTauSeconds;
+        RecalculationCycles = DefaultRecalculationCycles;
     }
 
     /// <summary>
@@ -79,9 +96,21 @@ public class ConnectionParameters : ConnectionParametersBase
     protected ConnectionParameters(SerializationInfo info, StreamingContext context)
     {
         // Deserialize connection parameters
-        m_calculatePhaseEstimates = info.GetOrDefault("calculatePhaseEstimates", DefaultCalculatePhaseEstimates);
-        m_frameRate = info.GetOrDefault("frameRate", Common.DefaultFramePerSecond);
-        m_nominalFrequency = info.GetOrDefault("nominalFrequency", Common.DefaultNominalFrequency);
+        CalculatePhaseEstimates = info.GetOrDefault("calculatePhaseEstimates", DefaultCalculatePhaseEstimates);
+        NominalFrequency = info.GetOrDefault("nominalFrequency", Common.DefaultNominalFrequency);
+        CalculationFrameRate = info.GetOrDefault("calculationFrameRate", Common.DefaultFramePerSecond);
+        RepeatLastCalculatedValueWhenDownSampling = info.GetOrDefault("repeatLastCalculatedValueWhenDownSampling", DefaultRepeatLastCalculatedValueWhenDownSampling);
+        ReferenceChannel = info.GetOrDefault("referenceChannel", DefaultReferenceChannel);
+        TargetCycles = info.GetOrDefault("targetCycles", DefaultTargetCycles);
+        EnableIntervalAveraging = info.GetOrDefault("enableIntervalAveraging", DefaultEnableIntervalAveraging);
+        EnablePublishEMA = info.GetOrDefault("enablePublishEMA", DefaultEnablePublishEMA);
+        PublishAnglesTauSeconds = info.GetOrDefault("publishAnglesTauSeconds", DefaultPublishAnglesTauSeconds);
+        PublishMagnitudesTauSeconds = info.GetOrDefault("publishMagnitudesTauSeconds", DefaultPublishMagnitudesTauSeconds);
+        PublishFrequencyTauSeconds = info.GetOrDefault("publishFrequencyTauSeconds", DefaultPublishFrequencyTauSeconds);
+        PublishRocofTauSeconds = info.GetOrDefault("publishRocofTauSeconds", DefaultPublishRocofTauSeconds);
+        SampleFrequencyTauSeconds = info.GetOrDefault("sampleFrequencyTauSeconds", DefaultSampleFrequencyTauSeconds);
+        SampleRocofTauSeconds = info.GetOrDefault("sampleRocofTauSeconds", DefaultSampleRocofTauSeconds);
+        RecalculationCycles = info.GetOrDefault("recalculationCycles", DefaultRecalculationCycles);
     }
 
     #endregion
@@ -89,40 +118,160 @@ public class ConnectionParameters : ConnectionParametersBase
     #region [ Properties ]
 
     /// <summary>
-    /// Gets or sets flag that determines if phase estimates should be calculated for phasor measurements.
+    /// Gets or sets flag that determines if current and voltage phase estimates, frequency and dF/dt should be
+    /// calculated for PoW data.
     /// </summary>
-    [Category("Optional Connection Parameters")]
-    [Description("Determines if phase angle estimates should be calculated for phasor magnitudes.")]
+    [Category("Phase Estimation Parameters")]
+    [Description("Determines if current and voltage phase estimates, frequency and dF/dt should be calculated for PoW data.")]
     [DefaultValue(DefaultCalculatePhaseEstimates)]
-    public bool CalculatePhaseEstimates
-    {
-        get => m_calculatePhaseEstimates;
-        set => m_calculatePhaseEstimates = value;
-    }
-
-    /// <summary>
-    /// Gets or sets the configured frame rate for the SEL CWS device.
-    /// </summary>
-    [Category("Optional Connection Parameters")]
-    [Description("Configured frame rate for SEL CWS device.")]
-    [DefaultValue(Common.DefaultFramePerSecond)]
-    public ushort FrameRate
-    {
-        get => m_frameRate;
-        set => m_frameRate = value < 1 ? Common.DefaultFramePerSecond : value;
-    }
+    public bool CalculatePhaseEstimates { get; set; }
 
     /// <summary>
     /// Gets or sets the nominal <see cref="LineFrequency"/> of this SEL CWS device.
     /// </summary>
-    [Category("Optional Connection Parameters")]
+    [Category("Phase Estimation Parameters")]
     [Description("Configured nominal frequency for SEL CWS device.")]
     [DefaultValue(typeof(LineFrequency), "Hz60")]
-    public LineFrequency NominalFrequency
-    {
-        get => m_nominalFrequency;
-        set => m_nominalFrequency = value;
-    }
+    public LineFrequency NominalFrequency { get; set; }
+
+    /// <summary>
+    /// Gets or sets the configured frame rate for phase estimate calculations.
+    /// </summary>
+    [Category("Phase Estimation Parameters")]
+    [Description("Configured frame rate for phase estimate calculations.")]
+    [DefaultValue(Common.DefaultFramePerSecond)]
+    public ushort CalculationFrameRate { get; set; }
+
+    /// <summary>
+    /// Gets or sets flag that determines if last value should be repeated when down-sampling, i.e.,
+    /// when <see cref="CalculationFrameRate"/> is less than SEL CWS frame rate (commonly 3000Hz);
+    /// otherwise <see cref="Double.NaN"/> will be used.
+    /// </summary>
+    [Category("Phase Estimation Parameters")]
+    [Description(
+        "Gets or sets flag that determines if last value should be repeated when down-sampling, i.e.," +
+        "when 'CalculationFrameRate' is less than SEL CWS frame rate (commonly 3000Hz);" +
+        "otherwise 'NaN' will be used."
+    )]
+    [DefaultValue(DefaultRepeatLastCalculatedValueWhenDownSampling)]
+    public bool RepeatLastCalculatedValueWhenDownSampling { get; set; }
+
+    /// <summary>
+    /// Gets or sets the reference channel for frequency tracking.
+    /// </summary>
+    [Category("Phase Estimation Parameters")]
+    [Description("Reference channel for frequency tracking.")]
+    [DefaultValue(typeof(PhaseChannel), "VA")]
+    public PhaseChannel ReferenceChannel { get; set; }
+
+    /// <summary>
+    /// Gets or sets the number of nominal cycles contained in the sliding DFT analysis window.
+    /// </summary>
+    /// <remarks>
+    /// Larger values generally reduce noise/jitter (more averaging) but increase latency and reduce step response.
+    /// </remarks>
+    [Category("Phase Estimation Parameters")]
+    [Description("Number of nominal cycles contained in the sliding DFT analysis window. Larger values generally reduce noise/jitter (more averaging) but increase latency and reduce step response.")]
+    [DefaultValue(DefaultTargetCycles)]
+    public int TargetCycles { get; set; }
+
+    /// <summary>
+    /// Gets or sets a flag that determines if interval averaging (boxcar averaging) is enabled across each publish interval when down-sampling.
+    /// </summary>
+    /// <remarks>
+    /// Down-sampling without an anti-alias / low-pass step will preserve high-rate jitter and can alias higher-frequency
+    /// content into the published stream. Interval averaging acts as a simple, cheap low-pass filter that reduces
+    /// jitter and improves published stability.
+    /// </remarks>
+    [Category("Phase Estimation Parameters")]
+    [Description("Enables interval averaging (boxcar averaging) across each publish interval when down-sampling. Down-sampling without an anti-alias / low-pass step will preserve high-rate jitter and can alias higher-frequency content into the published stream. Interval averaging acts as a simple, cheap low-pass filter that reduces jitter and improves published stability.")]
+    [DefaultValue(DefaultEnableIntervalAveraging)]
+    public bool EnableIntervalAveraging { get; set; }
+
+    /// <summary>
+    /// Gets or sets a flag that determines if an additional exponential moving average (EMA) is applied to the published stream (after interval averaging).
+    /// </summary>
+    /// <remarks>
+    /// Interval averaging removes high-rate noise; publish-EMA further reduces remaining jitter and produces a "calm"
+    /// display or control signal. This is usually the most intuitive "knob" for operators/consumers because it acts on
+    /// the actual output cadence.
+    /// </remarks>
+    [Category("Phase Estimation Parameters")]
+    [Description("Enables an additional exponential moving average (EMA) applied to the published stream (after interval averaging). Interval averaging removes high-rate noise; publish-EMA further reduces remaining jitter and produces a calm display or control signal.")]
+    [DefaultValue(DefaultEnablePublishEMA)]
+    public bool EnablePublishEMA { get; set; }
+
+    /// <summary>
+    /// Gets or sets the EMA time constant τ (seconds) for published phase angles.
+    /// </summary>
+    /// <remarks>
+    /// Angles are circular quantities; this implementation performs wrap-safe smoothing by operating on unit vectors
+    /// (cos/sin) rather than naïvely averaging radians. This avoids discontinuities at ±π.
+    /// </remarks>
+    [Category("Phase Estimation Parameters")]
+    [Description("EMA time constant τ (seconds) for published phase angles. Angles are circular quantities; this implementation performs wrap-safe smoothing by operating on unit vectors (cos/sin) rather than naïvely averaging radians.")]
+    [DefaultValue(DefaultPublishAnglesTauSeconds)]
+    public double PublishAnglesTauSeconds { get; set; }
+
+    /// <summary>
+    /// Gets or sets the EMA time constant τ (seconds) for published RMS magnitudes.
+    /// </summary>
+    [Category("Phase Estimation Parameters")]
+    [Description("EMA time constant τ (seconds) for published RMS magnitudes.")]
+    [DefaultValue(DefaultPublishMagnitudesTauSeconds)]
+    public double PublishMagnitudesTauSeconds { get; set; }
+
+    /// <summary>
+    /// Gets or sets the EMA time constant τ (seconds) for published frequency.
+    /// </summary>
+    [Category("Phase Estimation Parameters")]
+    [Description("EMA time constant τ (seconds) for published frequency.")]
+    [DefaultValue(DefaultPublishFrequencyTauSeconds)]
+    public double PublishFrequencyTauSeconds { get; set; }
+
+    /// <summary>
+    /// Gets or sets the EMA time constant τ (seconds) for published ROCOF (dF/dt).
+    /// </summary>
+    /// <remarks>
+    /// ROCOF is effectively a derivative signal and is typically much noisier than frequency; it generally benefits from
+    /// heavier smoothing (larger τ) than frequency.
+    /// </remarks>
+    [Category("Phase Estimation Parameters")]
+    [Description("EMA time constant τ (seconds) for published ROCOF (dF/dt). ROCOF is effectively a derivative signal and is typically much noisier than frequency; it generally benefits from heavier smoothing (larger τ) than frequency.")]
+    [DefaultValue(DefaultPublishRocofTauSeconds)]
+    public double PublishRocofTauSeconds { get; set; }
+
+    /// <summary>
+    /// Gets or sets the EMA time constant τ (seconds) for the internal per-sample frequency smoothing that occurs inside the estimator before any down-sampling/publish filtering.
+    /// </summary>
+    /// <remarks>
+    /// When interval averaging + publish EMA are enabled, this can be relatively light. If you disable publish smoothing,
+    /// you may want to increase this τ.
+    /// </remarks>
+    [Category("Phase Estimation Parameters")]
+    [Description("EMA time constant τ (seconds) for the internal per-sample frequency smoothing that occurs inside the estimator before any down-sampling/publish filtering. When interval averaging + publish EMA are enabled, this can be relatively light.")]
+    [DefaultValue(DefaultSampleFrequencyTauSeconds)]
+    public double SampleFrequencyTauSeconds { get; set; }
+
+    /// <summary>
+    /// Gets or sets the EMA time constant τ (seconds) for the internal per-sample ROCOF smoothing (computed from the internally smoothed frequency).
+    /// </summary>
+    [Category("Phase Estimation Parameters")]
+    [Description("EMA time constant τ (seconds) for the internal per-sample ROCOF smoothing (computed from the internally smoothed frequency).")]
+    [DefaultValue(DefaultSampleRocofTauSeconds)]
+    public double SampleRocofTauSeconds { get; set; }
+
+    /// <summary>
+    /// Gets or sets the number of nominal cycles between full DFT recalculations for numerical stability.
+    /// </summary>
+    /// <remarks>
+    /// Sliding DFT updates are O(1) per sample but can accumulate numerical drift; periodic full recomputation
+    /// re-anchors the phasor sums.
+    /// </remarks>
+    [Category("Phase Estimation Parameters")]
+    [Description("Number of nominal cycles between full DFT recalculations for numerical stability. Sliding DFT updates are O(1) per sample but can accumulate numerical drift; periodic full recomputation re-anchors the phasor sums.")]
+    [DefaultValue(DefaultRecalculationCycles)]
+    public int RecalculationCycles { get; set; }
 
     #endregion
 
@@ -136,9 +285,21 @@ public class ConnectionParameters : ConnectionParametersBase
     public override void GetObjectData(SerializationInfo info, StreamingContext context)
     {
         // Serialize connection parameters
-        info.AddValue("calculatePhaseEstimates", m_calculatePhaseEstimates);
-        info.AddValue("frameRate", m_frameRate);
-        info.AddValue("nominalFrequency", m_nominalFrequency, typeof(LineFrequency));
+        info.AddValue("calculatePhaseEstimates", CalculatePhaseEstimates);
+        info.AddValue("nominalFrequency", NominalFrequency, typeof(LineFrequency));
+        info.AddValue("calculationFrameRate", CalculationFrameRate);
+        info.AddValue("repeatLastCalculatedValueWhenDownSampling", RepeatLastCalculatedValueWhenDownSampling);
+        info.AddValue("referenceChannel", ReferenceChannel, typeof(PhaseChannel));
+        info.AddValue("targetCycles", TargetCycles);
+        info.AddValue("enableIntervalAveraging", EnableIntervalAveraging);
+        info.AddValue("enablePublishEMA", EnablePublishEMA);
+        info.AddValue("publishAnglesTauSeconds", PublishAnglesTauSeconds);
+        info.AddValue("publishMagnitudesTauSeconds", PublishMagnitudesTauSeconds);
+        info.AddValue("publishFrequencyTauSeconds", PublishFrequencyTauSeconds);
+        info.AddValue("publishRocofTauSeconds", PublishRocofTauSeconds);
+        info.AddValue("sampleFrequencyTauSeconds", SampleFrequencyTauSeconds);
+        info.AddValue("sampleRocofTauSeconds", SampleRocofTauSeconds);
+        info.AddValue("recalculationCycles", RecalculationCycles);
     }
 
     #endregion
