@@ -142,7 +142,7 @@ public class CommonFrameHeader : CommonHeaderBase<FrameType>, ISerializable
     /// <summary>
     /// Gets the nominal <see cref="LineFrequency"/> of the SEL CWS device.
     /// </summary>
-    public LineFrequency NominalFrequency { get; set; }
+    public LineFrequency NominalFrequency { get; init; }
 
     /// <summary>
     /// Gets the fundamental frame type of this frame.
