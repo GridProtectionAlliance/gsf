@@ -255,7 +255,7 @@ public class FrameParser : FrameParserBase<FrameType>
         // We narrow down parsing types to just those needed...
         base.Start([typeof(ConfigurationFrame), typeof(DataFrame)]);
 
-        // Make sure we mark stream an initialized even though base class doesn't think we use sync-bytes
+        // Make sure we mark stream as uninitialized even though base class doesn't think we use sync-bytes
         StreamInitialized = false;
     }
 
@@ -363,7 +363,7 @@ public class FrameParser : FrameParserBase<FrameType>
         if (buffer[offset] != (byte)FrameType.DataFrame || m_initialDataFrame is null)
             return parsedLength;
 
-        // Ensure static nanosecond frame distribution is initialized
+        // Ensure nanosecond frame distribution is initialized
         m_nanosecondPacketFrameOffsets ??= CalculateNanosecondPacketFrameOffsets(FramesPerPacket);
 
         // Move offset past initial data frame which includes 64-bit nanosecond timestamp
