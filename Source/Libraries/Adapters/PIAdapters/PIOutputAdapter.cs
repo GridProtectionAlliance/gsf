@@ -1689,7 +1689,11 @@ public class PIOutputAdapter : OutputAdapterBase
         };
 
         m_connection.Disconnected += Connection_Disconnected;
-        m_connection.Open();
+        
+        string warningMessage = m_connection.Open();
+
+        if (!string.IsNullOrEmpty(warningMessage))
+            OnStatusMessage(MessageLevel.Warning, warningMessage);
 
         m_mappedPIPoints.Clear();
 

@@ -402,7 +402,10 @@ public class PIPBInputAdapter : InputAdapterBase
                 ConnectTimeout = ConnectTimeout
             };
 
-            m_connection.Open();
+            string warningMessage = m_connection.Open();
+
+            if (!string.IsNullOrEmpty(warningMessage))
+                OnStatusMessage(MessageLevel.Warning, warningMessage);
 
             // Start the data reader on its own thread so connection attempt can complete in a timely fashion...
             ThreadPool.QueueUserWorkItem(StartDataReader);

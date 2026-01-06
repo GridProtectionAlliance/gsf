@@ -21,9 +21,7 @@
 //
 //******************************************************************************************************
 
-using GSF;
 using GSF.Diagnostics;
-using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using OSIsoft.AF.Asset;
 using OSIsoft.AF.PI;
@@ -31,12 +29,8 @@ using OSIsoft.AF.Time;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Linq;
 using System.Text;
-using System.Threading;
-using System.Timers;
-using Timer = System.Timers.Timer;
 
 namespace PIAdapters;
 
@@ -53,8 +47,8 @@ public class PIBufferInputAdapter : InputAdapterBase
     private const int DefaultPageFactor = 1;
 
     // Fields
-    private PIConnection m_connection;                                  // PI server connection
-    private IEnumerator<AFValue> m_dataReader;                          // Data reader
+    private PIConnection m_connection;          // PI server connection
+    private IEnumerator<AFValue> m_dataReader;  // Data reader
     private AFTime m_startTime;
     private AFTime m_stopTime;
     private bool m_disposed;
@@ -66,7 +60,7 @@ public class PIBufferInputAdapter : InputAdapterBase
     /// <summary>
     /// Creates a new instance of the <see cref="PIAdapters.PIBufferInputAdapter"/>.
     /// </summary>
-    public PIBufferInputAdapter() {}
+    public PIBufferInputAdapter() { }
 
     #endregion
 
@@ -103,10 +97,6 @@ public class PIBufferInputAdapter : InputAdapterBase
     [DefaultValue(PIConnection.DefaultConnectTimeout)]
     public int ConnectTimeout { get; set; }
 
-  
-
-
-
     /// <summary>
     /// Gets or sets value paging factor to read more data per page from PI.
     /// </summary>
@@ -119,7 +109,7 @@ public class PIBufferInputAdapter : InputAdapterBase
     /// Gets the flag indicating if this adapter supports temporal processing.
     /// </summary>
     public override bool SupportsTemporalProcessing => false;
-    
+
 
     /// <summary>
     /// Returns the detailed status of the data input source.
@@ -129,17 +119,19 @@ public class PIBufferInputAdapter : InputAdapterBase
         get
         {
             StringBuilder status = new();
-            status.Append(base.Status);
 
-            status.AppendFormat("        OSI-PI server name: {0}\r\n", ServerName);
-            status.AppendFormat("       Connected to server: {0}\r\n", m_connection is null ? "No" : m_connection.Connected ? "Yes" : "No");
-            status.AppendFormat("             Paging factor: {0:#,##0}\r\n", PageFactor);
-            status.AppendFormat("            Start time-tag: {0}\r\n", m_startTime);
-            status.AppendFormat("             Stop time-tag: {0}\r\n", m_stopTime);
+            status.Append(base.Status);
+            status.AppendLine($"        OSI-PI server name: {ServerName}");
+            status.AppendLine($"       Connected to server: {(m_connection is null ? "No" : m_connection.Connected ? "Yes" : "No")}");
+            status.AppendLine($"             Paging factor: {PageFactor:#,##0}");
+            status.AppendLine($"            Start time-tag: {m_startTime}");
+            status.AppendLine($"             Stop time-tag: {m_stopTime}");
+
             return status.ToString();
         }
     }
 
+    /// <inheritdoc />
     protected override bool UseAsyncConnect => false;
 
     #endregion
@@ -152,24 +144,24 @@ public class PIBufferInputAdapter : InputAdapterBase
     /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
     protected override void Dispose(bool disposing)
     {
-        if (!m_disposed)
+        if (m_disposed)
+            return;
+        
+        try
         {
-            try
+            if (!disposing)
+                return;
+            
+            if (m_connection is not null)
             {
-                if (disposing)
-                {
-                    if (m_connection is not null)
-                    {
-                        m_connection.Dispose();
-                        m_connection = null;
-                    }
-                }
+                m_connection.Dispose();
+                m_connection = null;
             }
-            finally
-            {
-                m_disposed = true;          // Prevent duplicate dispose.
-                base.Dispose(disposing);    // Call base class Dispose().
-            }
+        }
+        finally
+        {
+            m_disposed = true;          // Prevent duplicate dispose.
+            base.Dispose(disposing);    // Call base class Dispose().
         }
     }
 
@@ -195,8 +187,6 @@ public class PIBufferInputAdapter : InputAdapterBase
 
         ConnectTimeout = settings.TryGetValue(nameof(ConnectTimeout), out setting) ? Convert.ToInt32(setting) : PIConnection.DefaultConnectTimeout;
 
-
-
         if (settings.TryGetValue(nameof(PageFactor), out setting) && int.TryParse(setting, out int pageFactor) && pageFactor > 0)
             PageFactor = pageFactor;
         else
@@ -220,15 +210,18 @@ public class PIBufferInputAdapter : InputAdapterBase
     /// </summary>
     private void OpenPIConnection()
     {
-            m_connection = new PIConnection
-            {
-                ServerName = ServerName,
-                UserName = UserName,
-                Password = Password,
-                ConnectTimeout = ConnectTimeout
-            };
+        m_connection = new PIConnection
+        {
+            ServerName = ServerName,
+            UserName = UserName,
+            Password = Password,
+            ConnectTimeout = ConnectTimeout
+        };
 
-            m_connection.Open();
+        string warningMessage = m_connection.Open();
+
+        if (!string.IsNullOrEmpty(warningMessage))
+            OnStatusMessage(MessageLevel.Warning, warningMessage);
     }
 
     private IEnumerable<AFValue> ReadData(AFTime startTime, AFTime endTime, PIPointList points, int sampleRate)
@@ -241,15 +234,12 @@ public class PIBufferInputAdapter : InputAdapterBase
             DataReadExceptionHandler = ex => OnProcessException(MessageLevel.Warning, ex)
         };
 
-        if (sampleRate <= 0)
-            return scanner.Read(PageFactor);
-        else
-            return scanner.ReadInterpolated(new AFTimeSpan(new TimeSpan(0,0,sampleRate)), PageFactor);
-     }
+        return sampleRate <= 0 ? scanner.Read(PageFactor) : scanner.ReadInterpolated(new AFTimeSpan(new TimeSpan(0, 0, sampleRate)), PageFactor);
+    }
 
 
     /// <summary>
-    /// Commnad that reads the PI Buffer for the specified time range and tags.
+    /// Command that reads the PI Buffer for the specified time range and tags.
     /// </summary>
     /// <param name="start"> The start Time of the requested data.</param>
     /// <param name="end">The end time for the data requested.</param>
@@ -262,7 +252,7 @@ public class PIBufferInputAdapter : InputAdapterBase
         if (end.Kind == DateTimeKind.Unspecified)
             end = DateTime.SpecifyKind(end, DateTimeKind.Utc);
 
-        string[] tagArray = tags.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+        string[] tagArray = tags.Split([';'], StringSplitOptions.RemoveEmptyEntries);
 
         if (!Enabled || m_connection is null || tagArray.Length == 0)
         {
@@ -281,10 +271,9 @@ public class PIBufferInputAdapter : InputAdapterBase
 
         foreach (string tag in tagArray)
         {
-
             if (PIPoint.TryFindPIPoint(m_connection.Server, tag, out PIPoint point))
             {
-                tagList.Add(tag, new List<Tuple<long, double>>());
+                tagList.Add(tag, []);
                 points.Add(point);
             }
         }
@@ -308,11 +297,11 @@ public class PIBufferInputAdapter : InputAdapterBase
                 throw new NullReferenceException("PI data read returned a null value.");
 
             long timestamp = currentPoint.Timestamp.UtcTime.Ticks;
-            double Value = Convert.ToDouble(currentPoint.Value);
+            double value = Convert.ToDouble(currentPoint.Value);
 
             if (tagList.ContainsKey(currentPoint.PIPoint.Name))
             {
-                tagList[currentPoint.PIPoint.Name].Add(Tuple.Create(timestamp, Value));
+                tagList[currentPoint.PIPoint.Name].Add(Tuple.Create(timestamp, value));
             }
         }
 
@@ -320,12 +309,12 @@ public class PIBufferInputAdapter : InputAdapterBase
             tagList.Select(item => $"{item.Key}:{string.Join(";", item.Value.Select(v => $"{v.Item2},{v.Item1}"))}"));
     }
 
-    
-    /// <inheritdoc/>
-    protected override void AttemptConnection() {}
 
     /// <inheritdoc/>
-    protected override void AttemptDisconnection() {}
+    protected override void AttemptConnection() { }
+
+    /// <inheritdoc/>
+    protected override void AttemptDisconnection() { }
 
     #endregion
 }

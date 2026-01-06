@@ -286,7 +286,11 @@ public class PIRTInputAdapter : InputAdapterBase
         };
 
         m_connection.Disconnected += m_connection_Disconnected;
-        m_connection.Open();
+
+        string warningMessage = m_connection.Open();
+
+        if (!string.IsNullOrEmpty(warningMessage))
+            OnStatusMessage(MessageLevel.Warning, warningMessage);
 
         m_dataPipe = new PIDataPipe(AFDataPipeType.Snapshot);
         m_dataPipe.Subscribe(m_dataUpdateObserver);
@@ -465,7 +469,7 @@ public class PIRTInputAdapter : InputAdapterBase
                 Timestamp = value.Timestamp.UtcTime
             };
 
-            OnNewMeasurements(new[] { measurement });
+            OnNewMeasurements([measurement]);
 
             m_lastReceivedTimestamp = measurement.Timestamp;
             m_lastReceivedValue = measurement.Value;
