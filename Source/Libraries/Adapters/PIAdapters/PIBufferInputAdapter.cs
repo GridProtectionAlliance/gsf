@@ -220,7 +220,7 @@ public class PIBufferInputAdapter : InputAdapterBase
 
         string warningMessage = m_connection.Open();
 
-        if (string.IsNullOrEmpty(warningMessage))
+        if (!string.IsNullOrEmpty(warningMessage))
             OnStatusMessage(MessageLevel.Warning, warningMessage);
     }
 

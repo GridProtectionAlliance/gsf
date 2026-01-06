@@ -404,7 +404,7 @@ public class PIPBInputAdapter : InputAdapterBase
 
             string warningMessage = m_connection.Open();
 
-            if (string.IsNullOrEmpty(warningMessage))
+            if (!string.IsNullOrEmpty(warningMessage))
                 OnStatusMessage(MessageLevel.Warning, warningMessage);
 
             // Start the data reader on its own thread so connection attempt can complete in a timely fashion...

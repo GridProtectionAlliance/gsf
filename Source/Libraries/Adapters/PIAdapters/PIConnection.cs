@@ -147,7 +147,7 @@ public class PIConnection : IComparable<PIConnection>, IComparable, IDisposable
     /// </remarks>
     /// <exception cref="InvalidOperationException">
     /// Connection is already open, <see cref="ServerName"/> is not defined, server not found in PI servers collection,
-    /// or failed to connection to PI server.
+    /// or failed to connect to PI server.
     /// </exception>
     public string Open()
     {
