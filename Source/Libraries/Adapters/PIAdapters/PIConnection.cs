@@ -142,8 +142,17 @@ public class PIConnection : IComparable<PIConnection>, IComparable, IDisposable
     /// <summary>
     /// Attempts to open <see cref="PIConnection"/>.
     /// </summary>
-    public void Open()
+    /// <remarks>
+    /// Returns warning messages related to opening connection; otherwise, <c>null</c> if there are no warnings.
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">
+    /// Connection is already open, <see cref="ServerName"/> is not defined, server not found in PI servers collection,
+    /// or failed to connection to PI server.
+    /// </exception>
+    public string Open()
     {
+        string warningMessage = null;
+
         if (m_connected || (Server is not null && Server.ConnectionInfo.IsConnected))
             throw new InvalidOperationException("OSI-PI server connection is already open.");
 
@@ -162,7 +171,12 @@ public class PIConnection : IComparable<PIConnection>, IComparable, IDisposable
                 throw new InvalidOperationException("Server not found in the PI servers collection.");
 
             if (ConnectTimeout > 0)
-                Server.ConnectionInfo.ConnectionTimeOut = TimeSpan.FromMilliseconds(ConnectTimeout);
+            {
+                if (Server.Collective is null)
+                    Server.ConnectionInfo.ConnectionTimeOut = TimeSpan.FromMilliseconds(ConnectTimeout);
+                else
+                    warningMessage = "Cannot change connect timeout when connecting to PI collective";
+            }
 
             Server.ConnectChanged += PIConnection_ConnectChanged;
         }
@@ -181,6 +195,8 @@ public class PIConnection : IComparable<PIConnection>, IComparable, IDisposable
         }
 
         m_connected = true;
+
+        return warningMessage;
     }
 
     /// <summary>
