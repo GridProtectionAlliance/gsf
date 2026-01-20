@@ -257,7 +257,7 @@ namespace GSF.Web.Security
                 using TextWriter writer = new StreamWriter(Response.Body, Encoding.UTF8, 4096, true);
                 await writer.WriteAsync(FaultReason);
                 Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                return HostingEnvironment.IsHosted;
+                return false; // Abort pipeline
             }
 
             // Use Cases:
