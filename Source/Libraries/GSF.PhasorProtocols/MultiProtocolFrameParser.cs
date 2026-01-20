@@ -1469,7 +1469,6 @@ public sealed class MultiProtocolFrameParser : IFrameParser
     private IConfigurationFrame m_configurationFrame;
     private CheckSumValidationFrameTypes m_checkSumValidationFrameTypes;
     private long m_lastFramePublishTime;
-    private long m_targetFramePeriod;
     private long m_dataStreamStartTime;
     private long m_missingFramesOverflow;
     private int m_frameRateTotal;
@@ -3417,9 +3416,6 @@ public sealed class MultiProtocolFrameParser : IFrameParser
             if (m_transportProtocol != TransportProtocol.File)
                 return;
             
-            // Calculate target frame period to miss before reading more file data
-            m_targetFramePeriod = (long)(TimeSpan.TicksPerSecond / (double)m_definedFrameRate * 1.5D);
-
             // Begin reading file data
             m_readNextBuffer.RunOnceAsync();
         }
@@ -3451,10 +3447,7 @@ public sealed class MultiProtocolFrameParser : IFrameParser
     private void m_dataChannel_ConnectionTerminated(object sender, EventArgs e)
     {
         if (m_transportProtocol == TransportProtocol.File)
-        {
             m_lastFramePublishTime = 0L;
-            m_targetFramePeriod = 0L;
-        }
 
         ConnectionTerminated?.Invoke(this, EventArgs.Empty);
     }
@@ -3842,7 +3835,7 @@ public sealed class MultiProtocolFrameParser : IFrameParser
         if (m_dataChannel is not FileClient { CurrentState: ClientState.Connected } fileClient)
             return;
 
-        while (QueuedBuffers > 0 || DateTime.UtcNow.Ticks - m_lastFramePublishTime < m_targetFramePeriod)
+        while (QueuedBuffers > 0 || QueuedOutputs * 2 > m_definedFrameRate * 3)
         {
             Thread.Sleep(1);
 
