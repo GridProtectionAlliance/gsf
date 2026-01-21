@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
 //  DataCell.cs - Gbtc
 //
-//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2025, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,12 +16,8 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  02/08/2007 - J. Ritchie Carroll & Jian Ryan Zuo
+//  11/04/2025 - Ritchie Carroll
 //       Generated original version of source code.
-//  09/15/2009 - Stephen C. Wills
-//       Added new header and license agreement.
-//  12/17/2012 - Starlynn Danyelle Gilliam
-//       Modified Header.
 //
 //******************************************************************************************************
 // ReSharper disable RedundantOverriddenMember
@@ -137,17 +133,14 @@ public class DataCell : DataCellBase
         }
     }
 
+    /// <inheritdoc />
+    protected override int BodyLength => AnalogValues.Count * 4;
+
     #endregion
 
     #region [ Methods ]
 
-    /// <summary>
-    /// Parses the binary body image.
-    /// </summary>
-    /// <param name="buffer">Binary image to parse.</param>
-    /// <param name="startIndex">Start index into <paramref name="buffer"/> to begin parsing.</param>
-    /// <param name="length">Length of valid data within <paramref name="buffer"/>.</param>
-    /// <returns>The length of the data that was parsed.</returns>
+    /// <inheritdoc />
     protected override int ParseBodyImage(byte[] buffer, int startIndex, int length)
     {
         int index = startIndex;
@@ -162,11 +155,7 @@ public class DataCell : DataCellBase
         return index - startIndex;
     }
 
-    /// <summary>
-    /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
-    /// </summary>
-    /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
-    /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
+    /// <inheritdoc />
     public override void GetObjectData(SerializationInfo info, StreamingContext context)
     {
         base.GetObjectData(info, context);

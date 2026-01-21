@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
 //  DataFrame.cs - Gbtc
 //
-//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2025, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,12 +16,8 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  02/08/2007 - J. Ritchie Carroll & Jian Ryan Zuo
+//  11/04/2025 - Ritchie Carroll
 //       Generated original version of source code.
-//  09/15/2009 - Stephen C. Wills
-//       Added new header and license agreement.
-//  12/17/2012 - Starlynn Danyelle Gilliam
-//       Modified Header.
 //
 //******************************************************************************************************
 
@@ -147,9 +143,7 @@ public class DataFrame : DataFrameBase, ISupportSourceIdentifiableFrameImage<Sou
         }
     }
 
-    /// <summary>
-    /// Gets the length of the <see cref="DataFrame"/>.
-    /// </summary>
+    /// <inheritdoc />
     /// <remarks>
     /// This property is overridden so the length can be adjusted for lack of a checksum.
     /// </remarks>
@@ -165,6 +159,21 @@ public class DataFrame : DataFrameBase, ISupportSourceIdentifiableFrameImage<Sou
         }
     }
 
+    /// <inheritdoc />
+    protected override int BodyLength
+    {
+        get
+        {
+            int length = ConfigurationFrame is null ? 24 : base.BodyLength;
+
+            // Add nanosecond timestamp length for initial frame
+            if (m_initialDataFrame)
+                length += 8;
+
+            return length;
+        }
+    }
+
     // This interface implementation satisfies ISupportFrameImage<FrameType>.CommonHeader
     ICommonHeader<FrameType> ISupportFrameImage<FrameType>.CommonHeader
     {
@@ -172,9 +181,7 @@ public class DataFrame : DataFrameBase, ISupportSourceIdentifiableFrameImage<Sou
         set => CommonHeader = (value as CommonFrameHeader)!;
     }
 
-    /// <summary>
-    /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="DataFrame"/> object.
-    /// </summary>
+    /// <inheritdoc/>
     public override Dictionary<string, string> Attributes
     {
         get
@@ -192,13 +199,7 @@ public class DataFrame : DataFrameBase, ISupportSourceIdentifiableFrameImage<Sou
 
     #region [ Methods ]
 
-    /// <summary>
-    /// Parses the binary header image.
-    /// </summary>
-    /// <param name="buffer">Binary image to parse.</param>
-    /// <param name="startIndex">Start index into <paramref name="buffer"/> to begin parsing.</param>
-    /// <param name="length">Length of valid data within <paramref name="buffer"/>.</param>
-    /// <returns>The length of the data that was parsed.</returns>
+    /// <inheritdoc/>
     protected override int ParseHeaderImage(byte[] buffer, int startIndex, int length)
     {
         // We already parsed the frame header for initial data frame, so we just skip past it...
@@ -221,12 +222,7 @@ public class DataFrame : DataFrameBase, ISupportSourceIdentifiableFrameImage<Sou
         return index - startIndex;
     }
 
-    /// <summary>
-    /// Determines if checksum in the <paramref name="buffer"/> is valid.
-    /// </summary>
-    /// <param name="buffer">Buffer image to validate.</param>
-    /// <param name="startIndex">Start index into <paramref name="buffer"/> to perform checksum.</param>
-    /// <returns>Flag that determines if checksum over <paramref name="buffer"/> is valid.</returns>
+    /// <inheritdoc/>
     /// <remarks>
     /// SEL CWS doesn't use checksums - this always returns true.
     /// </remarks>
@@ -235,24 +231,13 @@ public class DataFrame : DataFrameBase, ISupportSourceIdentifiableFrameImage<Sou
         return true;
     }
 
-    /// <summary>
-    /// Method is not implemented.
-    /// </summary>
-    /// <exception cref="NotImplementedException">SEL CWS doesn't use checksums.</exception>
-    /// <param name="buffer">Array of <see cref="Byte"/>s.</param>
-    /// <param name="length">An <see cref="Int32"/> value for the bytes to read.</param>
-    /// <param name="offset">An <see cref="Int32"/> value for offset to read from.</param>
-    /// <returns>An <see cref="UInt16"/> as the checksum.</returns>
+    /// <inheritdoc/>
     protected override ushort CalculateChecksum(byte[] buffer, int offset, int length)
     {
         throw new NotImplementedException();
     }
 
-    /// <summary>
-    /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
-    /// </summary>
-    /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
-    /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
+    /// <inheritdoc/>
     public override void GetObjectData(SerializationInfo info, StreamingContext context)
     {
         base.GetObjectData(info, context);

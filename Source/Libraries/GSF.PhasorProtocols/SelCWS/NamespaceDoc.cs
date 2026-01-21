@@ -1,7 +1,7 @@
 ﻿//******************************************************************************************************
 //  NamespaceDoc.cs - Gbtc
 //
-//  Copyright © 2012, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2025, Grid Protection Alliance.  All Rights Reserved.
 //
 //  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
 //  the NOTICE file distributed with this work for additional information regarding copyright ownership.
@@ -16,10 +16,8 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  09/29/2009 - Pinal C. Patel
+//  11/04/2025 - Ritchie Carroll
 //       Generated original version of source code.
-//  12/17/2012 - Starlynn Danyelle Gilliam
-//       Modified Header.
 //
 //******************************************************************************************************
 
