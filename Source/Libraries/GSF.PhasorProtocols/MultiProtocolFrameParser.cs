@@ -1468,7 +1468,6 @@ public sealed class MultiProtocolFrameParser : IFrameParser
     private SharedTimer m_rateCalcTimer;
     private IConfigurationFrame m_configurationFrame;
     private CheckSumValidationFrameTypes m_checkSumValidationFrameTypes;
-    private long m_lastFramePublishTime;
     private long m_dataStreamStartTime;
     private long m_missingFramesOverflow;
     private int m_frameRateTotal;
@@ -3399,7 +3398,7 @@ public sealed class MultiProtocolFrameParser : IFrameParser
         int length = e.Argument2;
         Parse(SourceChannel.Data, buffer, 0, length);
 
-        if (TransportProtocol != TransportProtocol.File || m_dataChannel is not FileClient { CurrentState: ClientState.Connected } fileClient)
+        if (TransportProtocol != TransportProtocol.File || m_dataChannel is not FileClient { CurrentState: ClientState.Connected })
             return;
 
         // Read next buffer
@@ -3446,9 +3445,6 @@ public sealed class MultiProtocolFrameParser : IFrameParser
 
     private void m_dataChannel_ConnectionTerminated(object sender, EventArgs e)
     {
-        if (m_transportProtocol == TransportProtocol.File)
-            m_lastFramePublishTime = 0L;
-
         ConnectionTerminated?.Invoke(this, EventArgs.Empty);
     }
 
@@ -3726,8 +3722,6 @@ public sealed class MultiProtocolFrameParser : IFrameParser
                 // If injecting a simulated timestamp, use the last received time
                 if (InjectSimulatedTimestamp)
                     dataFrame.Timestamp = simulatedTimestamp;
-
-                m_lastFramePublishTime = DateTime.UtcNow.Ticks;
             }
 
             ReceivedDataFrame?.Invoke(this, e);
@@ -3835,15 +3829,14 @@ public sealed class MultiProtocolFrameParser : IFrameParser
         if (m_dataChannel is not FileClient { CurrentState: ClientState.Connected } fileClient)
             return;
 
-        while (QueuedBuffers > 0 || QueuedOutputs * 2 > m_definedFrameRate * 3)
+        while (QueuedBuffers > 0 || QueuedOutputs > 0)
         {
             Thread.Sleep(1);
 
             if (fileClient.CurrentState != ClientState.Connected)
                 return;
         }
-
-        // Read more file data when no data has been received for target frame period
+            
         fileClient.ReadNextBuffer();
     }
 
