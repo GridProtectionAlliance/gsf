@@ -32,29 +32,54 @@ namespace GSF.FuzzyStrings
     {
         public static int LevenshteinDistance(this string source, string target)
         {
-            if (source.Length == 0)
+            // Optimize for wider matrix M, resulting in fewer swaps
+            if (source.Length > target.Length)
+                return target.LevenshteinDistance(source);
+
+            // Given a matrix M where M[i,j] is the Levenshtein distance of the
+            // first i characters in source and the first j characters in target,
+            // arr0 and arr1 represent two consecutive rows of matrix M
+            int rows = source.Length + 1;
+            int columns = target.Length + 1;
+            int[] arr0 = new int[columns];
+            int[] arr1 = new int[columns];
+
+            // This fills in M[0] of the matrix
+            // If source is empty, the distance is the number of characters in target
+            for (int i = 0; i < columns; i++)
+                arr0[i] = i;
+
+            // In the following loop, arr0 is M[i-1] and arr1 is M[i]
+            // We fill in the values for M[i] given that M[i-1] has already been filled in
+            for (int i = 1; i < rows; i++)
             {
-                return target.Length;
-            }
-            if (target.Length == 0)
-            {
-                return source.Length;
+                // Fill in M[i,0]
+                // If target is empty, the distance is the number of characters in source
+                arr1[0] = i;
+
+                for (int j = 1; j < columns; j++)
+                {
+                    int distance = source[i - 1] == target[j - 1] ? 0 : 1;
+
+                    // M[i,j] = min(M[i-1,j] + 1,
+                    //              M[i,j-1] + 1,
+                    //              M[i-1,j-1] + distance)
+                    //
+                    // This is the recursive case of Levenshtein using precomputed values instead of recursion
+                    arr1[j] = Common.Min(arr0[j] + 1, arr1[j - 1] + 1, arr0[j - 1] + distance);
+                }
+
+                // Move M[i] into arr0 for the next iteration
+                // We no longer need M[i-1] so we reuse that array for arr1 in the next iteration
+                int[] temp = arr0;
+                arr0 = arr1;
+                arr1 = temp;
             }
 
-            int distance = 0;
-
-            if (source[source.Length - 1] == target[target.Length - 1])
-            {
-                distance = 0;
-            }
-            else
-            {
-                distance = 1;
-            }
-
-            return Math.Min(Math.Min(LevenshteinDistance(source.Substring(0, source.Length - 1), target) + 1,
-                                     LevenshteinDistance(source, target.Substring(0, target.Length - 1))) + 1,
-                                     LevenshteinDistance(source.Substring(0, source.Length - 1), target.Substring(0, target.Length - 1)) + distance);
+            // After the final swap, arr0 has the final row of the matrix M[rows-1]
+            // The last column contains the distance for all characters in source and all characters in target
+            // aka M[i,j] where i == source.Length and j == target.Length
+            return arr0[columns - 1];
         }
 
         public static double NormalizedLevenshteinDistance(this string source, string target)
