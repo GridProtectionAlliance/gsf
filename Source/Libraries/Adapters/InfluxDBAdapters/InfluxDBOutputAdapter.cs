@@ -49,16 +49,6 @@ namespace InfluxDBAdapters
         // Constants
 
         /// <summary>
-        /// Default value for <see cref="UserName"/>.
-        /// </summary>
-        public const string DefaultUserName = "root";
-
-        /// <summary>
-        /// Default value for <see cref="Password"/>.
-        /// </summary>
-        public const string DefaultPassword = "root";
-
-        /// <summary>
         /// Default value for <see cref="UseParallelPosting"/>.
         /// </summary>
         public const bool DefaultUseParallelPosting = true;
@@ -76,6 +66,7 @@ namespace InfluxDBAdapters
         private string m_databaseName;          // Database name forInfluxDB connection
         private string m_userName;              // Username for InfluxDB connection
         private string m_password;              // Password for InfluxDB connection
+        private string m_authorizationToken;    // Token for InfluxDB authorization
         private bool m_useParallelPosting;      // Enable parallel posting
         private int m_valuesPerPost;            // Maximum values to send per post (when using parallel posting)
         private string m_connectionResponse;    // Response from connection attempt
@@ -139,7 +130,7 @@ namespace InfluxDBAdapters
         /// <summary>
         /// Gets or sets the user name for the InfluxDB connection.
         /// </summary>
-        [ConnectionStringParameter, Description("Defines the the user name for the InfluxDB connection."), DefaultValue(DefaultUserName)]
+        [ConnectionStringParameter, Description("Defines the the user name for the InfluxDB connection."), DefaultValue(null)]
         public string UserName
         {
             get
@@ -155,7 +146,7 @@ namespace InfluxDBAdapters
         /// <summary>
         /// Gets or sets the password for the InfluxDB connection.
         /// </summary>
-        [ConnectionStringParameter, Description("Defines the password for the InfluxDB connection."), DefaultValue(DefaultPassword)]
+        [ConnectionStringParameter, Description("Defines the password for the InfluxDB connection."), DefaultValue(null)]
         public string Password
         {
             get
@@ -165,6 +156,22 @@ namespace InfluxDBAdapters
             set
             {
                 m_password = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the password for the InfluxDB connection.
+        /// </summary>
+        [ConnectionStringParameter, Description("Defines the token for the InfluxDB authorization."), DefaultValue(null)]
+        public string AuthorizationToken
+        {
+            get
+            {
+                return m_authorizationToken;
+            }
+            set
+            {
+                m_authorizationToken = value;
             }
         }
 
@@ -310,13 +317,12 @@ namespace InfluxDBAdapters
 
             if (settings.TryGetValue("userName", out setting))
                 m_userName = setting;
-            else
-                m_userName = DefaultUserName;
 
             if (settings.TryGetValue("password", out setting))
                 m_password = setting;
-            else
-                m_password = DefaultPassword;
+
+            if (settings.TryGetValue("authorizationToken", out setting))
+                m_authorizationToken = setting;
 
             if (settings.TryGetValue("useParallelPosting", out setting))
                 m_useParallelPosting = setting.ParseBoolean();
@@ -333,7 +339,8 @@ namespace InfluxDBAdapters
             // Define request URI
             UriBuilder requestUri = new UriBuilder(m_serverUri);
             requestUri.Path = string.Format("db/{0}/series", m_databaseName.UriEncode());
-            requestUri.Query = string.Format("u={0}&p={1}", m_userName.UriEncode(), m_password.UriEncode());
+            if (!string.IsNullOrEmpty(m_userName) && !string.IsNullOrEmpty(m_password))
+                requestUri.Query = string.Format("u={0}&p={1}", m_userName.UriEncode(), m_password.UriEncode());
             m_requestUri = requestUri.Uri;
         }
 
@@ -347,7 +354,8 @@ namespace InfluxDBAdapters
                 // Setup an authenticate request
                 UriBuilder requestUri = new UriBuilder(m_serverUri);
                 requestUri.Path = string.Format("db/{0}/authenticate", m_databaseName.UriEncode());
-                requestUri.Query = string.Format("u={0}&p={1}", m_userName.UriEncode(), m_password.UriEncode());
+                if (!string.IsNullOrEmpty(m_userName) && !string.IsNullOrEmpty(m_password))
+                    requestUri.Query = string.Format("u={0}&p={1}", m_userName.UriEncode(), m_password.UriEncode());
 
                 // Create a web request for authentication that will at least make sure the server is available
                 HttpWebRequest request = WebRequest.Create(requestUri.Uri) as HttpWebRequest;
@@ -355,6 +363,9 @@ namespace InfluxDBAdapters
                 if ((object)request != null)
                 {
                     request.ContentType = "application/json";
+
+                    if (!string.IsNullOrEmpty(m_authorizationToken))
+                        request.Headers.Add(HttpRequestHeader.Authorization, $"Token {m_authorizationToken}");
 
                     // Attempt query - if this doesn't throw an exception, query succeeded
                     using (WebResponse response = request.GetResponse())
@@ -430,6 +441,9 @@ namespace InfluxDBAdapters
                 request.SendChunked = true;
                 request.AllowWriteStreamBuffering = true;
                 request.ContentType = "application/json";
+
+                if (!string.IsNullOrEmpty(m_authorizationToken))
+                    request.Headers.Add(HttpRequestHeader.Authorization, $"Token {m_authorizationToken}");
 
                 // Build a JSON post expression with measurement values to use as post data
                 StringBuilder jsonData = new StringBuilder();
