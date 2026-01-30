@@ -28,7 +28,7 @@ namespace GSF.ComponentModel.DataAnnotations
     /// <summary>
     /// Defines an attribute that will define a UI label to used for a modeled table field.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Property)]
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Method)]
     public sealed class LabelAttribute : Attribute
     {
         /// <summary>
