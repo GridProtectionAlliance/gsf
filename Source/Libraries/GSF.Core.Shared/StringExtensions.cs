@@ -2432,5 +2432,110 @@ namespace GSF
 
             return string.Format(indexed, parameterValues);
         }
+
+        /// <summary>
+        /// Parses the string as a CSV document.
+        /// </summary>
+        /// <param name="csv">The string to be parsed</param>
+        /// <returns>An array of rows parsed as CSV data.</returns>
+        public static string[][] ParseAsCSV(this string csv)
+        {
+            using StringReader reader = new(csv);
+            List<string[]> rows = [];
+
+            while (true)
+            {
+                string[] row = ReadCSVRow(reader);
+                if (row is null) break;
+                rows.Add(row);
+            }
+
+            return [.. rows];
+        }
+
+        /// <summary>
+        /// Reads characters from the text reader and returns a single row of CSV data.
+        /// </summary>
+        /// <param name="reader">The text reader providing the CSV data</param>
+        /// <returns>An array of fields in one row of CSV data or <c>null</c> if there is no more data available from the text reader.</returns>
+        public static string[] ReadCSVRow(this TextReader reader)
+        {
+            List<string> fields = [];
+            int c = reader.Read();
+
+            if (EOF())
+                return null;
+
+            while (!EOF() && !EOL())
+            {
+                if (Matches('"'))
+                    fields.Add(ReadQuoted());
+                else
+                    fields.Add(ReadToComma());
+
+                if (Matches(','))
+                {
+                    Advance();
+
+                    // Edge case for when the last
+                    // field in a row is empty
+                    if (EOF() || EOL())
+                        fields.Add(string.Empty);
+                }
+            }
+
+            // Advance to the next line before returning
+            if (Matches('\r')) Advance();
+            if (Matches('\n')) Advance();
+            return [.. fields];
+
+            // Gets current character and advances to read the next character
+            char Advance() => (char)(c, c = reader.Read()).c;
+
+            bool Matches(char m) => c == m;
+            bool EOL() => Matches('\r') || Matches('\n');
+            bool EOF() => c == -1;
+
+            string ReadToComma()
+            {
+                StringBuilder token = new();
+
+                while (!EOF() && !EOL() && !Matches(','))
+                    token.Append(Advance());
+
+                return token.ToString();
+            }
+
+            string ReadQuoted()
+            {
+                StringBuilder token = new();
+
+                // Skip past the opening quote
+                Advance();
+
+                while (true)
+                {
+                    while (!EOF() && !Matches('"'))
+                        token.Append(Advance());
+
+                    // Skip past the end quote
+                    if (!EOF())
+                        Advance();
+
+                    // Check if it's actually an end quote vs an escaped quote
+                    if (Matches('"'))
+                        token.Append(Advance());
+                    else
+                        break;
+                }
+
+                // Excel treats everything after the
+                // end quote as if it were not quoted
+                if (!EOF() && !EOL() && !Matches(','))
+                    token.Append(ReadToComma());
+
+                return token.ToString();
+            }
+        }
     }
 }
