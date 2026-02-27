@@ -82,6 +82,11 @@ internal class InputWizardDevices : PagedViewModelBase<InputWizardDevice, string
             StationAcronym = cell.StationName?.Replace(" ", "_").Replace("'", "").ToUpper();
             LabelMatchValue = device.Acronym.Equals(StationLabel, StringComparison.Ordinal) ? 1.0D : 0.0D;
             MatchValue = ComputeMatchValue();
+
+            // The minimum Levenshtein distance has to be at least one
+            // because we already checked if the strings are equal
+            MinLabelDistance = new(() => Math.Max(1.0D, Device.Acronym.LevenshteinDistanceLowerBounds(StationLabel)));
+            MaxLabelDistance = new(() => Math.Max(1.0D, Device.Acronym.LevenshteinDistanceUpperBounds(StationLabel)));
         }
 
         #endregion
@@ -94,9 +99,8 @@ internal class InputWizardDevices : PagedViewModelBase<InputWizardDevice, string
 
         // A match value below 1 indicates the
         // mapping should probably be disregarded
-        public bool HasLowConfidence =>
-            (CanBeUpdated && MatchValue < 1.0D - InverseSquared(MinLabelDistance)) ||
-            (!CanBeUpdated && MatchValue < 1.0D);
+        public bool HasLowConfidence => MaxMatchValue < 1.0D;
+        public bool MaybeLowConfidence => MinMatchValue < 1.0D;
 
         private string LabelPrefix { get; }
         private string StationAcronym { get; }
@@ -104,15 +108,21 @@ internal class InputWizardDevices : PagedViewModelBase<InputWizardDevice, string
         private double LabelMatchValue { get; set; }
         private double MatchValue { get; set; }
 
+        private double MinMatchValue => CanBeUpdated
+            ? MatchValue + InverseSquared(MaxLabelDistance.Value)
+            : MatchValue;
+
+        private double MaxMatchValue => CanBeUpdated
+            ? MatchValue + InverseSquared(MinLabelDistance.Value)
+            : MatchValue;
+
         private string StationLabel =>
             Device.Acronym.StartsWith(LabelPrefix, StringComparison.Ordinal)
                 ? $"{LabelPrefix}{StationAcronym}"
                 : StationAcronym;
 
-        // The minimum Levenshtein distance has to be at least one
-        // because we already checked if the strings are equal
-        private double MinLabelDistance =>
-            Math.Max(1.0D, Device.Acronym.LevenshteinDistanceLowerBounds(StationLabel));
+        private Lazy<double> MinLabelDistance { get; }
+        private Lazy<double> MaxLabelDistance { get; }
 
         // Indicates whether computing Levenshtein distance could change the ranking
         private bool CanBeUpdated =>
@@ -130,8 +140,7 @@ internal class InputWizardDevices : PagedViewModelBase<InputWizardDevice, string
         {
             return
                 MatchValue < 3.0D &&
-                mapping.CanBeUpdated &&
-                MatchValue - mapping.MatchValue < InverseSquared(1.0D);
+                MinMatchValue < mapping.MaxMatchValue;
         }
 
         // Levenshtein distance can be expensive to compute
@@ -244,6 +253,16 @@ internal class InputWizardDevices : PagedViewModelBase<InputWizardDevice, string
                     Enqueue(UpdatedMappings, mapping);
                     mapping = UpdatedMappings.Dequeue();
                 }
+            }
+
+            // Edge case for mappings that
+            // straddle the low-confidence threshold
+            if (mapping.MaybeLowConfidence)
+            {
+                mapping.UpdateRank();
+
+                if (mapping.HasLowConfidence)
+                    return null;
             }
 
             MappedDevices.Add(mapping.Device);
