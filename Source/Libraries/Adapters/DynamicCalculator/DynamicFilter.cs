@@ -54,7 +54,13 @@ namespace DynamicCalculator
         /// Defines filter operation that changes measurement values based on expression evaluation.
         /// </summary>
         [Description("Changes measurement values based on expression evaluation.")]
-        ValueAugmentation
+        ValueAugmentation,
+
+        /// <summary>
+        /// Sets measurement state flags when expression evaluates to true.
+        /// </summary>
+        [Description("Sets measurement state flags when expression evaluates to true.")]
+        SetFlagsWhenTrue
     }    
 
     /// <summary>
@@ -88,6 +94,7 @@ namespace DynamicCalculator
         private long m_processedMeasurements;
         private long m_removedMeasurements;
         private long m_skippedRemovalSets;
+        private long m_measurementFlagsAssigned;
         private bool m_valueIsArray;
         private int m_valueArrayLength;
         private object m_result;
@@ -157,10 +164,12 @@ namespace DynamicCalculator
         public FilterOperation FilterOperation { get; set; } = DefaultFilterOperation;
 
         /// <summary>
-        /// Gets or sets measurement state flags that are applied when a value has been replaced when filter operation is set to <see cref="FilterOperation.ValueAugmentation"/>.
+        /// Gets or sets measurement state flags that are applied when a value has been replaced when filter operation is set to <see cref="FilterOperation.ValueAugmentation"/>
+        /// or when flags are set when filter operation is set to <see cref="FilterOperation.SetFlagsWhenTrue"/>.
         /// </summary>
         [ConnectionStringParameter]
-        [Description("Defines measurement state flags that are applied when a value has been replaced when filter operation is set to value augmentation.")]
+        [Description($"Defines measurement state flags that are applied when a value has been replaced when filter operation is set to '{nameof(FilterOperation.ValueAugmentation)}' " + 
+                     $"or when flags are set when filter operation is set to '{nameof(FilterOperation.SetFlagsWhenTrue)}'.")]
         [DefaultValue(DefaultAugmentationFlags)]
         public MeasurementStateFlags AugmentationFlags { get; set; } = DefaultAugmentationFlags;
 
@@ -208,7 +217,7 @@ namespace DynamicCalculator
         }
 
         /// <summary>
-        /// Gets or sets the allowed past time deviation tolerance, in seconds (can be sub-second).
+        /// Gets or sets the allowed past-time deviation tolerance, in seconds (can be sub-second).
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public new double LagTime // Redeclared to hide property - not relevant to this adapter
@@ -301,16 +310,22 @@ namespace DynamicCalculator
                 status.AppendLine($"          Filter Operation: {FilterOperation}");
                 status.AppendLine($"         Target Value Type: {(m_valueIsArray ? "Array" : "Singleton")}");
 
-                if (FilterOperation == FilterOperation.RemoveWhenTrue)
+                switch (FilterOperation)
                 {
-                    status.AppendLine($"    Processed Measurements: {m_processedMeasurements:N0}");
-                    status.AppendLine($"      Removed Measurements: {m_removedMeasurements:N0}");
-                    status.AppendLine($"      Skipped Removal Sets: {m_skippedRemovalSets:N0}");
-                }
-                else
-                {
-                    status.AppendLine($"        Augmentation Flags: {AugmentationFlags}");
-                    status.AppendLine($"    Augmented Measurements: {m_processedMeasurements:N0}");
+                    case FilterOperation.RemoveWhenTrue:
+                        status.AppendLine($"    Processed Measurements: {m_processedMeasurements:N0}");
+                        status.AppendLine($"      Removed Measurements: {m_removedMeasurements:N0}");
+                        status.AppendLine($"      Skipped Removal Sets: {m_skippedRemovalSets:N0}");
+                        break;
+                    case FilterOperation.ValueAugmentation:
+                        status.AppendLine($"        Augmentation Flags: {AugmentationFlags}");
+                        status.AppendLine($"    Augmented Measurements: {m_processedMeasurements:N0}");
+                        break;
+                    case FilterOperation.SetFlagsWhenTrue:
+                        status.AppendLine($"        Augmentation Flags: {AugmentationFlags}");
+                        status.AppendLine($"    Processed Measurements: {m_processedMeasurements:N0}");
+                        status.AppendLine($"Measurement Flags Assigned: {m_measurementFlagsAssigned:N0}");
+                        break;
                 }
 
                 return status.ToString();
@@ -402,11 +417,9 @@ namespace DynamicCalculator
                     Interlocked.Increment(ref m_skippedRemovalSets);
                     return;
                 }
-                else
-                {
-                    int index = 0;
-                    indexes = measurements.ToDictionary(measurement => measurement.Key, _ => index++);
-                }
+
+                int index = 0;
+                indexes = measurements.ToDictionary(measurement => measurement.Key, _ => index++);
             }
 
             void removeMeasurements(List<int> indexesToBeRemoved)
@@ -446,11 +459,17 @@ namespace DynamicCalculator
                 case FilterOperation.ValueAugmentation when m_valueIsArray:
                     ProcessValueAugmentationForArray(inputs);
                     break;
+                case FilterOperation.SetFlagsWhenTrue when m_valueIsArray:
+                    ProcessSetFlagsWhenTrueForArray(inputs);
+                    break;
                 case FilterOperation.RemoveWhenTrue when !m_valueIsArray:
                     removeMeasurements(ProcessRemoveWhenTrueForSingleton(inputs, indexes));
                     break;
                 case FilterOperation.ValueAugmentation when !m_valueIsArray:
                     ProcessValueAugmentationForSingleton(inputs);
+                    break;
+                case FilterOperation.SetFlagsWhenTrue when !m_valueIsArray:
+                    ProcessSetFlagsWhenTrueForSingleton(inputs);
                     break;
                 default:
                     if (m_processedMeasurements == 0L)
@@ -500,6 +519,29 @@ namespace DynamicCalculator
             }
         }
 
+        [MethodImpl(MethodImplOptions.Synchronized)] // Access to expression context, m_result and m_index requires synchronization
+        private void ProcessSetFlagsWhenTrueForArray(IReadOnlyDictionary<MeasurementKey, IMeasurement> inputs)
+        {
+            long measurementFlagsAssigned = 0L;
+
+            for (m_index = 0; m_index < m_valueArrayLength; m_index++)
+            {
+                if (!inputs.TryGetValue(m_variableKeys[$"value[{m_index}]"], out IMeasurement measurement))
+                    continue;
+                
+                Calculate(inputs, new Dictionary<string, int> { ["value"] = m_index });
+                
+                // If calculation result is true, we update measurement flags
+                if (!m_result.ToString().ParseBoolean())
+                    continue;
+                
+                measurement.StateFlags |= AugmentationFlags;
+                measurementFlagsAssigned++;
+            }
+
+            Interlocked.Add(ref m_measurementFlagsAssigned, measurementFlagsAssigned);
+        }
+
         [MethodImpl(MethodImplOptions.Synchronized)] // Access to expression context and m_result requires synchronization
         private List<int> ProcessRemoveWhenTrueForSingleton(IReadOnlyDictionary<MeasurementKey, IMeasurement> inputs, IReadOnlyDictionary<MeasurementKey, int> indexes)
         {
@@ -531,6 +573,22 @@ namespace DynamicCalculator
 
             measurement.Value = Convert.ToDouble(result);
             measurement.StateFlags |= AugmentationFlags;
+        }
+
+        [MethodImpl(MethodImplOptions.Synchronized)] // Access to expression context and m_result requires synchronization
+        private void ProcessSetFlagsWhenTrueForSingleton(IReadOnlyDictionary<MeasurementKey, IMeasurement> inputs)
+        {
+            if (!inputs.TryGetValue(m_variableKeys["value"], out IMeasurement measurement))
+                return;
+
+            Calculate(inputs);
+
+            // If calculation result is true, we update measurement flags
+            if (!m_result.ToString().ParseBoolean())
+                return;
+            
+            measurement.StateFlags |= AugmentationFlags;
+            Interlocked.Increment(ref m_measurementFlagsAssigned);
         }
 
         /// <summary>
