@@ -92,6 +92,14 @@ namespace DataQualityMonitoring
             set => m_destinationMeasurements = value;
         }
 
+        /// <inheritdoc/>
+        [EditorBrowsable(EditorBrowsableState.Never)] // Overriden to hide from UI
+        public override MeasurementKey[] InputMeasurementKeys
+        { 
+            get; 
+            set;
+        }
+
         /// <summary>
         /// Gets or sets the flags to be transferred from source
         /// measurements to the corresponding destination measurements.
