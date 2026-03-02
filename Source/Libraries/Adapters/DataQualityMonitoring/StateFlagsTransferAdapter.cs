@@ -96,8 +96,8 @@ namespace DataQualityMonitoring
         [EditorBrowsable(EditorBrowsableState.Never)] // Overriden to hide from UI
         public override MeasurementKey[] InputMeasurementKeys
         { 
-            get; 
-            set;
+            get => base.InputMeasurementKeys; 
+            set => base.InputMeasurementKeys = value;
         }
 
         /// <summary>
