@@ -168,8 +168,11 @@ namespace DynamicCalculator
         /// or when flags are set when filter operation is set to <see cref="FilterOperation.SetFlagsWhenTrue"/>.
         /// </summary>
         [ConnectionStringParameter]
-        [Description($"Defines measurement state flags that are applied when a value has been replaced when filter operation is set to '{nameof(FilterOperation.ValueAugmentation)}' " + 
-                     $"or when flags are set when filter operation is set to '{nameof(FilterOperation.SetFlagsWhenTrue)}'.")]
+        [Description
+        (
+             $"Defines measurement state flags that are applied when a value has been replaced when filter operation is set to '{nameof(FilterOperation.ValueAugmentation)}' " + 
+             $"or when flags are set when filter operation is set to '{nameof(FilterOperation.SetFlagsWhenTrue)}'."
+        )]
         [DefaultValue(DefaultAugmentationFlags)]
         public MeasurementStateFlags AugmentationFlags { get; set; } = DefaultAugmentationFlags;
 
