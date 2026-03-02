@@ -113,12 +113,7 @@ namespace DataQualityMonitoring
             set => m_flags = value;
         }
 
-        /// <summary>
-        /// Gets or sets the values that determines the order in which filter adapters are executed.
-        /// </summary>
-        /// <summary>
-        /// Gets or sets the value that determines the order in which filter adapters are executed.
-        /// </summary>
+        /// <inheritdoc/>
         [ConnectionStringParameter]
         [Description("Defines the value that determines the order in which filter adapters are executed.")]
         [DefaultValue(DefaultExecutionOrder)]
