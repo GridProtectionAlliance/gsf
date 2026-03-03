@@ -251,8 +251,10 @@
                             <TextBlock Text="Step 3: Select Devices to Configure" Margin="0,0,50,0" />
                             <CheckBox IsChecked="{tsfBinding:Column Path=DataContext.UseConfigLabels, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}}" Content="Use Config Phasor Labels" Margin="0,0,150,0" Visibility="{Binding ElementName=ExpanderStep3, Path=IsExpanded, Converter={StaticResource ObjectToVisibilityConverter}}" />
                             <StackPanel Orientation="Horizontal" Visibility="{Binding ElementName=ExpanderStep3, Path=IsExpanded, Converter={StaticResource ObjectToVisibilityConverter}}">
-                                <TextBlock Background="#FF2EB30D" Foreground="White" Text="*" FontWeight="Bold" TextAlignment="Center" Width="20"/>
-                                <TextBlock Foreground="Red" Text=" Device acronym already exists in the database." />
+                                <TextBlock Foreground="Red" Text="Mouse over to see description: " />
+                                <TextBlock Margin="2 0" Background="#FF2EB30D" Foreground="White" Text="*" FontWeight="Bold" TextAlignment="Center" Width="20" Cursor="Hand" ToolTip="Acronym will not be changed"/>
+                                <TextBlock Margin="2 0" Background="#FFE8E831" Foreground="White" Text="*" FontWeight="Bold" TextAlignment="Center" Width="20" Cursor="Hand" ToolTip="Acronym will be updated"/>
+                                <TextBlock Margin="2 0" Background="#FFFC0808" Foreground="White" Text="*" FontWeight="Bold" TextAlignment="Center" Width="20" Cursor="Hand" ToolTip="Acronym conflicts with another database record"/>
                             </StackPanel>
                         </StackPanel>
                     </DataTemplate>
@@ -276,13 +278,28 @@
                             </sdk:DataGridTemplateColumn.HeaderTemplate>
                         </sdk:DataGridTemplateColumn>
 
+                        <sdk:DataGridTemplateColumn Width="*">
+                            <sdk:DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button Command="{Binding Path=DataContext.UnlinkCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=1}}"
+                                            CommandParameter="{Binding}" ToolTip="{Binding Path=LinkAcronym}" Width="Auto">
+                                        <Button.Template>
+                                            <ControlTemplate>
+                                                <Image Source="/GSF.TimeSeries.UI;component/images/Unlink.png" Height="24" Width="24" />
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
+                                </DataTemplate>
+                            </sdk:DataGridTemplateColumn.CellTemplate>
+                        </sdk:DataGridTemplateColumn>
+
                         <sdk:DataGridTemplateColumn Header="Acronym" Width="4*">
                             <sdk:DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal" Background="{tsfBinding:Column Path=StatusColor, Converter={StaticResource StringToStatusColorConverter}}">
                                         <TextBox Text="{tsfBinding:Column Path=Acronym}" ToolTip="{Binding Path=ConfigAcronym}" Margin="25,0,0,0" Width="{StaticResource ItemSize}" MaxLength="200"/>
                                         <TextBlock Text="*" Foreground="White" FontWeight="Bold" Margin="2"
-                                            Visibility="{tsfBinding:Column Path=Existing, Converter={StaticResource ObjectToVisibilityConverter}}"/>
+                                            Visibility="{Binding Path=IsHighlighted, Converter={StaticResource ObjectToVisibilityConverter}}"/>
                                     </StackPanel>
                                 </DataTemplate>
                             </sdk:DataGridTemplateColumn.CellTemplate>

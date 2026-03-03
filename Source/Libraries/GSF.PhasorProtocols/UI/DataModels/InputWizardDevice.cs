@@ -42,10 +42,12 @@ namespace GSF.PhasorProtocols.UI.DataModels
         #region [ Members ]
 
         // Fields
+        private int m_id;
         private string m_acronym;
         private string m_name;
         private string m_configAcronym;
         private string m_configName;
+        private string m_linkAcronym;
         private decimal m_longitude;
         private decimal m_latitude;
         private int? m_vendorDeviceId;
@@ -56,9 +58,10 @@ namespace GSF.PhasorProtocols.UI.DataModels
         private int m_analogCount;
         private bool m_addDigitals;
         private bool m_addAnalogs;
-        private bool m_existing;
+        private bool m_hasConflict;
         private string m_statusColor;
         private ObservableCollection<InputWizardDevicePhasor> m_phasorList;
+        private bool m_useConfigLabels;
 
         #endregion
 
@@ -67,12 +70,30 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// <summary>
         /// Gets or sets existing device ID, if any.
         /// </summary>
-        public int ID { get; set; }
+        public int ID
+        {
+            get => m_id;
+            set
+            {
+                m_id = value;
+                UpdateStatusColor();
+            }
+        }
 
         /// <summary>
         /// Gets or sets and provided unique ID for the device.
         /// </summary>
         public Guid? UniqueID { get; set; }
+
+        /// <summary>
+        /// Gets or sets and provided global ID for the device's configuration cell.
+        /// </summary>
+        public Guid? GlobalID3 { get; set; }
+
+        /// <summary>
+        /// Gets or sets the acronym of the existing device record.
+        /// </summary>
+        public string OldAcronym { get; set; }
 
         /// <summary>
         /// Gets or sets acronym of the <see cref="InputWizardDevice"/>.
@@ -91,7 +112,15 @@ namespace GSF.PhasorProtocols.UI.DataModels
                     m_acronym = m_acronym.Substring(0, 200);
 
                 OnPropertyChanged(nameof(Acronym));
-                Existing = Device.GetDevice(null, $"WHERE Acronym = '{m_acronym.ToUpper()}'") is not null;
+
+                HasConflict =
+                    m_acronym != OldAcronym &&
+                    Device.GetDevice(null, $"WHERE Acronym = '{m_acronym.ToUpper()}'") is not null;
+
+                if (UseConfigLabels)
+                    ConfigFrameAcronym = value;
+                else
+                    DatabaseAcronym = value;
             }
         }
 
@@ -106,6 +135,11 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 m_name = value is null || value.Length <= 200 ? value : value.Substring(0, 200);
                 OnPropertyChanged(nameof(Name));
+
+                if (UseConfigLabels)
+                    ConfigFrameName = value;
+                else
+                    DatabaseName = value;
             }
         }
 
@@ -132,6 +166,19 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 m_configName = value;
                 OnPropertyChanged(nameof(ConfigName));
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets acronym from database.
+        /// </summary>
+        public string LinkAcronym
+        {
+            get => m_linkAcronym;
+            set
+            {
+                m_linkAcronym = value;
+                OnPropertyChanged(nameof(LinkAcronym));
             }
         }
 
@@ -268,14 +315,14 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="InputWizardDevice"/> existing flag.
         /// </summary>
-        public bool Existing
+        public bool HasConflict
         {
-            get => m_existing;
+            get => m_hasConflict;
             set
             {
-                m_existing = value;
-                OnPropertyChanged(nameof(Existing));
-                StatusColor = m_existing ? "green" : "transparent";
+                m_hasConflict = value;
+                OnPropertyChanged(nameof(HasConflict));
+                UpdateStatusColor();
             }
         }
 
@@ -289,8 +336,15 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 m_statusColor = value;
                 OnPropertyChanged(nameof(StatusColor));
+                OnPropertyChanged(nameof(IsHighlighted));
             }
         }
+
+        /// <summary>
+        /// Gets flag to indicate whether the device is highlighted via <see cref="StatusColor"/>.
+        /// </summary>
+        public bool IsHighlighted =>
+            StatusColor != "transparent";
 
         /// <summary>
         /// Gets or sets <see cref="InputWizardDevice"/> phasor list.
@@ -380,9 +434,62 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// </summary>
         public string AnalogLabelsPreview => AnalogLabels is not null ? string.Join(Environment.NewLine, AnalogLabels.Select((label, index) => $"Analog {index}: {label}")) : string.Empty;
 
+        internal string DatabaseAcronym { get; set; }
+        internal string ConfigFrameAcronym { get; set; }
+        internal string DatabaseName { get; set; }
+        internal string ConfigFrameName { get; set; }
+
+        internal bool UseConfigLabels
+        {
+            get => m_useConfigLabels;
+            set
+            {
+                if (m_useConfigLabels == value) return;
+                m_useConfigLabels = value;
+                Acronym = m_useConfigLabels ? ConfigFrameAcronym : DatabaseAcronym;
+                Name = m_useConfigLabels ? ConfigFrameName : DatabaseName;
+
+                foreach (InputWizardDevicePhasor phasor in PhasorList)
+                    phasor.UseConfigLabels = value;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Detaches the input wizard device from the database record it was mapped to.
+        /// </summary>
+        public void Unlink()
+        {
+            ID = 0;
+            UniqueID = GlobalID3;
+            OldAcronym = null;
+            VendorDeviceID = null;
+            DatabaseAcronym = ConfigFrameAcronym;
+            DatabaseName = ConfigFrameName;
+
+            if (!UseConfigLabels)
+            {
+                Acronym = ConfigFrameAcronym;
+                Name = ConfigFrameName;
+            }
+
+            foreach (InputWizardDevicePhasor phasor in m_phasorList)
+            {
+                phasor.DatabaseLabel = phasor.ConfigFrameLabel;
+                phasor.DatabaseType = phasor.ConfigFrameType;
+                phasor.DatabasePhase = phasor.ConfigFramePhase;
+
+                if (!phasor.UseConfigLabels)
+                {
+                    phasor.Label = phasor.ConfigFrameLabel;
+                    phasor.Type = phasor.ConfigFrameType;
+                    phasor.Phase = phasor.ConfigFramePhase;
+                }
+            }
+        }
 
         /// <summary>
         /// Retrieves <see cref="ObservableCollection{T}"/> type collection of <see cref="InputWizardDevice"/>.
@@ -419,6 +526,22 @@ namespace GSF.PhasorProtocols.UI.DataModels
         public static string Delete(AdoDataConnection database, int deviceID) => 
             string.Empty;
 
+        private void UpdateStatusColor()
+        {
+            string statusColor;
+            if (m_acronym == OldAcronym)
+                statusColor = "green";
+            else if (HasConflict)
+                statusColor = "red";
+            else if (m_id != 0)
+                statusColor = "yellow";
+            else
+                statusColor = "transparent";
+
+            if (statusColor != StatusColor)
+                StatusColor = statusColor;
+        }
+
         #endregion
     }
 
@@ -438,11 +561,14 @@ namespace GSF.PhasorProtocols.UI.DataModels
         private string m_baseKVInput;
         //private string m_destinationLabel;
         private bool m_include;
+        private bool m_useConfigLabels;
 
         internal string DatabaseLabel;
         internal string ConfigFrameLabel;
         internal string DatabaseType;
         internal string ConfigFrameType;
+        internal string DatabasePhase;
+        internal string ConfigFramePhase;
 
         #endregion
 
@@ -460,6 +586,11 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 m_label = value is null || value.Length <= 200 ? value : value.Substring(0, 200);
                 OnPropertyChanged("Label");
+
+                if (UseConfigLabels)
+                    ConfigFrameLabel = value;
+                else
+                    DatabaseLabel = value;
             }
         }
 
@@ -475,6 +606,11 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 m_type = value;
                 OnPropertyChanged("Type");
+
+                if (UseConfigLabels)
+                    ConfigFrameType = value;
+                else
+                    DatabaseType = value;
             }
         }
         
@@ -578,6 +714,18 @@ namespace GSF.PhasorProtocols.UI.DataModels
         /// Gets or sets and adder to be applied to the phasor angle, in radians.
         /// </summary>
         public float AngleAdder { get; set; }
+
+        internal bool UseConfigLabels
+        {
+            get => m_useConfigLabels;
+            set
+            {
+                m_useConfigLabels = value;
+                Label = m_useConfigLabels ? ConfigFrameLabel : DatabaseLabel;
+                Type = m_useConfigLabels ? ConfigFrameType : DatabaseType;
+                Phase = m_useConfigLabels ? ConfigFramePhase : DatabasePhase;
+            }
+        }
 
         #endregion
     }

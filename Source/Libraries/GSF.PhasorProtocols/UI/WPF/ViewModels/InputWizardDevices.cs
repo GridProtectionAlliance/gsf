@@ -337,6 +337,7 @@ internal class InputWizardDevices : PagedViewModelBase<InputWizardDevice, string
     private RelayCommand m_saveConfigurationFileCommand;
     private RelayCommand m_manualConfigurationCommand;
     private RelayCommand m_cancelConfigurationRequestCommand;
+    private RelayCommand m_unlinkCommand;
     private bool m_stepsEnabled;
     private bool m_stepOneExpanded;
     private bool m_stepTwoExpanded;
@@ -749,17 +750,8 @@ internal class InputWizardDevices : PagedViewModelBase<InputWizardDevice, string
             m_useConfigLabels = value;
             OnPropertyChanged(nameof(UseConfigLabels));
 
-            if (ItemsSource.Count == 0)
-                return;
-
             foreach (InputWizardDevice device in ItemsSource)
-            {
-                foreach (InputWizardDevicePhasor phasor in device.PhasorList)
-                {
-                    phasor.Label = value ? phasor.ConfigFrameLabel : phasor.DatabaseLabel;
-                    phasor.Type = value ? phasor.ConfigFrameType : phasor.DatabaseType;
-                }
-            }
+                device.UseConfigLabels = value;
         }
     }
 
@@ -955,6 +947,11 @@ internal class InputWizardDevices : PagedViewModelBase<InputWizardDevice, string
     /// Gets <see cref="ICommand"/> to create or update configuration manually.
     /// </summary>
     public ICommand ManualConfigurationCommand => m_manualConfigurationCommand ??= new RelayCommand(ManualConfiguration, () => CanSave);
+
+    /// <summary>
+    /// Gets <see cref="ICommand"/> to unlink <see cref="InputWizardDevice"/> from database record.
+    /// </summary>
+    public ICommand UnlinkCommand => m_unlinkCommand ??= new RelayCommand(UnlinkDevice);
 
     /// <summary>
     /// Gets or sets summary message to be displayed on UI after parsing configuration file or frame.
@@ -1254,11 +1251,13 @@ internal class InputWizardDevices : PagedViewModelBase<InputWizardDevice, string
                 string stationName = CultureInfo.CurrentUICulture.TextInfo.ToTitleCase(cell.StationName?.ToLower() ?? stationAcronym);
                 string deviceAcronym = i < DeviceAcronyms.Length ? DeviceAcronyms[i] : (existingDevice?.Acronym ?? stationAcronym);
                 int deviceID = existingDevice?.ID ?? 0;
+                Guid? globalID3 = null;
                 Guid? uniqueID = null;
                 decimal? longitude = null, latitude = null;
 
                 if (cell is ConfigurationCell3 configCell3)
                 {
+                    globalID3 = configCell3.GlobalID;
                     uniqueID = configCell3.GlobalID;
                     longitude = configCell3.LongitudeM;
                     latitude = configCell3.LatitudeM;
@@ -1279,6 +1278,7 @@ internal class InputWizardDevices : PagedViewModelBase<InputWizardDevice, string
                             }
                             finally
                             {
+                                globalID3 = null;
                                 uniqueID = null;
                             }
                         }
@@ -1465,11 +1465,9 @@ internal class InputWizardDevices : PagedViewModelBase<InputWizardDevice, string
 
                 string getConfigFrameType(IPhasorDefinition phasor) => phasor.PhasorType == PhasorType.Current ? "I" : "V";
 
-                string getPhasorLabel(IPhasorDefinition phasor) => UseConfigLabels ? getConfigFrameLabel(phasor) : getDatabaseLabel(phasor);
+                string getDatabasePhase(IPhasorDefinition phasor) => phasorExists(phasor) ? existingPhasors?[phasor.Index].Phase : getConfigFramePhase(phasor);
 
-                string getPhasorType(IPhasorDefinition phasor) => UseConfigLabels ? getConfigFrameType(phasor) : getDatabaseType(phasor);
-
-                string getPhasorPhase(IPhasorDefinition phasor)
+                string getConfigFramePhase(IPhasorDefinition phasor)
                 {
                     string configPhase = string.Empty;
 
@@ -1504,8 +1502,14 @@ internal class InputWizardDevices : PagedViewModelBase<InputWizardDevice, string
                         }
                     }
 
-                    return guessPhase(phasorExists(phasor) ? existingPhasors?[phasor.Index].Phase : configPhase, phasor.Label);
+                    return guessPhase(configPhase, phasor.Label);
                 }
+
+                string getPhasorLabel(IPhasorDefinition phasor) => UseConfigLabels ? getConfigFrameLabel(phasor) : getDatabaseLabel(phasor);
+
+                string getPhasorType(IPhasorDefinition phasor) => UseConfigLabels ? getConfigFrameType(phasor) : getDatabaseType(phasor);
+
+                string getPhasorPhase(IPhasorDefinition phasor) => UseConfigLabels ? getConfigFramePhase(phasor) : getDatabasePhase(phasor);
 
                 string getPhasorBaseKV(IPhasorDefinition phasor)
                 {
@@ -1530,15 +1534,24 @@ internal class InputWizardDevices : PagedViewModelBase<InputWizardDevice, string
                     analogs.Select(getAnalogScalarSet).ToArray();
 
                 string deviceIndex = m_configurationFrame.Cells.Count > 1 ? $" {i + 1:N0}" : "";
+                string databaseAcronym = string.IsNullOrWhiteSpace(existingDevice?.Acronym) ? deviceAcronym : existingDevice.Acronym;
+                string databaseName = string.IsNullOrWhiteSpace(existingDevice?.Name) ? stationName : existingDevice.Name;
 
                 wizardDeviceList.Add(new InputWizardDevice
                 {
                     ID = deviceID,
                     UniqueID = existingDevice?.UniqueID ?? uniqueID,
-                    Acronym = string.IsNullOrWhiteSpace(existingDevice?.Acronym) ? deviceAcronym : existingDevice.Acronym,
-                    Name = string.IsNullOrWhiteSpace(existingDevice?.Name) ? stationName : existingDevice.Name,
-                    ConfigAcronym = $"Device{deviceIndex} label from config: {deviceAcronym}{(string.IsNullOrWhiteSpace(cell.IDLabel) ? "" : $" ({cell.IDLabel})")}",
+                    GlobalID3 = globalID3,
+                    OldAcronym = existingDevice?.Acronym,
+                    Acronym = UseConfigLabels ? stationAcronym : databaseAcronym,
+                    DatabaseAcronym = databaseAcronym,
+                    ConfigFrameAcronym = stationAcronym,
+                    Name = UseConfigLabels ? stationName : databaseName,
+                    DatabaseName = databaseName,
+                    ConfigFrameName = stationName,
+                    ConfigAcronym = $"Device{deviceIndex} label from config: {stationAcronym}{(string.IsNullOrWhiteSpace(cell.IDLabel) ? "" : $" ({cell.IDLabel})")}",
                     ConfigName = $"Device{deviceIndex} name derived from config: {stationName}",
+                    LinkAcronym = $"Unlink from {deviceAcronym} in database",
                     Longitude = existingDevice?.Longitude ?? longitude ?? -98.6m,
                     Latitude = existingDevice?.Latitude ?? latitude ?? 37.5m,
                     VendorDeviceID = existingDevice?.VendorDeviceID,
@@ -1549,7 +1562,6 @@ internal class InputWizardDevices : PagedViewModelBase<InputWizardDevice, string
                     AnalogCount = cell.AnalogDefinitions.Count,
                     AddDigitals = cell.DigitalDefinitions.Count > 0,
                     AddAnalogs = cell.AnalogDefinitions.Count > 0,
-                    Existing = existingDevice is not null,
                     DigitalLabels = GetAnalogOrDigitalLabels(cell.DigitalDefinitions),
                     AnalogLabels = GetAnalogOrDigitalLabels(cell.AnalogDefinitions),
                     AnalogScalars = getAnalogScalars(cell.AnalogDefinitions),
@@ -1567,6 +1579,8 @@ internal class InputWizardDevices : PagedViewModelBase<InputWizardDevice, string
                             ConfigLabel = $"Phasor {phasor.Index + 1:N0} label from config: {phasor.Label}",
                             ConfigType = $"Phasor {phasor.Index + 1:N0} type from config: {phasor.PhasorType}",
                             Phase = getPhasorPhase(phasor),
+                            DatabasePhase = getDatabasePhase(phasor),
+                            ConfigFramePhase = getConfigFramePhase(phasor),
                             BaseKVInput = getPhasorBaseKV(phasor),
                             Include = true,
                             MagnitudeMultiplier = getMagnitudeMultiplier(phasor),
@@ -1909,6 +1923,12 @@ internal class InputWizardDevices : PagedViewModelBase<InputWizardDevice, string
         cc.WindowStartupLocation = WindowStartupLocation.CenterOwner;
 
         cc.ShowDialog();
+    }
+
+    private void UnlinkDevice(object context)
+    {
+        if (context is InputWizardDevice device)
+            device.Unlink();
     }
 
     /// <summary>
