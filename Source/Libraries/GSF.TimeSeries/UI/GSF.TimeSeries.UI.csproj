@@ -168,6 +168,9 @@
     <Resource Include="Images\Download.png" />
     <Resource Include="Images\Refresh.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Unlink.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterBuild">
     <CallTarget Targets="SignBuild" />
