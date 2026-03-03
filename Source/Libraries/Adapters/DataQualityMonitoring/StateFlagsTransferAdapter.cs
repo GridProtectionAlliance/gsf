@@ -106,7 +106,7 @@ namespace DataQualityMonitoring
         /// </summary>
         [ConnectionStringParameter]
         [DefaultValue(DefaultFlags)]
-        [Description("Defines the set of flags to be transfered.")]
+        [Description("Defines the set of flags to be transferred.")]
         public MeasurementStateFlags Flags
         {
             get => m_flags;
