@@ -1584,9 +1584,11 @@ internal class InputWizardDevices : PagedViewModelBase<InputWizardDevice, string
                             BaseKVInput = getPhasorBaseKV(phasor),
                             Include = true,
                             MagnitudeMultiplier = getMagnitudeMultiplier(phasor),
-                            AngleAdder = getAngleAdder(phasor)
+                            AngleAdder = getAngleAdder(phasor),
+                            UseConfigLabels = UseConfigLabels
                         }
-                    ).ToList())
+                    ).ToList()),
+                    UseConfigLabels = UseConfigLabels
                 });
             }
 
@@ -2037,9 +2039,7 @@ internal class InputWizardDevices : PagedViewModelBase<InputWizardDevice, string
                     if (inputWizardDevice.ID > 0)
                         device = Device.GetDevice(database, $"WHERE ID = {inputWizardDevice.ID}");
 
-                    if (device is null)
-                        device = Device.GetDevice(database, $"WHERE Acronym = '{inputWizardDevice.Acronym.ToUpper()}' AND NodeID = '{database.CurrentNodeID()}'");
-                    else
+                    if (device is not null)
                         device.Acronym = inputWizardDevice.Acronym.ToUpper();
 
                     bool newDevice = false;
