@@ -68,7 +68,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets existing device ID, if any.
+        /// Gets or sets ID of the existing database record, if any.
         /// </summary>
         public int ID
         {
@@ -170,7 +170,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
         }
 
         /// <summary>
-        /// Gets or sets acronym from database.
+        /// Gets or sets tooltip info describing the device acronym from the database.
         /// </summary>
         public string LinkAcronym
         {
