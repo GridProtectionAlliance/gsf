@@ -432,6 +432,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 if (phasor.SourceIndex == 0)
                     phasor.SourceIndex = database.ExecuteScalar<int>("SELECT MAX(SourceIndex) FROM Phasor WHERE DeviceID = {0}", phasor.DeviceID) + 1;
+                else if (phasor.SourceIndex != oldSourceIndex)
+                    database.ExecuteNonQuery("UPDATE Phasor SET SourceIndex = -SourceIndex WHERE DeviceID = {0} AND SourceIndex = {1}", phasor.DeviceID, phasor.SourceIndex);
 
                 // Since phasors could be reordered in the source device, this test could inadvertently throw an exception when it should not - so the validation has been removed
                 //if (database.ExecuteScalar<int>("SELECT COUNT(*) FROM Phasor WHERE ID <> {0} AND DeviceID = {1} AND SourceIndex = {2}", phasor.ID, phasor.DeviceID, phasor.SourceIndex) > 0)
