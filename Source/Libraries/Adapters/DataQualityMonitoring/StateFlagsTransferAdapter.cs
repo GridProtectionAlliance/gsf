@@ -52,6 +52,11 @@ namespace DataQualityMonitoring
         /// </summary>
         public const bool DefaultSupportsTemporalProcessing = false;
 
+        /// <summary>
+        /// Default value for the <see cref="ExecutionOrder"/> property.
+        /// </summary>
+        public const int DefaultExecutionOrder = 0;
+
         // Fields
         private MeasurementStateFlags m_flags;
         private MeasurementKey[] m_sourceMeasurements;
@@ -63,78 +68,64 @@ namespace DataQualityMonitoring
 
         #endregion
 
-        #region [ Constructors ]
-
-        #endregion
-
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the collection of measurements from which state will be transfered.
+        /// Gets or sets the collection of measurements from which state will be transferred.
         /// </summary>
-        [ConnectionStringParameter,
-        Description("Defines the collection of measurements from which state will be transfered.")]
+        [ConnectionStringParameter]
+        [Description("Defines the collection of measurements from which state will be transfered.")]
         public MeasurementKey[] SourceMeasurements
         {
-            get
-            {
-                return m_sourceMeasurements;
-            }
-            set
-            {
-                m_sourceMeasurements = value;
-            }
+            get => m_sourceMeasurements;
+            set => m_sourceMeasurements = value;
         }
 
         /// <summary>
         /// Gets or sets the collection of measurements to which state will be transferred.
         /// </summary>
-        [ConnectionStringParameter,
-        Description("Defines the collection of measurements to which state will be transferred.")]
+        [ConnectionStringParameter]
+        [Description("Defines the collection of measurements to which state will be transferred.")]
         public MeasurementKey[] DestinationMeasurements
         {
-            get
-            {
-                return m_destinationMeasurements;
-            }
-            set
-            {
-                m_destinationMeasurements = value;
-            }
+            get => m_destinationMeasurements;
+            set => m_destinationMeasurements = value;
+        }
+
+        /// <inheritdoc/>
+        [EditorBrowsable(EditorBrowsableState.Never)] // Overriden to hide from UI
+        public override MeasurementKey[] InputMeasurementKeys
+        { 
+            get => base.InputMeasurementKeys; 
+            set => base.InputMeasurementKeys = value;
         }
 
         /// <summary>
-        /// Gets or sets the flags to be transfered from source
+        /// Gets or sets the flags to be transferred from source
         /// measurements to the corresponding destination measurements.
         /// </summary>
-        [ConnectionStringParameter,
-        DefaultValue(DefaultFlags),
-        Description("Defines the set of flags to be transfered.")]
+        [ConnectionStringParameter]
+        [DefaultValue(DefaultFlags)]
+        [Description("Defines the set of flags to be transferred.")]
         public MeasurementStateFlags Flags
         {
-            get
-            {
-                return m_flags;
-            }
-            set
-            {
-                m_flags = value;
-            }
+            get => m_flags;
+            set => m_flags = value;
         }
+
+        /// <inheritdoc/>
+        [ConnectionStringParameter]
+        [Description("Defines the value that determines the order in which filter adapters are executed.")]
+        [DefaultValue(DefaultExecutionOrder)]
+        public override int ExecutionOrder { get; set; }
 
         /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
         /// </summary>
-        [ConnectionStringParameter,
-        Description("Define the flag indicating if this adapter supports temporal processing."),
-        DefaultValue(DefaultSupportsTemporalProcessing)]
-        public override bool SupportsTemporalProcessing
-        {
-            get
-            {
-                return m_supportsTemporalProcessing;
-            }
-        }
+        [ConnectionStringParameter]
+        [Description("Define the flag indicating if this adapter supports temporal processing.")]
+        [DefaultValue(DefaultSupportsTemporalProcessing)]
+        public override bool SupportsTemporalProcessing => m_supportsTemporalProcessing;
 
         #endregion
 
@@ -155,15 +146,15 @@ namespace DataQualityMonitoring
             if (settings.TryGetValue(nameof(SourceMeasurements), out setting))
                 m_sourceMeasurements = ParseInputMeasurementKeys(DataSource, true, setting);
             else
-                throw new ArgumentException("Missing required connection string parameter: SourceMeasurements", nameof(SourceMeasurements));
+                throw new ArgumentException("Missing required connection string parameter", nameof(SourceMeasurements));
 
             if (settings.TryGetValue(nameof(DestinationMeasurements), out setting))
                 m_destinationMeasurements = ParseInputMeasurementKeys(DataSource, true, setting);
             else
-                throw new ArgumentException("Missing required connection string parameter: DestinationMeasurements", nameof(DestinationMeasurements));
+                throw new ArgumentException("Missing required connection string parameter", nameof(DestinationMeasurements));
 
             if (m_sourceMeasurements.Length != m_destinationMeasurements.Length)
-                throw new ArgumentException($"Source and destination measurements are parallel arrays, therefore their lengths must match - Src: {m_sourceMeasurements.Length}, Dst: {m_destinationMeasurements.Length}");
+                throw new ArgumentException($"Source and destination measurements are parallel arrays, therefore their lengths must match - Src: {m_sourceMeasurements.Length:N0}, Dst: {m_destinationMeasurements.Length:N0}");
 
             InputMeasurementKeys = m_sourceMeasurements.Concat(m_destinationMeasurements).ToArray();
 
@@ -182,10 +173,9 @@ namespace DataQualityMonitoring
             if (!settings.TryGetValue(nameof(Flags), out setting) || !Enum.TryParse(setting, out m_flags))
                 m_flags = DefaultFlags;
 
-            if (settings.TryGetValue(nameof(SupportsTemporalProcessing), out setting))
-                m_supportsTemporalProcessing = setting.ParseBoolean();
-            else
-                m_supportsTemporalProcessing = DefaultSupportsTemporalProcessing;
+            ExecutionOrder = settings.TryGetValue(nameof(ExecutionOrder), out setting) && int.TryParse(setting, out int executionOrder) ? executionOrder : DefaultExecutionOrder;
+
+            m_supportsTemporalProcessing = settings.TryGetValue(nameof(SupportsTemporalProcessing), out setting) && setting.ParseBoolean();
         }
 
         /// <summary>
