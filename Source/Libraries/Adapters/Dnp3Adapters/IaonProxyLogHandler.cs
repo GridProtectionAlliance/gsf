@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Automatak.DNP3.Interface;
 using GSF.Diagnostics;
@@ -14,6 +15,11 @@ namespace DNP3Adapters;
 /// </summary>
 public interface IDnp3Adapter : IAdapter
 {
+    /// <summary>
+    /// Gets the ID of the channel added to the DNP3 manager.
+    /// </summary>
+    public string ChannelID { get; }
+
     /// <summary>
     /// Raises the <see cref="IAdapter.ProcessException"/> event.
     /// </summary>
@@ -34,7 +40,7 @@ internal class IaonProxyLogHandler<T> : ILogHandler where T : IDnp3Adapter
     /// <summary>
     /// Gets the static adapters that are currently registered with this proxy.
     /// </summary>
-    public List<IDnp3Adapter> Adapters { get; } = [];
+    public Dictionary<string, IDnp3Adapter> Adapters { get; } = [];
 
     /// <summary>
     /// Gets the static status proxy that is used to process exceptions and status messages.
@@ -50,7 +56,7 @@ internal class IaonProxyLogHandler<T> : ILogHandler where T : IDnp3Adapter
         lock (Adapters)
         {
             // Add adapter to list of available adapters 
-            Adapters.Add(adapter);
+            Adapters.Add(adapter.ChannelID, adapter);
 
             // If no adapter has been designated as the status proxy, assign this one
             StatusProxy ??= adapter;
@@ -66,13 +72,13 @@ internal class IaonProxyLogHandler<T> : ILogHandler where T : IDnp3Adapter
         lock (Adapters)
         {
             // Remove this adapter from the available list
-            Adapters.Remove(adapter);
+            Adapters.Remove(adapter.ChannelID);
 
             // See if we are disposing the status proxy instance
             if (ReferenceEquals(StatusProxy, adapter))
             {
                 // Attempt to find a new status proxy
-                StatusProxy = Adapters.Count > 0 ? Adapters[0] : null;
+                StatusProxy = Adapters.Values.FirstOrDefault();
             }
         }
     }
@@ -87,14 +93,17 @@ internal class IaonProxyLogHandler<T> : ILogHandler where T : IDnp3Adapter
         // contends with adapter initialization and disposal so contention will not be the normal case
         lock (Adapters)
         {
-            if (StatusProxy is null || StatusProxy.IsDisposed)
+            if (!Adapters.TryGetValue(entry.alias, out IDnp3Adapter? adapter))
+                adapter = StatusProxy;
+
+            if (adapter is null || adapter.IsDisposed)
                 return;
 
             if ((entry.filter.Flags & LogFilters.ERROR) > 0)
             {
                 // Expose errors through exception processor
                 InvalidOperationException exception = new(FormatLogEntry(entry));
-                StatusProxy.OnProcessException(MessageLevel.Error, exception);
+                adapter.OnProcessException(MessageLevel.Error, exception);
             }
             else
             {
@@ -102,11 +111,11 @@ internal class IaonProxyLogHandler<T> : ILogHandler where T : IDnp3Adapter
                 string message = FormatLogEntry(entry);
 
                 if ((entry.filter.Flags & LogFilters.WARNING) > 0)
-                    StatusProxy.OnStatusMessage(MessageLevel.Warning, message);
+                    adapter.OnStatusMessage(MessageLevel.Warning, message);
                 else if ((entry.filter.Flags & LogFilters.DEBUG) > 0)
-                    StatusProxy.OnStatusMessage(MessageLevel.Debug, message);
+                    adapter.OnStatusMessage(MessageLevel.Debug, message);
                 else
-                    StatusProxy.OnStatusMessage(MessageLevel.Info, message);
+                    adapter.OnStatusMessage(MessageLevel.Info, message);
             }
         }
     }

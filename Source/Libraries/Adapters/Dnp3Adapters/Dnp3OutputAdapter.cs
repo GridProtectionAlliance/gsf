@@ -431,6 +431,9 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
     /// <inheritdoc />
     public override bool OutputIsForArchive => false;
 
+    /// <inheritdoc/>
+    public string ChannelID => $"gsf-dnp3-outstation:{Name}";
+
     /// <inheritdoc />
     protected override bool UseAsyncConnect => false;
 
@@ -582,7 +585,7 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
     {
         // TCP server channel (listener)
         m_channel = s_manager.AddTCPServer(
-            $"gsf-dnp3-outstation:{Name}",
+            ChannelID,
             getLogLevel(),
             ServerAcceptMode.CloseExisting,
             new IPEndpoint(Interface, Port),
@@ -622,7 +625,7 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
 
         // Create a GSF outstation application that includes adapter logging
         m_outstation = m_channel.AddOutstation(
-            $"gsf-dnp3-outstation:{Name}",
+            ChannelID,
             new ReadOnlyCommandHandler(),
             new GSFOutstationApplication(this),
             outstationStackConfig

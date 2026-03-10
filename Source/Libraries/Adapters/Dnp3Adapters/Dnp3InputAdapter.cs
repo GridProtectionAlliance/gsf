@@ -173,6 +173,16 @@ public class DNP3InputAdapter : InputAdapterBase, IDnp3Adapter
         set => m_pollingInterval = TimeSpan.FromSeconds(value);
     }
 
+    /// <inheritdoc/>
+    public string ChannelID
+    {
+        get
+        {
+            TcpClientConfig tcpConfig = m_masterConfig.client;
+            return $"{tcpConfig.address}:{tcpConfig.port}";
+        }
+    }
+
     /// <summary>
     /// Gets the flag indicating if this adapter supports temporal processing.
     /// </summary>
@@ -311,17 +321,16 @@ public class DNP3InputAdapter : InputAdapterBase, IDnp3Adapter
     protected override void AttemptConnection()
     {
         TcpClientConfig tcpConfig = m_masterConfig.client;
-        string endPoint = $"{tcpConfig.address}:{tcpConfig.port}";
         TimeSpan minRetry = TimeSpan.FromMilliseconds(tcpConfig.minRetryMs);
         TimeSpan maxRetry = TimeSpan.FromMilliseconds(tcpConfig.maxRetryMs);
         TimeSpan reconnectDelay = TimeSpan.FromMilliseconds(tcpConfig.reconnectDelayMs);
         ChannelRetry channelRetry = new(minRetry, maxRetry, reconnectDelay);
-        IChannelListener channelListener = new ChannelListener(state => OnStatusMessage(MessageLevel.Info, $"{endPoint} - Channel state change: {state}"));
+        IChannelListener channelListener = new ChannelListener(state => OnStatusMessage(MessageLevel.Info, $"{ChannelID} - Channel state change: {state}"));
 
-        IChannel channel = s_manager.AddTCPClient(endPoint, tcpConfig.level, channelRetry, [new IPEndpoint(tcpConfig.address, tcpConfig.port)], channelListener);
+        IChannel channel = s_manager.AddTCPClient(ChannelID, tcpConfig.level, channelRetry, [new IPEndpoint(tcpConfig.address, tcpConfig.port)], channelListener);
         m_channel = channel;
 
-        IMaster master = channel.AddMaster(endPoint, m_soeHandler, DefaultMasterApplication.Instance, m_masterConfig.master);
+        IMaster master = channel.AddMaster(ChannelID, m_soeHandler, DefaultMasterApplication.Instance, m_masterConfig.master);
 
         if (m_pollingInterval > TimeSpan.Zero)
             master.AddClassScan(ClassField.AllClasses, m_pollingInterval, m_soeHandler, TaskConfig.Default);
