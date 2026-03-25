@@ -68,6 +68,7 @@ namespace ModbusAdapters
             String,
             Single,
             Double,
+            Int16,
             UInt16,
             Int32,
             UInt32,
@@ -724,6 +725,17 @@ namespace ModbusAdapters
                                 else
                                 {
                                     OnStatusMessage(MessageLevel.Warning, $"{derivedValue.AddressRecords.Count} address records defined for derived Double value \"{item.Key}\", expected 4.");
+                                }
+                                break;
+                            case DerivedType.Int16:
+                                if (derivedValue.AddressRecords.Count > 0)
+                                {
+                                    measurement.Value = (short)dataValues[0];
+                                    measurementsReceived++;
+                                }
+                                else
+                                {
+                                    OnStatusMessage(MessageLevel.Warning, $"No address records defined for Int16 value \"{item.Key}\".");
                                 }
                                 break;
                             case DerivedType.UInt16:
