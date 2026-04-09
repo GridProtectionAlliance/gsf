@@ -329,6 +329,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Hosting\OctetStreamMediaTypeFormatter.cs" />
     <Compile Include="Model\ModelController.cs" />
     <Compile Include="ModuleInitializer.cs" />
     <Compile Include="Security\AntiForgery.cs" />
