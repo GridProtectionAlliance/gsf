@@ -1259,7 +1259,7 @@ public class Dnp3OutputAdapter : OutputAdapterBase, IDnp3Adapter
 
     // Regex for parsing AlternateTag configuration
     // Format: DNP3{Type=Analog;Index=0;Class=1;Deadband=0.001;StaticVar=Group30Var1;EventVar=Group32Var7}
-    private static readonly Regex s_alternateTagRegex = new(@"^DNP3\{(?<config>[^}]+)\}$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private static readonly Regex s_alternateTagRegex = new(@"DNP3\{(?<config>[^}]+)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     // Static Constructor
     static Dnp3OutputAdapter()
