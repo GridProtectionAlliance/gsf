@@ -264,6 +264,18 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
+        /// Determines whether the specified <see cref="MeasurementKey"/> exists in the current collection of immediate measurements.
+        /// </summary>
+        /// <param name="key">The <see cref="MeasurementKey"/> to locate in the collection.</param>
+        /// <returns>
+        /// <c>true</c> if the specified <see cref="MeasurementKey"/> exists in the collection; otherwise, <c>false</c>.
+        /// </returns>
+        public bool HasMeasurementID(MeasurementKey key)
+        {
+            return m_measurements?.ContainsKey(key) ?? false;
+        }
+
+        /// <summary>
         /// Returns measurement list of specified tag, if it exists.
         /// </summary>
         /// <param name="tag">A <see cref="String"/> that indicates the tag to use.</param>
