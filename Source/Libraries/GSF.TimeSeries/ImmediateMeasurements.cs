@@ -264,12 +264,26 @@ namespace GSF.TimeSeries
         }
 
         /// <summary>
+        /// Determines whether the specified <see cref="MeasurementKey"/> exists in the current collection of immediate measurements.
+        /// </summary>
+        /// <param name="key">The <see cref="MeasurementKey"/> to locate in the collection.</param>
+        /// <returns>
+        /// <c>true</c> if the specified <see cref="MeasurementKey"/> exists in the collection; otherwise, <c>false</c>.
+        /// </returns>
+        public bool HasMeasurementID(MeasurementKey key)
+        {
+            return m_measurements?.ContainsKey(key) ?? false;
+        }
+
+        /// <summary>
         /// Returns measurement list of specified tag, if it exists.
         /// </summary>
         /// <param name="tag">A <see cref="String"/> that indicates the tag to use.</param>
         /// <returns>A collection of measurement keys.</returns>
-        public ReadOnlyCollection<MeasurementKey> TaggedMeasurementKeys(string tag) => 
-            new(m_taggedMeasurements[tag]);
+        public ReadOnlyCollection<MeasurementKey> TaggedMeasurementKeys(string tag)
+        {
+            return new ReadOnlyCollection<MeasurementKey>(m_taggedMeasurements[tag]);
+        }
 
         /// <summary>
         /// Store new measurement.
@@ -292,32 +306,38 @@ namespace GSF.TimeSeries
         /// </summary>
         /// <param name="id"><see cref="Guid"/> based signal ID of measurement.</param>
         /// <returns>A <see cref="TemporalMeasurement"/> object.</returns>
-        public TemporalMeasurement Measurement(MeasurementKey id) =>
-            m_measurements.GetOrAdd(id, key => new TemporalMeasurement(m_lagTime, m_leadTime)
+        public TemporalMeasurement Measurement(MeasurementKey id)
+        {
+            return m_measurements.GetOrAdd(id, key => new TemporalMeasurement(m_lagTime, m_leadTime)
             {
                 OutlierOperation = OutlierOperation,
                 OutlierState = OutlierState,
                 Metadata = key.Metadata,
             });
+        }
 
         /// <summary>
         /// Retrieves the specified immediate temporal measurement, creating it if needed.
         /// </summary>
         /// <param name="measurement">Source <see cref="IMeasurement"/> value.</param>
         /// <returns>A <see cref="TemporalMeasurement"/> object.</returns>
-        public TemporalMeasurement Measurement(IMeasurement measurement) =>
-            m_measurements.GetOrAdd(measurement.Key, key => new TemporalMeasurement(m_lagTime, m_leadTime)
+        public TemporalMeasurement Measurement(IMeasurement measurement)
+        {
+            return m_measurements.GetOrAdd(measurement.Key, key => new TemporalMeasurement(m_lagTime, m_leadTime)
             {
                 OutlierOperation = OutlierOperation,
                 OutlierState = OutlierState,
                 Metadata = key.Metadata.ChangeAdderMultiplier(measurement.Adder, measurement.Multiplier)
             });
+        }
 
         /// <summary>
         /// Clears the existing measurement cache.
         /// </summary>
-        public void ClearMeasurementCache() => 
+        public void ClearMeasurementCache()
+        {
             m_measurements.Clear();
+        }
 
         /// <summary>
         /// Defines tagged measurements from a data table.
@@ -452,21 +472,29 @@ namespace GSF.TimeSeries
         /// Updates the tracked temporal measurements lag time.
         /// </summary>
         /// <param name="lagTime">New lag time.</param>
-        protected void OnLagTimeUpdated(double lagTime) => 
+        protected void OnLagTimeUpdated(double lagTime)
+        {
             LagTime = lagTime;
+        }
 
         /// <summary>
         /// Updates the tracked temporal measurements lead time.
         /// </summary>
         /// <param name="leadTime">New lead time.</param>
-        protected void OnLeadTimeUpdated(double leadTime) => 
+        protected void OnLeadTimeUpdated(double leadTime)
+        {
             LeadTime = leadTime;
+        }
 
-        IEnumerator<TemporalMeasurement> IEnumerable<TemporalMeasurement>.GetEnumerator() => 
-            m_measurements.Values.ToList().GetEnumerator();
+        IEnumerator<TemporalMeasurement> IEnumerable<TemporalMeasurement>.GetEnumerator()
+        {
+            return m_measurements.Values.ToList().GetEnumerator();
+        }
 
-        IEnumerator IEnumerable.GetEnumerator() => 
-            m_measurements.Values.ToList().GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return m_measurements.Values.ToList().GetEnumerator();
+        }
 
         #endregion
     }
