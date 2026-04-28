@@ -774,6 +774,8 @@ public class PowerMultiCalculatorAdapter : ActionAdapterBase
 
         if (recordsAdded)
         {
+            m_configurationReloaded.Reset();
+
             // Notify host system that configuration has changed
             this.OnConfigurationChanged();
 
