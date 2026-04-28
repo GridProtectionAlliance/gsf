@@ -41,6 +41,7 @@ using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 using GSF.Units;
 using GSF.Units.EE;
+using MeasurementRecord = GSF.TimeSeries.Model.Measurement;
 
 namespace PowerCalculations.PowerMultiCalculator;
 
@@ -59,6 +60,8 @@ public class PowerMultiCalculatorAdapter : ActionAdapterBase
     private const VoltageAdjustmentStrategy DefaultAdjustmentStrategy = VoltageAdjustmentStrategy.LineToNeutral;
     private const bool DefaultEnableTemporalProcessing = false;
     private const BadDataStrategy DefaultBadDataStrategy = BadDataStrategy.FlagAsBad;
+    private const bool DefaultEnablePowerFactorCalculation = false;
+    private const PowerFactorSignConvention DefaultPowerFactorSignConvention = PowerFactorSignConvention.Unsigned;
 
     private const double SqrtOf3 = 1.7320508075688772935274463415059D;
     private const int ValuesToTrack = 5;
@@ -72,6 +75,8 @@ public class PowerMultiCalculatorAdapter : ActionAdapterBase
     private ConcurrentQueue<IMeasurement> m_lastActivePowerCalculations;
     private ConcurrentQueue<IMeasurement> m_lastReactivePowerCalculations;
     private ConcurrentQueue<IMeasurement> m_lastApparentPowerCalculations;
+    private ConcurrentQueue<IMeasurement> m_lastPowerFactorCalculations;
+    private ManualResetEventSlim m_configurationReloaded;
     private double m_lastTotalCalculationTime;
     private int m_lastTotalCalculations;
 
@@ -116,7 +121,7 @@ public class PowerMultiCalculatorAdapter : ActionAdapterBase
     public string TableName { get; set; } = DefaultTableName;
 
     /// <summary>
-    /// Gets or sets flag indicating whether or not this adapter will produce a result for all calculations. If this value is true and a calculation fails,
+    /// Gets or sets flag indicating whether this adapter will produce a result for all calculations. If this value is true and a calculation fails,
     /// the adapter will produce NaN for that calculation. If this value is false and a calculation fails, the adapter will not produce any result.
     /// </summary>
     [ConnectionStringParameter]
@@ -157,9 +162,48 @@ public class PowerMultiCalculatorAdapter : ActionAdapterBase
     public BadDataStrategy BadDataStrategy { get; set; } = DefaultBadDataStrategy;
 
     /// <summary>
+    /// Gets or sets flag that determines if a power factor output measurement should be calculated for each circuit.
+    /// </summary>
+    /// <remarks>
+    /// When enabled, a power factor output measurement will be auto-created (per circuit) using the
+    /// <see cref="MetadataHelpers"/> APIs if one is not already present in active configuration. The naming
+    /// convention is the existing active power (MW) point tag with the trailing power suffix replaced by <c>PF</c>.
+    /// </remarks>
+    [ConnectionStringParameter]
+    [Description("Defines flag that determines if power factor calculations should be added to the outputs. When enabled, output measurements are auto-created (per circuit) if not already present in active configuration.")]
+    [DefaultValue(DefaultEnablePowerFactorCalculation)]
+    public bool EnablePowerFactorCalculation { get; set; } = DefaultEnablePowerFactorCalculation;
+
+    /// <summary>
+    /// Gets or sets the sign convention used for published power factor values.
+    /// </summary>
+    /// <remarks>
+    /// Only relevant when <see cref="EnablePowerFactorCalculation"/> is <c>true</c>.
+    /// </remarks>
+    [ConnectionStringParameter]
+    [Description("Defines sign convention used for published power factor values. Only used when EnablePowerFactorCalculation is true.")]
+    [DefaultValue(DefaultPowerFactorSignConvention)]
+    public PowerFactorSignConvention PowerFactorSignConvention { get; set; } = DefaultPowerFactorSignConvention;
+
+    /// <summary>
     /// Gets the flag indicating if this adapter supports temporal processing.
     /// </summary>
     public override bool SupportsTemporalProcessing => EnableTemporalProcessing;
+
+    /// <summary>
+    /// Gets or sets <see cref="DataSet"/> based data source available to this <see cref="PowerMultiCalculatorAdapter"/>.
+    /// </summary>
+    public override DataSet DataSource
+    {
+        get => base.DataSource;
+        set
+        {
+            base.DataSource = value;
+
+            // Notify any pending configuration reload waiters that active configuration has been refreshed
+            m_configurationReloaded?.Set();
+        }
+    }
 
     /// <summary>
     /// Returns the adapter status, including real-time statistics about adapter operation
@@ -169,7 +213,7 @@ public class PowerMultiCalculatorAdapter : ActionAdapterBase
         get
         {
             StringBuilder status = new();
-            VoltageAdjustmentStrategy[] strategies = m_adjustmentStrategies?.Values.ToArray() ?? Array.Empty<VoltageAdjustmentStrategy>();
+            VoltageAdjustmentStrategy[] strategies = m_adjustmentStrategies?.Values.ToArray() ?? [];
 
             status.Append(base.Status);
 
@@ -177,6 +221,7 @@ public class PowerMultiCalculatorAdapter : ActionAdapterBase
             status.AppendLine($"Default Voltage Adjustment: {AdjustmentStrategy}");
             status.AppendLine($"         Bad Data Strategy: {BadDataStrategy}");
             status.AppendLine($"       Temporal Processing: {(EnableTemporalProcessing ? "Enabled" : "Disabled")}");
+            status.AppendLine($"  Power Factor Calculation: {(EnablePowerFactorCalculation ? $"Enabled ({PowerFactorSignConvention})" : "Disabled")}");
             status.AppendLine($"   Per-Circuit Adjustments: {strategies.Length:N0}");
 
             if (strategies.Length > 0)
@@ -242,6 +287,21 @@ public class PowerMultiCalculatorAdapter : ActionAdapterBase
                 status.AppendLine("\tNot enough values calculated yet...");
             }
 
+            if (EnablePowerFactorCalculation)
+            {
+                status.AppendLine("   Last Power Factor Measurements:");
+
+                if (m_lastPowerFactorCalculations is not null && m_lastPowerFactorCalculations.Any())
+                {
+                    foreach (IMeasurement measurement in m_lastPowerFactorCalculations)
+                        status.AppendLine($"\t{measurement.Key} = {measurement.AdjustedValue:N4}");
+                }
+                else
+                {
+                    status.AppendLine("\tNot enough values calculated yet...");
+                }
+            }
+
             status.AppendLine();
             return status.ToString();
         }
@@ -256,10 +316,14 @@ public class PowerMultiCalculatorAdapter : ActionAdapterBase
     /// </summary>
     public override void Initialize()
     {
+        // Allocate configuration-reload wait handle ahead of base.Initialize() so any DataSource
+        // assignment that fires during initialization is observed.
+        m_configurationReloaded ??= new ManualResetEventSlim();
+
         base.Initialize();
 
-        HashSet<IMeasurement> outputMeasurements = new();
-        List<PowerCalculation> configuredCalculations = new();
+        HashSet<IMeasurement> outputMeasurements = [];
+        List<PowerCalculation> configuredCalculations = [];
 
         m_adjustmentStrategies = new Dictionary<MeasurementKey, VoltageAdjustmentStrategy>();
         m_averageCalculationsPerFrame = new RunningAverage();
@@ -337,11 +401,24 @@ public class PowerMultiCalculatorAdapter : ActionAdapterBase
         if (settings.TryGetValue(nameof(BadDataStrategy), out setting) && Enum.TryParse(setting, true, out BadDataStrategy badDataStrategy))
             BadDataStrategy = badDataStrategy;
 
+        if (settings.TryGetValue(nameof(EnablePowerFactorCalculation), out setting))
+            EnablePowerFactorCalculation = setting.ParseBoolean();
+
+        if (settings.TryGetValue(nameof(PowerFactorSignConvention), out setting) && Enum.TryParse(setting, true, out PowerFactorSignConvention pfSignConvention))
+            PowerFactorSignConvention = pfSignConvention;
+
+        // Auto-create power factor output measurements when enabled. Soft-fails so a misconfigured
+        // circuit does not prevent the rest of the adapter from running.
+        CreatePowerFactorOutputs();
+
         if (TrackRecentValues)
         {
             m_lastActivePowerCalculations = new ConcurrentQueue<IMeasurement>();
             m_lastReactivePowerCalculations = new ConcurrentQueue<IMeasurement>();
             m_lastApparentPowerCalculations = new ConcurrentQueue<IMeasurement>();
+
+            if (EnablePowerFactorCalculation)
+                m_lastPowerFactorCalculations = new ConcurrentQueue<IMeasurement>();
         }
 
         // Define per power calculation line adjustment strategies
@@ -384,7 +461,8 @@ public class PowerMultiCalculatorAdapter : ActionAdapterBase
                 bool calculateActivePower = powerCalculation.ActivePowerOutputMeasurement is not null;
                 bool calculateReactivePower = powerCalculation.ReactivePowerOutputMeasurement is not null;
                 bool calculateApparentPower = powerCalculation.ApparentPowerOutputMeasurement is not null;
-                double activePower = double.NaN, reactivePower = double.NaN, apparentPower = double.NaN;
+                bool calculatePowerFactor = EnablePowerFactorCalculation && powerCalculation.PowerFactorOutputMeasurement is not null;
+                double activePower = double.NaN, reactivePower = double.NaN, apparentPower = double.NaN, powerFactor = double.NaN;
                 bool badInputDetected = false;
 
                 bool includeInput(IMeasurement measurement)
@@ -457,6 +535,35 @@ public class PowerMultiCalculatorAdapter : ActionAdapterBase
 
                         if (calculateApparentPower)
                             apparentPower = (double)Phasor.CalculateApparentPower(voltage, current) / SIUnitsFactor;
+
+                        if (!calculatePowerFactor)
+                            return;
+                        
+                        // Compute P, |S| and (when needed) Q regardless of whether the configured outputs were
+                        // requested, SI scaling cancels out, so we reuse already-computed values when available:
+                        double p = calculateActivePower ? activePower : (double)Phasor.CalculateActivePower(voltage, current) / SIUnitsFactor;
+                        double s = calculateApparentPower ? apparentPower : (double)Phasor.CalculateApparentPower(voltage, current) / SIUnitsFactor;
+
+                        if (s <= 0.0D)
+                            return;
+                        
+                        double magnitude = Math.Abs(p) / s;
+
+                        if (PowerFactorSignConvention == PowerFactorSignConvention.Unsigned)
+                        {
+                            powerFactor = magnitude;
+                        }
+                        else
+                        {
+                            double q = calculateReactivePower ? reactivePower : (double)Phasor.CalculateReactivePower(voltage, current) / SIUnitsFactor;
+                            int sign = Math.Sign(q);
+
+                            if (PowerFactorSignConvention == PowerFactorSignConvention.Leading)
+                                sign = -sign;
+
+                            // sign == 0 (Q exactly zero) -> unity power factor; preserve positive magnitude
+                            powerFactor = sign == 0 ? magnitude : sign * magnitude;
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -465,7 +572,7 @@ public class PowerMultiCalculatorAdapter : ActionAdapterBase
                 }
                 finally
                 {
-                    List<IMeasurement> outputMeasurements = new(3);
+                    List<IMeasurement> outputMeasurements = new(4);
                     MeasurementStateFlags flags = badInputDetected ? MeasurementStateFlags.BadData : MeasurementStateFlags.Normal;
 
                     if (calculateActivePower)
@@ -525,6 +632,25 @@ public class PowerMultiCalculatorAdapter : ActionAdapterBase
                         }
                     }
 
+                    if (calculatePowerFactor)
+                    {
+                        Measurement powerFactorMeasurement = Measurement.Clone(powerCalculation.PowerFactorOutputMeasurement, powerFactor, frame.Timestamp, flags);
+
+                        if (AlwaysProduceResult || !double.IsNaN(powerFactorMeasurement.Value))
+                        {
+                            outputMeasurements.Add(powerFactorMeasurement);
+                            calculations++;
+
+                            if (TrackRecentValues && m_lastPowerFactorCalculations is not null)
+                            {
+                                m_lastPowerFactorCalculations.Enqueue(powerFactorMeasurement);
+
+                                while (m_lastPowerFactorCalculations.Count > ValuesToTrack)
+                                    m_lastPowerFactorCalculations.TryDequeue(out _);
+                            }
+                        }
+                    }
+
                     publicationBuffer.Enqueue(outputMeasurements);
 
                     lock (m_averageCalculationTime)
@@ -545,6 +671,197 @@ public class PowerMultiCalculatorAdapter : ActionAdapterBase
 
         m_lastTotalCalculationTime = new Ticks(DateTime.UtcNow.Ticks - frameCalculationStartTime).ToMilliseconds();
         m_averageTotalCalculationTime.AddValue(m_lastTotalCalculationTime);
+    }
+
+    /// <summary>
+    /// Releases the unmanaged resources used by the <see cref="PowerMultiCalculatorAdapter"/> object and optionally releases the managed resources.
+    /// </summary>
+    /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
+    protected override void Dispose(bool disposing)
+    {
+        try
+        {
+            if (!disposing)
+                return;
+
+            ManualResetEventSlim configurationReloaded = m_configurationReloaded;
+            m_configurationReloaded = null;
+            configurationReloaded?.Set();
+            configurationReloaded?.Dispose();
+        }
+        finally
+        {
+            base.Dispose(disposing);
+        }
+    }
+
+    /// <summary>
+    /// Validates power factor output measurements when <see cref="EnablePowerFactorCalculation"/> is enabled,
+    /// auto-creating any missing per-circuit measurements via <see cref="MetadataHelpers"/>.
+    /// </summary>
+    /// <remarks>
+    /// Soft-fails: any per-circuit lookup or creation issue is logged as a warning, leaves the circuit's
+    /// <see cref="PowerCalculation.PowerFactorOutputMeasurement"/> as <c>null</c>, and skips PF publication
+    /// for that circuit only.
+    /// </remarks>
+    private void CreatePowerFactorOutputs()
+    {
+        if (!EnablePowerFactorCalculation || m_configuredCalculations is null || m_configuredCalculations.Length == 0)
+            return;
+
+        List<Guid> newSignalIDs = [];
+        bool recordsAdded = false;
+
+        // First pass: look up existing PF measurements; create new ones for circuits missing them,
+        // tracks (calc, derivedPointTag) so we can resolve newly-created measurements after the wait
+        List<(PowerCalculation calc, string pointTag)> pendingBindings = [];
+
+        foreach (PowerCalculation calc in m_configuredCalculations)
+        {
+            try
+            {
+                IMeasurement anchor = calc.ActivePowerOutputMeasurement
+                                   ?? calc.ApparentPowerOutputMeasurement
+                                   ?? calc.ReactivePowerOutputMeasurement;
+
+                if (anchor is null)
+                {
+                    OnStatusMessage(MessageLevel.Warning, $"Skipping power factor output for power calculation {calc.PowerCalculationID} ({calc.CircuitDescription}): no MW/MVA/MVAR output measurement is configured to derive a point tag from.");
+                    continue;
+                }
+
+                string anchorPointTag = anchor.TagName;
+                string pfPointTag = DerivePowerFactorPointTag(anchorPointTag);
+
+                if (string.IsNullOrWhiteSpace(pfPointTag))
+                {
+                    OnStatusMessage(MessageLevel.Warning, $"Skipping power factor output for power calculation {calc.PowerCalculationID} ({calc.CircuitDescription}): unable to derive a point tag from anchor \"{anchorPointTag}\".");
+                    continue;
+                }
+
+                pendingBindings.Add((calc, pfPointTag));
+
+                if (this.PointTagExists(pfPointTag, out _))
+                    continue;
+
+                // Create new PF measurement on the same device as the anchor so the new tag is co-located
+                // in the UI / historian browser with its sibling MW/MVA/MVAR points.
+                int deviceID = this.LookupDevice(anchor.Key.SignalID).ID;
+                string pfSignalReference = SignalReference.ToString(pfPointTag, SignalKind.Calculation);
+                string description = calc.CircuitDescription ?? string.Empty;
+                int index = description.LastIndexOf(';');
+                
+                if (index > 0)
+                    description = description.Substring(0, index).Trim();
+
+                OnStatusMessage(MessageLevel.Info, $"Creating power factor output measurement \"{pfSignalReference}\"...");
+
+                MeasurementRecord record = this.GetMeasurementRecord(
+                    deviceID > 0 ? deviceID : null,
+                    pfPointTag,
+                    null,
+                    pfSignalReference,
+                    $"{description} Power Factor Calculation");
+
+                newSignalIDs.Add(record.SignalID);
+                recordsAdded = true;
+            }
+            catch (Exception ex)
+            {
+                OnStatusMessage(MessageLevel.Warning, $"Failed to create power factor output measurement for power calculation {calc.PowerCalculationID} ({calc.CircuitDescription}): {ex.Message}");
+            }
+        }
+
+        if (recordsAdded)
+        {
+            // Notify host system that configuration has changed
+            this.OnConfigurationChanged();
+
+            OnStatusMessage(MessageLevel.Info, "Waiting for the newly created power factor output measurements to be loaded into active configuration...");
+
+            if (!this.WaitForSignalsToLoad(m_configurationReloaded, newSignalIDs))
+                OnStatusMessage(MessageLevel.Warning, $"Power factor output measurements not found in active configuration after waiting {MetadataHelpers.ElapsedWaitTimeString()} - power factor outputs may not be available until next reload.");
+        }
+
+        // Second pass: bind looked-up / newly-created PF signals back onto each PowerCalculation, then
+        // append them to OutputMeasurements so the routing layer accepts them as valid outputs
+        List<IMeasurement> pfOutputs = [];
+
+        foreach ((PowerCalculation calc, string pointTag) in pendingBindings)
+        {
+            try
+            {
+                if (!this.PointTagExists(pointTag, out Guid signalID))
+                {
+                    OnStatusMessage(MessageLevel.Warning, $"Power factor output \"{pointTag}\" for power calculation {calc.PowerCalculationID} ({calc.CircuitDescription}) was not found in active configuration; PF will not be published for this circuit until the next reload.");
+                    continue;
+                }
+
+                MeasurementKey key = MeasurementKey.LookUpBySignalID(signalID);
+
+                if (key.SignalID == Guid.Empty)
+                {
+                    OnStatusMessage(MessageLevel.Warning, $"Power factor measurement key for \"{pointTag}\" could not be resolved; PF will not be published for power calculation {calc.PowerCalculationID} ({calc.CircuitDescription}).");
+                    continue;
+                }
+
+                Measurement pfMeasurement = new() { Metadata = key.Metadata };
+                calc.PowerFactorOutputMeasurement = pfMeasurement;
+                pfOutputs.Add(pfMeasurement);
+            }
+            catch (Exception ex)
+            {
+                OnStatusMessage(MessageLevel.Warning, $"Failed to bind power factor output for power calculation {calc.PowerCalculationID} ({calc.CircuitDescription}): {ex.Message}");
+            }
+        }
+
+        if (pfOutputs.Count == 0)
+            return;
+
+        OutputMeasurements = OutputMeasurements is null ? 
+            pfOutputs.ToArray() : 
+            OutputMeasurements.Concat(pfOutputs).ToArray();
+    }
+
+    /// <summary>
+    /// Derives a power factor point tag from an existing MW / MVAR / MVA point tag by replacing the
+    /// trailing power suffix with <c>PF</c>. Falls back to appending <c>-PF</c> when no recognized suffix
+    /// is present.
+    /// </summary>
+    private static string DerivePowerFactorPointTag(string anchorPointTag)
+    {
+        if (string.IsNullOrWhiteSpace(anchorPointTag))
+            return null;
+
+        string tag = anchorPointTag.Trim();
+
+        // Walk longest-first so MVAR/MVA aren't shadowed by MW. Each token is matched as a hyphen- or
+        // underscore-prefixed segment immediately preceding either end-of-string or a ':' (e.g., ":CALC")
+        string[] suffixes = ["MVAR", "MVA", "MW"];
+
+        foreach (string suffix in suffixes)
+        {
+            foreach (char separator in new[] { '-', '_' })
+            {
+                string token = $"{separator}{suffix}";
+                int index = tag.LastIndexOf(token, StringComparison.OrdinalIgnoreCase);
+
+                if (index < 0)
+                    continue;
+
+                int end = index + token.Length;
+
+                // Suffix must terminate the tag, or be immediately followed by a recognized signal-type marker
+                if (end != tag.Length && tag[end] != ':')
+                    continue;
+
+                return $"{tag.Substring(0, index)}{separator}PF{tag.Substring(end)}";
+            }
+        }
+
+        // Strip any trailing ":CALC" style signal-type segment before appending so the new tag stays clean
+        int colonIndex = tag.IndexOf(':');
+        return colonIndex < 0 ? $"{tag}-PF" : $"{tag.Substring(0, colonIndex)}-PF{tag.Substring(colonIndex)}";
     }
 
     #endregion

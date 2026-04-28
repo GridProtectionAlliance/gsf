@@ -276,7 +276,7 @@ public static class PowerCalculationConfigurationValidation
         if (activePowerOutputSignalID == null && reactivePowerOutputSignalID == null && apparentPowerOutputSignalID == null)
             return;
 
-        List<string> updates = new();
+        List<string> updates = [];
 
         if (activePowerOutputSignalID != null)
             updates.Add($"ActivePowerOutputSignalID='{activePowerOutputSignalID.Value}'");
