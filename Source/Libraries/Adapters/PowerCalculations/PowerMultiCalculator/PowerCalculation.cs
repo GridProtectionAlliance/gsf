@@ -77,5 +77,14 @@ public class PowerCalculation
     /// </summary>
     public IMeasurement ApparentPowerOutputMeasurement { get; set; }
 
+    /// <summary>
+    /// Measurement template to be used for power factor output values from the <see cref="PowerCalculation"/>.
+    /// </summary>
+    /// <remarks>
+    /// Power factor is an optional, dynamically created output that is not represented by a column on the
+    /// <c>PowerCalculation</c> configuration table. When <c>null</c>, no power factor is published for this circuit.
+    /// </remarks>
+    public IMeasurement PowerFactorOutputMeasurement { get; set; }
+
     #endregion
 }

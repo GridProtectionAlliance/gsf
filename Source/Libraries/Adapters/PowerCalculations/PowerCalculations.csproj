@@ -66,6 +66,7 @@
     <Compile Include="PowerMultiCalculator\MeasurementRepository.cs" />
     <Compile Include="PowerMultiCalculator\PowerCalculation.cs" />
     <Compile Include="PowerMultiCalculator\PowerCalculationConfigurationValidation.cs" />
+    <Compile Include="PowerMultiCalculator\PowerFactorSignConvention.cs" />
     <Compile Include="PowerMultiCalculator\PowerMeasurement.cs" />
     <Compile Include="PowerMultiCalculator\PowerMultiCalculatorAdapter.cs" />
     <Compile Include="PowerMultiCalculator\RunningAverage.cs" />
