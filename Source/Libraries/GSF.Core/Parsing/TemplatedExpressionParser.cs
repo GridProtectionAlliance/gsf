@@ -310,7 +310,6 @@ namespace GSF.Parsing
 
         // Parses expressions of the form "[?conditional[result]]". Expressions can be nested, e.g., "[?conditional1[?conditional2[result]]]".
         // Returns the result of parsing the expressions and applying the replacements to the original templated expression string
-        [SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         private string ParseExpressions(string fieldReplacedTemplatedExpression, bool ignoreCase)
         {
             // Find and replace all expressions using regular expression
