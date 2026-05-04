@@ -29,6 +29,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using Automatak.DNP3.Adapter;
@@ -60,7 +61,7 @@ public class DNP3InputAdapter : InputAdapterBase, IDnp3Adapter
     // Class used to proxy dnp3 manager log entries to Iaon session
 
     // Constants
-    private const double DefaultPollingInterval = 2.0D;
+    private const string DefaultPollingIntervals = "Class0,Class1,Class2,Class3=2";
     private const double DefaultTimestampDifferentiation = 1.0D;
     private const bool DefaultMapQualityToStateFlags = true;
     private const bool DefaultPublishFlagsAsSeparateMeasurements = false;
@@ -68,24 +69,13 @@ public class DNP3InputAdapter : InputAdapterBase, IDnp3Adapter
     private const string DefaultQualityTagSuffix = "!FLAGS";
 
     // Fields
-    private TimeSpan m_pollingInterval;         // Interval, in seconds, at which the adapter will poll the DNP3 device
-    private MasterConfiguration m_masterConfig; // Configuration for the master set during the Initialize call
-    private TimeSeriesSOEHandler m_soeHandler;  // Time-series sequence of events handler
-    private IChannel m_channel;                 // Communications channel set during the AttemptConnection call and used in AttemptDisconnect
-    private bool m_active;                      // Flag that determines if the port/master has been added so that the resource can be cleaned up
+    private string m_pollingIntervals = string.Empty;                // Unparsed polling intervals
+    private List<(ClassField, TimeSpan)> m_pollingIntervalList = []; // Intervals at which the adapter will poll each class of data from the DNP3 device
+    private MasterConfiguration m_masterConfig;                      // Configuration for the master set during the Initialize call
+    private TimeSeriesSOEHandler m_soeHandler;                       // Time-series sequence of events handler
+    private IChannel m_channel;                                      // Communications channel set during the AttemptConnection call and used in AttemptDisconnect
+    private bool m_active;                                           // Flag that determines if the port/master has been added so that the resource can be cleaned up
     private bool m_disposed;
-
-    #endregion
-
-    #region [ Constructors ]
-
-    /// <summary>
-    /// Creates a new instance of the <see cref="DNP3Adapters"/> class.
-    /// </summary>
-    public DNP3InputAdapter()
-    {
-        m_pollingInterval = TimeSpan.FromSeconds(DefaultPollingInterval);
-    }
 
     #endregion
 
@@ -162,15 +152,20 @@ public class DNP3InputAdapter : InputAdapterBase, IDnp3Adapter
     }
 
     /// <summary>
-    /// Gets or sets the interval, in seconds, at which the adapter will poll the DNP3 device.
+    /// Gets or sets the string representation of the list of intervals
+    /// at which the adapter will poll each class of data from the DNP3 device.
     /// </summary>
     [ConnectionStringParameter]
-    [Description("Define the interval, in seconds, at which the adapter will poll the DNP3 device.")]
-    [DefaultValue(DefaultPollingInterval)]
-    public double PollingInterval
+    [Description("Define the semicolon-separated list of intervals, in seconds, at which the adapter will poll each class of data from the DNP3 device.")]
+    [DefaultValue(DefaultPollingIntervals)]
+    public string PollingIntervals
     {
-        get => m_pollingInterval.TotalSeconds;
-        set => m_pollingInterval = TimeSpan.FromSeconds(value);
+        get => m_pollingIntervals;
+        set
+        {
+            m_pollingIntervals = value;
+            m_pollingIntervalList = ParsePollingIntervals(value);
+        }
     }
 
     /// <inheritdoc/>
@@ -301,8 +296,12 @@ public class DNP3InputAdapter : InputAdapterBase, IDnp3Adapter
 
         m_soeHandler.TimestampDifferentiation = TimeSpan.FromMilliseconds(TimestampDifferentiation);
 
-        if (settings.TryGetValue(nameof(PollingInterval), out setting) && double.TryParse(setting, out double pollingInterval))
-            PollingInterval = pollingInterval;
+        if (settings.TryGetValue(nameof(PollingIntervals), out setting))
+            PollingIntervals = setting;
+        else if (settings.TryGetValue("PollingInterval", out setting) && double.TryParse(setting, out double pollingInterval))
+            PollingIntervals = $"Class0,Class1,Class2,Class3={pollingInterval}";
+        else
+            PollingIntervals = DefaultPollingIntervals;
 
         // Attach to output measurements for DNP3 device - just informs routing engine of expected measurements
         if (OutputMeasurements is null || OutputMeasurements.Length == 0)
@@ -332,8 +331,8 @@ public class DNP3InputAdapter : InputAdapterBase, IDnp3Adapter
 
         IMaster master = channel.AddMaster(ChannelID, m_soeHandler, DefaultMasterApplication.Instance, m_masterConfig.master);
 
-        if (m_pollingInterval > TimeSpan.Zero)
-            master.AddClassScan(ClassField.AllClasses, m_pollingInterval, m_soeHandler, TaskConfig.Default);
+        foreach ((ClassField, TimeSpan) pollingInterval in m_pollingIntervalList)
+            master.AddClassScan(pollingInterval.Item1, pollingInterval.Item2, m_soeHandler, TaskConfig.Default);
 
         master.Enable();
         m_active = true;
@@ -406,6 +405,45 @@ public class DNP3InputAdapter : InputAdapterBase, IDnp3Adapter
 
         using TextReader reader = new StreamReader(FilePath.GetAbsolutePath(path));
         return (T)serializer.Deserialize(reader);
+    }
+
+    private static List<(ClassField, TimeSpan)> ParsePollingIntervals(string text)
+    {
+        return text
+            .Split(';')
+            .Select(interval => interval.Trim())
+            .Where(interval => !string.IsNullOrEmpty(interval))
+            .Select(ParsePollingInterval)
+            .ToList();
+
+        (ClassField ClassField, TimeSpan Interval) ParsePollingInterval(string pollingInterval)
+        {
+            string[] parts = pollingInterval.Split('=');
+
+            if (parts.Length != 2)
+                throw new FormatException($"Expected polling interval in the form \"<ClassList>=<Interval>\", got \"{pollingInterval}\"");
+
+            PointClass[] pointClasses = parts[0]
+                .Split(',')
+                .Select(ParsePointClass)
+                .ToArray();
+
+            ClassField classField = ClassField.From(pointClasses);
+
+            if (!double.TryParse(parts[1], out double seconds))
+                throw new FormatException($"Expected interval number of seconds, got {parts[1]}");
+
+            TimeSpan timeSpan = TimeSpan.FromSeconds(seconds);
+            return (classField, timeSpan);
+        }
+
+        PointClass ParsePointClass(string text)
+        {
+            if (!Enum.TryParse(text, out PointClass pointClass))
+                throw new FormatException($"Expected point class, got {text}");
+
+            return pointClass;
+        }
     }
 
     #endregion
