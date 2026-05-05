@@ -152,11 +152,25 @@ public class DNP3InputAdapter : InputAdapterBase, IDnp3Adapter
     }
 
     /// <summary>
-    /// Gets or sets the string representation of the list of intervals
-    /// at which the adapter will poll each class of data from the DNP3 device.
+    /// Gets or sets the string representation of the list of intervals, in seconds, at which the
+    /// adapter will poll each class of data from the DNP3 device.
     /// </summary>
+    /// <remarks>
+    /// The string format for the polling intervals is a semicolon-separated list of intervals where
+    /// each interval is a comma separated list of class names followed by an equals sign and the
+    /// interval in seconds. For example: <c>Class0,Class1=2; Class2=10; Class3=30</c> would configure
+    /// the adapter to poll Class 0 and Class 1 every 2 seconds, Class 2 every 10 seconds, and Class 3
+    /// every 30 seconds. The class names should be one of 'Class0', 'Class1', 'Class2', or 'Class3'.
+    /// </remarks>
     [ConnectionStringParameter]
-    [Description("Define the semicolon-separated list of intervals, in seconds, at which the adapter will poll each class of data from the DNP3 device.")]
+    [Description(
+        "Define the semicolon-separated list of intervals, in seconds, at which the adapter will " +
+        "poll each class of data from the DNP3 device. The string format for the polling intervals " +
+        "is a semicolon-separated list of intervals where each interval is a comma separated list " +
+        "of class names followed by an equals sign and the interval in seconds.\r\n\r\nFor example: " +
+        "\"Class0,Class1=2; Class2=10; Class3=30\" would configure the adapter to poll Class 0 and " +
+        "Class 1 every 2 seconds, Class 2 every 10 seconds, and Class 3 every 30 seconds. The class " +
+        "names should be one of 'Class0', 'Class1', 'Class2', or 'Class3'.")]
     [DefaultValue(DefaultPollingIntervals)]
     public string PollingIntervals
     {
@@ -331,8 +345,8 @@ public class DNP3InputAdapter : InputAdapterBase, IDnp3Adapter
 
         IMaster master = channel.AddMaster(ChannelID, m_soeHandler, DefaultMasterApplication.Instance, m_masterConfig.master);
 
-        foreach ((ClassField, TimeSpan) pollingInterval in m_pollingIntervalList)
-            master.AddClassScan(pollingInterval.Item1, pollingInterval.Item2, m_soeHandler, TaskConfig.Default);
+        foreach ((ClassField classField, TimeSpan interval) pollingInterval in m_pollingIntervalList)
+            master.AddClassScan(pollingInterval.classField, pollingInterval.interval, m_soeHandler, TaskConfig.Default);
 
         master.Enable();
         m_active = true;
@@ -416,7 +430,7 @@ public class DNP3InputAdapter : InputAdapterBase, IDnp3Adapter
             .Select(ParsePollingInterval)
             .ToList();
 
-        (ClassField ClassField, TimeSpan Interval) ParsePollingInterval(string pollingInterval)
+        (ClassField, TimeSpan) ParsePollingInterval(string pollingInterval)
         {
             string[] parts = pollingInterval.Split('=');
 
@@ -433,14 +447,14 @@ public class DNP3InputAdapter : InputAdapterBase, IDnp3Adapter
             if (!double.TryParse(parts[1], out double seconds))
                 throw new FormatException($"Expected interval number of seconds, got {parts[1]}");
 
-            TimeSpan timeSpan = TimeSpan.FromSeconds(seconds);
-            return (classField, timeSpan);
+            TimeSpan interval = TimeSpan.FromSeconds(seconds);
+            return (classField, interval);
         }
 
-        PointClass ParsePointClass(string text)
+        PointClass ParsePointClass(string className)
         {
-            if (!Enum.TryParse(text, out PointClass pointClass))
-                throw new FormatException($"Expected point class, got {text}");
+            if (!Enum.TryParse(className, true, out PointClass pointClass))
+                throw new FormatException($"Expected valid point class name, got {className}");
 
             return pointClass;
         }
