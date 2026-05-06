@@ -22,11 +22,13 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Timers;
 using GSF;
 using GSF.Diagnostics;
@@ -36,6 +38,7 @@ using GSF.TimeSeries.Adapters;
 #if !MONO
 using GSF.TimeSeries.UI.Editors;
 #endif
+using Timer = System.Timers.Timer;
 
 namespace FileAdapters
 {
@@ -89,8 +92,8 @@ namespace FileAdapters
         private double m_watchInterval;
         private double m_processInterval;
 
-        private readonly List<string> m_processedFiles;
-        private readonly Queue<string> m_unprocessedFiles;
+        private readonly ConcurrentQueue<string> m_unprocessedFiles;
+        private int m_processedFiles;
         private FileStream m_activeFileStream;
         private Timer m_watchTimer;
         private Timer m_processTimer;
@@ -112,8 +115,7 @@ namespace FileAdapters
         {
             BlockSize = DefaultBlockSize;
             m_watchInterval = DefaultWatchInterval;
-            m_processedFiles = new List<string>();
-            m_unprocessedFiles = new Queue<string>();
+            m_unprocessedFiles = new ConcurrentQueue<string>();
         }
 
         #endregion
@@ -251,6 +253,11 @@ namespace FileAdapters
         /// Gets the flag indicating if this adapter supports temporal processing.
         /// </summary>
         public override bool SupportsTemporalProcessing => false;
+
+        /// <summary>
+        /// Gets the number of files processed by this adapter.
+        /// </summary>
+        private int ProcessedFiles => Interlocked.CompareExchange(ref m_processedFiles, 0, 0);
 
         /// <summary>
         /// Gets the block size after making adjustments for throttling.
@@ -436,19 +443,10 @@ namespace FileAdapters
         /// <returns>A short one-line summary of the current status of this <see cref="FileBlockReader"/>.</returns>
         public override string GetShortStatus(int maxLength)
         {
-            if (m_activeFileStream is not null)
-                return $"Currently reading from file {Path.GetFileName(m_unprocessedFiles.Peek())}".CenterText(maxLength);
+            if (m_activeFileStream is not null && m_unprocessedFiles.TryPeek(out string file))
+                return $"Currently reading from file {Path.GetFileName(file)}".CenterText(maxLength);
 
-            return $"{m_processedFiles.Count} files processed by {Name}".CenterText(maxLength);
-        }
-
-        /// <summary>
-        /// Empties the processed file list.
-        /// </summary>
-        [AdapterCommand("Empties the processed file list so that newly dropped files with the same name as old processed files will not be deleted.", "Administrator", "Editor")]
-        public void ClearProcessedFileList()
-        {
-            m_processedFiles.Clear();
+            return $"{ProcessedFiles} files processed by {Name}".CenterText(maxLength);
         }
 
         /// <summary>
@@ -556,27 +554,29 @@ namespace FileAdapters
 
                     if (bytesRead == 1)
                     {
+                        string activeFilePath = m_activeFileStream.Name;
+
                         // Notify that processing is done for the current file
-                        OnStatusMessage(MessageLevel.Info, "Done processing file {0}.", Path.GetFileName(m_unprocessedFiles.Peek()));
+                        OnStatusMessage(MessageLevel.Info, "Done processing file {0}.", Path.GetFileName(activeFilePath));
 
                         // Delete the now-processed file
                         m_activeFileStream.Dispose();
                         m_activeFileStream = null;
-                        File.Delete(m_unprocessedFiles.Peek());
+                        File.Delete(activeFilePath);
 
-                        // Move unprocessed file into processed file list
-                        m_processedFiles.Add(m_unprocessedFiles.Peek());
-                        m_unprocessedFiles.Dequeue();
+                        // Remove it from unprocessed files
+                        m_unprocessedFiles.TryDequeue(out _);
+                        Interlocked.Increment(ref m_processedFiles);
                     }
                 }
 
-                if (m_activeFileStream is null && m_unprocessedFiles.Count > 0)
+                if (m_activeFileStream is null && m_unprocessedFiles.TryPeek(out string filePath))
                 {
                     // Notify that processing has started for a new file
-                    OnStatusMessage(MessageLevel.Info, "Now processing file {0}...", Path.GetFileName(m_unprocessedFiles.Peek()));
+                    OnStatusMessage(MessageLevel.Info, "Now processing file {0}...", Path.GetFileName(filePath));
 
                     // Get info about the next file to process
-                    fileInfo = new FileInfo(m_unprocessedFiles.Peek());
+                    fileInfo = new FileInfo(filePath);
 
                     // Set first byte to 1 to indicate that
                     // this is the beginning of a file
