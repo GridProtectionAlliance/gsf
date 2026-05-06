@@ -25,6 +25,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -538,7 +539,7 @@ namespace FileAdapters
         {
             byte[] buffer = m_buffer;
             int bytesRead = 0;
-            int fileNameByteLength;
+            int filePathByteLength;
             FileInfo fileInfo;
 
             if (Enabled)
@@ -555,9 +556,10 @@ namespace FileAdapters
                     if (bytesRead == 1)
                     {
                         string activeFilePath = m_activeFileStream.Name;
+                        string relativePath = GetRelativePath(activeFilePath);
 
                         // Notify that processing is done for the current file
-                        OnStatusMessage(MessageLevel.Info, "Done processing file {0}.", Path.GetFileName(activeFilePath));
+                        OnStatusMessage(MessageLevel.Info, "Done processing file {0}.", relativePath);
 
                         // Delete the now-processed file
                         m_activeFileStream.Dispose();
@@ -572,8 +574,10 @@ namespace FileAdapters
 
                 if (m_activeFileStream is null && m_unprocessedFiles.TryPeek(out string filePath))
                 {
+                    string relativePath = GetRelativePath(filePath);
+
                     // Notify that processing has started for a new file
-                    OnStatusMessage(MessageLevel.Info, "Now processing file {0}...", Path.GetFileName(filePath));
+                    OnStatusMessage(MessageLevel.Info, "Now processing file {0}...", relativePath);
 
                     // Get info about the next file to process
                     fileInfo = new FileInfo(filePath);
@@ -583,11 +587,11 @@ namespace FileAdapters
                     buffer[0] = 1;
 
                     // Copy file info into the buffer
-                    fileNameByteLength = Encoding.Unicode.GetByteCount(fileInfo.Name);
-                    BigEndian.CopyBytes(fileNameByteLength, buffer, 1);
-                    Encoding.Unicode.GetBytes(fileInfo.Name, 0, fileInfo.Name.Length, buffer, 5);
-                    BigEndian.CopyBytes(fileInfo.Length, buffer, 5 + fileNameByteLength);
-                    bytesRead = 1 + 4 + fileNameByteLength + 8;
+                    filePathByteLength = Encoding.Unicode.GetByteCount(relativePath);
+                    BigEndian.CopyBytes(filePathByteLength, buffer, 1);
+                    Encoding.Unicode.GetBytes(relativePath, 0, relativePath.Length, buffer, 5);
+                    BigEndian.CopyBytes(fileInfo.Length, buffer, 5 + filePathByteLength);
+                    bytesRead = 1 + 4 + filePathByteLength + 8;
 
                     // Wait for lock to open the file
                     FilePath.WaitForReadLock(fileInfo.FullName);
@@ -611,6 +615,16 @@ namespace FileAdapters
                 if (m_processTimer is not null)
                     m_processTimer.Start();
             }
+        }
+
+        /// <summary>
+        /// Gets path relative to <see cref="WatchDirectory"/>.
+        /// </summary>
+        private string GetRelativePath(string filePath)
+        {
+            string watchDirectory = WatchDirectory.EnsureEnd(Path.DirectorySeparatorChar);
+            Debug.Assert(filePath.StartsWith(WatchDirectory));
+            return filePath.Substring(watchDirectory.Length);
         }
 
         /// <summary>
