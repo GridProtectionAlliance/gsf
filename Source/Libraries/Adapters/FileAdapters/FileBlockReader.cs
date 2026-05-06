@@ -85,14 +85,9 @@ namespace FileAdapters
         public const double DefaultProcessIntervalAdjustment = 5.0D;
 
         // Fields
-        private string m_watchDirectory;
-        private string m_filePattern;
         private int m_blockSize;
         private double m_watchInterval;
         private double m_processInterval;
-        private double m_retransmissionThreshold;
-        private double m_blockSizeAdjustment;
-        private double m_processIntervalAdjustment;
 
         private readonly List<string> m_processedFiles;
         private readonly Queue<string> m_unprocessedFiles;
@@ -115,10 +110,8 @@ namespace FileAdapters
         /// </summary>
         public FileBlockReader()
         {
-            m_filePattern = DefaultFilePattern;
             BlockSize = DefaultBlockSize;
             m_watchInterval = DefaultWatchInterval;
-
             m_processedFiles = new List<string>();
             m_unprocessedFiles = new Queue<string>();
         }
@@ -134,17 +127,7 @@ namespace FileAdapters
 #if !MONO
         [CustomConfigurationEditor(typeof(FolderBrowserEditor))]
 #endif
-        public string WatchDirectory
-        {
-            get
-            {
-                return m_watchDirectory;
-            }
-            set
-            {
-                m_watchDirectory = value;
-            }
-        }
+        public string WatchDirectory { get; set; }
 
         /// <summary>
         /// Gets or sets the pattern used to match file that appear in the watch folder.
@@ -152,17 +135,7 @@ namespace FileAdapters
         [ConnectionStringParameter,
         DefaultValue(DefaultFilePattern),
         Description("Determines which files are to processed when they appear in the watch folder.")]
-        public string FilePattern
-        {
-            get
-            {
-                return m_filePattern;
-            }
-            set
-            {
-                m_filePattern = value;
-            }
-        }
+        public string FilePattern { get; set; } = DefaultFilePattern;
 
         /// <summary>
         /// Gets or sets the statistic that defines the number of buffer block retransmissions in the system.
@@ -220,7 +193,7 @@ namespace FileAdapters
             {
                 m_watchInterval = value;
 
-                if ((object)m_watchTimer != null)
+                if (m_watchTimer is not null)
                     m_watchTimer.Interval = value * 1000.0D;
             }
         }
@@ -241,7 +214,7 @@ namespace FileAdapters
             {
                 m_processInterval = value;
 
-                if ((object)m_processTimer != null)
+                if (m_processTimer is not null)
                     m_processTimer.Interval = AdjustedProcessInterval * 1000.0D;
             }
         }
@@ -254,17 +227,7 @@ namespace FileAdapters
         [ConnectionStringParameter,
         DefaultValue(DefaultRetransmissionThreshold),
         Description("Defines the percentage of buffer blocks that can be retransmitted before throttling begins.")]
-        public double RetransmissionThreshold
-        {
-            get
-            {
-                return m_retransmissionThreshold;
-            }
-            set
-            {
-                m_retransmissionThreshold = value;
-            }
-        }
+        public double RetransmissionThreshold { get; set; } = DefaultRetransmissionThreshold;
 
         /// <summary>
         /// Gets or sets the percentage of adjustment to be applied
@@ -273,17 +236,7 @@ namespace FileAdapters
         [ConnectionStringParameter,
         DefaultValue(DefaultBlockSizeAdjustment),
         Description("Defines the percentage by which to adjust the buffer size when throttling buffer blocks.")]
-        public double BlockSizeAdjustment
-        {
-            get
-            {
-                return m_blockSizeAdjustment;
-            }
-            set
-            {
-                m_blockSizeAdjustment = value;
-            }
-        }
+        public double BlockSizeAdjustment { get; set; } = DefaultBlockSizeAdjustment;
 
         /// <summary>
         /// Gets or sets the percentage of adjustment to be applied
@@ -292,17 +245,7 @@ namespace FileAdapters
         [ConnectionStringParameter,
         DefaultValue(DefaultBlockSizeAdjustment),
         Description("Defines the percentage by which to adjust the process interval when throttling buffer blocks.")]
-        public double ProcessIntervalAdjustment
-        {
-            get
-            {
-                return m_processIntervalAdjustment;
-            }
-            set
-            {
-                m_processIntervalAdjustment = value;
-            }
-        }
+        public double ProcessIntervalAdjustment { get; set; } = DefaultProcessIntervalAdjustment;
 
         /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
@@ -316,7 +259,7 @@ namespace FileAdapters
         {
             get
             {
-                double blockSizeAdjustment = m_blockSize * (m_blockSizeAdjustment * 0.01);
+                double blockSizeAdjustment = m_blockSize * (BlockSizeAdjustment * 0.01);
                 return m_blockSize - (int)(m_throttleMultiplier * blockSizeAdjustment);
             }
         }
@@ -328,7 +271,7 @@ namespace FileAdapters
         {
             get
             {
-                double processIntervalAdjustment = m_processInterval * (m_processIntervalAdjustment * 0.01);
+                double processIntervalAdjustment = m_processInterval * (ProcessIntervalAdjustment * 0.01);
                 return m_processInterval + (m_throttleMultiplier * processIntervalAdjustment);
             }
         }
@@ -431,15 +374,15 @@ namespace FileAdapters
             if (!settings.TryGetValue("watchDirectory", out setting))
                 throw new ArgumentException(string.Format(ErrorMessage, "watchDirectory"));
 
-            m_watchDirectory = FilePath.GetAbsolutePath(setting);
+            WatchDirectory = FilePath.GetAbsolutePath(setting);
 
             if (OutputMeasurements.Length <= 0)
                 throw new ArgumentException(string.Format(ErrorMessage, "outputMeasurements"));
 
             // Optional parameters
 
-            if (!settings.TryGetValue("filePattern", out m_filePattern))
-                m_filePattern = DefaultFilePattern;
+            if (settings.TryGetValue("filePattern", out setting))
+                FilePattern = setting;
 
             if (settings.TryGetValue("retransmissionStat", out setting))
                 RetransmissionStat = setting;
@@ -457,17 +400,23 @@ namespace FileAdapters
             if (!settings.TryGetValue("processInterval", out setting) || !double.TryParse(setting, out m_processInterval))
                 m_processInterval = DefaultProcessInterval;
 
-            if (!settings.TryGetValue("retransmissionThreshold", out setting) || !double.TryParse(setting, out m_retransmissionThreshold))
-                m_retransmissionThreshold = DefaultRetransmissionThreshold;
+            if (settings.TryGetValue("retransmissionThreshold", out setting) && double.TryParse(setting, out double retransmissionThreshold))
+                RetransmissionThreshold = retransmissionThreshold;
+            else
+                RetransmissionThreshold = DefaultRetransmissionThreshold;
 
-            if (!settings.TryGetValue("blockSizeAdjustment", out setting) || !double.TryParse(setting, out m_blockSizeAdjustment))
-                m_blockSizeAdjustment = DefaultBlockSizeAdjustment;
+            if (settings.TryGetValue("blockSizeAdjustment", out setting) && double.TryParse(setting, out double blockSizeAdjustment))
+                BlockSizeAdjustment = blockSizeAdjustment;
+            else
+                BlockSizeAdjustment = DefaultBlockSizeAdjustment;
 
-            if (!settings.TryGetValue("processIntervalAdjustment", out setting) || !double.TryParse(setting, out m_processIntervalAdjustment))
-                m_processIntervalAdjustment = DefaultProcessIntervalAdjustment;
+            if (settings.TryGetValue("processIntervalAdjustment", out setting) && double.TryParse(setting, out double processIntervalAdjustment))
+                ProcessIntervalAdjustment = processIntervalAdjustment;
+            else
+                ProcessIntervalAdjustment = DefaultProcessIntervalAdjustment;
 
-            if (!Directory.Exists(m_watchDirectory))
-                Directory.CreateDirectory(m_watchDirectory);
+            if (!Directory.Exists(WatchDirectory))
+                Directory.CreateDirectory(WatchDirectory);
 
             m_watchTimer = new Timer();
             m_watchTimer.AutoReset = false;
@@ -487,7 +436,7 @@ namespace FileAdapters
         /// <returns>A short one-line summary of the current status of this <see cref="FileBlockReader"/>.</returns>
         public override string GetShortStatus(int maxLength)
         {
-            if ((object)m_activeFileStream != null)
+            if (m_activeFileStream is not null)
                 return $"Currently reading from file {Path.GetFileName(m_unprocessedFiles.Peek())}".CenterText(maxLength);
 
             return $"{m_processedFiles.Count} files processed by {Name}".CenterText(maxLength);
@@ -520,7 +469,7 @@ namespace FileAdapters
             m_watchTimer.Stop();
             m_processTimer.Stop();
 
-            if ((object)m_activeFileStream != null)
+            if (m_activeFileStream is not null)
             {
                 m_activeFileStream.Dispose();
                 m_activeFileStream = null;
@@ -548,9 +497,9 @@ namespace FileAdapters
             int bufferBlocksSentSinceLastAdjustment = (int)(bufferBlocksSent - m_bufferBlocksSentLastAdjustment);
 
             // Adjust the throttle multiplier based on the number of retransmissions
-            if (retransmissions >= bufferBlocksSentSinceLastAdjustment * (m_retransmissionThreshold * 0.01))
+            if (retransmissions >= bufferBlocksSentSinceLastAdjustment * (RetransmissionThreshold * 0.01))
                 m_throttleMultiplier++;
-            else if (retransmissions < bufferBlocksSentSinceLastAdjustment * (m_retransmissionThreshold * 0.005))
+            else if (retransmissions < bufferBlocksSentSinceLastAdjustment * (RetransmissionThreshold * 0.005))
                 m_throttleMultiplier--;
 
             // Throttle multiplier cannot be less than 0
@@ -574,14 +523,14 @@ namespace FileAdapters
             if (Enabled)
             {
                 // Scan each file and add them to the unprocessed files lists
-                foreach (string file in FilePath.GetFileList(Path.Combine(m_watchDirectory, m_filePattern)))
+                foreach (string file in FilePath.GetFileList(Path.Combine(WatchDirectory, FilePattern)))
                 {
                     if (!m_unprocessedFiles.Contains(file))
                         m_unprocessedFiles.Enqueue(file);
                 }
 
                 // Done scanning, so start the timer for another scan
-                if ((object)m_watchTimer != null)
+                if (m_watchTimer is not null)
                     m_watchTimer.Start();
             }
         }
@@ -596,7 +545,7 @@ namespace FileAdapters
 
             if (Enabled)
             {
-                if ((object)m_activeFileStream != null)
+                if (m_activeFileStream is not null)
                 {
                     // Set first byte to 0 to indicate that
                     // this is not the beginning of a file
@@ -621,7 +570,7 @@ namespace FileAdapters
                     }
                 }
 
-                if ((object)m_activeFileStream == null && m_unprocessedFiles.Count > 0)
+                if (m_activeFileStream is null && m_unprocessedFiles.Count > 0)
                 {
                     // Notify that processing has started for a new file
                     OnStatusMessage(MessageLevel.Info, "Now processing file {0}...", Path.GetFileName(m_unprocessedFiles.Peek()));
@@ -648,7 +597,7 @@ namespace FileAdapters
                     bytesRead += m_activeFileStream.Read(buffer, bytesRead, buffer.Length - bytesRead);
                 }
 
-                if ((object)m_activeFileStream != null)
+                if (m_activeFileStream is not null)
                 {
                     // Publish next block of file data
                     OnNewMeasurement(new BufferBlockMeasurement(buffer, 0, bytesRead)
@@ -659,7 +608,7 @@ namespace FileAdapters
                 }
 
                 // Done reading, so start the timer for another read
-                if ((object)m_processTimer != null)
+                if (m_processTimer is not null)
                     m_processTimer.Start();
             }
         }
@@ -685,20 +634,20 @@ namespace FileAdapters
                 {
                     if (disposing)
                     {
-                        if ((object)m_activeFileStream != null)
+                        if (m_activeFileStream is not null)
                         {
                             m_activeFileStream.Dispose();
                             m_activeFileStream = null;
                         }
 
-                        if ((object)m_watchTimer != null)
+                        if (m_watchTimer is not null)
                         {
                             m_watchTimer.Stop();
                             m_watchTimer.Dispose();
                             m_watchTimer = null;
                         }
 
-                        if ((object)m_processTimer != null)
+                        if (m_processTimer is not null)
                         {
                             m_processTimer.Stop();
                             m_processTimer.Dispose();

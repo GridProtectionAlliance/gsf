@@ -46,7 +46,6 @@ namespace FileAdapters
         #region [ Members ]
 
         // Fields
-        private string m_outputDirectory;
 
         private FileStream m_activeFileStream;
         private long m_activeFileSize;
@@ -65,17 +64,7 @@ namespace FileAdapters
 #if !MONO
         [CustomConfigurationEditor(typeof(FolderBrowserEditor))]
 #endif
-        public string OutputDirectory
-        {
-            get
-            {
-                return m_outputDirectory;
-            }
-            set
-            {
-                m_outputDirectory = value;
-            }
-        }
+        public string OutputDirectory { get; set; }
 
         /// <summary>
         /// Gets the flag that determines if measurements sent to this <see cref="FileBlockWriter"/> are destined for archival.
@@ -108,10 +97,10 @@ namespace FileAdapters
             if (!settings.TryGetValue("outputDirectory", out setting))
                 throw new ArgumentException(string.Format(errorMessage, "outputDirectory"));
 
-            m_outputDirectory = FilePath.GetAbsolutePath(setting);
+            OutputDirectory = FilePath.GetAbsolutePath(setting);
 
-            if (!Directory.Exists(m_outputDirectory))
-                Directory.CreateDirectory(m_outputDirectory);
+            if (!Directory.Exists(OutputDirectory))
+                Directory.CreateDirectory(OutputDirectory);
         }
 
         /// <summary>
@@ -124,7 +113,7 @@ namespace FileAdapters
             if ((object)m_activeFileStream != null)
                 return $"Currently writing to file {Path.GetFileName(m_activeFileStream.Name)}".CenterText(maxLength);
 
-            return $"{FilePath.GetFileList(Path.Combine(m_outputDirectory, "*")).Length} files written by {Name}".CenterText(maxLength);
+            return $"{FilePath.GetFileList(Path.Combine(OutputDirectory, "*")).Length} files written by {Name}".CenterText(maxLength);
         }
 
         /// <summary>
@@ -183,7 +172,7 @@ namespace FileAdapters
 
                 // Create new file
                 using (FileStream activeFileStream = m_activeFileStream)
-                    m_activeFileStream = File.Create(Path.Combine(m_outputDirectory, fileName));
+                    m_activeFileStream = File.Create(Path.Combine(OutputDirectory, fileName));
 
                 m_activeFileStream.SetLength(fileSize);
                 m_activeFileSize = fileSize;
