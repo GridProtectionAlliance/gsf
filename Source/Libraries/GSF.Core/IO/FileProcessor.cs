@@ -303,11 +303,12 @@ namespace GSF.IO
                         action();
                     }
 
+                    string trackedPath = ToTrackedPath(file.FullName);
                     DateTime lastWriteTime = file.LastWriteTimeUtc;
-                    void Process() => m_fileProcessor.TouchAndProcess(file.FullName, lastWriteTime, false);
-                    void Skip() => m_fileProcessor.TouchAndSkip(file.FullName, lastWriteTime);
+                    void Process() => m_fileProcessor.TouchAndProcess(trackedPath, lastWriteTime, false);
+                    void Skip() => m_fileProcessor.TouchAndSkip(trackedPath, lastWriteTime);
 
-                    if (!m_fileProcessor.MatchesFilter(file.FullName))
+                    if (!m_fileProcessor.MatchesFilter(trackedPath))
                         return InvokeOnProcessingThread(Skip);
 
                     Task processTask = InvokeOnProcessingThread(Process);
@@ -374,6 +375,19 @@ namespace GSF.IO
                 {
                     ActivelyVisitedPathsRequested -= handler;
                 }
+            }
+
+            private string ToTrackedPath(string fullPath)
+            {
+                string dirFullPath = System.IO.Path
+                    .GetFullPath(Path)
+                    .EnsureEnd('\\');
+
+                if (!fullPath.StartsWith(dirFullPath, StringComparison.OrdinalIgnoreCase))
+                    return fullPath;
+
+                string relativePath = fullPath.Substring(dirFullPath.Length);
+                return System.IO.Path.Combine(Path, relativePath);
             }
 
             private void CreateFileWatcher()
