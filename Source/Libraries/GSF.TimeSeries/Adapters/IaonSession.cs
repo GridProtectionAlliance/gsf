@@ -31,7 +31,6 @@ using GSF.Annotations;
 using GSF.Collections;
 using GSF.Configuration;
 using GSF.Diagnostics;
-using System.Collections.Generic;
 
 // ReSharper disable InconsistentlySynchronizedField
 namespace GSF.TimeSeries.Adapters
@@ -185,12 +184,10 @@ namespace GSF.TimeSeries.Adapters
             
                 // Create input adapters collection
             m_inputAdapters = new InputAdapterCollection();
-            m_inputAdapters.NewMeasurements += NewMeasurementsHandler;
             m_inputAdapters.ProcessingComplete += ProcessingCompleteHandler;
 
             // Create action adapters collection
             m_actionAdapters = new ActionAdapterCollection();
-            m_actionAdapters.NewMeasurements += NewMeasurementsHandler;
             m_actionAdapters.UnpublishedSamples += UnpublishedSamplesHandler;
             m_actionAdapters.RequestTemporalSupport += RequestTemporalSupportHandler;
 
@@ -200,6 +197,7 @@ namespace GSF.TimeSeries.Adapters
 
             // Associate adapter collections with routing tables
             m_routingTables.InputAdapters = m_inputAdapters;
+            m_routingTables.FilterAdapters = m_filterAdapters;
             m_routingTables.ActionAdapters = m_actionAdapters;
             m_routingTables.OutputAdapters = m_outputAdapters;
 
@@ -370,7 +368,6 @@ namespace GSF.TimeSeries.Adapters
                 if (m_inputAdapters is not null)
                 {
                     m_inputAdapters.Stop();
-                    m_inputAdapters.NewMeasurements -= NewMeasurementsHandler;
                     m_inputAdapters.ProcessingComplete -= ProcessingCompleteHandler;
                     m_inputAdapters.Dispose();
                 }
@@ -380,7 +377,6 @@ namespace GSF.TimeSeries.Adapters
                 if (m_actionAdapters is not null)
                 {
                     m_actionAdapters.Stop();
-                    m_actionAdapters.NewMeasurements -= NewMeasurementsHandler;
                     m_actionAdapters.UnpublishedSamples -= UnpublishedSamplesHandler;
                     m_actionAdapters.RequestTemporalSupport -= RequestTemporalSupportHandler;
                     m_actionAdapters.Dispose();
@@ -768,14 +764,6 @@ namespace GSF.TimeSeries.Adapters
             // Bubble message up to any event subscribers
             OnUnprocessedMeasurements(sender, e.Argument);
         }
-
-        /// <summary>
-        /// Event handler for new measurement notifications from input adapters and action adapters.
-        /// </summary>
-        /// <param name="sender">Event source reference to the adapter that is reporting new measurements.</param>
-        /// <param name="e">Event arguments for event that contains references to the new measurements.</param>
-        public virtual void NewMeasurementsHandler(object sender, EventArgs<ICollection<IMeasurement>> e) => 
-            m_filterAdapters?.HandleNewMeasurements(e.Argument);
 
         /// <summary>
         /// Event handler for processing complete notifications from input adapters.

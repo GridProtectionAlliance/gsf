@@ -40,13 +40,15 @@ namespace GSF.TimeSeries.Adapters
 
         private class GlobalCache
         {
+            public readonly IFilterAdapter[] FilterAdapters;
             public readonly Dictionary<Guid, List<Consumer>> GlobalSignalLookup;
             public readonly Dictionary<IAdapter, Consumer> GlobalDestinationLookup;
             public readonly List<Consumer> BroadcastConsumers;
             public readonly int Version;
 
-            public GlobalCache(Dictionary<IAdapter, Consumer> consumers, int version)
+            public GlobalCache(IFilterAdapter[] filterAdapters, Dictionary<IAdapter, Consumer> consumers, int version)
             {
+                FilterAdapters = filterAdapters;
                 GlobalSignalLookup = new Dictionary<Guid, List<Consumer>>();
                 GlobalDestinationLookup = consumers;
                 BroadcastConsumers = new List<Consumer>();
@@ -79,18 +81,23 @@ namespace GSF.TimeSeries.Adapters
 
         private class LocalCache
         {
+            private readonly AsyncQueue<ICollection<IMeasurement>> m_asyncRouter;
             private readonly Dictionary<Guid, List<Producer>> m_localSignalLookup;
             private readonly Dictionary<Consumer, Producer> m_localDestinationLookup;
-            private readonly RouteMappingDoubleBufferQueue m_routingTables;
+            private readonly Func<GlobalCache> m_fetchGlobalCache;
             private readonly object m_localCacheLock;
+            private int m_asyncJobCount;
             private int m_version;
 
-            public LocalCache(RouteMappingDoubleBufferQueue routingTables, IAdapter producerAdapter)
+            public LocalCache(Func<GlobalCache> fetchGlobalCache, IAdapter producerAdapter, Action<Exception> exceptionHandler)
             {
                 m_localCacheLock = new object();
+                m_asyncRouter = new AsyncQueue<ICollection<IMeasurement>>();
+                m_asyncRouter.ProcessItemFunction = FilterAndRoute;
+                m_asyncRouter.ProcessException += (_, args) => exceptionHandler(args.Argument);
                 m_localSignalLookup = new Dictionary<Guid, List<Producer>>();
                 m_localDestinationLookup = new Dictionary<Consumer, Producer>();
-                m_routingTables = routingTables;
+                m_fetchGlobalCache = fetchGlobalCache;
 
                 if (producerAdapter is IInputAdapter inputAdapter)
                     inputAdapter.NewMeasurements += Route;
@@ -106,64 +113,113 @@ namespace GSF.TimeSeries.Adapters
                     return;
 
                 // Get the global cache from the routing tables
-                GlobalCache globalCache = Interlocked.CompareExchange(ref m_routingTables.m_globalCache, null, null);
+                GlobalCache globalCache = m_fetchGlobalCache();
 
                 // Return if routes are still being calculated
                 if (globalCache is null)
                     return;
 
+                if (RequiresAsync(globalCache))
+                {
+                    Interlocked.Increment(ref m_asyncJobCount);
+                    m_asyncRouter.Enqueue(measurements);
+                    return;
+                }
+
                 lock (m_localCacheLock)
                 {
-                    // Check the version of the local cache against that of the global cache.
-                    // We need to clear the local cache if the versions don't match because
-                    // that means routes have changed
-                    if (m_version != globalCache.Version)
+                    // Fetch again, inside the lock
+                    globalCache = m_fetchGlobalCache();
+
+                    if (RequiresAsync(globalCache))
                     {
-                        // Dump the signal lookup
-                        m_localSignalLookup.Clear();
-
-                        // Best if we hang onto producers for adapters that still have routes
-                        foreach (Consumer consumer in m_localDestinationLookup.Keys.Where(consumer => !globalCache.GlobalDestinationLookup.ContainsKey(consumer.Adapter)).ToList())
-                        {
-                            m_localDestinationLookup[consumer].QueueProducer.Dispose();
-                            m_localDestinationLookup.Remove(consumer);
-                        }
-
-                        // Update the local cache version
-                        m_version = globalCache.Version;
+                        Interlocked.Increment(ref m_asyncJobCount);
+                        m_asyncRouter.Enqueue(measurements);
+                        return;
                     }
 
-                    foreach (IMeasurement measurement in measurements)
-                    {
-                        // Attempt to look up the signal in the local cache
-                        if (!m_localSignalLookup.TryGetValue(measurement.ID, out List<Producer> producers))
-                        {
-                            // Not in the local cache - check the global cache and fall back on broadcast consumers
-                            if (!globalCache.GlobalSignalLookup.TryGetValue(measurement.ID, out List<Consumer> consumers))
-                                consumers = globalCache.BroadcastConsumers;
-
-                            // Get a producer for each of the consumers
-                            producers = consumers
-                                .Select(consumer => m_localDestinationLookup.GetOrAdd(consumer, c => new Producer(c.Manager)))
-                                .ToList();
-
-                            // Add this signal to the local cache
-                            m_localSignalLookup.Add(measurement.ID, producers);
-                        }
-
-                        // Add this measurement to the producers' list
-                        foreach (Producer producer in producers)
-                            producer.Measurements.Add(measurement);
-                    }
-
-                    // Produce measurements to consumers in the local destination
-                    // cache which have measurements to be received
-                    foreach (Producer producer in m_localDestinationLookup.Values.Where(producer => producer.Measurements.Count > 0))
-                    {
-                        producer.QueueProducer.Produce(producer.Measurements);
-                        producer.Measurements.Clear();
-                    }
+                    UpdateFrom(globalCache);
+                    RouteMeasurements(measurements, globalCache);
                 }
+            }
+
+            private void FilterAndRoute(ICollection<IMeasurement> measurements)
+            {
+                lock (m_localCacheLock)
+                {
+                    // Get the global cache from the routing tables
+                    GlobalCache globalCache = m_fetchGlobalCache();
+                    UpdateFrom(globalCache);
+
+                    foreach (IFilterAdapter filterAdapter in globalCache.FilterAdapters)
+                        filterAdapter.HandleNewMeasurements(measurements);
+
+                    RouteMeasurements(measurements, globalCache);
+                    Interlocked.Decrement(ref m_asyncJobCount);
+                }
+            }
+
+            private void UpdateFrom(GlobalCache globalCache)
+            {
+                // Check the version of the local cache against that of the global cache.
+                // We need to clear the local cache if the versions don't match because
+                // that means routes have changed
+                if (m_version == globalCache.Version)
+                    return;
+
+                // Dump the signal lookup
+                m_localSignalLookup.Clear();
+
+                // Best if we hang onto producers for adapters that still have routes
+                foreach (Consumer consumer in m_localDestinationLookup.Keys.Where(consumer => !globalCache.GlobalDestinationLookup.ContainsKey(consumer.Adapter)).ToList())
+                {
+                    m_localDestinationLookup[consumer].QueueProducer.Dispose();
+                    m_localDestinationLookup.Remove(consumer);
+                }
+
+                // Update the local cache version
+                m_version = globalCache.Version;
+            }
+
+            private void RouteMeasurements(ICollection<IMeasurement> measurements, GlobalCache globalCache)
+            {
+                foreach (IMeasurement measurement in measurements)
+                {
+                    // Attempt to look up the signal in the local cache
+                    if (!m_localSignalLookup.TryGetValue(measurement.ID, out List<Producer> producers))
+                    {
+                        // Not in the local cache - check the global cache and fall back on broadcast consumers
+                        if (!globalCache.GlobalSignalLookup.TryGetValue(measurement.ID, out List<Consumer> consumers))
+                            consumers = globalCache.BroadcastConsumers;
+
+                        // Get a producer for each of the consumers
+                        producers = consumers
+                            .Select(consumer => m_localDestinationLookup.GetOrAdd(consumer, c => new Producer(c.Manager)))
+                            .ToList();
+
+                        // Add this signal to the local cache
+                        m_localSignalLookup.Add(measurement.ID, producers);
+                    }
+
+                    // Add this measurement to the producers' list
+                    foreach (Producer producer in producers)
+                        producer.Measurements.Add(measurement);
+                }
+
+                // Produce measurements to consumers in the local destination
+                // cache which have measurements to be received
+                foreach (Producer producer in m_localDestinationLookup.Values.Where(producer => producer.Measurements.Count > 0))
+                {
+                    producer.QueueProducer.Produce(producer.Measurements);
+                    producer.Measurements.Clear();
+                }
+            }
+
+            private bool RequiresAsync(GlobalCache globalCache)
+            {
+                return
+                    globalCache.FilterAdapters.Length > 0 ||
+                    Interlocked.CompareExchange(ref m_asyncJobCount, 0, 0) > 0;
             }
         }
 
@@ -222,9 +278,14 @@ namespace GSF.TimeSeries.Adapters
         {
             m_onStatusMessage = _ => { };
             m_onProcessException = _ => { };
-            m_globalCache = new GlobalCache(new Dictionary<IAdapter, Consumer>(), 0);
-            m_injectMeasurementsLocalCache = new LocalCache(this, null);
+            m_globalCache = new GlobalCache(Array.Empty<IFilterAdapter>(), new Dictionary<IAdapter, Consumer>(), 0);
+            m_injectMeasurementsLocalCache = new LocalCache(GetGlobalCache, null, m_onProcessException);
         }
+
+        /// <summary>
+        /// Gets the number of routes in this routing table.
+        /// </summary>
+        public int RouteCount => GetGlobalCache().GlobalSignalLookup.Count;
 
         /// <summary>
         /// Assigns the status messaging callbacks.
@@ -238,17 +299,13 @@ namespace GSF.TimeSeries.Adapters
         }
 
         /// <summary>
-        /// Gets the number of routes in this routing table.
-        /// </summary>
-        public int RouteCount => m_globalCache.GlobalSignalLookup.Count;
-
-        /// <summary>
         /// Patches the existing routing table with the supplied adapters.
         /// </summary>
         /// <param name="producerAdapters">all of the producers</param>
+        /// <param name="filterAdapters">all of the filters</param>
         /// <param name="consumerAdapters">all of the consumers</param>
         [SuppressMessage("SonarQube.UnusedObject", "S1848", Justification = "Class instantiation of \"LocalCache\" attaches event handlers for adapters.")]
-        public void PatchRoutingTable(RoutingTablesAdaptersList producerAdapters, RoutingTablesAdaptersList consumerAdapters)
+        public void PatchRoutingTable(RoutingTablesAdaptersList producerAdapters, IFilterAdapter[] filterAdapters, RoutingTablesAdaptersList consumerAdapters)
         {
             if (producerAdapters is null)
                 throw new ArgumentNullException(nameof(producerAdapters));
@@ -259,7 +316,7 @@ namespace GSF.TimeSeries.Adapters
             // Attach to NewMeasurements event of all producer adapters that are new
             // ReSharper disable once ObjectCreationAsStatement
             foreach (IAdapter producerAdapter in producerAdapters.NewAdapter)
-                new LocalCache(this, producerAdapter);
+                new LocalCache(GetGlobalCache, producerAdapter, m_onProcessException);
 
             Dictionary<IAdapter, Consumer> consumerLookup = new(m_globalCache.GlobalDestinationLookup);
 
@@ -271,7 +328,7 @@ namespace GSF.TimeSeries.Adapters
             foreach (IAdapter consumerAdapter in consumerAdapters.OldAdapter)
                 consumerLookup.Remove(consumerAdapter);
 
-            Interlocked.Exchange(ref m_globalCache, new GlobalCache(consumerLookup, m_globalCache.Version + 1));
+            Interlocked.Exchange(ref m_globalCache, new GlobalCache(filterAdapters, consumerLookup, m_globalCache.Version + 1));
         }
 
         /// <summary>
@@ -282,5 +339,10 @@ namespace GSF.TimeSeries.Adapters
         /// <param name="measurements">the event arguments</param>
         public void InjectMeasurements(object sender, EventArgs<ICollection<IMeasurement>> measurements) => 
             m_injectMeasurementsLocalCache.Route(sender, measurements);
+
+        private GlobalCache GetGlobalCache()
+        {
+            return Interlocked.CompareExchange(ref m_globalCache, null, null);
+        }
     }
 }

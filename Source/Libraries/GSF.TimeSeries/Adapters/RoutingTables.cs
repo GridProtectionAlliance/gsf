@@ -116,6 +116,11 @@ namespace GSF.TimeSeries.Adapters
         public InputAdapterCollection InputAdapters { get; set; }
 
         /// <summary>
+        /// Gets or sets the active <see cref="FilterAdapterCollection"/>.
+        /// </summary>
+        public FilterAdapterCollection FilterAdapters { get; set; }
+
+        /// <summary>
         /// Gets or sets the active <see cref="ActionAdapterCollection"/>.
         /// </summary>
         public ActionAdapterCollection ActionAdapters { get; set; }
@@ -188,6 +193,7 @@ namespace GSF.TimeSeries.Adapters
             long startTime = DateTime.UtcNow.Ticks;
 
             IInputAdapter[] inputAdapterCollection = null;
+            IFilterAdapter[] filterAdapterCollection = null;
             IActionAdapter[] actionAdapterCollection = null;
             IOutputAdapter[] outputAdapterCollection = null;
             bool retry = true;
@@ -206,6 +212,9 @@ namespace GSF.TimeSeries.Adapters
                     if (InputAdapters is not null)
                         inputAdapterCollection = InputAdapters.ToArray<IInputAdapter>();
 
+                    if (FilterAdapters is not null)
+                        filterAdapterCollection = FilterAdapters.ToArray<IFilterAdapter>();
+
                     if (ActionAdapters is not null)
                         actionAdapterCollection = ActionAdapters.ToArray<IActionAdapter>();
 
@@ -222,6 +231,7 @@ namespace GSF.TimeSeries.Adapters
                 {
                     // Catch rare exceptions where IaonSession is disposed during a context switch
                     inputAdapterCollection = null;
+                    filterAdapterCollection = null;
                     actionAdapterCollection = null;
                     outputAdapterCollection = null;
                     retry = false;
@@ -238,10 +248,13 @@ namespace GSF.TimeSeries.Adapters
                 HashSet<IAdapter> consumerAdapters = new((actionAdapterCollection ?? Enumerable.Empty<IAdapter>())
                     .Concat(outputAdapterCollection ?? Enumerable.Empty<IAdapter>()));
 
+                // Put filter adapters in execution order
+                Array.Sort(filterAdapterCollection, (adapter1, adapter2) => adapter1.ExecutionOrder.CompareTo(adapter2.ExecutionOrder));
+
                 RoutingTablesAdaptersList producerChanges = new(m_prevCalculatedProducers, producerAdapters);
                 RoutingTablesAdaptersList consumerChanges = new(m_prevCalculatedConsumers, consumerAdapters);
 
-                m_routeMappingTables.PatchRoutingTable(producerChanges, consumerChanges);
+                m_routeMappingTables.PatchRoutingTable(producerChanges, filterAdapterCollection, consumerChanges);
                 m_prevCalculatedProducers = producerAdapters;
                 m_prevCalculatedConsumers = consumerAdapters;
 
