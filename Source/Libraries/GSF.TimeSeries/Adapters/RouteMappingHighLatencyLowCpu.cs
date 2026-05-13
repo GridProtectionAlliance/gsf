@@ -87,6 +87,12 @@ namespace GSF.TimeSeries.Adapters
         private class GlobalCache
         {
             /// <summary>
+            /// Contains all the adapters that get a chance at filtering
+            /// input measurements before passing them along to consumers.
+            /// </summary>
+            public readonly IFilterAdapter[] FilterAdapters;
+
+            /// <summary>
             /// Contains all consumers for all adapters regardless of if they are optimized or not.
             /// </summary>
             public readonly Dictionary<IAdapter, Consumer> GlobalDestinationLookup;
@@ -103,8 +109,9 @@ namespace GSF.TimeSeries.Adapters
             public readonly List<Consumer> NormalDestinationAdapters;
             public readonly int Version;
 
-            public GlobalCache(Dictionary<IAdapter, Consumer> consumers, int version)
+            public GlobalCache(IFilterAdapter[] filterAdapters, Dictionary<IAdapter, Consumer> consumers, int version)
             {
+                FilterAdapters = filterAdapters;
                 NormalDestinationAdapters = new List<Consumer>();
                 RoutingPassthroughAdapters = new List<RoutingPassthroughMethod>();
                 GlobalSignalLookup = new IndexedArray<List<Consumer>>();
@@ -195,7 +202,7 @@ namespace GSF.TimeSeries.Adapters
 
             m_onStatusMessage = _ => { };
             m_onProcessException = _ => { };
-            m_globalCache = new GlobalCache(new Dictionary<IAdapter, Consumer>(), 0);
+            m_globalCache = new GlobalCache(Array.Empty<IFilterAdapter>(), new Dictionary<IAdapter, Consumer>(), 0);
             RouteCount = m_globalCache.GlobalSignalLookup.Count(x => x is not null);
         }
 
@@ -219,8 +226,9 @@ namespace GSF.TimeSeries.Adapters
         /// Patches the existing routing table with the supplied adapters.
         /// </summary>
         /// <param name="producerAdapters">all of the producers</param>
+        /// <param name="filterAdapters">all of the filters</param>
         /// <param name="consumerAdapters">all of the consumers</param>
-        public void PatchRoutingTable(RoutingTablesAdaptersList producerAdapters, RoutingTablesAdaptersList consumerAdapters)
+        public void PatchRoutingTable(RoutingTablesAdaptersList producerAdapters, IFilterAdapter[] filterAdapters, RoutingTablesAdaptersList consumerAdapters)
         {
             if (producerAdapters is null)
                 throw new ArgumentNullException(nameof(producerAdapters));
@@ -252,7 +260,7 @@ namespace GSF.TimeSeries.Adapters
             foreach (IAdapter consumerAdapter in consumerAdapters.OldAdapter)
                 consumerLookup.Remove(consumerAdapter);
 
-            m_globalCache = new GlobalCache(consumerLookup, m_globalCache.Version + 1);
+            m_globalCache = new GlobalCache(filterAdapters, consumerLookup, m_globalCache.Version + 1);
             RouteCount = m_globalCache.GlobalSignalLookup.Count(x => x is not null);
         }
 
@@ -290,6 +298,9 @@ namespace GSF.TimeSeries.Adapters
                     Interlocked.Add(ref m_pendingMeasurements, -measurements.Count);
 
                     //For loops are faster than ForEach for List<T>
+
+                    for (int x = 0; x < map.FilterAdapters.Length; x++)
+                        map.FilterAdapters[x].HandleNewMeasurements(measurements);
                     
                     //Process Optimized Consumers
                     for (int x = 0; x < map.RoutingPassthroughAdapters.Count; x++)

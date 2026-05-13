@@ -47,8 +47,9 @@ namespace GSF.TimeSeries.Adapters
         /// Patches the existing routing table with the supplied adapters.
         /// </summary>
         /// <param name="producerAdapters">all of the producers</param>
+        /// <param name="filterAdapters">all of the filters</param>
         /// <param name="consumerAdapters">all of the consumers</param>
-        void PatchRoutingTable(RoutingTablesAdaptersList producerAdapters, RoutingTablesAdaptersList consumerAdapters);
+        void PatchRoutingTable(RoutingTablesAdaptersList producerAdapters, IFilterAdapter[] filterAdapters, RoutingTablesAdaptersList consumerAdapters);
 
         /// <summary>
         /// This method will directly inject measurements into the routing table and use a shared local input adapter. For
