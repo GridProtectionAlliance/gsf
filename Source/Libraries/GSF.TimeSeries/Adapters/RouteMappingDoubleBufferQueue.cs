@@ -92,7 +92,7 @@ namespace GSF.TimeSeries.Adapters
             public LocalCache(Func<GlobalCache> fetchGlobalCache, IAdapter producerAdapter, Action<Exception> exceptionHandler)
             {
                 m_localCacheLock = new object();
-                m_asyncRouter = new AsyncQueue<ICollection<IMeasurement>>();
+                m_asyncRouter = new AsyncQueue<ICollection<IMeasurement>>(Threading.SynchronizedOperationType.LongBackground);
                 m_asyncRouter.ProcessItemFunction = FilterAndRoute;
                 m_asyncRouter.ProcessException += (_, args) => exceptionHandler(args.Argument);
                 m_localSignalLookup = new Dictionary<Guid, List<Producer>>();
