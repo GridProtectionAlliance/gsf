@@ -249,12 +249,13 @@ namespace GSF.TimeSeries.Adapters
                     .Concat(outputAdapterCollection ?? Enumerable.Empty<IAdapter>()));
 
                 // Put filter adapters in execution order
-                Array.Sort(filterAdapterCollection, (adapter1, adapter2) => adapter1.ExecutionOrder.CompareTo(adapter2.ExecutionOrder));
+                IFilterAdapter[] filterAdapters = filterAdapterCollection ?? Array.Empty<IFilterAdapter>();
+                Array.Sort(filterAdapters, (adapter1, adapter2) => adapter1.ExecutionOrder.CompareTo(adapter2.ExecutionOrder));
 
                 RoutingTablesAdaptersList producerChanges = new(m_prevCalculatedProducers, producerAdapters);
                 RoutingTablesAdaptersList consumerChanges = new(m_prevCalculatedConsumers, consumerAdapters);
 
-                m_routeMappingTables.PatchRoutingTable(producerChanges, filterAdapterCollection, consumerChanges);
+                m_routeMappingTables.PatchRoutingTable(producerChanges, filterAdapters, consumerChanges);
                 m_prevCalculatedProducers = producerAdapters;
                 m_prevCalculatedConsumers = consumerAdapters;
 
