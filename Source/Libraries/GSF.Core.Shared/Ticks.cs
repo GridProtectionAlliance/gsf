@@ -1629,33 +1629,66 @@ namespace GSF
         /// </summary>
         /// <param name="timestamp">Timestamp to align.</param>
         /// <param name="samplesPerSecond">Samples per second to use for distribution.</param>
-        /// <param name="Baseline"> Starting Timestamp of the Distribution.</param>
+        /// <param name="baseline">Starting timestamp of the distribution.</param>
         /// <returns>The nearest distribution timestamp for given <paramref name="timestamp"/>.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Ticks RoundToSecondDistribution(Ticks timestamp, double samplesPerSecond, Ticks Baseline)
+        public static Ticks RoundToSecondDistribution(Ticks timestamp, double samplesPerSecond, Ticks baseline)
         {
-            // Calculate destination ticks for this frame
-            long ticks = timestamp.Value;
-            long baseTicks, ticksBeyondSecond, destinationTicks;
-            double frameIndex;
+            if (double.IsNaN(samplesPerSecond) || double.IsInfinity(samplesPerSecond))
+                throw new ArgumentOutOfRangeException(nameof(samplesPerSecond));
 
-            // Baseline timestamp based on start Time
-            baseTicks = ticks - ticks % Baseline;
+            if (samplesPerSecond <= 0.0D)
+                throw new ArgumentOutOfRangeException(nameof(samplesPerSecond));
 
-            // Remove the seconds from ticks
-            ticksBeyondSecond = ticks - baseTicks;
+            // Using [y - y0 = m(t - t0)] where
+            //   y = sample number at time t
+            //   y0 = baseline sample number (0)
+            //   m = samples per tick
+            //   t = timestamp in ticks
+            //   t0 = baseline timestamp in ticks
+            //
+            // The goal is to compute y, round to the nearest sample number,
+            // and then compute the equivalent timestamp. Ignoring y0 and
+            // solving for t, we can produce the following simplified forms
+            // of the equation to do the conversions
+            //   y = m(t - t0)
+            //   t = y/m + t0
 
-            // Calculate a frame index between 0 and m_framesPerSecond-1,
-            // corresponding to ticks rounded to the nearest frame
-            frameIndex = Math.Round((double)ticksBeyondSecond / (double)(Ticks.PerSecond / (double)samplesPerSecond));
+            // Adjust units to compute m
+            double samplesPerTick = samplesPerSecond / Ticks.PerSecond;
 
-            // Calculate the timestamp of the nearest frame
-            destinationTicks = (long)(frameIndex * Ticks.PerSecond / samplesPerSecond);
+            // If 1/m is too large, it breaks some assumptions
+            double ticksPerSample = 1.0D / samplesPerTick;
 
-            // Recover the seconds that were removed
-            destinationTicks += baseTicks;
+            if (ticksPerSample >= (1L << 53))
+                throw new ArgumentOutOfRangeException(nameof(samplesPerSecond));
 
-            return new Ticks(destinationTicks);
+            // Pick a new baseline [t0 = t + x/m] to mitigate
+            // loss of precision when converting to double.
+            // x and x/m must both be integers.
+            // Note: Start by extracting the mantissa because
+            //       if you multiply a double by 2 until the
+            //       exponent is 52, you get an integer multiple
+            //       of that number with 53 bits of precision
+            const long Prefix = 1L << 52;
+            const long Mask = Prefix - 1;
+            long bits = BitConverter.DoubleToInt64Bits(ticksPerSample);
+            long x0m = Prefix | (bits & Mask);
+
+            // Compute the largest multiple x1 of x0/m that
+            // is smaller than [timestamp - baseline]. When x/m
+            // is added to baseline, the value of [timestamp - t0]
+            // will be smaller than x0/m, which should fit in 53 bits
+            long x1 = (timestamp - baseline) / x0m;
+            long xm = x0m * x1;
+            long t0 = baseline + xm;
+
+            // Solve for [y = m(t - t0)] and round the result
+            double sampleNum = samplesPerTick * (timestamp - t0);
+            double nearest = Math.Round(sampleNum);
+
+            // Solve for [t = y/m + t0] to return the rounded timestamp
+            return (long)(nearest / samplesPerTick) + t0;
         }
 
         /// <summary>
