@@ -456,7 +456,7 @@ namespace GSF.IO
                 m_fileWatcher.Changed += m_fileProcessor.Watcher_Changed;
                 m_fileWatcher.Renamed += m_fileProcessor.Watcher_Renamed;
                 m_fileWatcher.Deleted += m_fileProcessor.Watcher_Deleted;
-                m_fileWatcher.Error += m_fileProcessor.Watcher_Error;
+                m_fileWatcher.Error += Watcher_Error;
 
                 m_fileWatcher.EnableRaisingEvents = true;
             }
@@ -467,8 +467,13 @@ namespace GSF.IO
                 m_fileWatcher.Changed -= m_fileProcessor.Watcher_Changed;
                 m_fileWatcher.Renamed -= m_fileProcessor.Watcher_Renamed;
                 m_fileWatcher.Deleted -= m_fileProcessor.Watcher_Deleted;
-                m_fileWatcher.Error -= m_fileProcessor.Watcher_Error;
+                m_fileWatcher.Error -= Watcher_Error;
                 m_fileWatcher.Dispose();
+            }
+
+            private void Watcher_Error(object sender, ErrorEventArgs args)
+            {
+                m_fileProcessor.HandleWatcherError(sender, this, args);
             }
 
             #endregion
@@ -1178,8 +1183,14 @@ namespace GSF.IO
         }
 
         // Triggers the error event for the exception encountered by the file watcher.
-        private void Watcher_Error(object sender, ErrorEventArgs args)
+        private void HandleWatcherError(object sender, TrackedDirectory directory, ErrorEventArgs args)
         {
+            if (args.GetException() is InternalBufferOverflowException)
+            {
+                _ = directory.EnumerateAsync();
+                return;
+            }
+
             Error?.Invoke(sender, args);
         }
 
