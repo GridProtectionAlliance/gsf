@@ -963,9 +963,16 @@ namespace GSF.IO
                     return new List<TrackedDirectory>(m_trackedDirectories);
             }
 
-            List<TrackedDirectory> trackedDirectories = GetTrackedDirectories();
-            IEnumerable<Task> enumerationTasks = trackedDirectories.Select(dir => dir.EnumerateAsync());
-            await Task.WhenAll(enumerationTasks).ConfigureAwait(false);
+            try
+            {
+                List<TrackedDirectory> trackedDirectories = GetTrackedDirectories();
+                IEnumerable<Task> enumerationTasks = trackedDirectories.Select(dir => dir.EnumerateAsync());
+                await Task.WhenAll(enumerationTasks).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                OnError(ex);
+            }
         }
         
         // Checks and updates the touchedFiles lookup table, then starts the processing loop.
@@ -975,7 +982,7 @@ namespace GSF.IO
 
             async Task ProcessAsync()
             {
-                await RunProcessLoopAsync(filePath, raisedByFileWatcher);
+                await RunProcessLoopAsync(filePath, raisedByFileWatcher).ConfigureAwait(false);
 
                 if (!touched)
                     Interlocked.Increment(ref m_processedFileCount);
@@ -1187,11 +1194,17 @@ namespace GSF.IO
         {
             if (args.GetException() is InternalBufferOverflowException)
             {
-                _ = directory.EnumerateAsync();
+                _ = TryEnumerateAsync();
                 return;
             }
 
             Error?.Invoke(sender, args);
+
+            async Task TryEnumerateAsync()
+            {
+                try { await directory.EnumerateAsync().ConfigureAwait(false); }
+                catch (Exception ex) { OnError(ex); }
+            }
         }
 
         // Picks up files that were missed by the file watchers.
