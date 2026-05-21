@@ -361,12 +361,13 @@ namespace GSF.IO
                     bool matchesFilter = m_fileProcessor.MatchesFilter(trackedPath);
 
                     // The file must be processed on the processing thread
-                    await processingThread.Join(FileProcessor.ProcessNormalPriority);
-
-                    if (matchesFilter)
-                        m_fileProcessor.TouchAndProcess(trackedPath, lastWriteTime, false);
-                    else
-                        m_fileProcessor.TouchAndSkip(trackedPath, lastWriteTime);
+                    processingThread.Push(FileProcessor.ProcessNormalPriority, () =>
+                    {
+                        if (matchesFilter)
+                            m_fileProcessor.TouchAndProcess(trackedPath, lastWriteTime, false);
+                        else
+                            m_fileProcessor.TouchAndSkip(trackedPath, lastWriteTime);
+                    });
                 }
 
                 async Task EnumerateSubdirectoriesAsync()
@@ -398,10 +399,6 @@ namespace GSF.IO
 
                     IEnumerable<Task> processTasks = files.Select(VisitFileAsync);
                     await Task.WhenAll(processTasks).ConfigureAwait(false);
-
-                    // The continuation of VisitFileAsync() will execute on the
-                    // processing thread so we need to join back to the appropriate thread
-                    await enumerationThread.Join();
                 }
 
                 EventHandler<EventArgs<List<string>>> handler = (sender, args) =>
