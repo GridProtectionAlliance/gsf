@@ -48,7 +48,7 @@ public readonly ref struct PhaseEstimate
     public required double dFdt { get; init; }
 
     /// <summary>
-    /// Gets angles in radians, length 6: IA, IB, IC, VA, VB, VC.
+    /// Gets angles in radians, length 6: VA, VB, VC, IA, IB, IC.
     /// </summary>
     /// <remarks>
     /// The data this span references is owned by the <see cref="RollingPhaseEstimator"/> instance,
@@ -58,7 +58,7 @@ public readonly ref struct PhaseEstimate
     public required ReadOnlySpan<Angle> Angles { get; init; }
 
     /// <summary>
-    /// Gets RMS magnitudes, length 6: IA, IB, IC, VA, VB, VC.
+    /// Gets RMS magnitudes, length 6: VA, VB, VC, IA, IB, IC.
     /// </summary>
     /// <remarks>
     /// The data this span references is owned by the <see cref="RollingPhaseEstimator"/> instance,
@@ -545,14 +545,14 @@ internal sealed class RollingPhaseEstimator
     #region [ Methods ]
 
     /// <summary>
-    /// Push one interleaved sample-group (IA, IB, IC, VA, VB, VC) with its epoch nanoseconds.
+    /// Push one interleaved sample-group (VA, VB, VC, IA, IB, IC) with its epoch nanoseconds.
     /// </summary>
-    /// <param name="ia">Current sample for phase A current.</param>
-    /// <param name="ib">Current sample for phase B current.</param>
-    /// <param name="ic">Current sample for phase C current.</param>
     /// <param name="va">Current sample for phase A voltage.</param>
     /// <param name="vb">Current sample for phase B voltage.</param>
     /// <param name="vc">Current sample for phase C voltage.</param>
+    /// <param name="ia">Current sample for phase A current.</param>
+    /// <param name="ib">Current sample for phase B current.</param>
+    /// <param name="ic">Current sample for phase C current.</param>
     /// <param name="epochNanoseconds">Timestamp in nanoseconds since epoch.</param>
     /// <param name="phaseEstimateHandler">Handler for phase estimate result.</param>
     /// <returns>
@@ -566,12 +566,12 @@ internal sealed class RollingPhaseEstimator
     /// delegate call. If you need to retain the data, make a copy.
     /// </remarks>
     public bool Step(
-        double ia,
-        double ib,
-        double ic,
         double va,
         double vb,
         double vc,
+        double ia,
+        double ib,
+        double ic,
         long epochNanoseconds,
         PhaseEstimateHandler phaseEstimateHandler)
     {
@@ -582,7 +582,7 @@ internal sealed class RollingPhaseEstimator
         bool isFillingUp = TotalSamplesProcessed < WindowSamples;
         int oldestIndex = m_bufferWriteIndex;
 
-        Span<double> samples = stackalloc double[NumChannels] { ia, ib, ic, va, vb, vc };
+        Span<double> samples = stackalloc double[NumChannels] { va, vb, vc, ia, ib, ic };
 
         // Store the new sample in the buffer and update SDFT
         for (int ch = 0; ch < NumChannels; ch++)
@@ -972,7 +972,9 @@ internal sealed class RollingPhaseEstimator
 
         // Smooth frequency
         if (m_frequencyInitialized)
+        {
             m_smoothedFrequency = m_frequencyAlpha * instantaneousFrequency + (1.0D - m_frequencyAlpha) * m_smoothedFrequency;
+        }
         else
         {
             m_smoothedFrequency = instantaneousFrequency;

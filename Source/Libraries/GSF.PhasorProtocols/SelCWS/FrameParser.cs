@@ -439,7 +439,7 @@ public class FrameParser : FrameParserBase<FrameType>
             RecalculationCycles);
 
         // Calculate next phase estimation
-        bool calculated = m_phaseEstimator.Step(ia, ib, ic, va, vb, vc, timestamp, processPhaseEstimate);
+        bool calculated = m_phaseEstimator.Step(va, vb, vc, ia, ib, ic, timestamp, processPhaseEstimate);
 
         if (!RepeatLastCalculatedValueWhenDownSampling)
             return;
