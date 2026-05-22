@@ -109,6 +109,7 @@ internal sealed class RollingPhaseEstimator
     // Constants
     private const int NumChannels = 6;
     private const double TwoPI = 2.0D * Math.PI;
+    private const double Sqrt2 = 1.4142135623730951D;
     private const long NanosecondsPerSecond = 1_000_000_000L;
 
     /// <summary>
@@ -169,10 +170,13 @@ internal sealed class RollingPhaseEstimator
     // Fields
     private readonly double m_samplePeriodSeconds;
     private readonly int m_recalculationInterval;
+    private readonly int m_initialSamplesUntilRecalc;  // countdown to the first recalc after the window fills
+    private int m_samplesUntilRecalc;                  // samples remaining until the next full DFT recalc
 
     // Output decimation / publish gating
     private readonly long m_publishPeriodNs;    // 0 means "publish every sample"
     private long m_nextPublishEpochNs;          // first publish scheduled when window becomes ready
+    private bool m_publishScheduleInitialized;  // guards first-time publish-schedule initialization
 
     // If enabled, we boxcar-average (anti-alias) across each publish interval.
     private readonly bool m_enableIntervalAveraging;
@@ -186,6 +190,12 @@ internal sealed class RollingPhaseEstimator
     private readonly double m_publishMagnitudesAlpha;
     private readonly double m_publishFrequencyAlpha;
     private readonly double m_publishRocofAlpha;
+
+    // Precomputed (1 - α) complements for the published-stream EMA
+    private readonly double m_oneMinusPublishAnglesAlpha;
+    private readonly double m_oneMinusPublishMagnitudesAlpha;
+    private readonly double m_oneMinusPublishFrequencyAlpha;
+    private readonly double m_oneMinusPublishRocofAlpha;
 
     // Circular sample buffers for each channel
     private readonly double[][] m_sampleBuffers;
@@ -215,17 +225,26 @@ internal sealed class RollingPhaseEstimator
     private readonly double[] m_cosTable;
     private readonly double[] m_sinTable;
 
+    // Precomputed RMS magnitude scale factor: sqrt(2) / N
+    private readonly double m_magnitudeScale;
+
+    // Precomputed frequency-tracking constants (derived from nominal frequency)
+    private readonly double m_minFrequency;     // NominalFrequencyHz * 0.9 (clamp lower bound)
+    private readonly double m_maxFrequency;     // NominalFrequencyHz * 1.1 (clamp upper bound)
+
     // Previous phase angle for frequency calculation (from reference channel)
     private double m_prevPhaseAngle;
     private bool m_hasPrevPhase;
 
     // Frequency smoothing (exponential moving average) on per-sample instantaneous frequency
     private readonly double m_frequencyAlpha;
+    private readonly double m_oneMinusFrequencyAlpha;  // precomputed 1 - α
     private double m_smoothedFrequency;
     private bool m_frequencyInitialized;
 
     // ROCOF smoothing on per-sample instantaneous ROCOF
     private readonly double m_rocofAlpha;
+    private readonly double m_oneMinusRocofAlpha;  // precomputed 1 - α
     private double m_prevSmoothedFrequency;
     private double m_smoothedRocof;
     private bool m_rocofInitialized;
@@ -446,6 +465,10 @@ internal sealed class RollingPhaseEstimator
         NominalFrequencyHz = (double)nominalFrequency;
         ReferenceChannel = referenceChannel;
 
+        // Precompute nominal-derived frequency-tracking constants
+        m_minFrequency = NominalFrequencyHz * 0.9D;
+        m_maxFrequency = NominalFrequencyHz * 1.1D;
+
         m_samplePeriodSeconds = 1.0D / sampleRateHz;
 
         m_publishPeriodNs = outputRateHz >= sampleRateHz ?
@@ -466,9 +489,24 @@ internal sealed class RollingPhaseEstimator
         m_frequencyAlpha = AlphaFromTau(sampleDt, sampleFrequencyTauSeconds);
         m_rocofAlpha = AlphaFromTau(sampleDt, sampleRocofTauSeconds);
 
+        // Precompute (1 - α) complements used in the EMA hot paths
+        m_oneMinusPublishAnglesAlpha = 1.0D - m_publishAnglesAlpha;
+        m_oneMinusPublishMagnitudesAlpha = 1.0D - m_publishMagnitudesAlpha;
+        m_oneMinusPublishFrequencyAlpha = 1.0D - m_publishFrequencyAlpha;
+        m_oneMinusPublishRocofAlpha = 1.0D - m_publishRocofAlpha;
+        m_oneMinusFrequencyAlpha = 1.0D - m_frequencyAlpha;
+        m_oneMinusRocofAlpha = 1.0D - m_rocofAlpha;
+
         int samplesPerNominalCycle = (int)Math.Round(sampleRateHz / NominalFrequencyHz);
         WindowSamples = samplesPerNominalCycle * targetCycles;
         m_recalculationInterval = samplesPerNominalCycle * recalculationCycles;
+
+        // Align the first recalc countdown so recalcs land on the same absolute cadence a modulo would
+        m_initialSamplesUntilRecalc = m_recalculationInterval - WindowSamples % m_recalculationInterval;
+
+        // Precompute RMS magnitude scale factor from DFT magnitude.
+        // For a pure sinusoid: |X| = N * A / 2 (A = peak amplitude); RMS = A / sqrt(2), so RMS = sqrt(2) * |X| / N.
+        m_magnitudeScale = Sqrt2 / WindowSamples;
 
         // Initialize sample buffers
         m_sampleBuffers = new double[NumChannels][];
@@ -614,16 +652,26 @@ internal sealed class RollingPhaseEstimator
             }
         }
 
-        // Advance buffer write index
-        m_bufferWriteIndex = (m_bufferWriteIndex + 1) % WindowSamples;
+        // Advance buffer write index (compare/reset avoids a per-sample modulo)
+        if (++m_bufferWriteIndex >= WindowSamples)
+            m_bufferWriteIndex = 0;
+
         TotalSamplesProcessed++;
 
-        // Periodic full recalculation for numerical stability (only at or after fill-up)
-        // Also recalculate immediately after fill-up to ensure consistency
+        // Periodic full recalculation for numerical stability: immediately after fill-up, then on a fixed
+        // sample countdown aligned to m_recalculationInterval (avoids a per-sample modulo).
         bool justFilled = TotalSamplesProcessed == WindowSamples;
 
-        if (justFilled || (!isFillingUp && TotalSamplesProcessed % m_recalculationInterval == 0))
+        if (justFilled)
+        {
+            m_samplesUntilRecalc = m_initialSamplesUntilRecalc;
             RecalculateFullDft();
+        }
+        else if (!isFillingUp && --m_samplesUntilRecalc == 0)
+        {
+            m_samplesUntilRecalc = m_recalculationInterval;
+            RecalculateFullDft();
+        }
 
         // Check if window has filled
         if (TotalSamplesProcessed < WindowSamples)
@@ -659,8 +707,11 @@ internal sealed class RollingPhaseEstimator
             StoreLastSample(sampleEstimate);
 
         // Initialize publish schedule the first time we become ready
-        if (m_nextPublishEpochNs == 0L)
+        if (!m_publishScheduleInitialized)
+        {
             m_nextPublishEpochNs = AlignToNextBoundary(epochNanoseconds, m_publishPeriodNs);
+            m_publishScheduleInitialized = true;
+        }
 
         // Accumulate all per-sample estimates within a publish interval.
         // This acts as an anti-alias low-pass when outputRate < sampleRate.
@@ -715,6 +766,7 @@ internal sealed class RollingPhaseEstimator
         m_rocofInitialized = false;
         m_prevEpochNs = 0L;
         m_nextPublishEpochNs = 0L;
+        m_publishScheduleInitialized = false;
 
         ResetInterval();
         ResetPublishEMA();
@@ -862,11 +914,6 @@ internal sealed class RollingPhaseEstimator
     {
         if (m_publishEMAInitialized)
         {
-            double oneMinusAnglesAlpha = 1.0D - m_publishAnglesAlpha;
-            double oneMinusMagnitudesAlpha = 1.0D - m_publishMagnitudesAlpha;
-            double oneMinusFrequencyAlpha = 1.0D - m_publishFrequencyAlpha;
-            double oneMinusRocofAlpha = 1.0D - m_publishRocofAlpha;
-
             // Angles: EMA on unit vectors (wrap-safe)
             for (int ch = 0; ch < NumChannels; ch++)
             {
@@ -874,14 +921,14 @@ internal sealed class RollingPhaseEstimator
                 double cos = Math.Cos(angle);
                 double sin = Math.Sin(angle);
 
-                m_pubAngleCos[ch] = m_publishAnglesAlpha * cos + oneMinusAnglesAlpha * m_pubAngleCos[ch];
-                m_pubAngleSin[ch] = m_publishAnglesAlpha * sin + oneMinusAnglesAlpha * m_pubAngleSin[ch];
+                m_pubAngleCos[ch] = m_publishAnglesAlpha * cos + m_oneMinusPublishAnglesAlpha * m_pubAngleCos[ch];
+                m_pubAngleSin[ch] = m_publishAnglesAlpha * sin + m_oneMinusPublishAnglesAlpha * m_pubAngleSin[ch];
 
-                m_pubMagnitude[ch] = m_publishMagnitudesAlpha * magnitudes[ch] + oneMinusMagnitudesAlpha * m_pubMagnitude[ch];
+                m_pubMagnitude[ch] = m_publishMagnitudesAlpha * magnitudes[ch] + m_oneMinusPublishMagnitudesAlpha * m_pubMagnitude[ch];
             }
 
-            m_pubFrequency = m_publishFrequencyAlpha * freq + oneMinusFrequencyAlpha * m_pubFrequency;
-            m_pubRocof = m_publishRocofAlpha * rocof + oneMinusRocofAlpha * m_pubRocof;
+            m_pubFrequency = m_publishFrequencyAlpha * freq + m_oneMinusPublishFrequencyAlpha * m_pubFrequency;
+            m_pubRocof = m_publishRocofAlpha * rocof + m_oneMinusPublishRocofAlpha * m_pubRocof;
         }
         else
         {
@@ -917,12 +964,8 @@ internal sealed class RollingPhaseEstimator
         double[] magnitudes = m_workingMagnitudes;
         int referenceChannel = (int)ReferenceChannel;
 
-        // Scaling factor for RMS magnitude from DFT
-        // For a pure sinusoid: DFT magnitude = N * A / 2, where A is peak amplitude
-        // RMS = A / sqrt(2), so RMS = sqrt(2) * |X| / N
-        double magnitudeScale = Math.Sqrt(2.0) / WindowSamples;
-
-        // Reference angle for phase normalization (typically VA)
+        // Reference angle for phase normalization (typically VA); also reused below as the reference
+        // channel's current phase for frequency tracking, which avoids a duplicate Atan2 evaluation.
         double referenceAngle = Math.Atan2(m_phasorImag[referenceChannel], m_phasorReal[referenceChannel]);
 
         for (int ch = 0; ch < NumChannels; ch++)
@@ -931,7 +974,7 @@ internal sealed class RollingPhaseEstimator
             double imag = m_phasorImag[ch];
 
             // Calculate magnitude (RMS)
-            magnitudes[ch] = Math.Sqrt(real * real + imag * imag) * magnitudeScale;
+            magnitudes[ch] = Math.Sqrt(real * real + imag * imag) * m_magnitudeScale;
 
             // Calculate angle relative to reference (VA)
             double rawAngle = Math.Atan2(imag, real);
@@ -949,31 +992,36 @@ internal sealed class RollingPhaseEstimator
                 deltaTimeSeconds = measuredDelta;
         }
 
-        // Frequency from reference channel phase progression
-        double currentPhase = Math.Atan2(m_phasorImag[referenceChannel], m_phasorReal[referenceChannel]);
+        // Frequency from reference channel phase progression (reuses referenceAngle as current phase).
+        // FUTURE: Track frequency from the positive-sequence component instead of a single reference
+        // channel, so a single-channel fault (e.g., a VA PT failure) does not degrade the frequency /
+        // ROCOF estimate while the remaining phases are still healthy.
         double instantaneousFrequency = NominalFrequencyHz;
 
         if (m_hasPrevPhase)
         {
-            double deltaPhase = NormalizeAngle(currentPhase - m_prevPhaseAngle);
-            double expectedDeltaPhase = TwoPI * NominalFrequencyHz * deltaTimeSeconds;
+            double deltaPhase = NormalizeAngle(referenceAngle - m_prevPhaseAngle);
 
-            double phaseDeviation = deltaPhase - expectedDeltaPhase;
-            double frequencyDeviation = phaseDeviation / (TwoPI * deltaTimeSeconds);
-            instantaneousFrequency = NominalFrequencyHz + frequencyDeviation;
+            // Instantaneous frequency from phase progression. The full form is
+            // NominalFrequencyHz + (deltaPhase - 2π·fNom·dt) / (2π·dt), which cancels exactly to
+            // deltaPhase / (2π·dt) — fewer ops and avoids adding/subtracting the large nominal term.
+            instantaneousFrequency = deltaPhase / (TwoPI * deltaTimeSeconds);
 
-            double minFreq = NominalFrequencyHz * 0.9D;
-            double maxFreq = NominalFrequencyHz * 1.1D;
-            instantaneousFrequency = Math.Max(minFreq, Math.Min(maxFreq, instantaneousFrequency));
+            // Clamp instantaneous frequency to ±10% of nominal to reject transient / bad-data excursions.
+            // This saturates silently, so it effectively acts as a data-quality guard. Surfacing that as an
+            // output quality flag is protocol-dependent: SEL CWS currently carries no quality flags, so any
+            // quality indication would have to be expressed through the existing base-model quality fields.
+            // FUTURE: Revisit quality reporting if/when SEL CWS adds native quality flags.
+            instantaneousFrequency = Math.Max(m_minFrequency, Math.Min(m_maxFrequency, instantaneousFrequency));
         }
 
-        m_prevPhaseAngle = currentPhase;
+        m_prevPhaseAngle = referenceAngle;
         m_hasPrevPhase = true;
 
         // Smooth frequency
         if (m_frequencyInitialized)
         {
-            m_smoothedFrequency = m_frequencyAlpha * instantaneousFrequency + (1.0D - m_frequencyAlpha) * m_smoothedFrequency;
+            m_smoothedFrequency = m_frequencyAlpha * instantaneousFrequency + m_oneMinusFrequencyAlpha * m_smoothedFrequency;
         }
         else
         {
@@ -987,7 +1035,7 @@ internal sealed class RollingPhaseEstimator
         if (m_rocofInitialized)
         {
             double instantaneousRocof = (m_smoothedFrequency - m_prevSmoothedFrequency) / deltaTimeSeconds;
-            m_smoothedRocof = m_rocofAlpha * instantaneousRocof + (1.0D - m_rocofAlpha) * m_smoothedRocof;
+            m_smoothedRocof = m_rocofAlpha * instantaneousRocof + m_oneMinusRocofAlpha * m_smoothedRocof;
             rocof = m_smoothedRocof;
         }
         else
