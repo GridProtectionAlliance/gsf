@@ -73,8 +73,7 @@ public enum PhaseChannel
     /// <summary>
     /// Phase C current (IC).
     /// </summary>
-    IC = 5,
-}
+    IC = 5
 }
 
 #endregion
