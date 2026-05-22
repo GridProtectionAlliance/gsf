@@ -16,12 +16,8 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  02/08/2007 - J. Ritchie Carroll & Jian Ryan Zuo
+//  11/04/2025 - Ritchie Carroll
 //       Generated original version of source code.
-//  09/15/2009 - Stephen C. Wills
-//       Added new header and license agreement.
-//  12/17/2012 - Starlynn Danyelle Gilliam
-//       Modified Header.
 //
 //******************************************************************************************************
 

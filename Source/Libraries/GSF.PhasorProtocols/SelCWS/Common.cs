@@ -49,31 +49,32 @@ public enum FrameType : byte
 /// Phase channels for SEL CWS PoW analogs.
 /// </summary>
 public enum PhaseChannel
-{ 
-    /// <summary>
-    /// Phase A current (IA).
-    /// </summary>
-    IA = 0,
-    /// <summary>
-    /// Phase B current (IB).
-    /// </summary>
-    IB = 1,
-    /// <summary>
-    /// Phase C current (IC).
-    /// </summary>
-    IC = 2,
+{
     /// <summary>
     /// Phase A voltage (VA).
     /// </summary>
-    VA = 3,
+    VA = 0,
     /// <summary>
     /// Phase B voltage (VB).
     /// </summary>
-    VB = 4,
+    VB = 1,
     /// <summary>
     /// Phase C voltage (VC).
     /// </summary>
-    VC = 5
+    VC = 2,
+    /// <summary>
+    /// Phase A current (IA).
+    /// </summary>
+    IA = 3,
+    /// <summary>
+    /// Phase B current (IB).
+    /// </summary>
+    IB = 4,
+    /// <summary>
+    /// Phase C current (IC).
+    /// </summary>
+    IC = 5,
+}
 }
 
 #endregion

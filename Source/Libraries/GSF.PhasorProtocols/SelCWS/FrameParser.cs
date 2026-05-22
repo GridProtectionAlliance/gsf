@@ -361,7 +361,7 @@ public class FrameParser : FrameParserBase<FrameType>
 
         if (buffer[offset] != (byte)FrameType.DataFrame || m_initialDataFrame is null)
             return parsedLength;
-        
+
         // Make sure enough frame buffer image is available for data frame to be parsed
         if (length < parsedLength)
             return 0;
@@ -414,12 +414,12 @@ public class FrameParser : FrameParserBase<FrameType>
             return;
 
         // Expected order defined by SEL CWS protocol:
-        double ia = cell.AnalogValues[(int)PhaseChannel.IA].Value;
-        double ib = cell.AnalogValues[(int)PhaseChannel.IB].Value;
-        double ic = cell.AnalogValues[(int)PhaseChannel.IC].Value;
         double va = cell.AnalogValues[(int)PhaseChannel.VA].Value;
         double vb = cell.AnalogValues[(int)PhaseChannel.VB].Value;
         double vc = cell.AnalogValues[(int)PhaseChannel.VC].Value;
+        double ia = cell.AnalogValues[(int)PhaseChannel.IA].Value;
+        double ib = cell.AnalogValues[(int)PhaseChannel.IB].Value;
+        double ic = cell.AnalogValues[(int)PhaseChannel.IC].Value;
 
         // Ensure phase estimator is created
         m_phaseEstimator ??= new RollingPhaseEstimator(
