@@ -48,8 +48,17 @@ public sealed class ReplayTimer
     // time remains, then yield/spin to the exact deadline
     private const double SleepGuardBand = 2.0D;
 
+    // Maximum deficit, in milliseconds, that the deadline may fall behind real
+    // time. This bounds the catch-up burst produced after a long stall (e.g., a
+    // pause/resume or a slow buffer read) while still allowing the normal buffer-
+    // read gaps of file playback to be fully recovered so the defined frame rate
+    // is maintained. Raise toward infinity for unbounded catch-up; lower for
+    // tighter burst control at the risk of dropping below the defined rate.
+    private const double MaxCatchUpLag = 1000.0D;
+
     private readonly long m_periodTicks;    // Query Performance Counter (QPC) ticks per frame
     private readonly long m_guardBandTicks; // QPC ticks for the guard-band
+    private readonly long m_maxLagTicks;    // QPC ticks for the maximum catch-up deficit
     private long m_nextTick;                // Next scheduled QPC tick (not equal to DateTime ticks)
 
     /// <summary>
@@ -63,6 +72,7 @@ public sealed class ReplayTimer
 
         m_periodTicks = (long)Math.Round(Stopwatch.Frequency / (double)definedFrameRate);
         m_guardBandTicks = (long)Math.Round(Stopwatch.Frequency * SleepGuardBand / 1000.0D);
+        m_maxLagTicks = (long)Math.Round(Stopwatch.Frequency * MaxCatchUpLag / 1000.0D);
         m_nextTick = Stopwatch.GetTimestamp();
 
         DefinedFrameRate = definedFrameRate;
@@ -77,30 +87,39 @@ public sealed class ReplayTimer
     /// Blocks until the next scheduled frame rate interval.
     /// </summary>
     /// <remarks>
-    /// The deadline advances by exactly one period from the current deadline (absolute
-    /// cadence) to keep inter-frame intervals consistent. If the deadline has already
-    /// fallen behind by more than one full period, it resets to "now + period" to
-    /// prevent a burst of catch-up frames.
+    /// The deadline advances by exactly one period from the previous deadline (absolute
+    /// cadence) so the long-term average rate stays locked to the defined frame rate even
+    /// when frames arrive in bursts separated by buffer-read gaps. When the deadline is
+    /// already at or behind the current time, the method returns without waiting so playback
+    /// can catch back up; the accrued deficit is clamped (see <see cref="MaxCatchUpLag"/>) so
+    /// a long stall cannot produce an unbounded burst of catch-up frames.
     /// </remarks>
     public void WaitNext()
     {
-        // Advance deadline absolutely from previous deadline to maintain
-        // a steady cadence regardless of per-frame processing jitter
+        // Absolute cadence: advance the deadline by exactly one period from the
+        // previous deadline so the long-term average rate stays locked to the
+        // defined frame rate. File frames arrive in bursts separated by buffer-read
+        // gaps; during a gap the deadline accrues a deficit that is recovered on the
+        // following frames (which return without waiting) until the cadence catches
+        // back up to real time — this is what lets high replay rates keep pace.
+        long now = Stopwatch.GetTimestamp();
         long nextTick = m_nextTick + m_periodTicks;
 
-        // If the advanced deadline is already in the past, we've fallen
-        // behind by more than a full period — reset to relative mode to
-        // avoid a burst of catch-up frames
-        if (Stopwatch.GetTimestamp() >= nextTick)
-            nextTick = Stopwatch.GetTimestamp() + m_periodTicks;
+        long ticksRemaining = nextTick - now;
+
+        // At or past the deadline (processing slower than the interval, or catching
+        // up after a gap): return immediately without waiting. Clamp the accrued
+        // deficit so a long stall cannot produce an unbounded burst of catch-up frames.
+        if (ticksRemaining <= 0L)
+        {
+            if (now - nextTick > m_maxLagTicks)
+                nextTick = now - m_maxLagTicks;
+
+            m_nextTick = nextTick;
+            return;
+        }
 
         m_nextTick = nextTick;
-
-        // Fast exit if already past deadline (e.g., processing took longer than interval)
-        if (Stopwatch.GetTimestamp() >= nextTick)
-            return;
-
-        long ticksRemaining = nextTick - Stopwatch.GetTimestamp();
 
         // For longer waits, sleep in one bulk call leaving only a small
         // guard-band for spin/yield — this dramatically reduces the number
@@ -117,7 +136,7 @@ public sealed class ReplayTimer
         // Yield / spin for the remaining guard-band to hit precise deadline
         while (true)
         {
-            long now = Stopwatch.GetTimestamp();
+            now = Stopwatch.GetTimestamp();
 
             if (now >= nextTick)
                 return;
