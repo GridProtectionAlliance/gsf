@@ -203,7 +203,7 @@ namespace GSF.IO
 
             #region [ Methods ]
 
-            public async Task EnumerateAsync(FileEnumerationStrategy fileEnumerationStrategy)
+            public async Task EnumerateAsync(FileEnumerationStrategy fileEnumerationStrategy, bool sort)
             {
                 if (m_disposed)
                     return;
@@ -211,7 +211,7 @@ namespace GSF.IO
                 CancellationToken cancellationToken = new CancellationToken();
                 Interlocked.Exchange(ref m_cancellationToken, cancellationToken);
                 DirectoryInfo directory = new DirectoryInfo(Path);
-                await EnumerateDirectoryAsync(directory, fileEnumerationStrategy, cancellationToken);
+                await EnumerateDirectoryAsync(directory, fileEnumerationStrategy, sort, cancellationToken);
             }
 
             public void CancelEnumeration()
@@ -248,7 +248,7 @@ namespace GSF.IO
                 }
             }
 
-            private async Task EnumerateDirectoryAsync(DirectoryInfo directory, FileEnumerationStrategy fileEnumerationStrategy, CancellationToken cancellationToken)
+            private async Task EnumerateDirectoryAsync(DirectoryInfo directory, FileEnumerationStrategy fileEnumerationStrategy, bool sort, CancellationToken cancellationToken)
             {
                 bool parallelSubdirectories =
                     fileEnumerationStrategy == FileEnumerationStrategy.ParallelSubdirectories;
@@ -287,7 +287,7 @@ namespace GSF.IO
                     if (m_fileProcessor.MatchesFolderExclusion(subdirectory.FullName))
                         return;
 
-                    await EnumerateDirectoryAsync(subdirectory, fileEnumerationStrategy, cancellationToken);
+                    await EnumerateDirectoryAsync(subdirectory, fileEnumerationStrategy, sort, cancellationToken);
                 }
 
                 async Task<Task> VisitFileAsync(FileInfo file)
@@ -303,11 +303,12 @@ namespace GSF.IO
                         action();
                     }
 
+                    string trackedPath = ToTrackedPath(file.FullName);
                     DateTime lastWriteTime = file.LastWriteTimeUtc;
-                    void Process() => m_fileProcessor.TouchAndProcess(file.FullName, lastWriteTime, false);
-                    void Skip() => m_fileProcessor.TouchAndSkip(file.FullName, lastWriteTime);
+                    void Process() => m_fileProcessor.TouchAndProcess(trackedPath, lastWriteTime, false);
+                    void Skip() => m_fileProcessor.TouchAndSkip(trackedPath, lastWriteTime);
 
-                    if (!m_fileProcessor.MatchesFilter(file.FullName))
+                    if (!m_fileProcessor.MatchesFilter(trackedPath))
                         return InvokeOnProcessingThread(Skip);
 
                     Task processTask = InvokeOnProcessingThread(Process);
@@ -320,19 +321,25 @@ namespace GSF.IO
                     Func<IEnumerable<Task>, Task> whenAll =
                         parallelSubdirectories ? Task.WhenAll : ForEach;
 
-                    IEnumerable<Task> subdirectoryTasks = FilePath
-                        .EnumerateDirectories(directory, "*", SearchOption.TopDirectoryOnly, m_fileProcessor.OnError)
-                        .Select(VisitSubdirectoryAsync);
+                    IEnumerable<DirectoryInfo> subdirectories = FilePath
+                        .EnumerateDirectories(directory, "*", SearchOption.TopDirectoryOnly, m_fileProcessor.OnError);
 
+                    if (sort)
+                        subdirectories = subdirectories.OrderBy(info => info.Name);
+
+                    IEnumerable<Task> subdirectoryTasks = subdirectories.Select(VisitSubdirectoryAsync);
                     await whenAll(subdirectoryTasks);
                 }
 
                 async Task EnumerateFilesAsync()
                 {
-                    IEnumerable<Task<Task>> fileTasks = FilePath
-                        .EnumerateFiles(directory, "*", SearchOption.TopDirectoryOnly)
-                        .Select(VisitFileAsync);
+                    IEnumerable<FileInfo> files = FilePath
+                        .EnumerateFiles(directory, "*", SearchOption.TopDirectoryOnly);
 
+                    if (sort)
+                        files.OrderBy(info => info.Name);
+
+                    IEnumerable<Task<Task>> fileTasks = files.Select(VisitFileAsync);
                     List<Task> processTasks = new List<Task>();
 
                     foreach (Task<Task> fileTask in fileTasks)
@@ -368,6 +375,19 @@ namespace GSF.IO
                 {
                     ActivelyVisitedPathsRequested -= handler;
                 }
+            }
+
+            private string ToTrackedPath(string fullPath)
+            {
+                string dirFullPath = System.IO.Path
+                    .GetFullPath(Path)
+                    .EnsureEnd('\\');
+
+                if (!fullPath.StartsWith(dirFullPath, StringComparison.OrdinalIgnoreCase))
+                    return fullPath;
+
+                string relativePath = fullPath.Substring(dirFullPath.Length);
+                return System.IO.Path.Combine(Path, relativePath);
             }
 
             private void CreateFileWatcher()
@@ -872,6 +892,7 @@ namespace GSF.IO
             List<TrackedDirectory> trackedDirectories = GetTrackedDirectories();
             FileEnumerationStrategy enumerationStrategy = m_enumerationStrategy;
             bool sequential = enumerationStrategy == FileEnumerationStrategy.Sequential;
+            bool sort = m_orderedEnumeration;
 
             Func<LogicalThread> getEnumerationThread = sequential
                 ? () => m_sequentialEnumerationThread
@@ -883,7 +904,7 @@ namespace GSF.IO
                 {
                     LogicalThread enumerationThread = getEnumerationThread();
                     await enumerationThread.Join();
-                    await trackedDirectory.EnumerateAsync(enumerationStrategy);
+                    await trackedDirectory.EnumerateAsync(enumerationStrategy, sort);
                 }
                 catch (Exception ex)
                 {

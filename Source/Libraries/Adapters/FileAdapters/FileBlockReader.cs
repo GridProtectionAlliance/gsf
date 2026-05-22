@@ -22,13 +22,17 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Timers;
 using GSF;
+using GSF.Collections;
 using GSF.Diagnostics;
 using GSF.IO;
 using GSF.TimeSeries;
@@ -36,6 +40,7 @@ using GSF.TimeSeries.Adapters;
 #if !MONO
 using GSF.TimeSeries.UI.Editors;
 #endif
+using Timer = System.Timers.Timer;
 
 namespace FileAdapters
 {
@@ -52,7 +57,7 @@ namespace FileAdapters
         /// <summary>
         /// Default value for <see cref="FilePattern"/>.
         /// </summary>
-        public const string DefaultFilePattern = "*";
+        public const string DefaultFilePattern = @"**\*";
 
         /// <summary>
         /// Default value for <see cref="BlockSize"/>.
@@ -60,9 +65,9 @@ namespace FileAdapters
         public const int DefaultBlockSize = 16384;
 
         /// <summary>
-        /// Default value for <see cref="WatchInterval"/>.
+        /// Default value for <see cref="ScanInterval"/>.
         /// </summary>
-        public const double DefaultWatchInterval = 5.0D;
+        public const double DefaultScanInterval = 0.0D;
 
         /// <summary>
         /// Default value for <see cref="ProcessInterval"/>.
@@ -84,20 +89,23 @@ namespace FileAdapters
         /// </summary>
         public const double DefaultProcessIntervalAdjustment = 5.0D;
 
-        // Fields
-        private string m_watchDirectory;
-        private string m_filePattern;
-        private int m_blockSize;
-        private double m_watchInterval;
-        private double m_processInterval;
-        private double m_retransmissionThreshold;
-        private double m_blockSizeAdjustment;
-        private double m_processIntervalAdjustment;
+        /// <summary>
+        /// Default value for <see cref="DeleteFilesWhenProcessed"/>.
+        /// </summary>
+        public const bool DefaultDeleteFilesWhenProcessed = false;
 
-        private readonly List<string> m_processedFiles;
-        private readonly Queue<string> m_unprocessedFiles;
+        // Fields
+        private string m_filePattern;
+        private string m_folderExclusion;
+        private int m_blockSize;
+        private double m_scanInterval;
+        private double m_processInterval;
+
+        private readonly ConcurrentQueue<string> m_unprocessedFiles;
+        private int m_processedFiles;
         private FileStream m_activeFileStream;
-        private Timer m_watchTimer;
+        private FileProcessor m_fileProcessor;
+        private Timer m_scanTimer;
         private Timer m_processTimer;
         private byte[] m_buffer;
         private long m_bufferBlocksSent;
@@ -117,10 +125,9 @@ namespace FileAdapters
         {
             m_filePattern = DefaultFilePattern;
             BlockSize = DefaultBlockSize;
-            m_watchInterval = DefaultWatchInterval;
-
-            m_processedFiles = new List<string>();
-            m_unprocessedFiles = new Queue<string>();
+            m_scanInterval = DefaultScanInterval;
+            m_processInterval = DefaultProcessInterval;
+            m_unprocessedFiles = new ConcurrentQueue<string>();
         }
 
         #endregion
@@ -134,24 +141,14 @@ namespace FileAdapters
 #if !MONO
         [CustomConfigurationEditor(typeof(FolderBrowserEditor))]
 #endif
-        public string WatchDirectory
-        {
-            get
-            {
-                return m_watchDirectory;
-            }
-            set
-            {
-                m_watchDirectory = value;
-            }
-        }
+        public string WatchDirectory { get; set; }
 
         /// <summary>
-        /// Gets or sets the pattern used to match file that appear in the watch folder.
+        /// Gets or sets the pattern used to match files that appear in the watch folder.
         /// </summary>
         [ConnectionStringParameter,
         DefaultValue(DefaultFilePattern),
-        Description("Determines which files are to processed when they appear in the watch folder.")]
+        Description("Determines which files are to be processed when they appear in the watch folder.")]
         public string FilePattern
         {
             get
@@ -161,6 +158,30 @@ namespace FileAdapters
             set
             {
                 m_filePattern = value;
+
+                if (m_fileProcessor is not null)
+                    m_fileProcessor.Filter = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the pattern used to determine whether a folder should be excluded from enumeration.
+        /// </summary>
+        [ConnectionStringParameter,
+        DefaultValue(null),
+        Description("Determines which folders should be ignored when scanning the watch folder.")]
+        public string FolderExclusion
+        {
+            get
+            {
+                return m_folderExclusion;
+            }
+            set
+            {
+                m_folderExclusion = value;
+
+                if (m_fileProcessor is not null)
+                    m_fileProcessor.FolderExclusion = value;
             }
         }
 
@@ -208,20 +229,20 @@ namespace FileAdapters
         /// Gets or sets the amount of time, in seconds, between each scan of the watch folder.
         /// </summary>
         [ConnectionStringParameter,
-        DefaultValue(DefaultWatchInterval),
+        DefaultValue(DefaultScanInterval),
         Description("Determines the amount of time, in seconds, between each scan of the watch folder.")]
-        public double WatchInterval
+        public double ScanInterval
         {
             get
             {
-                return m_watchInterval;
+                return m_scanInterval;
             }
             set
             {
-                m_watchInterval = value;
+                m_scanInterval = value;
 
-                if ((object)m_watchTimer != null)
-                    m_watchTimer.Interval = value * 1000.0D;
+                if (value > 0.0D && m_scanTimer is not null)
+                    m_scanTimer.Interval = value * 1000.0D;
             }
         }
 
@@ -241,7 +262,7 @@ namespace FileAdapters
             {
                 m_processInterval = value;
 
-                if ((object)m_processTimer != null)
+                if (m_processTimer is not null)
                     m_processTimer.Interval = AdjustedProcessInterval * 1000.0D;
             }
         }
@@ -254,17 +275,7 @@ namespace FileAdapters
         [ConnectionStringParameter,
         DefaultValue(DefaultRetransmissionThreshold),
         Description("Defines the percentage of buffer blocks that can be retransmitted before throttling begins.")]
-        public double RetransmissionThreshold
-        {
-            get
-            {
-                return m_retransmissionThreshold;
-            }
-            set
-            {
-                m_retransmissionThreshold = value;
-            }
-        }
+        public double RetransmissionThreshold { get; set; } = DefaultRetransmissionThreshold;
 
         /// <summary>
         /// Gets or sets the percentage of adjustment to be applied
@@ -273,17 +284,7 @@ namespace FileAdapters
         [ConnectionStringParameter,
         DefaultValue(DefaultBlockSizeAdjustment),
         Description("Defines the percentage by which to adjust the buffer size when throttling buffer blocks.")]
-        public double BlockSizeAdjustment
-        {
-            get
-            {
-                return m_blockSizeAdjustment;
-            }
-            set
-            {
-                m_blockSizeAdjustment = value;
-            }
-        }
+        public double BlockSizeAdjustment { get; set; } = DefaultBlockSizeAdjustment;
 
         /// <summary>
         /// Gets or sets the percentage of adjustment to be applied
@@ -292,22 +293,25 @@ namespace FileAdapters
         [ConnectionStringParameter,
         DefaultValue(DefaultBlockSizeAdjustment),
         Description("Defines the percentage by which to adjust the process interval when throttling buffer blocks.")]
-        public double ProcessIntervalAdjustment
-        {
-            get
-            {
-                return m_processIntervalAdjustment;
-            }
-            set
-            {
-                m_processIntervalAdjustment = value;
-            }
-        }
+        public double ProcessIntervalAdjustment { get; set; } = DefaultProcessIntervalAdjustment;
+
+        /// <summary>
+        /// Gets or sets a flag that determines whether files should be deleted from the watch directory after they have been processed.
+        /// </summary>
+        [ConnectionStringParameter,
+        DefaultValue(DefaultDeleteFilesWhenProcessed),
+        Description("Defines a flag that determines whether files should be deleted from the watch directory after they have been processed.")]
+        public bool DeleteFilesWhenProcessed { get; set; } = DefaultDeleteFilesWhenProcessed;
 
         /// <summary>
         /// Gets the flag indicating if this adapter supports temporal processing.
         /// </summary>
         public override bool SupportsTemporalProcessing => false;
+
+        /// <summary>
+        /// Gets the number of files processed by this adapter.
+        /// </summary>
+        private int ProcessedFiles => Interlocked.CompareExchange(ref m_processedFiles, 0, 0);
 
         /// <summary>
         /// Gets the block size after making adjustments for throttling.
@@ -316,7 +320,7 @@ namespace FileAdapters
         {
             get
             {
-                double blockSizeAdjustment = m_blockSize * (m_blockSizeAdjustment * 0.01);
+                double blockSizeAdjustment = m_blockSize * (BlockSizeAdjustment * 0.01);
                 return m_blockSize - (int)(m_throttleMultiplier * blockSizeAdjustment);
             }
         }
@@ -328,8 +332,47 @@ namespace FileAdapters
         {
             get
             {
-                double processIntervalAdjustment = m_processInterval * (m_processIntervalAdjustment * 0.01);
+                double processIntervalAdjustment = m_processInterval * (ProcessIntervalAdjustment * 0.01);
                 return m_processInterval + (m_throttleMultiplier * processIntervalAdjustment);
+            }
+        }
+
+        /// <inheritdoc/>
+        public override string Status
+        {
+            get
+            {
+                StringBuilder status = new(base.Status);
+
+                status.AppendLine($"           Processed files: {ProcessedFiles:N0}");
+                status.AppendLine($"       Throttle Multiplier: {m_throttleMultiplier:N0}");
+                status.AppendLine($"      Throttled Block Size: {AdjustedBlockSize:N0}");
+                status.AppendLine($"Throttled Process Interval: {AdjustedProcessInterval:N0}");
+
+                if (m_fileProcessor is not null)
+                {
+                    bool isEnumerating = m_fileProcessor.IsEnumerating;
+
+                    status.AppendLine($"             Scanned Files: {m_fileProcessor.ProcessedFileCount:N0}");
+                    status.AppendLine($"             Skipped Files: {m_fileProcessor.SkippedFileCount:N0}");
+                    status.AppendLine($"               Is Scanning: {isEnumerating}");
+
+                    if (isEnumerating)
+                    {
+                        IEnumerable<string> paths = m_fileProcessor.ActivelyEnumeratedPaths
+                            .Select((path, i) => $"    [{i}] {path}");
+
+                        string progress = string.Join(Environment.NewLine, paths);
+
+                        if (progress.Length > 0)
+                        {
+                            status.AppendLine($"        Currently scanning:");
+                            status.AppendLine(progress);
+                        }
+                    }
+                }
+
+                return status.ToString();
             }
         }
 
@@ -431,14 +474,16 @@ namespace FileAdapters
             if (!settings.TryGetValue("watchDirectory", out setting))
                 throw new ArgumentException(string.Format(ErrorMessage, "watchDirectory"));
 
-            m_watchDirectory = FilePath.GetAbsolutePath(setting);
+            WatchDirectory = FilePath.GetAbsolutePath(setting);
 
             if (OutputMeasurements.Length <= 0)
                 throw new ArgumentException(string.Format(ErrorMessage, "outputMeasurements"));
 
             // Optional parameters
 
-            if (!settings.TryGetValue("filePattern", out m_filePattern))
+            if (settings.TryGetValue("filePattern", out setting))
+                m_filePattern = setting;
+            else
                 m_filePattern = DefaultFilePattern;
 
             if (settings.TryGetValue("retransmissionStat", out setting))
@@ -451,28 +496,54 @@ namespace FileAdapters
             else
                 BlockSize = DefaultBlockSize;
 
-            if (!settings.TryGetValue("watchInterval", out setting) || !double.TryParse(setting, out m_watchInterval))
-                m_watchInterval = DefaultWatchInterval;
+            if (!settings.TryGetValue("scanInterval", out setting) || !double.TryParse(setting, out m_scanInterval))
+            {
+                if (!settings.TryGetValue("watchInterval", out setting) || !double.TryParse(setting, out m_scanInterval))
+                    m_scanInterval = DefaultScanInterval;
+            }
 
             if (!settings.TryGetValue("processInterval", out setting) || !double.TryParse(setting, out m_processInterval))
                 m_processInterval = DefaultProcessInterval;
 
-            if (!settings.TryGetValue("retransmissionThreshold", out setting) || !double.TryParse(setting, out m_retransmissionThreshold))
-                m_retransmissionThreshold = DefaultRetransmissionThreshold;
+            if (settings.TryGetValue("retransmissionThreshold", out setting) && double.TryParse(setting, out double retransmissionThreshold))
+                RetransmissionThreshold = retransmissionThreshold;
+            else
+                RetransmissionThreshold = DefaultRetransmissionThreshold;
 
-            if (!settings.TryGetValue("blockSizeAdjustment", out setting) || !double.TryParse(setting, out m_blockSizeAdjustment))
-                m_blockSizeAdjustment = DefaultBlockSizeAdjustment;
+            if (settings.TryGetValue("blockSizeAdjustment", out setting) && double.TryParse(setting, out double blockSizeAdjustment))
+                BlockSizeAdjustment = blockSizeAdjustment;
+            else
+                BlockSizeAdjustment = DefaultBlockSizeAdjustment;
 
-            if (!settings.TryGetValue("processIntervalAdjustment", out setting) || !double.TryParse(setting, out m_processIntervalAdjustment))
-                m_processIntervalAdjustment = DefaultProcessIntervalAdjustment;
+            if (settings.TryGetValue("processIntervalAdjustment", out setting) && double.TryParse(setting, out double processIntervalAdjustment))
+                ProcessIntervalAdjustment = processIntervalAdjustment;
+            else
+                ProcessIntervalAdjustment = DefaultProcessIntervalAdjustment;
 
-            if (!Directory.Exists(m_watchDirectory))
-                Directory.CreateDirectory(m_watchDirectory);
+            if (settings.TryGetValue("deleteFilesWhenProcessed", out setting))
+                DeleteFilesWhenProcessed = setting.ParseBoolean();
+            else
+                DeleteFilesWhenProcessed = DefaultDeleteFilesWhenProcessed;
 
-            m_watchTimer = new Timer();
-            m_watchTimer.AutoReset = false;
-            m_watchTimer.Interval = m_watchInterval * 1000.0D;
-            m_watchTimer.Elapsed += WatchTimer_Elapsed;
+            if (!Directory.Exists(WatchDirectory))
+                Directory.CreateDirectory(WatchDirectory);
+
+            m_fileProcessor = new FileProcessor();
+            m_fileProcessor.Filter = m_filePattern;
+            m_fileProcessor.FolderExclusion = m_folderExclusion;
+            m_fileProcessor.EnumerationStrategy = FileEnumerationStrategy.Sequential;
+            m_fileProcessor.OrderedEnumeration = true;
+            m_fileProcessor.MaxThreadCount = 1;
+            m_fileProcessor.TrackChanges = true;
+            m_fileProcessor.Processing += FileProcessor_Processing;
+            m_fileProcessor.Error += FileProcessor_Error;
+
+            if (m_scanInterval > 0.0D)
+            {
+                m_scanTimer = new Timer();
+                m_scanTimer.Interval = m_scanInterval * 1000.0D;
+                m_scanTimer.Elapsed += ScanTimer_Elapsed;
+            }
 
             m_processTimer = new Timer();
             m_processTimer.AutoReset = false;
@@ -487,19 +558,66 @@ namespace FileAdapters
         /// <returns>A short one-line summary of the current status of this <see cref="FileBlockReader"/>.</returns>
         public override string GetShortStatus(int maxLength)
         {
-            if ((object)m_activeFileStream != null)
-                return $"Currently reading from file {Path.GetFileName(m_unprocessedFiles.Peek())}".CenterText(maxLength);
+            if (m_activeFileStream is not null && m_unprocessedFiles.TryPeek(out string file))
+                return $"Currently reading from file {Path.GetFileName(file)}".CenterText(maxLength);
 
-            return $"{m_processedFiles.Count} files processed by {Name}".CenterText(maxLength);
+            return $"{ProcessedFiles} files processed by {Name}".CenterText(maxLength);
         }
 
         /// <summary>
-        /// Empties the processed file list.
+        /// Check if files have been removed from the directory and remove them from the index.
         /// </summary>
-        [AdapterCommand("Empties the processed file list so that newly dropped files with the same name as old processed files will not be deleted.", "Administrator", "Editor")]
-        public void ClearProcessedFileList()
+        [AdapterCommand("Remove missing files from the index.", "Administrator", "Editor")]
+        public void TrimFileIndex()
         {
-            m_processedFiles.Clear();
+            bool Exists(string relativePath)
+            {
+                string fullPath = Path.Combine(WatchDirectory, relativePath);
+                return File.Exists(fullPath);
+            }
+
+            using FileBackedDictionary<string, DateTime> fileIndex = GetFileIndex();
+
+            List<string> missingFiles = fileIndex.Keys
+                .Where(relativePath => !Exists(relativePath))
+                .ToList();
+
+            foreach (string filePath in missingFiles)
+                fileIndex.Remove(filePath);
+
+            if (missingFiles.Count > 0)
+                fileIndex.Compact();
+        }
+
+        /// <summary>
+        /// Scans the watch directory to check for missed files.
+        /// </summary>
+        [AdapterCommand("Scans the watch directory to check for missed files.", "Administrator", "Editor")]
+        public void ScanWatchDirectory()
+        {
+            m_fileProcessor.EnumerateWatchDirectories();
+        }
+
+        /// <summary>
+        /// Rescans the folder and sends all files from scratch.
+        /// </summary>
+        [AdapterCommand("Recans the folder and sends all files from scratch.", "Administrator", "Editor")]
+        public void ResendAllFiles()
+        {
+            using (FileBackedDictionary<string, DateTime> fileIndex = GetFileIndex())
+                fileIndex.Clear();
+
+            m_fileProcessor.ResetIndexAndStatistics();
+            m_fileProcessor.EnumerateWatchDirectories();
+        }
+
+        /// <summary>
+        /// Stops the currently active scan.
+        /// </summary>
+        [AdapterCommand("Stops the currently active scan.", "Administrator", "Editor")]
+        public void StopWatchDirectoryScan()
+        {
+            m_fileProcessor.StopEnumeration();
         }
 
         /// <summary>
@@ -508,7 +626,12 @@ namespace FileAdapters
         public override void Start()
         {
             base.Start();
-            m_watchTimer.Start();
+            m_fileProcessor.AddTrackedDirectory(WatchDirectory);
+            m_fileProcessor.EnumerateWatchDirectories();
+
+            if (m_scanInterval > 0.0D)
+                m_scanTimer.Start();
+
             m_processTimer.Start();
         }
 
@@ -517,10 +640,12 @@ namespace FileAdapters
         /// </summary>		
         public override void Stop()
         {
-            m_watchTimer.Stop();
-            m_processTimer.Stop();
+            m_fileProcessor?.StopEnumeration();
+            m_fileProcessor?.ClearTrackedDirectories();
+            m_scanTimer?.Stop();
+            m_processTimer?.Stop();
 
-            if ((object)m_activeFileStream != null)
+            if (m_activeFileStream is not null)
             {
                 m_activeFileStream.Dispose();
                 m_activeFileStream = null;
@@ -548,9 +673,9 @@ namespace FileAdapters
             int bufferBlocksSentSinceLastAdjustment = (int)(bufferBlocksSent - m_bufferBlocksSentLastAdjustment);
 
             // Adjust the throttle multiplier based on the number of retransmissions
-            if (retransmissions >= bufferBlocksSentSinceLastAdjustment * (m_retransmissionThreshold * 0.01))
+            if (retransmissions >= bufferBlocksSentSinceLastAdjustment * (RetransmissionThreshold * 0.01))
                 m_throttleMultiplier++;
-            else if (retransmissions < bufferBlocksSentSinceLastAdjustment * (m_retransmissionThreshold * 0.005))
+            else if (retransmissions < bufferBlocksSentSinceLastAdjustment * (RetransmissionThreshold * 0.005))
                 m_throttleMultiplier--;
 
             // Throttle multiplier cannot be less than 0
@@ -568,22 +693,18 @@ namespace FileAdapters
             m_bufferBlocksSentLastAdjustment = bufferBlocksSent;
         }
 
+        // When a file is created or changed, adds it to the unprocessed files queue
+        private void FileProcessor_Processing(object sender, FileProcessorEventArgs e)
+        {
+            if (!HasProcessedFile(e.FullPath))
+                m_unprocessedFiles.Enqueue(e.FullPath);
+        }
+
         // Scans the watch folder for new files to transfer
-        private void WatchTimer_Elapsed(object sender, ElapsedEventArgs elapsedEventArgs)
+        private void ScanTimer_Elapsed(object sender, ElapsedEventArgs elapsedEventArgs)
         {
             if (Enabled)
-            {
-                // Scan each file and add them to the unprocessed files lists
-                foreach (string file in FilePath.GetFileList(Path.Combine(m_watchDirectory, m_filePattern)))
-                {
-                    if (!m_unprocessedFiles.Contains(file))
-                        m_unprocessedFiles.Enqueue(file);
-                }
-
-                // Done scanning, so start the timer for another scan
-                if ((object)m_watchTimer != null)
-                    m_watchTimer.Start();
-            }
+                m_fileProcessor.EnumerateWatchDirectories();
         }
 
         // Reads the next block from the active file
@@ -591,12 +712,12 @@ namespace FileAdapters
         {
             byte[] buffer = m_buffer;
             int bytesRead = 0;
-            int fileNameByteLength;
+            int filePathByteLength;
             FileInfo fileInfo;
 
             if (Enabled)
             {
-                if ((object)m_activeFileStream != null)
+                if (m_activeFileStream is not null)
                 {
                     // Set first byte to 0 to indicate that
                     // this is not the beginning of a file
@@ -607,38 +728,46 @@ namespace FileAdapters
 
                     if (bytesRead == 1)
                     {
-                        // Notify that processing is done for the current file
-                        OnStatusMessage(MessageLevel.Info, "Done processing file {0}.", Path.GetFileName(m_unprocessedFiles.Peek()));
+                        string activeFilePath = m_activeFileStream.Name;
+                        string relativePath = GetRelativePath(activeFilePath);
 
-                        // Delete the now-processed file
+                        // Notify that processing is done for the current file
+                        OnStatusMessage(MessageLevel.Info, "Done processing file {0}.", relativePath);
+
+                        // Move it to indexed files
+                        m_unprocessedFiles.TryDequeue(out _);
+                        Interlocked.Increment(ref m_processedFiles);
+                        AddToIndex(activeFilePath);
+
+                        // Close and delete the now-processed file
                         m_activeFileStream.Dispose();
                         m_activeFileStream = null;
-                        File.Delete(m_unprocessedFiles.Peek());
 
-                        // Move unprocessed file into processed file list
-                        m_processedFiles.Add(m_unprocessedFiles.Peek());
-                        m_unprocessedFiles.Dequeue();
+                        if (DeleteFilesWhenProcessed)
+                            File.Delete(activeFilePath);
                     }
                 }
 
-                if ((object)m_activeFileStream == null && m_unprocessedFiles.Count > 0)
+                if (m_activeFileStream is null && m_unprocessedFiles.TryPeek(out string filePath))
                 {
+                    string relativePath = GetRelativePath(filePath);
+
                     // Notify that processing has started for a new file
-                    OnStatusMessage(MessageLevel.Info, "Now processing file {0}...", Path.GetFileName(m_unprocessedFiles.Peek()));
+                    OnStatusMessage(MessageLevel.Info, "Now processing file {0}...", relativePath);
 
                     // Get info about the next file to process
-                    fileInfo = new FileInfo(m_unprocessedFiles.Peek());
+                    fileInfo = new FileInfo(filePath);
 
                     // Set first byte to 1 to indicate that
                     // this is the beginning of a file
                     buffer[0] = 1;
 
                     // Copy file info into the buffer
-                    fileNameByteLength = Encoding.Unicode.GetByteCount(fileInfo.Name);
-                    BigEndian.CopyBytes(fileNameByteLength, buffer, 1);
-                    Encoding.Unicode.GetBytes(fileInfo.Name, 0, fileInfo.Name.Length, buffer, 5);
-                    BigEndian.CopyBytes(fileInfo.Length, buffer, 5 + fileNameByteLength);
-                    bytesRead = 1 + 4 + fileNameByteLength + 8;
+                    filePathByteLength = Encoding.Unicode.GetByteCount(relativePath);
+                    BigEndian.CopyBytes(filePathByteLength, buffer, 1);
+                    Encoding.Unicode.GetBytes(relativePath, 0, relativePath.Length, buffer, 5);
+                    BigEndian.CopyBytes(fileInfo.Length, buffer, 5 + filePathByteLength);
+                    bytesRead = 1 + 4 + filePathByteLength + 8;
 
                     // Wait for lock to open the file
                     FilePath.WaitForReadLock(fileInfo.FullName);
@@ -648,7 +777,7 @@ namespace FileAdapters
                     bytesRead += m_activeFileStream.Read(buffer, bytesRead, buffer.Length - bytesRead);
                 }
 
-                if ((object)m_activeFileStream != null)
+                if (m_activeFileStream is not null)
                 {
                     // Publish next block of file data
                     OnNewMeasurement(new BufferBlockMeasurement(buffer, 0, bytesRead)
@@ -659,9 +788,60 @@ namespace FileAdapters
                 }
 
                 // Done reading, so start the timer for another read
-                if ((object)m_processTimer != null)
+                if (m_processTimer is not null)
                     m_processTimer.Start();
             }
+        }
+
+        /// <summary>
+        /// Determines whether the given file has already been processed.
+        /// </summary>
+        private bool HasProcessedFile(string filePath)
+        {
+            string relativePath = GetRelativePath(filePath);
+            DateTime lastWriteTime = File.GetLastWriteTimeUtc(filePath);
+            using FileBackedDictionary<string, DateTime> fileIndex = GetFileIndex();
+
+            return
+                fileIndex.TryGetValue(relativePath, out DateTime oldWriteTime) &&
+                lastWriteTime <= oldWriteTime;
+        }
+
+        /// <summary>
+        /// Adds the given file to the index.
+        /// </summary>
+        private void AddToIndex(string filePath)
+        {
+            string relativePath = GetRelativePath(filePath);
+            DateTime lastWriteTime = File.GetLastWriteTimeUtc(filePath);
+            using FileBackedDictionary<string, DateTime> fileIndex = GetFileIndex();
+            fileIndex[relativePath] = lastWriteTime;
+        }
+
+        /// <summary>
+        /// Gets path relative to <see cref="WatchDirectory"/>.
+        /// </summary>
+        private string GetRelativePath(string filePath)
+        {
+            string watchDirectory = WatchDirectory.EnsureEnd(Path.DirectorySeparatorChar);
+
+            if (!filePath.StartsWith(watchDirectory, StringComparison.OrdinalIgnoreCase))
+            {
+                watchDirectory = Path.GetFullPath(watchDirectory);
+                Debug.Assert(filePath.StartsWith(watchDirectory, StringComparison.OrdinalIgnoreCase));
+            }
+
+            return filePath.Substring(watchDirectory.Length);
+        }
+
+        /// <summary>
+        /// Gets the index for files that were processed.
+        /// </summary>
+        private FileBackedDictionary<string, DateTime> GetFileIndex()
+        {
+            string appData = FilePath.GetCommonApplicationDataFolder();
+            string pathToFileIndex = Path.Combine(appData, $"FileIndex_{ID:X8}.bin");
+            return new FileBackedDictionary<string, DateTime>(pathToFileIndex, StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>
@@ -671,6 +851,14 @@ namespace FileAdapters
         {
             OnNewMeasurements(new[] { measurement });
             m_bufferBlocksSent++;
+        }
+
+        /// <summary>
+        /// Raises the <see cref="AdapterBase.ProcessException"/> event.
+        /// </summary>
+        private void FileProcessor_Error(object sender, ErrorEventArgs e)
+        {
+            OnProcessException(MessageLevel.Error, e.GetException());
         }
 
         /// <summary>
@@ -685,20 +873,28 @@ namespace FileAdapters
                 {
                     if (disposing)
                     {
-                        if ((object)m_activeFileStream != null)
+                        if (m_activeFileStream is not null)
                         {
                             m_activeFileStream.Dispose();
                             m_activeFileStream = null;
                         }
 
-                        if ((object)m_watchTimer != null)
+                        if (m_fileProcessor is not null)
                         {
-                            m_watchTimer.Stop();
-                            m_watchTimer.Dispose();
-                            m_watchTimer = null;
+                            m_fileProcessor.StopEnumeration();
+                            m_fileProcessor.ClearTrackedDirectories();
+                            m_fileProcessor.Dispose();
+                            m_fileProcessor = null;
                         }
 
-                        if ((object)m_processTimer != null)
+                        if (m_scanTimer is not null)
+                        {
+                            m_scanTimer.Stop();
+                            m_scanTimer.Dispose();
+                            m_scanTimer = null;
+                        }
+
+                        if (m_processTimer is not null)
                         {
                             m_processTimer.Stop();
                             m_processTimer.Dispose();

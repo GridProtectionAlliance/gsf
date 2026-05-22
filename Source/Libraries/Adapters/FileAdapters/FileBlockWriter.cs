@@ -46,7 +46,6 @@ namespace FileAdapters
         #region [ Members ]
 
         // Fields
-        private string m_outputDirectory;
 
         private FileStream m_activeFileStream;
         private long m_activeFileSize;
@@ -65,17 +64,7 @@ namespace FileAdapters
 #if !MONO
         [CustomConfigurationEditor(typeof(FolderBrowserEditor))]
 #endif
-        public string OutputDirectory
-        {
-            get
-            {
-                return m_outputDirectory;
-            }
-            set
-            {
-                m_outputDirectory = value;
-            }
-        }
+        public string OutputDirectory { get; set; }
 
         /// <summary>
         /// Gets the flag that determines if measurements sent to this <see cref="FileBlockWriter"/> are destined for archival.
@@ -108,10 +97,10 @@ namespace FileAdapters
             if (!settings.TryGetValue("outputDirectory", out setting))
                 throw new ArgumentException(string.Format(errorMessage, "outputDirectory"));
 
-            m_outputDirectory = FilePath.GetAbsolutePath(setting);
+            OutputDirectory = FilePath.GetAbsolutePath(setting);
 
-            if (!Directory.Exists(m_outputDirectory))
-                Directory.CreateDirectory(m_outputDirectory);
+            if (!Directory.Exists(OutputDirectory))
+                Directory.CreateDirectory(OutputDirectory);
         }
 
         /// <summary>
@@ -124,7 +113,7 @@ namespace FileAdapters
             if ((object)m_activeFileStream != null)
                 return $"Currently writing to file {Path.GetFileName(m_activeFileStream.Name)}".CenterText(maxLength);
 
-            return $"{FilePath.GetFileList(Path.Combine(m_outputDirectory, "*")).Length} files written by {Name}".CenterText(maxLength);
+            return $"{FilePath.GetFileList(Path.Combine(OutputDirectory, "*")).Length} files written by {Name}".CenterText(maxLength);
         }
 
         /// <summary>
@@ -172,25 +161,32 @@ namespace FileAdapters
             if (bufferBlock[0] != 0)
             {
                 // Start of a new file - read file info
-                int fileNameByteLength = BigEndian.ToInt32(bufferBlock, 1);
-                string fileName = Encoding.Unicode.GetString(bufferBlock, 5, fileNameByteLength);
-                long fileSize = BigEndian.ToInt64(bufferBlock, 5 + fileNameByteLength);
+                int filePathByteLength = BigEndian.ToInt32(bufferBlock, 1);
+                string filePath = Encoding.Unicode.GetString(bufferBlock, 5, filePathByteLength);
+                long fileSize = BigEndian.ToInt64(bufferBlock, 5 + filePathByteLength);
 
                 // Notify of new file creation
-                OnStatusMessage(MessageLevel.Info, "Now writing to file {0}...", fileName);
+                OnStatusMessage(MessageLevel.Info, "Now writing to file {0}...", filePath);
+
+                // Create the directory structure at which the new file will be created
+                string fullPath = Path.Combine(OutputDirectory, filePath);
+                string directoryPath = FilePath.GetDirectoryName(fullPath);
+
+                if (!EnsureDirectory(directoryPath))
+                    fullPath = Path.Combine(OutputDirectory, Path.GetFileName(filePath));
 
                 // ReSharper disable once UnusedVariable > Justification: Implementation pattern closes any existing stream
 
                 // Create new file
                 using (FileStream activeFileStream = m_activeFileStream)
-                    m_activeFileStream = File.Create(Path.Combine(m_outputDirectory, fileName));
+                    m_activeFileStream = File.Create(fullPath);
 
                 m_activeFileStream.SetLength(fileSize);
                 m_activeFileSize = fileSize;
                 m_bytesWritten = 0L;
 
                 // Advance buffer pointer to file data
-                index = 1 + 4 + fileNameByteLength + 8;
+                index = 1 + 4 + filePathByteLength + 8;
             }
 
             if ((object)m_activeFileStream != null)
@@ -209,6 +205,23 @@ namespace FileAdapters
                     m_activeFileStream = null;
                     m_bytesWritten = 0L;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Attempt to create a directory at the given location if it does not already exist.
+        /// </summary>
+        private bool EnsureDirectory(string path)
+        {
+            try
+            {
+                Directory.CreateDirectory(path);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(MessageLevel.Error, ex);
+                return false;
             }
         }
 
