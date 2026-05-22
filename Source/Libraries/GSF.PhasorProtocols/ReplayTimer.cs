@@ -50,7 +50,7 @@ public sealed class ReplayTimer
 
     // Maximum deficit, in milliseconds, that the deadline may fall behind real
     // time. This bounds the catch-up burst produced after a long stall (e.g., a
-    // pause/resume or a slow buffer read) while still allowing the normal buffer-
+    // pause/resume or a slow buffer read) while still allowing the normal buffer
     // read gaps of file playback to be fully recovered so the defined frame rate
     // is maintained. Raise toward infinity for unbounded catch-up; lower for
     // tighter burst control at the risk of dropping below the defined rate.
