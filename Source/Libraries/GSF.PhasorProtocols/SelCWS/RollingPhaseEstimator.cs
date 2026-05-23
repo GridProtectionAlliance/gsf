@@ -167,6 +167,12 @@ internal sealed class RollingPhaseEstimator
     /// </summary>
     public const int DefaultRecalculationCycles = 10;
 
+    /// <summary>
+    /// Default maximum gap (in samples) filled by phase-continued synthesis before resynchronizing.
+    /// A negative value means "auto" (one full analysis window).
+    /// </summary>
+    public const int DefaultMaxGapFillSamples = -1;
+
     // Fields
     private readonly double m_samplePeriodSeconds;
     private readonly int m_recalculationInterval;
@@ -251,6 +257,11 @@ internal sealed class RollingPhaseEstimator
 
     // Timing
     private long m_prevEpochNs;
+
+    // Gap detection / fill (missing-data handling)
+    private readonly double m_samplePeriodNs;   // expected nanoseconds between consecutive input samples
+    private readonly int m_maxGapFillSamples;   // max gap (samples) coasted before a resynchronization
+    private long m_prevInputEpochNs;            // epoch of the previous Step call (tracked every sample)
 
     // Interval accumulators (for down-sampling / anti-aliasing)
     private int m_intervalCount;
@@ -365,6 +376,13 @@ internal sealed class RollingPhaseEstimator
     /// Sliding DFT updates are O(1) per sample but can accumulate numerical drift; periodic full recomputation
     /// re-anchors the phasor sums.
     /// </param>
+    /// <param name="maxGapFillSamples">
+    /// Maximum gap (in input samples) that will be filled by phase-continued synthesis (coasting the last
+    /// phasors at the tracked frequency) when the input timestamp cadence indicates dropped samples. Gaps
+    /// larger than this trigger a resynchronization (the analysis window is dropped and refilled).
+    /// A negative value (default) means "auto" = one full analysis window; <c>0</c> disables coasting
+    /// (any gap resynchronizes). Must not exceed twice <see cref="WindowSamples"/>.
+    /// </param>
     /// <exception cref="ArgumentOutOfRangeException">
     /// Thrown if any rate is non-positive, output rate exceeds input rate, targetCycles &lt; 1, or any τ is negative.
     /// </exception>
@@ -422,7 +440,8 @@ internal sealed class RollingPhaseEstimator
         double publishRocofTauSeconds = DefaultPublishRocofTauSeconds,
         double sampleFrequencyTauSeconds = DefaultSampleFrequencyTauSeconds,
         double sampleRocofTauSeconds = DefaultSampleRocofTauSeconds,
-        int recalculationCycles = DefaultRecalculationCycles)
+        int recalculationCycles = DefaultRecalculationCycles,
+        int maxGapFillSamples = DefaultMaxGapFillSamples)
     {
         // Validate rates / window
         if (sampleRateHz <= 0)
@@ -503,6 +522,13 @@ internal sealed class RollingPhaseEstimator
 
         // Align the first recalc countdown so recalcs land on the same absolute cadence a modulo would
         m_initialSamplesUntilRecalc = m_recalculationInterval - WindowSamples % m_recalculationInterval;
+
+        // Gap-fill bound: validate for reasonability against the window, then resolve "auto" (negative) to one window
+        if (maxGapFillSamples > 2 * WindowSamples)
+            throw new ArgumentOutOfRangeException(nameof(maxGapFillSamples), "Max gap fill samples should not exceed twice the window size.");
+
+        m_maxGapFillSamples = maxGapFillSamples < 0 ? WindowSamples : maxGapFillSamples;
+        m_samplePeriodNs = NanosecondsPerSecond / sampleRateHz;
 
         // Precompute RMS magnitude scale factor from DFT magnitude.
         // For a pure sinusoid: |X| = N * A / 2 (A = peak amplitude); RMS = A / sqrt(2), so RMS = sqrt(2) * |X| / N.
@@ -616,62 +642,46 @@ internal sealed class RollingPhaseEstimator
         if (phaseEstimateHandler is null)
             throw new ArgumentNullException(nameof(phaseEstimateHandler));
 
-        // Determine if we're in fill-up mode or sliding mode
-        bool isFillingUp = TotalSamplesProcessed < WindowSamples;
-        int oldestIndex = m_bufferWriteIndex;
+        // Missing-data handling: infer dropped samples from the input timestamp cadence, then either
+        // coast across a small gap (phase-continued synthesis) or resynchronize across a large one.
+        if (m_prevInputEpochNs > 0L)
+        {
+            long deltaNs = epochNanoseconds - m_prevInputEpochNs;
 
+            if (deltaNs <= 0L)
+            {
+                // Backward or duplicate timestamp. Unexpected for GPS-synced sources, so the sample is ignored.
+                // NOTE: if rewound/looped streams become a real case, treat a backward jump as a resync instead.
+                return false;
+            }
+
+            // Samples missing between the previous input and this one (rounding absorbs minor timing jitter).
+            double missing = Math.Round(deltaNs / m_samplePeriodNs) - 1.0D;
+
+            if (missing > 0.0D)
+            {
+                if (IsReady && missing <= m_maxGapFillSamples)
+                {
+                    CoastFillGap((int)missing);
+
+                    // Re-anchor frequency tracking to the post-coast state so the upcoming real sample yields a
+                    // clean single-sample phase delta (a multi-sample delta would wrap and corrupt the estimate).
+                    int referenceChannel = (int)ReferenceChannel;
+                    m_prevPhaseAngle = Math.Atan2(m_phasorImag[referenceChannel], m_phasorReal[referenceChannel]);
+                    m_prevEpochNs = epochNanoseconds - (long)m_samplePeriodNs;
+                }
+                else
+                {
+                    Resync();
+                }
+            }
+        }
+
+        // Apply the real sample to the buffers and SDFT
         Span<double> samples = stackalloc double[NumChannels] { va, vb, vc, ia, ib, ic };
+        AdvanceOneSample(samples);
 
-        // Store the new sample in the buffer and update SDFT
-        for (int ch = 0; ch < NumChannels; ch++)
-        {
-            double oldSample = m_sampleBuffers[ch][oldestIndex];
-            double newSample = samples[ch];
-
-            m_sampleBuffers[ch][oldestIndex] = newSample;
-
-            if (isFillingUp)
-            {
-                // During fill-up, add contribution of new sample to DFT at correct phase
-                // DFT coefficient for this sample's position within the window
-                int dftIndex = (int)(TotalSamplesProcessed % WindowSamples);
-                m_phasorReal[ch] += newSample * m_cosTable[dftIndex];
-                m_phasorImag[ch] -= newSample * m_sinTable[dftIndex];
-            }
-            else
-            {
-                // Sliding DFT update: X_new = (X_old - x_oldest + x_new) * e^(j*2π/N)
-                // First, remove the oldest sample's contribution and add the new sample
-                double unrotatedReal = m_phasorReal[ch] + (newSample - oldSample);
-                double unrotatedImag = m_phasorImag[ch];
-
-                // Then rotate by the twiddle factor
-                // Complex multiplication: (a + bi)(c + di) = (ac - bd) + (ad + bc)i
-                m_phasorReal[ch] = unrotatedReal  * m_twiddleReal - unrotatedImag  * m_twiddleImag;
-                m_phasorImag[ch] = unrotatedReal  * m_twiddleImag + unrotatedImag  * m_twiddleReal;
-            }
-        }
-
-        // Advance buffer write index (compare/reset avoids a per-sample modulo)
-        if (++m_bufferWriteIndex >= WindowSamples)
-            m_bufferWriteIndex = 0;
-
-        TotalSamplesProcessed++;
-
-        // Periodic full recalculation for numerical stability: immediately after fill-up, then on a fixed
-        // sample countdown aligned to m_recalculationInterval (avoids a per-sample modulo).
-        bool justFilled = TotalSamplesProcessed == WindowSamples;
-
-        if (justFilled)
-        {
-            m_samplesUntilRecalc = m_initialSamplesUntilRecalc;
-            RecalculateFullDft();
-        }
-        else if (!isFillingUp && --m_samplesUntilRecalc == 0)
-        {
-            m_samplesUntilRecalc = m_recalculationInterval;
-            RecalculateFullDft();
-        }
+        m_prevInputEpochNs = epochNanoseconds;
 
         // Check if window has filled
         if (TotalSamplesProcessed < WindowSamples)
@@ -738,6 +748,124 @@ internal sealed class RollingPhaseEstimator
         return true;
     }
 
+    // Applies one sample-group to the circular buffers and the sliding DFT (no estimate / no publish).
+    // Shared by real input samples and synthesized gap-fill samples so the window stays contiguous.
+    private void AdvanceOneSample(ReadOnlySpan<double> samples)
+    {
+        bool isFillingUp = TotalSamplesProcessed < WindowSamples;
+        int oldestIndex = m_bufferWriteIndex;
+
+        for (int ch = 0; ch < NumChannels; ch++)
+        {
+            double oldSample = m_sampleBuffers[ch][oldestIndex];
+            double newSample = samples[ch];
+
+            m_sampleBuffers[ch][oldestIndex] = newSample;
+
+            if (isFillingUp)
+            {
+                // During fill-up, add contribution of new sample to DFT at correct phase
+                int dftIndex = (int)(TotalSamplesProcessed % WindowSamples);
+                m_phasorReal[ch] += newSample * m_cosTable[dftIndex];
+                m_phasorImag[ch] -= newSample * m_sinTable[dftIndex];
+            }
+            else
+            {
+                // Sliding DFT update: X_new = (X_old - x_oldest + x_new) * e^(j*2π/N)
+                double unrotatedReal = m_phasorReal[ch] + (newSample - oldSample);
+                double unrotatedImag = m_phasorImag[ch];
+
+                m_phasorReal[ch] = unrotatedReal * m_twiddleReal - unrotatedImag * m_twiddleImag;
+                m_phasorImag[ch] = unrotatedReal * m_twiddleImag + unrotatedImag * m_twiddleReal;
+            }
+        }
+
+        // Advance buffer write index (compare/reset avoids a per-sample modulo)
+        if (++m_bufferWriteIndex >= WindowSamples)
+            m_bufferWriteIndex = 0;
+
+        TotalSamplesProcessed++;
+
+        // Periodic full recalculation for numerical stability: immediately after fill-up, then on a fixed
+        // sample countdown aligned to m_recalculationInterval (avoids a per-sample modulo).
+        bool justFilled = TotalSamplesProcessed == WindowSamples;
+
+        if (justFilled)
+        {
+            m_samplesUntilRecalc = m_initialSamplesUntilRecalc;
+            RecalculateFullDft();
+        }
+        else if (!isFillingUp && --m_samplesUntilRecalc == 0)
+        {
+            m_samplesUntilRecalc = m_recalculationInterval;
+            RecalculateFullDft();
+        }
+    }
+
+    // Fills a detected gap of "missing" samples by synthesizing a phase-continued sinusoid for each
+    // channel from the current phasor state, feeding them through the SDFT so the window stays
+    // temporally contiguous. Only valid when IsReady (a settled phasor exists to extrapolate from).
+    private void CoastFillGap(int missing)
+    {
+        // Per-sample phase advance at the tracked frequency: ω = 2π·f/fs.
+        double omega = TwoPI * m_smoothedFrequency * m_samplePeriodSeconds;
+
+        // Reconstruct each channel's raw-waveform argument at the last real sample from its phasor.
+        // For a tone at bin k, the phasor angle ψ relates to the newest sample's cosine argument by
+        // rawArg = ψ + ω·(N-1), and peak amplitude A = 2·|X|/N.
+        double windowOffset = omega * (WindowSamples - 1);
+
+        Span<double> amplitude = stackalloc double[NumChannels];
+        Span<double> rawArg0 = stackalloc double[NumChannels];
+
+        for (int ch = 0; ch < NumChannels; ch++)
+        {
+            double re = m_phasorReal[ch];
+            double im = m_phasorImag[ch];
+
+            amplitude[ch] = 2.0D * Math.Sqrt(re * re + im * im) / WindowSamples;
+            rawArg0[ch] = Math.Atan2(im, re) + windowOffset;
+        }
+
+        Span<double> synthesized = stackalloc double[NumChannels];
+
+        for (int k = 1; k <= missing; k++)
+        {
+            for (int ch = 0; ch < NumChannels; ch++)
+                synthesized[ch] = amplitude[ch] * Math.Cos(rawArg0[ch] + omega * k);
+
+            AdvanceOneSample(synthesized);
+        }
+    }
+
+    // Resynchronizes after a gap too large to coast: drops the in-flight SDFT/window and frequency
+    // state so the window refills from fresh contiguous samples. Published EMA state and the publish
+    // schedule are intentionally preserved so consumers see continuity while the window refills.
+    // NOTE: to instead snap outputs to the resynchronized values, also call ResetPublishEMA() here.
+    private void Resync()
+    {
+        for (int ch = 0; ch < NumChannels; ch++)
+            Array.Clear(m_sampleBuffers[ch], 0, WindowSamples);
+
+        m_bufferWriteIndex = 0;
+        TotalSamplesProcessed = 0L;
+
+        Array.Clear(m_phasorReal, 0, NumChannels);
+        Array.Clear(m_phasorImag, 0, NumChannels);
+
+        m_prevPhaseAngle = 0.0D;
+        m_hasPrevPhase = false;
+        m_hasLastSampleEstimate = false;
+        m_smoothedFrequency = NominalFrequencyHz;
+        m_prevSmoothedFrequency = NominalFrequencyHz;
+        m_smoothedRocof = 0.0D;
+        m_frequencyInitialized = false;
+        m_rocofInitialized = false;
+        m_prevEpochNs = 0L;
+
+        ResetInterval();
+    }
+
     /// <summary>
     /// Resets the estimator to its initial state.
     /// </summary>
@@ -765,6 +893,7 @@ internal sealed class RollingPhaseEstimator
         m_frequencyInitialized = false;
         m_rocofInitialized = false;
         m_prevEpochNs = 0L;
+        m_prevInputEpochNs = 0L;
         m_nextPublishEpochNs = 0L;
         m_publishScheduleInitialized = false;
 

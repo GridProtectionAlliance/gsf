@@ -98,6 +98,7 @@ public class FrameParser : FrameParserBase<FrameType>
         SampleFrequencyTauSeconds = DefaultSampleFrequencyTauSeconds;
         SampleRocofTauSeconds = DefaultSampleRocofTauSeconds;
         RecalculationCycles = DefaultRecalculationCycles;
+        MaxGapFillSamples = DefaultMaxGapFillSamples;
     }
 
     #endregion
@@ -238,6 +239,16 @@ public class FrameParser : FrameParserBase<FrameType>
     /// re-anchors the phasor sums.
     /// </remarks>
     public int RecalculationCycles { get; set; }
+
+    /// <summary>
+    /// Gets or sets the maximum gap (in input samples) filled by phase-continued synthesis before resynchronizing.
+    /// </summary>
+    /// <remarks>
+    /// Dropped samples (e.g., lost UDP packets) are inferred from the input timestamp cadence. Gaps up to this size
+    /// are coasted by continuing the last phasors at the tracked frequency; larger gaps drop and refill the analysis
+    /// window. A negative value means "auto" (one full analysis window); <c>0</c> resynchronizes on any gap.
+    /// </remarks>
+    public int MaxGapFillSamples { get; set; }
 
     #endregion
 
@@ -436,7 +447,8 @@ public class FrameParser : FrameParserBase<FrameType>
             PublishRocofTauSeconds,
             SampleFrequencyTauSeconds,
             SampleRocofTauSeconds,
-            RecalculationCycles);
+            RecalculationCycles,
+            MaxGapFillSamples);
 
         // Calculate next phase estimation
         bool calculated = m_phaseEstimator.Step(va, vb, vc, ia, ib, ic, timestamp, processPhaseEstimate);
@@ -570,6 +582,7 @@ public class FrameParser : FrameParserBase<FrameType>
             SampleFrequencyTauSeconds = parameters.SampleFrequencyTauSeconds;
             SampleRocofTauSeconds = parameters.SampleRocofTauSeconds;
             RecalculationCycles = parameters.RecalculationCycles;
+            MaxGapFillSamples = parameters.MaxGapFillSamples;
         }
     }
 

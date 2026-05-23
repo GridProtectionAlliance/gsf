@@ -82,6 +82,7 @@ public class ConnectionParameters : ConnectionParametersBase
         SampleFrequencyTauSeconds = DefaultSampleFrequencyTauSeconds;
         SampleRocofTauSeconds = DefaultSampleRocofTauSeconds;
         RecalculationCycles = DefaultRecalculationCycles;
+        MaxGapFillSamples = DefaultMaxGapFillSamples;
     }
 
     /// <summary>
@@ -107,6 +108,7 @@ public class ConnectionParameters : ConnectionParametersBase
         SampleFrequencyTauSeconds = info.GetOrDefault("sampleFrequencyTauSeconds", DefaultSampleFrequencyTauSeconds);
         SampleRocofTauSeconds = info.GetOrDefault("sampleRocofTauSeconds", DefaultSampleRocofTauSeconds);
         RecalculationCycles = info.GetOrDefault("recalculationCycles", DefaultRecalculationCycles);
+        MaxGapFillSamples = info.GetOrDefault("maxGapFillSamples", DefaultMaxGapFillSamples);
     }
 
     #endregion
@@ -269,6 +271,19 @@ public class ConnectionParameters : ConnectionParametersBase
     [DefaultValue(DefaultRecalculationCycles)]
     public int RecalculationCycles { get; set; }
 
+    /// <summary>
+    /// Gets or sets the maximum gap (in input samples) filled by phase-continued synthesis before resynchronizing.
+    /// </summary>
+    /// <remarks>
+    /// When dropped samples are inferred from the input timestamp cadence, gaps up to this size are coasted
+    /// (the last phasors are continued at the tracked frequency); larger gaps drop and refill the analysis window.
+    /// A negative value means "auto" (one full analysis window); <c>0</c> resynchronizes on any gap.
+    /// </remarks>
+    [Category("Phase Estimation Parameters")]
+    [Description("Maximum gap (in input samples) filled by phase-continued synthesis before resynchronizing. Negative means auto (one full analysis window); 0 resynchronizes on any gap.")]
+    [DefaultValue(DefaultMaxGapFillSamples)]
+    public int MaxGapFillSamples { get; set; }
+
     #endregion
 
     #region [ Methods ]
@@ -296,6 +311,7 @@ public class ConnectionParameters : ConnectionParametersBase
         info.AddValue("sampleFrequencyTauSeconds", SampleFrequencyTauSeconds);
         info.AddValue("sampleRocofTauSeconds", SampleRocofTauSeconds);
         info.AddValue("recalculationCycles", RecalculationCycles);
+        info.AddValue("maxGapFillSamples", MaxGapFillSamples);
     }
 
     #endregion
