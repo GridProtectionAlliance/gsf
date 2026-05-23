@@ -17,7 +17,7 @@
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
 //  11/04/2025 - Ritchie Carroll
-//       Generated original version of source code in collaboration with ChatGPT.
+//       Generated original version of source code in collaboration with ChatGPT/Claude.
 //
 //******************************************************************************************************
 // ReSharper disable IdentifierTypo
@@ -606,31 +606,43 @@ internal sealed class SlidingDftPhaseEstimator : IPhaseEstimator
         {
             long deltaNs = epochNanoseconds - m_prevInputEpochNs;
 
-            if (deltaNs <= 0L)
+            if (deltaNs < 0L)
             {
-                // Backward or duplicate timestamp. Unexpected for GPS-synced sources, so the sample is ignored.
-                // NOTE: if rewound/looped streams become a real case, treat a backward jump as a resync instead.
+                // Backward timestamp: the input timeline moved earlier than the last sample. This happens when
+                // the source restarts/loops or a new configuration frame re-bases timing. Treat it as a stream
+                // discontinuity and fully reset so the window, frequency state, AND publish schedule adopt the
+                // new timeline. (A plain Resync would keep the stale publish schedule, stalling the down-sampled
+                // output until the new timeline caught up; and simply returning false here -- the previous
+                // behavior -- permanently wedged reporting once any non-increasing timestamp arrived.)
+                Reset();
+            }
+            else if (deltaNs == 0L)
+            {
+                // Duplicate timestamp: skip so the sample is not fed into the SDFT twice. The timeline reference
+                // is unchanged, so the next forward-advancing sample resumes normally.
                 return false;
             }
-
-            // Samples missing between the previous input and this one (rounding absorbs minor timing jitter).
-            double missing = Math.Round(deltaNs / m_samplePeriodNs) - 1.0D;
-
-            if (missing > 0.0D)
+            else
             {
-                if (IsReady && missing <= m_maxGapFillSamples)
-                {
-                    CoastFillGap((int)missing);
+                // Samples missing between the previous input and this one (rounding absorbs minor timing jitter).
+                double missing = Math.Round(deltaNs / m_samplePeriodNs) - 1.0D;
 
-                    // Re-anchor frequency tracking to the post-coast state so the upcoming real sample yields a
-                    // clean single-sample phase delta (a multi-sample delta would wrap and corrupt the estimate).
-                    int referenceChannel = (int)ReferenceChannel;
-                    m_prevPhaseAngle = Math.Atan2(m_phasorImag[referenceChannel], m_phasorReal[referenceChannel]);
-                    m_prevEpochNs = epochNanoseconds - (long)m_samplePeriodNs;
-                }
-                else
+                if (missing > 0.0D)
                 {
-                    Resync();
+                    if (IsReady && missing <= m_maxGapFillSamples)
+                    {
+                        CoastFillGap((int)missing);
+
+                        // Re-anchor frequency tracking to the post-coast state so the upcoming real sample yields a
+                        // clean single-sample phase delta (a multi-sample delta would wrap and corrupt the estimate).
+                        int referenceChannel = (int)ReferenceChannel;
+                        m_prevPhaseAngle = Math.Atan2(m_phasorImag[referenceChannel], m_phasorReal[referenceChannel]);
+                        m_prevEpochNs = epochNanoseconds - (long)m_samplePeriodNs;
+                    }
+                    else
+                    {
+                        Resync();
+                    }
                 }
             }
         }
