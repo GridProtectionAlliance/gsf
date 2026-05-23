@@ -1,7 +1,6 @@
 ﻿#pragma warning disable
 
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 
 namespace System.Runtime.CompilerServices
 {

@@ -312,10 +312,13 @@
     <Compile Include="SelCWS\FrameParser.cs" />
     <Compile Include="SelCWS\FrequencyDefinition.cs" />
     <Compile Include="SelCWS\FrequencyValue.cs" />
+    <Compile Include="SelCWS\IEEEC37_118PhaseEstimator.cs" />
+    <Compile Include="SelCWS\IPhaseEstimator.cs" />
     <Compile Include="SelCWS\NamespaceDoc.cs" />
+    <Compile Include="SelCWS\PhaseEstimate.cs" />
     <Compile Include="SelCWS\PhasorDefinition.cs" />
     <Compile Include="SelCWS\PhasorValue.cs" />
-    <Compile Include="SelCWS\RollingPhaseEstimator.cs" />
+    <Compile Include="SelCWS\SlidingDftPhaseEstimator.cs" />
     <Compile Include="SelFastMessage\CommandFrame.cs" />
     <Compile Include="SelFastMessage\Common.cs" />
     <Compile Include="SelFastMessage\CommonFrameHeader.cs" />

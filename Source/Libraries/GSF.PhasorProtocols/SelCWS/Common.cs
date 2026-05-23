@@ -23,6 +23,7 @@
 // ReSharper disable InconsistentNaming
 
 using System;
+using System.ComponentModel;
 using GSF.Units.EE;
 
 namespace GSF.PhasorProtocols.SelCWS;
@@ -74,6 +75,39 @@ public enum PhaseChannel
     /// Phase C current (IC).
     /// </summary>
     IC = 5
+}
+
+/// <summary>
+/// Phase estimation algorithm used to derive synchrophasor, frequency and ROCOF components from
+/// SEL CWS point-on-wave data.
+/// </summary>
+public enum PhaseEstimationAlgorithm
+{
+    /// <summary>
+    /// Rolling sliding DFT estimator with optional EMA smoothing (see <see cref="SlidingDftPhaseEstimator"/>).
+    /// </summary>
+    [Description("Rolling sliding DFT estimator with optional EMA smoothing")]
+    SlidingDft,
+    /// <summary>
+    /// IEEE C37.118-2018 Annex D filter-based estimator (see <see cref="IEEEC37_118PhaseEstimator"/>).
+    /// </summary>
+    [Description("IEEE C37.118-2018 Annex D filter-based estimator")]
+    IEEEC37_118
+}
+
+/// <summary>
+/// IEEE C37.118-2018 Annex D filter class for phasor estimation.
+/// </summary>
+public enum FilterClass
+{
+    /// <summary>
+    /// P-class (Protection): fast response, triangular window filter.
+    /// </summary>
+    P,
+    /// <summary>
+    /// M-class (Measurement): better out-of-band rejection, Hamming-windowed sinc filter.
+    /// </summary>
+    M
 }
 
 #endregion
