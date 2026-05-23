@@ -29,7 +29,8 @@ using GSF.Parsing;
 using GSF.Units.EE;
 using static GSF.PhasorProtocols.SelCWS.Common;
 using static GSF.PhasorProtocols.SelCWS.ConnectionParameters;
-using static GSF.PhasorProtocols.SelCWS.RollingPhaseEstimator;
+using static GSF.PhasorProtocols.SelCWS.SlidingDftPhaseEstimator;
+using static GSF.PhasorProtocols.SelCWS.IEEEC37_118PhaseEstimator;
 
 namespace GSF.PhasorProtocols.SelCWS;
 
@@ -67,7 +68,7 @@ public class FrameParser : FrameParserBase<FrameType>
     // Fields
     private ConfigurationFrame m_configurationFrame;
     private DataFrame m_initialDataFrame;
-    private RollingPhaseEstimator m_phaseEstimator;
+    private IPhaseEstimator m_phaseEstimator;
     private long[] m_nanosecondPacketFrameOffsets;
     private DataCell m_lastCell;
 
@@ -87,6 +88,7 @@ public class FrameParser : FrameParserBase<FrameType>
         NominalFrequency = DefaultNominalFrequency;
         CalculationFrameRate = DefaultFramePerSecond;
         RepeatLastCalculatedValueWhenDownSampling = DefaultRepeatLastCalculatedValueWhenDownSampling;
+        Algorithm = DefaultAlgorithm;
         ReferenceChannel = DefaultReferenceChannel;
         TargetCycles = DefaultTargetCycles;
         EnableIntervalAveraging = DefaultEnableIntervalAveraging;
@@ -99,6 +101,7 @@ public class FrameParser : FrameParserBase<FrameType>
         SampleRocofTauSeconds = DefaultSampleRocofTauSeconds;
         RecalculationCycles = DefaultRecalculationCycles;
         MaxGapFillSamples = DefaultMaxGapFillSamples;
+        FilterClass = DefaultFilterClass;
     }
 
     #endregion
@@ -157,8 +160,17 @@ public class FrameParser : FrameParserBase<FrameType>
     public bool RepeatLastCalculatedValueWhenDownSampling { get; set; }
 
     /// <summary>
+    /// Gets or sets the <see cref="PhaseEstimationAlgorithm"/> used to derive synchrophasor, frequency
+    /// and ROCOF components from SEL CWS point-on-wave data.
+    /// </summary>
+    public PhaseEstimationAlgorithm Algorithm { get; set; }
+
+    /// <summary>
     /// Gets or sets the reference channel for frequency tracking.
     /// </summary>
+    /// <remarks>
+    /// Only applies when <see cref="Algorithm"/> is <see cref="PhaseEstimationAlgorithm.SlidingDft"/>.
+    /// </remarks>
     public PhaseChannel ReferenceChannel { get; set; }
 
     /// <summary>
@@ -249,6 +261,14 @@ public class FrameParser : FrameParserBase<FrameType>
     /// window. A negative value means "auto" (one full analysis window); <c>0</c> resynchronizes on any gap.
     /// </remarks>
     public int MaxGapFillSamples { get; set; }
+
+    /// <summary>
+    /// Gets or sets the IEEE C37.118 filter class: P (Protection, fast response) or M (Measurement, better out-of-band rejection).
+    /// </summary>
+    /// <remarks>
+    /// Only applies when <see cref="Algorithm"/> is <see cref="PhaseEstimationAlgorithm.IEEEC37_118"/>.
+    /// </remarks>
+    public FilterClass FilterClass { get; set; }
 
     #endregion
 
@@ -432,23 +452,8 @@ public class FrameParser : FrameParserBase<FrameType>
         double ib = cell.AnalogValues[(int)PhaseChannel.IB].Value;
         double ic = cell.AnalogValues[(int)PhaseChannel.IC].Value;
 
-        // Ensure phase estimator is created
-        m_phaseEstimator ??= new RollingPhaseEstimator(
-            DefaultFramePerSecond,
-            CalculationFrameRate,
-            NominalFrequency,
-            ReferenceChannel,
-            TargetCycles,
-            EnableIntervalAveraging,
-            EnablePublishEMA,
-            PublishAnglesTauSeconds,
-            PublishMagnitudesTauSeconds,
-            PublishFrequencyTauSeconds,
-            PublishRocofTauSeconds,
-            SampleFrequencyTauSeconds,
-            SampleRocofTauSeconds,
-            RecalculationCycles,
-            MaxGapFillSamples);
+        // Ensure phase estimator is created for the selected algorithm
+        m_phaseEstimator ??= CreatePhaseEstimator();
 
         // Calculate next phase estimation
         bool calculated = m_phaseEstimator.Step(va, vb, vc, ia, ib, ic, timestamp, processPhaseEstimate);
@@ -490,6 +495,36 @@ public class FrameParser : FrameParserBase<FrameType>
                 phasorValue.Magnitude = estimate.Magnitudes[i];
             }
         }
+    }
+
+    // Creates the phase estimator for the currently selected algorithm. Both estimators consume
+    // sample-groups in VA, VB, VC, IA, IB, IC order and publish a common PhaseEstimate.
+    private IPhaseEstimator CreatePhaseEstimator()
+    {
+        return Algorithm switch
+        {
+            PhaseEstimationAlgorithm.IEEEC37_118 => new IEEEC37_118PhaseEstimator(
+                DefaultFramePerSecond,
+                CalculationFrameRate,
+                NominalFrequency,
+                FilterClass),
+            _ => new SlidingDftPhaseEstimator(
+                DefaultFramePerSecond,
+                CalculationFrameRate,
+                NominalFrequency,
+                ReferenceChannel,
+                TargetCycles,
+                EnableIntervalAveraging,
+                EnablePublishEMA,
+                PublishAnglesTauSeconds,
+                PublishMagnitudesTauSeconds,
+                PublishFrequencyTauSeconds,
+                PublishRocofTauSeconds,
+                SampleFrequencyTauSeconds,
+                SampleRocofTauSeconds,
+                RecalculationCycles,
+                MaxGapFillSamples)
+        };
     }
 
     /// <inheritdoc/>
@@ -571,6 +606,7 @@ public class FrameParser : FrameParserBase<FrameType>
             NominalFrequency = parameters.NominalFrequency;
             CalculationFrameRate = parameters.CalculationFrameRate;
             RepeatLastCalculatedValueWhenDownSampling = parameters.RepeatLastCalculatedValueWhenDownSampling;
+            Algorithm = parameters.Algorithm;
             ReferenceChannel = parameters.ReferenceChannel;
             TargetCycles = parameters.TargetCycles;
             EnableIntervalAveraging = parameters.EnableIntervalAveraging;
@@ -583,6 +619,10 @@ public class FrameParser : FrameParserBase<FrameType>
             SampleRocofTauSeconds = parameters.SampleRocofTauSeconds;
             RecalculationCycles = parameters.RecalculationCycles;
             MaxGapFillSamples = parameters.MaxGapFillSamples;
+            FilterClass = parameters.FilterClass;
+
+            // Force the estimator to be rebuilt so any change of algorithm or its options takes effect
+            m_phaseEstimator = null;
         }
     }
 

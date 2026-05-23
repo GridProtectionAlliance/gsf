@@ -56,7 +56,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RollingPhaseEstimatorTest.cs" />
+    <Compile Include="IEEEC37_118PhaseEstimatorTest.cs" />
+    <Compile Include="SlidingDftPhaseEstimatorTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\GSF.Communication\GSF.Communication.csproj">

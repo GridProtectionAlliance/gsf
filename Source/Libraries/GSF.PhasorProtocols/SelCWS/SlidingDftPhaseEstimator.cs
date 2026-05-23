@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  RollingPhaseEstimator.cs - Gbtc
+//  SlidingDftPhaseEstimator.cs - Gbtc
 //
 //  Copyright © 2025, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -33,48 +33,6 @@ using GSF.Units.EE;
 namespace GSF.PhasorProtocols.SelCWS;
 
 /// <summary>
-/// Represents the output of the phase estimation algorithm.
-/// </summary>
-public readonly ref struct PhaseEstimate
-{
-    /// <summary>
-    /// Gets smoothed frequency estimate in hertz.
-    /// </summary>
-    public required double Frequency { get; init; }
-
-    /// <summary>
-    /// Gets rate of change of frequency (ROCOF) in Hz/s.
-    /// </summary>
-    public required double dFdt { get; init; }
-
-    /// <summary>
-    /// Gets angles in radians, length 6: VA, VB, VC, IA, IB, IC.
-    /// </summary>
-    /// <remarks>
-    /// The data this span references is owned by the <see cref="RollingPhaseEstimator"/> instance,
-    /// it is only valid during the scope of the <see cref="PhaseEstimateHandler"/> delegate call.
-    /// If you need to retain the data, make a copy.
-    /// </remarks>
-    public required ReadOnlySpan<Angle> Angles { get; init; }
-
-    /// <summary>
-    /// Gets RMS magnitudes, length 6: VA, VB, VC, IA, IB, IC.
-    /// </summary>
-    /// <remarks>
-    /// The data this span references is owned by the <see cref="RollingPhaseEstimator"/> instance,
-    /// it is only valid during the scope of the <see cref="PhaseEstimateHandler"/> delegate call.
-    /// If you need to retain the data, make a copy.
-    /// </remarks>
-    public required ReadOnlySpan<double> Magnitudes { get; init; }
-}
-
-/// <summary>
-/// Delegate for handling a <see cref="PhaseEstimate"/>.
-/// </summary>
-/// <param name="estimate">Phase estimate.</param>
-public delegate void PhaseEstimateHandler(in PhaseEstimate estimate);
-
-/// <summary>
 /// Represents a rolling six-phase estimator using a sliding DFT algorithm with optional smoothing.
 /// </summary>
 /// <remarks>
@@ -93,7 +51,7 @@ public delegate void PhaseEstimateHandler(in PhaseEstimate estimate);
 /// configured for other sample rates.
 /// </para>
 /// </remarks>
-internal sealed class RollingPhaseEstimator
+internal sealed class SlidingDftPhaseEstimator : IPhaseEstimator
 {
     #region [ Members ]
 
@@ -284,7 +242,7 @@ internal sealed class RollingPhaseEstimator
     #region [ Constructors ]
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="RollingPhaseEstimator"/> class with independent
+    /// Initializes a new instance of the <see cref="SlidingDftPhaseEstimator"/> class with independent
     /// input sample rate and output publish rate, plus smoothing expressed as time constants (τ).
     /// </summary>
     /// <param name="sampleRateHz">
@@ -426,7 +384,7 @@ internal sealed class RollingPhaseEstimator
     /// </list>
     /// </para>
     /// </remarks>
-    public RollingPhaseEstimator(
+    public SlidingDftPhaseEstimator(
         double sampleRateHz,
         double outputRateHz,
         LineFrequency nominalFrequency,
@@ -626,7 +584,7 @@ internal sealed class RollingPhaseEstimator
     /// <remarks>
     /// The data referenced in the span-based properties of the <see cref="PhaseEstimate"/>
     /// parameter provided to the <see cref="PhaseEstimateHandler"/> delegate is owned by the
-    /// <see cref="RollingPhaseEstimator"/> instance, it is only valid during the scope of the
+    /// <see cref="SlidingDftPhaseEstimator"/> instance, it is only valid during the scope of the
     /// delegate call. If you need to retain the data, make a copy.
     /// </remarks>
     public bool Step(

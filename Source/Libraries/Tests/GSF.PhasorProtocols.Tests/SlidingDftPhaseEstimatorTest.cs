@@ -1,5 +1,5 @@
 //******************************************************************************************************
-//  RollingPhaseEstimatorTest.cs - Gbtc
+//  SlidingDftPhaseEstimatorTest.cs - Gbtc
 //
 //  Copyright © 2026, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -25,11 +25,11 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace GSF.PhasorProtocols.Tests
 {
     /// <summary>
-    /// Unit tests for <see cref="RollingPhaseEstimator"/>, covering the core phasor/frequency estimation
+    /// Unit tests for <see cref="SlidingDftPhaseEstimator"/>, covering the core phasor/frequency estimation
     /// and the missing-data handling (phase-continued coast and resynchronization).
     /// </summary>
     [TestClass]
-    public class RollingPhaseEstimatorTest
+    public class SlidingDftPhaseEstimatorTest
     {
         private const double SampleRate = 3000.0D;
         private const double NominalFrequency = 60.0D;
@@ -77,9 +77,9 @@ namespace GSF.PhasorProtocols.Tests
 
         // Builds an estimator configured for deterministic, full-rate testing: publish rate equals sample
         // rate (an estimate per sample) and all smoothing disabled so outputs reflect the raw per-sample DFT.
-        private static RollingPhaseEstimator BuildEstimator(int maxGapFillSamples = RollingPhaseEstimator.DefaultMaxGapFillSamples)
+        private static SlidingDftPhaseEstimator BuildEstimator(int maxGapFillSamples = SlidingDftPhaseEstimator.DefaultMaxGapFillSamples)
         {
-            return new RollingPhaseEstimator(
+            return new SlidingDftPhaseEstimator(
                 sampleRateHz: SampleRate,
                 outputRateHz: SampleRate,
                 nominalFrequency: LineFrequency.Hz60,
@@ -120,7 +120,7 @@ namespace GSF.PhasorProtocols.Tests
 
         // Steps the estimator with the sinusoidal sample-group for an absolute sample index, using an
         // explicit epoch (so gaps and out-of-order timestamps can be simulated).
-        private static bool StepWithEpoch(RollingPhaseEstimator estimator, Capture capture, long sampleIndex, double frequency, double[] peak, double[] phaseRadians, long epochNs)
+        private static bool StepWithEpoch(SlidingDftPhaseEstimator estimator, Capture capture, long sampleIndex, double frequency, double[] peak, double[] phaseRadians, long epochNs)
         {
             double t = sampleIndex / SampleRate;
             double w = 2.0D * Math.PI * frequency * t;
@@ -136,7 +136,7 @@ namespace GSF.PhasorProtocols.Tests
         }
 
         // Steps with the natural contiguous epoch for the given sample index.
-        private static bool StepIndex(RollingPhaseEstimator estimator, Capture capture, long sampleIndex, double frequency, double[] peak, double[] phaseRadians)
+        private static bool StepIndex(SlidingDftPhaseEstimator estimator, Capture capture, long sampleIndex, double frequency, double[] peak, double[] phaseRadians)
         {
             return StepWithEpoch(estimator, capture, sampleIndex, frequency, peak, phaseRadians, EpochNs(sampleIndex));
         }
@@ -149,7 +149,7 @@ namespace GSF.PhasorProtocols.Tests
         [TestMethod]
         public void TracksNominalFrequency()
         {
-            RollingPhaseEstimator estimator = BuildEstimator();
+            SlidingDftPhaseEstimator estimator = BuildEstimator();
             Capture capture = new();
             double[] peak = UniformPeaks(100.0D);
             double[] phases = BalancedPhases();
@@ -167,7 +167,7 @@ namespace GSF.PhasorProtocols.Tests
         [TestMethod]
         public void TracksOffNominalFrequency()
         {
-            RollingPhaseEstimator estimator = BuildEstimator();
+            SlidingDftPhaseEstimator estimator = BuildEstimator();
             Capture capture = new();
             double[] peak = UniformPeaks(100.0D);
             double[] phases = BalancedPhases();
@@ -186,7 +186,7 @@ namespace GSF.PhasorProtocols.Tests
         [TestMethod]
         public void MeasuresRmsMagnitudesPerChannel()
         {
-            RollingPhaseEstimator estimator = BuildEstimator();
+            SlidingDftPhaseEstimator estimator = BuildEstimator();
             Capture capture = new();
             double[] peak = { 100.0D, 150.0D, 200.0D, 120.0D, 180.0D, 90.0D };
             double[] phases = BalancedPhases();
@@ -203,7 +203,7 @@ namespace GSF.PhasorProtocols.Tests
         [TestMethod]
         public void ReportsAnglesRelativeToReference()
         {
-            RollingPhaseEstimator estimator = BuildEstimator();
+            SlidingDftPhaseEstimator estimator = BuildEstimator();
             Capture capture = new();
             double[] peak = UniformPeaks(100.0D);
             double[] phases = BalancedPhases(currentLeadDegrees: 30.0D);
@@ -222,7 +222,7 @@ namespace GSF.PhasorProtocols.Tests
         public void CoastsAcrossSmallGap()
         {
             // Auto max-gap-fill resolves to one window (100 samples), so a 50-sample drop coasts.
-            RollingPhaseEstimator estimator = BuildEstimator();
+            SlidingDftPhaseEstimator estimator = BuildEstimator();
             Capture capture = new();
             double[] peak = UniformPeaks(100.0D);
             double[] phases = BalancedPhases();
@@ -245,7 +245,7 @@ namespace GSF.PhasorProtocols.Tests
         public void ResynchronizesAcrossLargeGap()
         {
             // Small fill bound forces a 50-sample drop to resynchronize.
-            RollingPhaseEstimator estimator = BuildEstimator(maxGapFillSamples: 10);
+            SlidingDftPhaseEstimator estimator = BuildEstimator(maxGapFillSamples: 10);
             Capture capture = new();
             double[] peak = UniformPeaks(100.0D);
             double[] phases = BalancedPhases();
@@ -265,7 +265,7 @@ namespace GSF.PhasorProtocols.Tests
         [TestMethod]
         public void IgnoresBackwardTimestamp()
         {
-            RollingPhaseEstimator estimator = BuildEstimator();
+            SlidingDftPhaseEstimator estimator = BuildEstimator();
             Capture capture = new();
             double[] peak = UniformPeaks(100.0D);
             double[] phases = BalancedPhases();
@@ -288,8 +288,8 @@ namespace GSF.PhasorProtocols.Tests
             // Compare a continuously-fed estimator against one that coasts a 50-sample drop. Once the gap
             // has slid out of the window, both should agree closely, validating that coasting does not
             // corrupt long-term state and that the synthesized phase continuation is faithful.
-            RollingPhaseEstimator continuous = BuildEstimator();
-            RollingPhaseEstimator gapped = BuildEstimator();
+            SlidingDftPhaseEstimator continuous = BuildEstimator();
+            SlidingDftPhaseEstimator gapped = BuildEstimator();
             Capture continuousCapture = new();
             Capture gappedCapture = new();
 

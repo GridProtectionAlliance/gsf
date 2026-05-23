@@ -27,7 +27,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-// Expose internal types (e.g., RollingPhaseEstimator) to the unit-test assembly
+// Expose internal types (e.g., SlidingDftPhaseEstimator, IEEEC37_118PhaseEstimator) to the unit-test assembly
 [assembly: InternalsVisibleTo("GSF.PhasorProtocols.Tests")]
 
 // Informational attributes.
