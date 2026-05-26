@@ -400,9 +400,12 @@ public class FrameParser : FrameParserBase<FrameType>
         // Ensure nanosecond frame distribution is initialized
         m_nanosecondPacketFrameOffsets ??= CalculateNanosecondPacketFrameOffsets(FramesPerPacket);
 
-        // Move offset past initial data frame which includes 64-bit nanosecond timestamp
-        offset += 32;
-        length -= 32;
+        // Move offset past the entire initial data frame to reach the second sample. The initial
+        // frame spans the 16-byte common header + 8-byte nanosecond timestamp + first 24-byte sample
+        // (6 analogs x 4 bytes) = 48 bytes. (Previously skipped only 32, omitting the common header,
+        // which misaligned samples 1-49 of every packet by 16 bytes / 4 analog channels.)
+        offset += 48;
+        length -= 48;
 
         // In the case of data frames in CWS, the source buffer has 49 more frames to parse after the first
         for (int i = 1; i < FramesPerPacket; i++)
