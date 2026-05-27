@@ -2455,12 +2455,12 @@ public class ArchiveFile : Component, IArchive, ISupportLifecycle, ISupportIniti
 
             if (string.IsNullOrWhiteSpace(pathName))
             {
-                OnOffloadException(new InvalidOperationException($"Failed to derive root path for \"{m_fileName}\" file. Offload threshold check cannot be performed."));
+                OnOffloadException(new InvalidOperationException($"Failed to derive root path for file \"{m_fileName}\". Offload threshold check cannot be performed."));
             }
             else
             {
                 // Offload historic files if we've reached the offload threshold percentage of disk space used
-                if (FilePath.GetAvailableFreeSpace(Path.GetPathRoot(m_fileName).ToNonNullString(), out long availableFreeSpace, out long totalSize))
+                if (FilePath.GetAvailableFreeSpace(pathName, out long availableFreeSpace, out long totalSize))
                 {
                     if (availableFreeSpace < totalSize * (1.0D - m_archiveOffloadThreshold / 100.0D))
                         OffloadHistoricFiles();
