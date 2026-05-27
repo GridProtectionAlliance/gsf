@@ -58,6 +58,7 @@ using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Web.Hosting;
 using GSF.Console;
+using GSF.Diagnostics;
 using GSF.Identity;
 using GSF.Interop;
 using GSF.Reflection;
@@ -192,8 +193,9 @@ namespace GSF.IO
 
                 return success;
             }
-            catch
+            catch (Exception ex)
             {
+                Logger.SwallowException(ex, $"Failed to get available disk free space for path: {pathName}", nameof(GetAvailableFreeSpace));
                 freeSpace = 0L;
                 totalSize = 0L;
                 return false;
