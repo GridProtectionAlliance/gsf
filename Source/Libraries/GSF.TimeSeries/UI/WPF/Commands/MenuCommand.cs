@@ -26,6 +26,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Input;
@@ -45,6 +46,7 @@ namespace GSF.TimeSeries.UI.Commands
         private string m_roles;
         private string m_userControlAssembly;
         private string m_userControlPath;
+        private string m_externalProcessPath;
         private string m_description;
 
         //Events
@@ -82,6 +84,7 @@ namespace GSF.TimeSeries.UI.Commands
             set
             {
                 m_roles = value;
+                OnCanExecuteChanged();
             }
         }
 
@@ -112,6 +115,21 @@ namespace GSF.TimeSeries.UI.Commands
             set
             {
                 m_userControlPath = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets path to the external process to be executed.
+        /// </summary>
+        public string ExternalProcessPath
+        {
+            get
+            {
+                return m_externalProcessPath;
+            }
+            set
+            {
+                m_externalProcessPath = value;
             }
         }
 
@@ -154,6 +172,8 @@ namespace GSF.TimeSeries.UI.Commands
         /// Handles <see cref="ICommand"/> action. 
         /// Loads user control as defined in the <see cref="UserControlPath"/> property from assembly name set in the 
         /// <see cref="UserControlAssembly"/> property.
+        /// - OR -
+        /// Executes external process as defined in the <see cref="ExternalProcessPath"/> property.
         /// </summary>
         /// <param name="parameter">
         /// Data used by the <see cref="MenuCommand"/>. If the <see cref="MenuCommand"/> does not require
@@ -161,8 +181,24 @@ namespace GSF.TimeSeries.UI.Commands
         /// </param>
         public void Execute(object parameter)
         {
+            bool hasUserControlAssembly = !string.IsNullOrEmpty(UserControlAssembly);
+            bool hasUserControlPath = !string.IsNullOrEmpty(UserControlPath);
+            bool hasExternalProcessPath = !string.IsNullOrEmpty(ExternalProcessPath);
+
+            if (hasUserControlAssembly != hasUserControlPath)
+                throw new InvalidOperationException("UserControlAssembly and UserControlPath must both be populated or neither");
+
+            if (hasUserControlAssembly == hasExternalProcessPath)
+                throw new InvalidOperationException("One of UserControlAssembly and ExternalProcessPath must be populated, but not both");
+
             try
             {
+                if (hasExternalProcessPath)
+                {
+                    Process.Start(ExternalProcessPath).Dispose();
+                    return;
+                }
+
                 Assembly assembly = Assembly.LoadFrom(FilePath.GetAbsolutePath(m_userControlAssembly));
                 CommonFunctions.LoadUserControl(m_description, assembly.GetType(m_userControlPath));
             }
