@@ -44,6 +44,7 @@ namespace GSF.TimeSeries.UI
         private string m_roles;
         private string m_userControlAssembly;
         private string m_userControlPath;
+        private string m_externalProcessPath;
         private MenuCommand m_command;
         private ObservableCollection<MenuDataItem> m_subMenuItems;
 
@@ -148,6 +149,22 @@ namespace GSF.TimeSeries.UI
         }
 
         /// <summary>
+        /// Gets or sets path for the external process to be executed when <see cref="MenuDataItem"/> is clicked.
+        /// </summary>
+        [XmlAttribute]
+        public string ExternalProcessPath
+        {
+            get
+            {
+                return m_externalProcessPath;
+            }
+            set
+            {
+                m_externalProcessPath = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the commnad to execute when <see cref="MenuDataItem"/> is clicked.
         /// </summary> 
         [XmlIgnore]
@@ -161,6 +178,7 @@ namespace GSF.TimeSeries.UI
                 m_command.Roles = Roles;
                 m_command.UserControlAssembly = UserControlAssembly;
                 m_command.UserControlPath = UserControlPath;
+                m_command.ExternalProcessPath = ExternalProcessPath;
                 m_command.Description = Description;
 
                 return m_command;
