@@ -126,7 +126,10 @@ namespace GSF.TimeSeries
                 remotingClientSettings = ConfigurationFile.Current.Settings["remotingClient"];
 
                 // Setup default logging parameters for remote console applications
-                string logPath = FilePath.GetAbsolutePath("Logs");
+                Environment.SpecialFolder appDataFolder = Environment.SpecialFolder.LocalApplicationData;
+                string appDataPath = Environment.GetFolderPath(appDataFolder);
+                string appName = AssemblyInfo.EntryAssembly.Name;
+                string logPath = Path.Combine(appDataPath, appName, "Logs");
 
                 if (!Directory.Exists(logPath))
                     Directory.CreateDirectory(logPath);
