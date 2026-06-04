@@ -784,9 +784,9 @@ namespace PhasorWebUI
                     {
                         ID = childDevice.ID,
                         ParentID = device.ID,
-                        UniqueID = device.UniqueID,
-                        Longitude = device.Longitude,
-                        Latitude = device.Latitude,
+                        UniqueID = childDevice.UniqueID,
+                        Longitude = childDevice.Longitude,
+                        Latitude = childDevice.Latitude,
                         IDCode = (ushort)childDevice.AccessID,
                         StationName = childDevice.Name,
                         IDLabel = childDevice.Acronym,
