@@ -153,6 +153,22 @@ namespace GSF.TimeSeries.UI
 
         // Static Methods
 
+        /// <summary>
+        /// Gets the absolute path to the manager menu definition file, preferring a deployment-specific
+        /// <c>Menu.Custom.xml</c> when present and otherwise falling back to the default <c>Menu.xml</c>.
+        /// </summary>
+        /// <returns>Absolute path to <c>Menu.Custom.xml</c> when it exists; otherwise to <c>Menu.xml</c>.</returns>
+        /// <remarks>
+        /// This allows custom or licensed deployments to override the manager menu by simply adding a
+        /// <c>Menu.Custom.xml</c> alongside the application, without overwriting the base-installed
+        /// <c>Menu.xml</c> (which would create a Windows Installer component-ownership conflict).
+        /// </remarks>
+        public static string GetMenuFilePath()
+        {
+            string customMenuPath = FilePath.GetAbsolutePath("Menu.Custom.xml");
+            return System.IO.File.Exists(customMenuPath) ? customMenuPath : FilePath.GetAbsolutePath("Menu.xml");
+        }
+
         #region [ AdoDataConnection Extension Methods ]
 
         /// <summary>
