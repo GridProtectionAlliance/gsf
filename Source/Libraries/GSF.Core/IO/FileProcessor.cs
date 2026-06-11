@@ -260,7 +260,8 @@ namespace GSF.IO
                 if (m_disposed)
                     return null;
 
-                CancellationToken cancellationToken = Interlocked.CompareExchange(ref m_cancellationToken, new CancellationToken(), null);
+                CancellationToken newToken = new CancellationToken();
+                CancellationToken cancellationToken = Interlocked.CompareExchange(ref m_cancellationToken, newToken, null) ?? newToken;
 
                 if (cancellationToken.IsCancelled)
                     return null;
