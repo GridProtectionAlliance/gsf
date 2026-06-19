@@ -336,8 +336,18 @@
         <Setter Property="Background" Value="Transparent"/>
     </Style>
 
+    <conv:MenuItemIconConverter x:Key="MenuItemIconConverter"/>
+
     <Style TargetType="{x:Type MenuItem}" x:Key="MenuItemStyle">
         <Setter Property="Command" Value="{Binding Command}" />
+        <Setter Property="Icon">
+            <Setter.Value>
+                <MultiBinding Converter="{StaticResource MenuItemIconConverter}">
+                    <Binding Path="Icon"/>
+                    <Binding Path="ExternalProcessPath"/>
+                </MultiBinding>
+            </Setter.Value>
+        </Setter>
         <Setter Property="FontWeight" Value="Bold"/>
         <Setter Property="HorizontalAlignment" Value="Left"/>
         <Setter Property="Margin" Value="1"/>
