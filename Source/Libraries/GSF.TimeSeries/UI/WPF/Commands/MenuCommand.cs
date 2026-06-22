@@ -29,6 +29,7 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Windows;
 using System.Windows.Input;
 using GSF.IO;
 using GSF.Security;
@@ -185,26 +186,37 @@ namespace GSF.TimeSeries.UI.Commands
             bool hasUserControlPath = !string.IsNullOrEmpty(UserControlPath);
             bool hasExternalProcessPath = !string.IsNullOrEmpty(ExternalProcessPath);
 
-            if (hasUserControlAssembly != hasUserControlPath)
-                throw new InvalidOperationException("UserControlAssembly and UserControlPath must both be populated or neither");
+            if (!hasExternalProcessPath && hasUserControlAssembly != hasUserControlPath)
+                throw new InvalidOperationException("UserControlAssembly and UserControlPath must both be populated or neither when ExternalProcessPath is not set");
 
             if (hasUserControlAssembly == hasExternalProcessPath)
                 throw new InvalidOperationException("One of UserControlAssembly and ExternalProcessPath must be populated, but not both");
 
+            if (hasExternalProcessPath)
+            {
+                try
+                {
+                    // If ExternalProcessPath requires arguments, they can be specified in the UserControlPath property
+                    Process.Start(ExternalProcessPath, UserControlPath)?.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    CommonFunctions.Popup($"Failed to launch external process \"{ExternalProcessPath}\": {ex.Message}", "Menu Launch Exception:", MessageBoxImage.Error);
+                    CommonFunctions.LogException(null, "Menu Launch Exception", ex);
+                }
+                return;
+            }
+
             try
             {
-                if (hasExternalProcessPath)
-                {
-                    Process.Start(ExternalProcessPath).Dispose();
-                    return;
-                }
-
-                Assembly assembly = Assembly.LoadFrom(FilePath.GetAbsolutePath(m_userControlAssembly));
-                CommonFunctions.LoadUserControl(m_description, assembly.GetType(m_userControlPath));
+                Assembly assembly = Assembly.LoadFrom(FilePath.GetAbsolutePath(UserControlAssembly));
+                CommonFunctions.LoadUserControl(m_description, assembly.GetType(UserControlPath));
             }
             catch (Exception ex)
             {
-                throw new InvalidOperationException(string.Format("Failed to create user control {0}: {1}", m_userControlPath, ex.Message), ex);
+                CommonFunctions.Popup($"Failed to create user control {UserControlAssembly}: {ex.Message}", "Menu Load Exception:", MessageBoxImage.Error);
+                CommonFunctions.LogException(null, "Menu Load Exception", ex);
+
             }
         }
 
