@@ -801,7 +801,12 @@ namespace GSF.TimeSeries.Adapters
                     throw new InvalidOperationException("Specified adapter assembly does not exist");
 
                 Assembly assembly = Assembly.LoadFrom(assemblyName);
-                adapter = (T)Activator.CreateInstance(assembly.GetType(typeName));
+                Type adapterType = assembly.GetType(typeName);
+
+                if (!typeof(T).IsAssignableFrom(adapterType))
+                    throw new InvalidOperationException("Adapter type is not compatible with the adapter collection");
+
+                adapter = (T)Activator.CreateInstance(adapterType);
 
                 // Assign critical adapter properties
                 adapter.Name = name;
