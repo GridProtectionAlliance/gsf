@@ -161,10 +161,9 @@ namespace DataMigrationUtility
                 if ((object)m_currentTable != null)
                 {
                     // Clear any existing field values
-                    // Field field = default(Field);
-                    foreach (Field field in m_currentTable.Fields)
+                    foreach (Field dbField in m_currentTable.Fields)
                     {
-                        field.Value = null;
+                        dbField.Value = null;
                     }
 
                     m_fieldList.Clear();
