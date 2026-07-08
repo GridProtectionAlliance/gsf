@@ -28,8 +28,8 @@ using System.Runtime.InteropServices;
 [assembly: InternalsVisibleTo("GSF.PhasorProtocols")]
 
 // Assembly identity attributes.
-[assembly: AssemblyVersion("2.4.308.0")]
-[assembly: AssemblyInformationalVersion("2.4.308-beta")]
+[assembly: AssemblyVersion("2.4.309.0")]
+[assembly: AssemblyInformationalVersion("2.4.309-beta")]
 
 // Informational attributes.
 [assembly: AssemblyCompany("Grid Protection Alliance")]
