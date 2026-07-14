@@ -1504,6 +1504,7 @@ namespace GSF.TimeSeries
             catch (Exception ex)
             {
                 LogException(ex);
+                throw;
             }
         }
 
