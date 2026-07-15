@@ -229,16 +229,20 @@ namespace GSF
         /// </remarks>
         public static object ConvertToType(this string value, Type type, CultureInfo culture)
         {
-            // Don't proceed further if string is empty.
+            // Handle the trivial string-to-string conversion
+            if (type == typeof(string))
+                return value;
+
+            // Don't proceed further if string is empty
             if (string.IsNullOrEmpty(value))
                 return null;
 
-            // Initialize return type if not specified.
-            if ((object)type == null)
+            // There is no way to guess what type the user intended to convert to
+            if (type is null)
                 throw new ArgumentNullException(nameof(type));
 
-            // Initialize culture info if not specified.
-            if (culture == null)
+            // Initialize culture info if not specified
+            if (culture is null)
                 culture = CultureInfo.InvariantCulture;
 
             try
