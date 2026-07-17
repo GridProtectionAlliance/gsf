@@ -693,6 +693,7 @@ namespace GSF.Communication
         /// Sends data to the server synchronously.
         /// </summary>
         /// <param name="serializableObject">The serializable object that is to be sent.</param>
+        [Obsolete("This method uses BinaryFormatter for serialization, leaving the consumer vulnerable during deserialization!")]
         public virtual void Send(object serializableObject) => Send(Serialization.Serialize(serializableObject, SerializationFormat.Binary));
 
         /// <summary>
@@ -721,6 +722,7 @@ namespace GSF.Communication
         /// </summary>
         /// <param name="serializableObject">The serializable object that is to be sent.</param>
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
+        [Obsolete("This method uses BinaryFormatter for serialization, leaving the consumer vulnerable during deserialization!")]
         public virtual WaitHandle SendAsync(object serializableObject) => SendAsync(Serialization.Serialize(serializableObject, SerializationFormat.Binary));
 
         /// <summary>
