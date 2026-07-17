@@ -38,11 +38,14 @@
 //******************************************************************************************************
 
 using System;
+using System.IO;
 using System.Runtime.Serialization;
 using System.Security;
 using System.Security.Principal;
+using System.Text;
 using System.Web.Hosting;
 using GSF.Identity;
+using GSF.Parsing;
 using GSF.Reflection;
 
 namespace GSF.ServiceProcess
@@ -50,13 +53,9 @@ namespace GSF.ServiceProcess
     /// <summary>
     /// Represents information about a client using <see cref="ClientHelper"/> for connecting to a Windows Service that uses <see cref="ServiceHelper"/>.
     /// </summary>
-    /// <remarks>
-    /// <see cref="ClientInfo"/> can be serialized and deserialized using <see cref="System.Runtime.Serialization.Formatters.Binary.BinaryFormatter"/> only.
-    /// </remarks>
     /// <seealso cref="ClientHelper"/>
     /// <seealso cref="ServiceHelper"/>
-    [Serializable]
-    public class ClientInfo : ISerializable
+    public class ClientInfo
     {
         #region [ Constructors ]
 
@@ -103,19 +102,11 @@ namespace GSF.ServiceProcess
             }
         }
 
-        /// <summary>
-        /// Creates a new <see cref="ClientInfo"/> from serialization parameters.
-        /// </summary>
-        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
-        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
-        protected ClientInfo(SerializationInfo info, StreamingContext context)
+        private ClientInfo(Guid clientID, ApplicationType clientType, string clientName, string clientUserCredentials, string machineName, DateTime connectedAt)
         {
-            // Deserialize client request fields
-            ClientID = info.GetOrDefault("clientID", Guid.Empty);
-            ClientType = info.GetOrDefault("clientType", ApplicationType.Unknown);
-            ClientName = info.GetOrDefault("clientName", "__undefined");
-
-            string clientUserCredentials = info.GetOrDefault("clientUserCredentials", "");
+            ClientID = clientID;
+            ClientType = clientType;
+            ClientName = clientName;
 
             if (!string.IsNullOrEmpty(clientUserCredentials))
             {
@@ -131,13 +122,12 @@ namespace GSF.ServiceProcess
                 }
             }
 
-            // Initialize user principal.
-            ClientUser = ClientType == ApplicationType.Web ? 
-                new GenericPrincipal(new GenericIdentity(ClientUsername ?? UserInfo.RemoteUserID), new string[] { }) : 
+            ClientUser = ClientType == ApplicationType.Web ?
+                new GenericPrincipal(new GenericIdentity(ClientUsername ?? UserInfo.RemoteUserID), new string[] { }) :
                 new GenericPrincipal(new GenericIdentity(ClientUsername ?? UserInfo.CurrentUserID), new string[] { });
 
-            MachineName = info.GetOrDefault("machineName", "__unknown");
-            ConnectedAt = info.GetOrDefault("connectedAt", DateTime.UtcNow);
+            MachineName = machineName;
+            ConnectedAt = connectedAt;
         }
 
         #endregion
@@ -194,6 +184,33 @@ namespace GSF.ServiceProcess
         /// </summary>
         public DateTime ConnectedAt { get; set; }
 
+        /// <summary>
+        /// Gets the length of the binary image when the <see cref="ClientInfo"/>
+        /// is converted into raw binary data.
+        /// </summary>
+        public int BinaryLength
+        {
+            get
+            {
+                const int GuidSize = 16;
+                const int MinStringSize = sizeof(int);
+                const int DateTimeSize = sizeof(long);
+
+                string clientName = ClientName ?? string.Empty;
+                string clientUserCredentials = ClientUserCredentials ?? string.Empty;
+                string machineName = MachineName ?? string.Empty;
+                int nameLength = Encoding.UTF8.GetByteCount(clientName);
+                int userCredentialsLength = Encoding.UTF8.GetByteCount(clientUserCredentials);
+                int machineNameLength = Encoding.UTF8.GetByteCount(machineName);
+
+                return GuidSize + sizeof(int)
+                    + MinStringSize + nameLength
+                    + MinStringSize + userCredentialsLength
+                    + MinStringSize + machineNameLength
+                    + DateTimeSize;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -206,20 +223,103 @@ namespace GSF.ServiceProcess
             ClientUser = user ?? throw new ArgumentNullException(nameof(user));
 
         /// <summary>
-        /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
+        /// Converts this <see cref="ClientInfo"/> instance into raw binary data.
         /// </summary>
-        /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
-        /// <param name="context">The destination (see <see cref="StreamingContext"/>) for this serialization.</param>
-        /// <exception cref="SecurityException">The caller does not have the required permission.</exception>
-        public virtual void GetObjectData(SerializationInfo info, StreamingContext context)
+        /// <param name="buffer">The buffer into which raw binary data will be written</param>
+        /// <param name="startIndex">The start of the region in the buffer into which the raw binary data will be written</param>
+        /// <returns>The number of bytes written to the buffer</returns>
+        /// <exception cref="IndexOutOfRangeException">Insufficient bytes to serialize ClientInfo</exception>
+        public int Serialize(byte[] buffer, int startIndex)
         {
-            // Serialize client request fields
-            info.AddValue("clientID", ClientID);
-            info.AddValue("clientType", ClientType, typeof(ApplicationType));
-            info.AddValue("clientName", ClientName);
-            info.AddValue("clientUserCredentials", ClientUserCredentials);
-            info.AddValue("machineName", MachineName);
-            info.AddValue("connectedAt", ConnectedAt);
+            const int GuidSize = 16;
+            const int MinStringSize = sizeof(int);
+            const int DateTimeSize = sizeof(long);
+
+            string clientName = ClientName ?? string.Empty;
+            string clientUserCredentials = ClientUserCredentials ?? string.Empty;
+            string machineName = MachineName ?? string.Empty;
+            int nameLength = Encoding.UTF8.GetByteCount(clientName);
+            int userCredentialsLength = Encoding.UTF8.GetByteCount(clientUserCredentials);
+            int machineNameLength = Encoding.UTF8.GetByteCount(machineName);
+
+            int idOffset = startIndex;
+            int typeOffset = idOffset + GuidSize;
+            int nameOffset = typeOffset + sizeof(int);
+            int userCredentialsOffset = nameOffset + MinStringSize + nameLength;
+            int machineNameOffset = userCredentialsOffset + MinStringSize + userCredentialsLength;
+            int connectedAtOffset = machineNameOffset + MinStringSize + machineNameLength;
+
+            if (buffer.Length - startIndex < connectedAtOffset + DateTimeSize)
+                throw new IndexOutOfRangeException("Insufficient bytes to serialize ClientInfo");
+
+            ClientID.ToRfcBytes(buffer, idOffset);
+            BigEndian.CopyBytes((int)ClientType, buffer, typeOffset);
+            BigEndian.CopyBytes(nameLength, buffer, nameOffset);
+            Buffer.BlockCopy(Encoding.UTF8.GetBytes(clientName), 0, buffer, nameOffset + MinStringSize, nameLength);
+            BigEndian.CopyBytes(userCredentialsLength, buffer, userCredentialsOffset);
+            Buffer.BlockCopy(Encoding.UTF8.GetBytes(clientUserCredentials), 0, buffer, userCredentialsOffset + MinStringSize, userCredentialsLength);
+            BigEndian.CopyBytes(machineNameLength, buffer, machineNameOffset);
+            Buffer.BlockCopy(Encoding.UTF8.GetBytes(machineName), 0, buffer, machineNameOffset + MinStringSize, machineNameLength);
+            BigEndian.CopyBytes(ConnectedAt.Ticks, buffer, connectedAtOffset);
+
+            return connectedAtOffset + DateTimeSize - startIndex;
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+
+        /// <summary>
+        /// Creates an instance of <see cref="ClientInfo"/> from raw binary data.
+        /// </summary>
+        /// <param name="buffer">The byte array containing the raw bytes</param>
+        /// <param name="startIndex">The index of the first byte in the region that represents the client info</param>
+        /// <param name="length">The total number of bytes available for deserialization</param>
+        /// <returns>An instance of the <see cref="ClientInfo"/> class.</returns>
+        /// <exception cref="IndexOutOfRangeException">Insufficient bytes to deserialize <see cref="ClientInfo"/></exception>
+        public static ClientInfo Deserialize(byte[] buffer, int startIndex, int length)
+        {
+            buffer.ValidateParameters(startIndex, length);
+
+            const int GuidSize = 16;
+            const int MinStringSize = sizeof(int);
+            const int DateTimeSize = sizeof(long);
+
+            int idOffset = startIndex;
+            int typeOffset = idOffset + GuidSize;
+            int nameOffset = typeOffset + sizeof(int);
+
+            if (startIndex + length < nameOffset + MinStringSize)
+                throw new IndexOutOfRangeException("Insufficient bytes to deserialize ClientInfo");
+
+            int nameLength = BigEndian.ToInt32(buffer, nameOffset);
+            int userCredentialsOffset = nameOffset + MinStringSize + nameLength;
+
+            if (startIndex + length < userCredentialsOffset + MinStringSize)
+                throw new IndexOutOfRangeException("Insufficient bytes to deserialize ClientInfo");
+
+            int userCredentialsLength = BigEndian.ToInt32(buffer, userCredentialsOffset);
+            int machineNameOffset = userCredentialsOffset + MinStringSize + userCredentialsLength;
+
+            if (startIndex + length < machineNameOffset + MinStringSize)
+                throw new IndexOutOfRangeException("Insufficient bytes to deserialize ClientInfo");
+
+            int machineNameLength = BigEndian.ToInt32(buffer, machineNameOffset);
+            int connectedAtOffset = machineNameOffset + MinStringSize + machineNameLength;
+
+            if (startIndex + length < connectedAtOffset + DateTimeSize)
+                throw new IndexOutOfRangeException("Insufficient bytes to deserialize ClientInfo");
+
+            Guid clientID = buffer.ToRfcGuid(idOffset);
+            ApplicationType clientType = (ApplicationType)BigEndian.ToInt32(buffer, typeOffset);
+            string clientName = Encoding.UTF8.GetString(buffer, nameOffset + MinStringSize, nameLength);
+            string clientUserCredentials = Encoding.UTF8.GetString(buffer, userCredentialsOffset + MinStringSize, userCredentialsLength);
+            string machineName = Encoding.UTF8.GetString(buffer, machineNameOffset + MinStringSize, machineNameLength);
+            DateTime connectedAt = new DateTime(BigEndian.ToInt64(buffer, connectedAtOffset), DateTimeKind.Utc);
+
+            return new ClientInfo(clientID, clientType, clientName, clientUserCredentials, machineName, connectedAt);
         }
 
         #endregion
