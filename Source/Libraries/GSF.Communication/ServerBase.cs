@@ -686,6 +686,7 @@ namespace GSF.Communication
         /// </summary>
         /// <param name="clientID">ID of the client to which the data is to be sent.</param>
         /// <param name="serializableObject">The serializable object that is to be sent.</param>
+        [Obsolete("This method uses BinaryFormatter for serialization, leaving the consumer vulnerable during deserialization!")]
         public virtual void SendTo(Guid clientID, object serializableObject) => SendTo(clientID, Serialization.Serialize(serializableObject, SerializationFormat.Binary));
 
         /// <summary>
@@ -714,6 +715,7 @@ namespace GSF.Communication
         /// Sends data to all of the connected clients synchronously.
         /// </summary>
         /// <param name="serializableObject">The serializable object that is to be sent.</param>
+        [Obsolete("This method uses BinaryFormatter for serialization, leaving the consumer vulnerable during deserialization!")]
         public virtual void Multicast(object serializableObject) => Multicast(Serialization.Serialize(serializableObject, SerializationFormat.Binary));
 
         /// <summary>
@@ -761,6 +763,7 @@ namespace GSF.Communication
         /// <param name="clientID">ID of the client to which the data is to be sent.</param>
         /// <param name="serializableObject">The serializable object that is to be sent.</param>
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
+        [Obsolete("This method uses BinaryFormatter for serialization, leaving the consumer vulnerable during deserialization!")]
         public virtual WaitHandle SendToAsync(Guid clientID, object serializableObject) => SendToAsync(clientID, Serialization.Serialize(serializableObject, SerializationFormat.Binary));
 
         /// <summary>
@@ -799,6 +802,7 @@ namespace GSF.Communication
         /// </summary>
         /// <param name="serializableObject">The serializable object that is to be sent.</param>
         /// <returns>Array of <see cref="WaitHandle"/> for the asynchronous operation.</returns>
+        [Obsolete("This method uses BinaryFormatter for serialization, leaving the consumer vulnerable during deserialization!")]
         public virtual WaitHandle[] MulticastAsync(object serializableObject) => MulticastAsync(Serialization.Serialize(serializableObject, SerializationFormat.Binary));
 
         /// <summary>

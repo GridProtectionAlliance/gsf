@@ -680,7 +680,10 @@ namespace GSF.ServiceProcess
         {
             // Upon establishing connection with the service's communication client, we'll send our information to the
             // service so the service can keep track of all the client that are connected to its communication server.
-            m_remotingClient.SendAsync(new ClientInfo(this));
+            ClientInfo clientInfo = new ClientInfo(this);
+            byte[] buffer = new byte[clientInfo.BinaryLength];
+            clientInfo.Serialize(buffer, 0);
+            m_remotingClient.SendAsync(buffer);
 
             StringBuilder status = new();
             

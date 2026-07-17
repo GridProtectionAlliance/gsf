@@ -2510,7 +2510,7 @@ namespace GSF.ServiceProcess
             if (client is null)
             {
                 // First message from a remote client should be its info.
-                Serialization.TryDeserialize(e.Argument2.BlockCopy(0, e.Argument3), SerializationFormat, out client);
+                client = ClientInfo.Deserialize(e.Argument2, 0, e.Argument3);
 
                 try
                 {
