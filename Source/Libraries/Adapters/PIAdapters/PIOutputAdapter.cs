@@ -491,14 +491,17 @@ public class PIOutputAdapter : OutputAdapterBase
         set
         {
             base.InputMeasurementKeys = value;
-            InputMeasurementKeyTypes = DataSource.GetSignalTypes(value);
+
+            InputMeasurementKeysWithTypes = [.. DataSource
+                .GetSignalTypes(value)
+                .Zip(value, (type, key) => (key, type))];
         }
     }
 
     /// <summary>
     /// Gets or sets input measurement <see cref="SignalType"/>'s for each of the <see cref="ActionAdapterBase.InputMeasurementKeys"/>, if any.
     /// </summary>
-    public virtual SignalType[] InputMeasurementKeyTypes { get; private set; }
+    public virtual (MeasurementKey, SignalType)[] InputMeasurementKeysWithTypes { get; private set; }
 
     /// <summary>
     /// Returns true to indicate that this <see cref="PIOutputAdapter"/> is sending measurements to a historian, OSIsoft PI.
@@ -2247,26 +2250,16 @@ public class PIOutputAdapter : OutputAdapterBase
                 OnStatusMessage(MessageLevel.Warning, $"Input measurements not found in active configuration after waiting {MetadataHelpers.ElapsedWaitTimeString()} - new inputs may not be available.");
         }
 
-        MeasurementKey[] inputMeasurementKeys = InputMeasurementKeys;
-        SignalType[] inputMeasurementTypes = InputMeasurementKeyTypes;
-
-        // A possible race condition exists in accessing input measurement keys and types where the arrays
-        // are not yet synchronized, in this case a metadata refresh will be pending, so we'll just return
-        if (inputMeasurementKeys is null || inputMeasurementTypes is null || inputMeasurementKeys.Length != inputMeasurementTypes.Length)
-            return;
+        (MeasurementKey Key, SignalType)[] inputMeasurementKeysWithTypes = InputMeasurementKeysWithTypes;
 
         // Create a set of all input measurements that are of integer type or are word types that should be excluded
         HashSet<MeasurementKey> integerValueTypes = [];
         HashSet<MeasurementKey> excludedWords = [];
 
-        for (int i = 0; i < inputMeasurementKeys.Length; i++)
+        foreach ((MeasurementKey key, SignalType signalType) in inputMeasurementKeysWithTypes)
         {
-            MeasurementKey key = inputMeasurementKeys[i];
-
             if (key is null)
                 continue;
-
-            SignalType signalType = inputMeasurementTypes[i];
 
             if (signalType is SignalType.FLAG or SignalType.QUAL or SignalType.DIGI)
                 integerValueTypes.Add(key);
@@ -2298,6 +2291,7 @@ public class PIOutputAdapter : OutputAdapterBase
             MeasurementReportingInterval = previousMeasurementReportingInterval;
 
         // Establish initial connection point dictionary (much of the meta-data may already exist)
+        MeasurementKey[] inputMeasurementKeys = [.. inputMeasurementKeysWithTypes.Select(tuple => tuple.Key)];
         EstablishPIPointDictionary(inputMeasurementKeys);
 
         if (!RunMetadataSync)
@@ -2310,21 +2304,18 @@ public class PIOutputAdapter : OutputAdapterBase
         {
             OnStatusMessage(MessageLevel.Info, "Beginning metadata refresh...");
 
-            if (inputMeasurementKeys.Length > 0)
+            if (inputMeasurementKeysWithTypes.Length > 0)
             {
                 PIServer server = m_connection.Server;
-                int processed = 0, total = inputMeasurementKeys.Length;
+                int processed = 0, total = inputMeasurementKeysWithTypes.Length;
                 AdoDataConnection database = null;
                 DataTable measurements = DataSource.Tables["ActiveMeasurements"];
 
-                for (int i = 0; i < inputMeasurementKeys.Length; i++)
+                foreach ((MeasurementKey key, SignalType signalType) in inputMeasurementKeysWithTypes)
                 {
-                    MeasurementKey key = inputMeasurementKeys[i];
-
                     if (key is null)
                         continue;
 
-                    SignalType signalType = inputMeasurementTypes[i];
                     Guid signalID = key.SignalID;
 
                     // If adapter gets disabled while executing this thread - go ahead and exit
@@ -2691,14 +2682,6 @@ public class PIOutputAdapter : OutputAdapterBase
 
     private (Dictionary<MeasurementKey, (string, MeasurementKey[])>, Dictionary<MeasurementKey, int>) MapDigitalStateSetsToTags(List<Guid> newRecords, SignalType targetSignalType, Dictionary<int, int> targetBitStates)
     {
-        MeasurementKey[] inputMeasurementKeys = InputMeasurementKeys;
-        SignalType[] inputMeasurementTypes = InputMeasurementKeyTypes;
-
-        // A possible race condition exists in accessing input measurement keys and types where the arrays are not
-        // yet synchronized, in this case a metadata refresh will be pending, so we'll just return empty mappings
-        if (inputMeasurementKeys is null || inputMeasurementTypes is null || inputMeasurementKeys.Length != inputMeasurementTypes.Length)
-            return ([], []);
-
         // When expanding status or quality bits to tags, validate digital state sets exist, creating them if needed
         ValidateC37118DigitalStates();
 
@@ -2706,14 +2689,11 @@ public class PIOutputAdapter : OutputAdapterBase
         Dictionary<Guid, (MeasurementKey sourceKey, string sourceSignalReference, int statusIndex, ulong pointID)> signalIDBitStateMap = [];
         bool recordsAdded = false;
 
-        for (int i = 0; i < inputMeasurementKeys.Length; i++)
+        foreach ((MeasurementKey key, SignalType signalType) in InputMeasurementKeysWithTypes)
         {
-            SignalType signalType = inputMeasurementTypes[i];
-
             if (signalType != targetSignalType)
                 continue;
 
-            MeasurementKey key = inputMeasurementKeys[i];
             (string deviceAcronym, int deviceID) = this.LookupDevice(key.SignalID);
 
             if (deviceID == 0)
@@ -2850,13 +2830,6 @@ public class PIOutputAdapter : OutputAdapterBase
 
     private void MapDigitalBitStateSetsToTags(List<Guid> newRecords)
     {
-        MeasurementKey[] inputMeasurementKeys = InputMeasurementKeys;
-        SignalType[] inputMeasurementTypes = InputMeasurementKeyTypes;
-
-        // A possible race condition exists in accessing input measurement keys and types where the arrays
-        // are not yet synchronized, in this case a metadata refresh will be pending, so we'll just return
-        if (inputMeasurementKeys is null || inputMeasurementTypes is null || inputMeasurementKeys.Length != inputMeasurementTypes.Length)
-            return;
 
         HashSet<string> validDigitalStateNames = new(StringComparer.OrdinalIgnoreCase);
         PIServer server = m_connection.Server;
@@ -2914,14 +2887,11 @@ public class PIOutputAdapter : OutputAdapterBase
             Dictionary<MeasurementKey, (string[] digitalLabels, (string state, int bit)[])> digitalWordLabelBitStateMap = [];
 
             // Create map of digital states to be used for tag expansion
-            for (int i = 0; i < inputMeasurementKeys.Length; i++)
+            foreach ((MeasurementKey key, SignalType signalType) in InputMeasurementKeysWithTypes)
             {
-                SignalType signalType = inputMeasurementTypes[i];
-
                 if (signalType != SignalType.DIGI)
                     continue;
 
-                MeasurementKey key = inputMeasurementKeys[i];
                 Guid signalID = key.SignalID;
                 DataRow[] rows = measurements.Select($"SignalID='{signalID}'");
 
