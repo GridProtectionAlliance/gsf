@@ -713,6 +713,66 @@ namespace GSF.Interop
         }
 
         /// <summary>
+        /// JOBOBJECTINFOCLASS enumeration.
+        /// </summary>
+        [SuppressMessage("Microsoft.Design", "CA1008:EnumsShouldHaveZeroValue"), SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible")]
+        public enum JobObjectInfoType
+        {
+            AssociateCompletionPortInformation = 7,
+            BasicLimitInformation = 2,
+            BasicUIRestrictions = 4,
+            EndOfJobTimeInformation = 6,
+            ExtendedLimitInformation = 9,
+            SecurityLimitInformation = 5,
+            GroupInformation = 11
+        }
+
+        /// <summary>
+        /// Win32 IO_COUNTERS structure.
+        /// </summary>
+        [SuppressMessage("Microsoft.Naming", "CA1707:IdentifiersShouldNotContainUnderscores"), SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible"), SuppressMessage("Microsoft.Performance", "CA1815:OverrideEqualsAndOperatorEqualsOnValueTypes"), StructLayout(LayoutKind.Sequential)]
+        public struct IO_COUNTERS
+        {
+            public UInt64 ReadOperationCount;
+            public UInt64 WriteOperationCount;
+            public UInt64 OtherOperationCount;
+            public UInt64 ReadTransferCount;
+            public UInt64 WriteTransferCount;
+            public UInt64 OtherTransferCount;
+        }
+
+        /// <summary>
+        /// Win32 JOBOBJECT_BASIC_LIMIT_INFORMATION structure.
+        /// </summary>
+        [SuppressMessage("Microsoft.Naming", "CA1707:IdentifiersShouldNotContainUnderscores"), SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible"), SuppressMessage("Microsoft.Performance", "CA1815:OverrideEqualsAndOperatorEqualsOnValueTypes"), StructLayout(LayoutKind.Sequential)]
+        public struct JOBOBJECT_BASIC_LIMIT_INFORMATION
+        {
+            public Int64 PerProcessUserTimeLimit;
+            public Int64 PerJobUserTimeLimit;
+            public UInt32 LimitFlags;
+            public UIntPtr MinimumWorkingSetSize;
+            public UIntPtr MaximumWorkingSetSize;
+            public UInt32 ActiveProcessLimit;
+            public UIntPtr Affinity;
+            public UInt32 PriorityClass;
+            public UInt32 SchedulingClass;
+        }
+
+        /// <summary>
+        /// Win32 JOBOBJECT_EXTENDED_LIMIT_INFORMATION structure.
+        /// </summary>
+        [SuppressMessage("Microsoft.Naming", "CA1707:IdentifiersShouldNotContainUnderscores"), SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible"), SuppressMessage("Microsoft.Performance", "CA1815:OverrideEqualsAndOperatorEqualsOnValueTypes"), StructLayout(LayoutKind.Sequential)]
+        public struct JOBOBJECT_EXTENDED_LIMIT_INFORMATION
+        {
+            public JOBOBJECT_BASIC_LIMIT_INFORMATION BasicLimitInformation;
+            public IO_COUNTERS IoInfo;
+            public UIntPtr ProcessMemoryLimit;
+            public UIntPtr JobMemoryLimit;
+            public UIntPtr PeakProcessMemoryUsed;
+            public UIntPtr PeakJobMemoryUsed;
+        }
+
+        /// <summary>
         /// Win32 SERVICE_DESCRIPTION structure.
         /// </summary>
         /// <remarks>
@@ -1148,6 +1208,24 @@ namespace GSF.Interop
         /// </summary>
         [SuppressMessage("Microsoft.Interoperability", "CA1401:PInvokesShouldNotBeVisible"), DllImport("kernel32.dll", SetLastError = true)]
         public static extern IntPtr GetCurrentProcess();
+
+        /// <summary>
+        /// Win32 CreateJobObject function.
+        /// </summary>
+        [SuppressMessage("Microsoft.Interoperability", "CA1401:PInvokesShouldNotBeVisible"), DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+        public static extern IntPtr CreateJobObject(IntPtr a, string lpName);
+
+        /// <summary>
+        /// Win32 SetInformationJobObject function.
+        /// </summary>
+        [SuppressMessage("Microsoft.Interoperability", "CA1401:PInvokesShouldNotBeVisible"), DllImport("kernel32.dll")]
+        public static extern bool SetInformationJobObject(IntPtr hJob, JobObjectInfoType infoType, IntPtr lpJobObjectInfo, UInt32 cbJobObjectInfoLength);
+
+        /// <summary>
+        /// Win32 AssignProcessToJobObject function.
+        /// </summary>
+        [SuppressMessage("Microsoft.Interoperability", "CA1401:PInvokesShouldNotBeVisible"), DllImport("kernel32.dll", SetLastError = true)]
+        public static extern bool AssignProcessToJobObject(IntPtr job, IntPtr process);
 
         /// <summary>
         /// Win32 CloseHandle function.
