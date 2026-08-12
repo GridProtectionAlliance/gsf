@@ -25,11 +25,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
 using System.Linq;
 using System.Reflection;
 using System.Security.Claims;
 using System.Web.Http;
+using GSF.Configuration;
 using GSF.Data;
 using GSF.Data.Model;
 using Newtonsoft.Json;
@@ -145,6 +147,12 @@ namespace GSF.Web.Model
             AllowSearch = typeof(T).GetCustomAttribute<AllowSearchAttribute>()?.AllowSearch ?? false;
 
             SearchSettings = typeof(T).GetCustomAttribute<AdditionalFieldSearchAttribute>();
+
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings["systemSettings"];
+
+            PageSize = settings["DefaultRecordsPerPage"]?.ValueAsInt32() ?? null;
+
             Take = typeof(T).GetCustomAttribute<ReturnLimitAttribute>()?.Limit ?? null;
 
             SQLSearchModifier = typeof(T).GetMethods(BindingFlags.Public | BindingFlags.Static).FirstOrDefault(p => p.GetCustomAttributes<SQLSearchModifierAttribute>().Any());
@@ -178,7 +186,7 @@ namespace GSF.Web.Model
         protected string DeleteRoles { get; } = "Administrator";
         protected RecordRestriction RootQueryRestriction { get; } = null;
         protected int? Take { get; } = null;
-
+        protected int? PageSize { get; } = null;
         private string SecurityType = "";
         protected Dictionary<string, List<Claim>> Claims { get; } = new Dictionary<string, List<Claim>>();
         protected AdditionalFieldSearchAttribute SearchSettings { get; } = null;
@@ -435,7 +443,7 @@ namespace GSF.Web.Model
 
             using DataTable table = GetSearchResults(postData, page);
             int recordCount = CountSearchResults(postData);
-            int recordsPerPage = Take ?? 50;
+            int recordsPerPage = PageSize ?? 50;
 
             return Ok(new PagedResults()
             {
@@ -506,7 +514,7 @@ namespace GSF.Web.Model
 
             using DataTable table = GetSearchResults(postData, page);
             int recordCount = CountSearchResults(postData);
-            int recordsPerPage = Take ?? 50;
+            int recordsPerPage = PageSize ?? 50;
 
             return Ok(new PagedResults()
             {
@@ -831,7 +839,7 @@ namespace GSF.Web.Model
 
                 if (page is not null)
                 {
-                    int recordsPerPage = Take ?? 50;
+                    int recordsPerPage = PageSize ?? 50;
                     sql += $" OFFSET {page * recordsPerPage} ROWS FETCH NEXT {recordsPerPage} ROWS ONLY";
                 }
 
