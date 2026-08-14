@@ -37,6 +37,13 @@
     string toolTip = ViewBag.ToolTip;
     string inputSizeRestriction = maxLength > 0 ? string.Format(" maxlength=\"{0}\" size=\"{0}\"", maxLength) : "";
     string requiredValue = required.ToString().ToLowerInvariant();
+    string autocomplete = "";
+
+    if (inputType.Equals("password", StringComparison.OrdinalIgnoreCase))
+    {
+        // Disable autocomplete on password fields for security
+        autocomplete = " autocomplete=\"off\"";
+    }
 
     if (!string.IsNullOrEmpty(dependencyFieldName))
     {
@@ -86,7 +93,7 @@
     @if (fieldLabel.Length > 0) {
     <label for="@Raw(fieldID)"@Raw(labelDataBinding)>@Raw(fieldLabel):</label>
     }
-    <input type="@Raw(inputType)" class="form-control" data-bind="textInput: @Raw(fieldName), attr: {'readonly': ($root.recordMode()===RecordMode.View ? true : undefined)}@Raw(customDataBinding)" id="@Raw(fieldID)"@Raw(inputSizeRestriction)@(required && string.IsNullOrEmpty(requiredDataBinding) ? " required" : "")>
+    <input type="@Raw(inputType)"@Raw(autocomplete) class="form-control" data-bind="textInput: @Raw(fieldName), attr: {'readonly': ($root.recordMode()===RecordMode.View ? true : undefined)}@Raw(customDataBinding)" id="@Raw(fieldID)"@Raw(inputSizeRestriction)@(required && string.IsNullOrEmpty(requiredDataBinding) ? " required" : "")>
     <span class="glyphicon glyphicon-remove form-control-feedback" data-bind="visible: !fieldIsValid(@(Raw(fieldName)), @requiredValue)@(Raw(requiredDataBinding))"></span>
 </div>
 @Raw(string.IsNullOrEmpty(groupDataBinding) ? "" : "</div>\r\n")
