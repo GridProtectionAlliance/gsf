@@ -350,6 +350,7 @@ internal class InputWizardDevices : PagedViewModelBase<InputWizardDevice, string
     private int m_protocolID;
     private string m_protocolAcronym;
     private bool m_connectToConcentrator;
+    private bool m_detachChildren;
     private int? m_pdcID;
     private string m_pdcAcronym;
     private string m_pdcName;
@@ -664,6 +665,21 @@ internal class InputWizardDevices : PagedViewModelBase<InputWizardDevice, string
             m_connectToConcentrator = value;
             OnPropertyChanged(nameof(ConnectToConcentrator));
             ValidatePdcAcronym();
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets boolean value indicating if concentrator children should be detached, i.e., modeled
+    /// as standalone devices with a null ParentID that reference the parent concentrator through a
+    /// "parentID" connection string value.
+    /// </summary>
+    public bool DetachChildren
+    {
+        get => m_detachChildren;
+        set
+        {
+            m_detachChildren = value;
+            OnPropertyChanged(nameof(DetachChildren));
         }
     }
 
@@ -1980,8 +1996,23 @@ internal class InputWizardDevices : PagedViewModelBase<InputWizardDevice, string
 
         try
         {
-            if (!ConnectToConcentrator || PdcID is not (null or 0))
+            if (!ConnectToConcentrator)
                 return;
+
+            if (PdcID is not (null or 0))
+            {
+                // Existing concentrator device is not otherwise updated by the wizard, but the detached
+                // children flag still needs to be persisted when its state has been toggled
+                m_pdcDevice ??= Device.GetDevice(null, $"WHERE ID = {PdcID}");
+
+                if (m_pdcDevice is not null && DetachedDeviceLink.HasDetachedChildren(m_pdcDevice.ConnectionString) != DetachChildren)
+                {
+                    m_pdcDevice.ConnectionString = DetachedDeviceLink.SetDetachedChildren(m_pdcDevice.ConnectionString, DetachChildren, PdcID.Value);
+                    Device.SaveWithAnalogsDigitals(null, m_pdcDevice, false, 0, 0);
+                }
+
+                return;
+            }
 
             Device device = new()
             {
@@ -2004,6 +2035,15 @@ internal class InputWizardDevices : PagedViewModelBase<InputWizardDevice, string
             Device.SaveWithAnalogsDigitals(null, device, false, 0, 0);
 
             device = Device.GetDevice(null, $"WHERE Acronym = '{PdcAcronym.ToUpper()}'");
+
+            // Stamp detached children flag, along with the parent's own database ID which is only known
+            // after the insert, when children are to be modeled as standalone devices
+            if (DetachChildren)
+            {
+                device.ConnectionString = DetachedDeviceLink.SetDetachedChildren(device.ConnectionString, true, device.ID);
+                Device.SaveWithAnalogsDigitals(null, device, false, 0, 0);
+            }
+
             PdcID = device.ID;
             m_pdcDevice = device;
         }
@@ -2101,8 +2141,20 @@ internal class InputWizardDevices : PagedViewModelBase<InputWizardDevice, string
                     if (ConnectToConcentrator && PdcID > 0)
                     {
                         device.AccessID = inputWizardDevice.AccessID;
-                        device.ParentID = PdcID;
-                        device.ConnectionString = string.Empty;
+
+                        if (DetachChildren)
+                        {
+                            // Detached children are modeled as standalone devices - the parent linkage is
+                            // carried in the connection string as a proxy for the ParentID field, along
+                            // with the station name used for label based cell mapping
+                            device.ParentID = null;
+                            device.ConnectionString = DetachedDeviceLink.BuildChildConnectionString(PdcID.Value, device.Name);
+                        }
+                        else
+                        {
+                            device.ParentID = PdcID;
+                            device.ConnectionString = string.Empty;
+                        }
 
                         // If device is connected to concentrator then do not send initialize command when device is saved.
                         Device.SaveWithAnalogsDigitals(database, device, false, inputWizardDevice.DigitalCount, inputWizardDevice.AnalogCount, inputWizardDevice.DigitalLabels, inputWizardDevice.AnalogLabels, inputWizardDevice.AnalogScalars);
@@ -2274,11 +2326,14 @@ internal class InputWizardDevices : PagedViewModelBase<InputWizardDevice, string
                 deviceCount++;
             }
 
-            // Find and remove child devices which are not included in this configuration update
-            foreach (Device device in Device.GetDevices(database, $"WHERE ParentID = {PdcID}") ?? Enumerable.Empty<Device>())
+            // Find and remove child devices, including detached children, which are not included in this configuration update
+            if (PdcID > 0)
             {
-                if (!ItemsSource.Any(child => child.Include && device.Acronym == child.Acronym))
-                    Device.Delete(database, device);
+                foreach (Device device in Device.GetChildDevices(database, PdcID.Value))
+                {
+                    if (!ItemsSource.Any(child => child.Include && device.Acronym == child.Acronym))
+                        Device.Delete(database, device);
+                }
             }
 
             string configurationName = ConnectToConcentrator && PdcID is null or 0 ? PdcAcronym : ItemsSource.First().Name;

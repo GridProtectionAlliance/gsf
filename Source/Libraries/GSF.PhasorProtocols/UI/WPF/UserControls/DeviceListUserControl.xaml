@@ -74,7 +74,7 @@
                                     CommandParameter="{tsfBinding:GridButtonCommand Path=DataContext.CurrentItem}" Width="Auto" Margin="2" >
 
                                     <Button.Visibility>
-                                        <Binding Path="ParentID" Converter="{StaticResource ObjectToVisibilityConverter}">
+                                        <Binding Path="EffectiveParentID" Converter="{StaticResource ObjectToVisibilityConverter}">
                                             <Binding.ConverterParameter>
                                                 <sys:Boolean>True</sys:Boolean>
                                             </Binding.ConverterParameter>

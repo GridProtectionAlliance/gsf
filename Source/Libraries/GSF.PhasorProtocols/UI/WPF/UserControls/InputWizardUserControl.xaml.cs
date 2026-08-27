@@ -82,12 +82,15 @@ namespace GSF.PhasorProtocols.UI.UserControls
             if (device.IsConcentrator)
             {
                 m_dataContext.ConnectToConcentrator = true;
+                m_dataContext.DetachChildren = DetachedDeviceLink.HasDetachedChildren(device.ConnectionString);
                 m_dataContext.PdcAcronym = device.Acronym;
                 m_dataContext.PdcName = device.Name;
                 m_dataContext.PdcVendorDeviceID = device.VendorDeviceID ?? 0;
 
+                // Child devices are linked by ParentID or, for detached children modeled as standalone
+                // devices, by a "parentID" connection string value referencing the parent device
                 m_dataContext.Devices = Device
-                    .GetDevices(null, "WHERE ParentID = " + device.ID)
+                    .GetChildDevices(null, device.ID)
                     .OrderBy(device => device.LoadOrder)
                     .ToArray();
             }

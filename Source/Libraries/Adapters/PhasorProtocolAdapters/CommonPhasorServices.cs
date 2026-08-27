@@ -1494,6 +1494,11 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
                 if (connectionSettings is not null && connectionSettings.TryGetValue("forwardOnly", out string setting) && setting.ParseBoolean())
                     continue;
 
+                // Do not automatically add quality measurement for a detached child device, i.e., a concentrator
+                // child modeled as a standalone device - quality flags belong to the parent connection
+                if (connectionSettings is not null && connectionSettings.ContainsKey(DetachedDeviceLink.ParentIDKey) && !device["IsConcentrator"].ToNonNullString().ParseBoolean())
+                    continue;
+
                 deviceID = device.ConvertField<int>("ID");
                 acronym = device.Field<string>("Acronym");
                 signalReference = SignalReference.ToString(acronym, SignalKind.Quality);
@@ -1542,8 +1547,13 @@ public sealed class CommonPhasorServices : FacileActionAdapterBase
 
             // Make sure devices associated with a concentrator do not have any extraneous input stream statistic measurements - this can happen
             // when a device was once a direct connect device but now is part of a concentrator...
-            foreach (DataRow inputStream in database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM Device WHERE (IsConcentrator = 0 AND ParentID IS NOT NULL) AND NodeID = {nodeIDQueryString} AND ProtocolID IN ({protocolIDs})").Rows)
+            foreach (DataRow inputStream in database.Connection.RetrieveData(database.AdapterType, $"SELECT * FROM Device WHERE IsConcentrator = 0 AND NodeID = {nodeIDQueryString} AND ProtocolID IN ({protocolIDs})").Rows)
             {
+                // Concentrator children are linked by ParentID or, for detached children modeled as standalone
+                // devices, by a "parentID" connection string value referencing the parent device
+                if (!inputStream.ConvertNullableField<int>("ParentID").HasValue && !DetachedDeviceLink.IsDetachedChild(inputStream.Field<string>("ConnectionString")))
+                    continue;
+
                 firstStatisticExisted = false;
 
                 foreach (DataRow statistic in inputStreamStatistics)

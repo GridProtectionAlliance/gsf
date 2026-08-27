@@ -91,7 +91,7 @@ namespace GSF.PhasorProtocols.UI.ViewModels
                 OnPropertyChanged("CanGoToPhasorOrMeasurement");
 
                 if (device.IsConcentrator)
-                    PdcDevices = Device.GetDevices(null, "WHERE ParentID = " + device.ID);
+                    PdcDevices = Device.GetChildDevices(null, device.ID);
             }
         }
 
@@ -766,8 +766,9 @@ namespace GSF.PhasorProtocols.UI.ViewModels
             {
                 if (CurrentItem.IsConcentrator)
                 {
-                    IList<int> keys = Device.LoadKeys(null, CurrentItem.ID);
-                    ObservableCollection<Device> deviceList = Device.Load(null, keys);
+                    // Child devices are linked by ParentID or, for detached children modeled as standalone
+                    // devices, by a "parentID" connection string value referencing the parent device
+                    ObservableCollection<Device> deviceList = Device.GetChildDevices(null, CurrentItem.ID);
                     int outputStreamDeviceCount = 0;
 
                     string result;
@@ -863,15 +864,19 @@ namespace GSF.PhasorProtocols.UI.ViewModels
 
         private void ConfigureConcentrator()
         {
-            if ((object)CurrentItem.ParentID != null && CurrentItem.ParentID > 0)
+            // Use effective parent ID so detached children, i.e., children modeled as standalone devices
+            // with the parent linkage in the connection string, still resolve their concentrator
+            int? parentID = CurrentItem.EffectiveParentID;
+
+            if ((object)parentID != null && parentID > 0)
             {
                 m_stayOnConfigurationScreen = true;
 
-                Device device = Device.GetDevice(null, "WHERE ID = " + CurrentItem.ParentID);
+                Device device = Device.GetDevice(null, "WHERE ID = " + parentID);
 
                 if ((object)device != null)
                 {
-                    PdcDevices = Device.GetDevices(null, "WHERE ParentID = " + CurrentItem.ParentID);
+                    PdcDevices = Device.GetChildDevices(null, parentID.Value);
                     CurrentItem = device;
                 }
             }
