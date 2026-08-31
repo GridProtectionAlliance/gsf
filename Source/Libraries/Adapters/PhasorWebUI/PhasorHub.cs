@@ -535,6 +535,11 @@ namespace PhasorWebUI
             DataContext.Table<Phasor>().UpdateRecord(phasor);
         }
 
+        public Phasor QueryPhasorByID(int phasorID)
+        {
+            return DataContext.Table<Phasor>().QueryRecordWhere("ID = {0}", phasorID) ?? NewPhasor();
+        }
+
         public Phasor QueryPhasorForDevice(int deviceID, int sourceIndex)
         {
             return DataContext.Table<Phasor>().QueryRecordWhere("DeviceID = {0} AND SourceIndex = {1}", deviceID, sourceIndex) ?? NewPhasor();
