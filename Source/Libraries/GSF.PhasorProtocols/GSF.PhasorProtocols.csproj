@@ -110,6 +110,7 @@
     <Compile Include="DataFrameBase.cs" />
     <Compile Include="DataFrameCollection.cs" />
     <Compile Include="DataFrameParsingState.cs" />
+    <Compile Include="DetachedDeviceLink.cs" />
     <Compile Include="DigitalDefinitionBase.cs" />
     <Compile Include="DigitalDefinitionCollection.cs" />
     <Compile Include="DigitalValueBase.cs" />

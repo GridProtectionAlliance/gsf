@@ -216,6 +216,8 @@
                         <TextBox Name="PdcAcronymTextBox" Text="{tsfBinding:Column Path=DataContext.PdcAcronym, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}}" Width="{StaticResource SmallItemSize}" TextChanged="PdcAcronymTextBox_TextChanged" />
                         <TextBlock Text="{tsfBinding:Column Path=DataContext.PdcMessage, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}}" Width="Auto" TextWrapping="Wrap"/>
                         <CheckBox x:Name="UseSourcePrefix" Margin="5,-5,0,-4" IsChecked="{tsfBinding:Column Path=DataContext.UseSourcePrefix, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}}" Content="Use Source Prefix: &quot;!&quot;"  />
+                        <CheckBox x:Name="CheckBoxDetachChildren" Margin="5,-5,0,-4" IsChecked="{tsfBinding:Column Path=DataContext.DetachChildren, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=StackPanel, AncestorLevel=2}}" Content="Detach PMUs"
+                            ToolTip="When checked, child devices are modeled as standalone devices, i.e., saved with no parent reference - the concentrator linkage is maintained through device connection strings." />
                     </StackPanel>
 
                     <TextBlock Grid.Row="10" Grid.Column="0" Text="PDC Name" Visibility="{Binding ElementName=CheckBoxConnectToConcentrator, Path=IsChecked, Converter={StaticResource ObjectToVisibilityConverter}}"/>

@@ -186,6 +186,11 @@ namespace PhasorProtocolAdapters
         private long m_timeResolution;
         private bool m_countOnlyMappedMeasurements;
         private bool m_injectBadData;
+        private bool m_detachedPlaceholder;
+        private string m_detachedParentIdentifier;
+        private bool m_detachedChildren;
+        private int m_databaseID;
+        private List<string> m_detachedChildAcronyms;
 
         private long m_totalMeasurementsPerSecond;
         private long m_measurementsPerSecondCount;
@@ -759,6 +764,12 @@ namespace PhasorProtocolAdapters
                 status.AppendLine($"    Source is concentrator: {IsConcentrator}");
                 status.AppendLine($"Forwarding only connection: {m_forwardOnly}");
 
+                if (m_detachedPlaceholder)
+                    status.AppendLine($"  Detached child of parent: {m_detachedParentIdentifier} (inert placeholder -- no independent connection)");
+
+                if (m_detachedChildren)
+                    status.AppendLine($"   Detached child devices: {m_detachedChildAcronyms?.Count ?? 0:N0} mapped through this parent connection");
+
                 if (!string.IsNullOrWhiteSpace(SharedMapping))
                     status.AppendLine($"     Shared mapping source: {SharedMapping}");
 
@@ -983,6 +994,38 @@ namespace PhasorProtocolAdapters
                 m_accessIDList = new[] { defaultAccessID };
             }
 
+            // Check if this device record is a detached child of a concentrator style connection - in this case
+            // the device record exists with a null ParentID so the child appears as a standalone modeled device,
+            // but stream parsing for the device is still handled by its parent connection, so this adapter
+            // operates as an inert placeholder that never attempts a connection of its own
+            if (!IsConcentrator && settings.TryGetValue(DetachedDeviceLink.ParentIDKey, out setting) && !string.IsNullOrWhiteSpace(setting))
+            {
+                m_detachedPlaceholder = true;
+                m_detachedParentIdentifier = setting.Trim();
+
+                // Assign safe defaults for any state normally established later during initialization
+                TimeZone = TimeZoneInfo.Utc;
+                m_definedDevices = new ConcurrentDictionary<ushort, DeviceStatisticsHelper<ConfigurationCell>>();
+                m_definedMeasurements = new Dictionary<string, MeasurementKey>();
+
+                // Claim no outputs - the parent connection claims child device measurements so that
+                // connect on demand routing correctly targets the parent
+                OutputMeasurements = null;
+                AutoStart = false;
+
+                OnStatusMessage(MessageLevel.Info, $"\"{Name}\" is a detached child device of concentrator \"{m_detachedParentIdentifier}\" operating as an inert placeholder -- stream data for the device is parsed and mapped by its parent connection.");
+                return;
+            }
+
+            // Check if this concentrator style connection has detached, i.e., standalone modeled, child devices
+            if (IsConcentrator)
+            {
+                m_detachedChildren = settings.TryGetValue(DetachedDeviceLink.DetachedChildrenKey, out setting) && setting.ParseBoolean();
+
+                if (settings.TryGetValue(DetachedDeviceLink.DatabaseIDKey, out setting) && int.TryParse(setting, out int databaseID))
+                    m_databaseID = databaseID;
+            }
+
             m_forceLabelMapping = settings.TryGetValue("forceLabelMapping", out setting) && setting.ParseBoolean();
 
             // Commented out for security purposes related to Parent collection --
@@ -1194,6 +1237,7 @@ namespace PhasorProtocolAdapters
             }
 
             m_definedDevices = new ConcurrentDictionary<ushort, DeviceStatisticsHelper<ConfigurationCell>>();
+            m_detachedChildAcronyms = null;
 
             if (IsConcentrator)
             {
@@ -1218,75 +1262,11 @@ namespace PhasorProtocolAdapters
                     definedDevice.Tag = uint.Parse(row["ID"].ToString());
                     definedDevice.Source = this;
 
-                    bool deviceAdded = false;
-
-                    if (m_forceLabelMapping)
-                    {
-                        // When forcing label mapping we always try to use label for unique lookup
-                        m_labelDefinedDevices ??= new ConcurrentDictionary<string, DeviceStatisticsHelper<ConfigurationCell>>(StringComparer.OrdinalIgnoreCase);
-
-                        // See if label already exists in this collection
-                        if (m_labelDefinedDevices.ContainsKey(definedDevice.StationName))
-                        {
-                            // For devices that do not have unique labels when forcing label mapping, we fall back on its ID code for unique lookup
-                            if (m_definedDevices.ContainsKey(definedDevice.IDCode))
-                            {
-                                OnProcessException(MessageLevel.Error, new InvalidOperationException($"ERROR: Device ID \"{definedDevice.IDCode}\", labeled \"{definedDevice.StationName}\", was not unique in the {Name} input stream. Data from devices that are not distinctly defined by ID code or label will not be correctly parsed until uniquely identified."), flags: MessageFlags.UsageIssue);
-                            }
-                            else
-                            {
-                                m_definedDevices.TryAdd(definedDevice.IDCode, new DeviceStatisticsHelper<ConfigurationCell>(definedDevice));
-                                RegisterStatistics(definedDevice, definedDevice.IDLabel, "Device", "PMU");
-                                deviceAdded = true;
-                            }
-                        }
-                        else
-                        {
-                            m_labelDefinedDevices.TryAdd(definedDevice.StationName, new DeviceStatisticsHelper<ConfigurationCell>(definedDevice));
-                            RegisterStatistics(definedDevice, definedDevice.IDLabel, "Device", "PMU");
-                            deviceAdded = true;
-                        }
-                    }
-                    else
-                    {
-                        // See if key already exists in this collection
-                        if (m_definedDevices.ContainsKey(definedDevice.IDCode))
-                        {
-                            // For devices that do not have unique ID codes, we fall back on its label for unique lookup
-                            m_labelDefinedDevices ??= new ConcurrentDictionary<string, DeviceStatisticsHelper<ConfigurationCell>>(StringComparer.OrdinalIgnoreCase);
-
-                            if (m_labelDefinedDevices.ContainsKey(definedDevice.StationName))
-                            {
-                                OnProcessException(MessageLevel.Error, new InvalidOperationException($"Device ID \"{definedDevice.IDCode}\", labeled \"{definedDevice.StationName}\", was not unique in the {Name} input stream. Data from devices that are not distinctly defined by ID code or label will not be correctly parsed until uniquely identified."), flags: MessageFlags.UsageIssue);
-                            }
-                            else
-                            {
-                                m_labelDefinedDevices.TryAdd(definedDevice.StationName, new DeviceStatisticsHelper<ConfigurationCell>(definedDevice));
-                                RegisterStatistics(definedDevice, definedDevice.IDLabel, "Device", "PMU");
-                                deviceAdded = true;
-                            }
-                        }
-                        else
-                        {
-                            m_definedDevices.TryAdd(definedDevice.IDCode, new DeviceStatisticsHelper<ConfigurationCell>(definedDevice));
-                            RegisterStatistics(definedDevice, definedDevice.IDLabel, "Device", "PMU");
-                            deviceAdded = true;
-                        }
-                    }
-
-                    if (deviceAdded)
-                    {
-                        // Create status display string for expected device
-                        deviceStatus.Append("   Device ");
-                        deviceStatus.Append(index++.ToString("00"));
-                        deviceStatus.Append(": ");
-                        deviceStatus.Append(definedDevice.StationName);
-                        deviceStatus.Append(" (");
-                        deviceStatus.Append(definedDevice.IDCode);
-                        deviceStatus.Append(')');
-                        deviceStatus.AppendLine();
-                    }
+                    AddDefinedDevice(definedDevice, deviceStatus, ref index);
                 }
+
+                // Load any detached child devices associated with this connection
+                LoadDetachedInputDevices(deviceStatus, ref index);
 
                 OnStatusMessage(MessageLevel.Info, deviceStatus.ToString());
 
@@ -1342,19 +1322,198 @@ namespace PhasorProtocolAdapters
             }
         }
 
+        // Adds a defined device to the mapping dictionaries, using ID code or label based lookup as configured,
+        // registering the device with the statistics engine when successfully added
+        private bool AddDefinedDevice(ConfigurationCell definedDevice, StringBuilder deviceStatus, ref int index)
+        {
+            bool deviceAdded = false;
+
+            if (m_forceLabelMapping)
+            {
+                // When forcing label mapping we always try to use label for unique lookup
+                m_labelDefinedDevices ??= new ConcurrentDictionary<string, DeviceStatisticsHelper<ConfigurationCell>>(StringComparer.OrdinalIgnoreCase);
+
+                // See if label already exists in this collection
+                if (m_labelDefinedDevices.ContainsKey(definedDevice.StationName))
+                {
+                    // For devices that do not have unique labels when forcing label mapping, we fall back on its ID code for unique lookup
+                    if (m_definedDevices.ContainsKey(definedDevice.IDCode))
+                    {
+                        OnProcessException(MessageLevel.Error, new InvalidOperationException($"ERROR: Device ID \"{definedDevice.IDCode}\", labeled \"{definedDevice.StationName}\", was not unique in the {Name} input stream. Data from devices that are not distinctly defined by ID code or label will not be correctly parsed until uniquely identified."), flags: MessageFlags.UsageIssue);
+                    }
+                    else
+                    {
+                        m_definedDevices.TryAdd(definedDevice.IDCode, new DeviceStatisticsHelper<ConfigurationCell>(definedDevice));
+                        RegisterStatistics(definedDevice, definedDevice.IDLabel, "Device", "PMU");
+                        deviceAdded = true;
+                    }
+                }
+                else
+                {
+                    m_labelDefinedDevices.TryAdd(definedDevice.StationName, new DeviceStatisticsHelper<ConfigurationCell>(definedDevice));
+                    RegisterStatistics(definedDevice, definedDevice.IDLabel, "Device", "PMU");
+                    deviceAdded = true;
+                }
+            }
+            else
+            {
+                // See if key already exists in this collection
+                if (m_definedDevices.ContainsKey(definedDevice.IDCode))
+                {
+                    // For devices that do not have unique ID codes, we fall back on its label for unique lookup
+                    m_labelDefinedDevices ??= new ConcurrentDictionary<string, DeviceStatisticsHelper<ConfigurationCell>>(StringComparer.OrdinalIgnoreCase);
+
+                    if (m_labelDefinedDevices.ContainsKey(definedDevice.StationName))
+                    {
+                        OnProcessException(MessageLevel.Error, new InvalidOperationException($"Device ID \"{definedDevice.IDCode}\", labeled \"{definedDevice.StationName}\", was not unique in the {Name} input stream. Data from devices that are not distinctly defined by ID code or label will not be correctly parsed until uniquely identified."), flags: MessageFlags.UsageIssue);
+                    }
+                    else
+                    {
+                        m_labelDefinedDevices.TryAdd(definedDevice.StationName, new DeviceStatisticsHelper<ConfigurationCell>(definedDevice));
+                        RegisterStatistics(definedDevice, definedDevice.IDLabel, "Device", "PMU");
+                        deviceAdded = true;
+                    }
+                }
+                else
+                {
+                    m_definedDevices.TryAdd(definedDevice.IDCode, new DeviceStatisticsHelper<ConfigurationCell>(definedDevice));
+                    RegisterStatistics(definedDevice, definedDevice.IDLabel, "Device", "PMU");
+                    deviceAdded = true;
+                }
+            }
+
+            if (deviceAdded)
+            {
+                // Create status display string for expected device
+                deviceStatus.Append("   Device ");
+                deviceStatus.Append(index++.ToString("00"));
+                deviceStatus.Append(": ");
+                deviceStatus.Append(definedDevice.StationName);
+                deviceStatus.Append(" (");
+                deviceStatus.Append(definedDevice.IDCode);
+                deviceStatus.Append(')');
+                deviceStatus.AppendLine();
+            }
+
+            return deviceAdded;
+        }
+
+        // Load any detached child devices associated with this concentrator style connection. Detached children
+        // are modeled as standalone devices, i.e., have a null ParentID, so they are not available through the
+        // input stream devices table; instead, each child record carries a "parentID" connection string value
+        // referencing this parent connection and is published through the input adapters table where its adapter
+        // operates as an inert placeholder.
+        private void LoadDetachedInputDevices(StringBuilder deviceStatus, ref int index)
+        {
+            m_detachedChildAcronyms = new List<string>();
+
+            if (!m_detachedChildren || DataSource is null || !DataSource.Tables.Contains("InputAdapters"))
+                return;
+
+            foreach (DataRow row in DataSource.Tables["InputAdapters"].Rows)
+            {
+                Dictionary<string, string> childSettings;
+
+                try
+                {
+                    childSettings = row["ConnectionString"].ToNonNullString().ParseKeyValuePairs();
+                }
+                catch
+                {
+                    continue;
+                }
+
+                if (!childSettings.TryGetValue(DetachedDeviceLink.ParentIDKey, out string parentIdentifier) || !IsThisParent(parentIdentifier))
+                    continue;
+
+                // Nested detached concentrators are not supported
+                if (childSettings.TryGetValue("isConcentrator", out string setting) && setting.ParseBoolean())
+                    continue;
+
+                string acronym = row["AdapterName"].ToNonNullString("[undefined]").Trim();
+
+                // Skip any devices already defined through the input stream devices table
+                if (DefinedDevices.Any(device => acronym.Equals(device.IDLabel, StringComparison.OrdinalIgnoreCase)))
+                    continue;
+
+                if (!childSettings.TryGetValue("accessID", out setting) || !ushort.TryParse(setting, out ushort accessID))
+                    accessID = 1;
+
+                if (!childSettings.TryGetValue(DetachedDeviceLink.StationNameKey, out string stationName) || string.IsNullOrWhiteSpace(stationName))
+                    stationName = acronym;
+
+                if (!uint.TryParse(row["ID"].ToNonNullString("0"), out uint runtimeID))
+                    runtimeID = 0;
+
+                // Create new configuration cell for the detached child device
+                ConfigurationCell definedDevice = new(accessID);
+
+                definedDevice.StationName = stationName.Trim().TruncateRight(definedDevice.MaximumStationNameLength);
+                definedDevice.IDLabel = acronym.TruncateRight(definedDevice.IDLabelLength);
+                definedDevice.Tag = runtimeID;
+                definedDevice.Source = this;
+
+                if (AddDefinedDevice(definedDevice, deviceStatus, ref index))
+                    m_detachedChildAcronyms.Add(acronym);
+            }
+
+            if (m_detachedChildAcronyms.Count > 0)
+                OnStatusMessage(MessageLevel.Info, $"{Name} loaded {m_detachedChildAcronyms.Count:N0} detached child devices, i.e., devices modeled as standalone that are mapped through this parent connection.");
+        }
+
+        // Determines if the specified parent identifier, parsed from a detached child device connection string,
+        // references this connection
+        private bool IsThisParent(string parentIdentifier)
+        {
+            if (string.IsNullOrWhiteSpace(parentIdentifier))
+                return false;
+
+            parentIdentifier = parentIdentifier.Trim();
+
+            // Non-numeric parent identifiers are matched against the connection acronym as a manual configuration fallback
+            if (!int.TryParse(parentIdentifier, out int parentID))
+                return parentIdentifier.Equals(Name, StringComparison.OrdinalIgnoreCase);
+
+            // Parent database ID is normally stamped into the connection string by the device wizard; when
+            // missing, attempt a one-time database lookup of this connection's device record
+            if (m_databaseID == 0)
+                m_databaseID = LookupDatabaseID();
+
+            return m_databaseID > 0 && parentID == m_databaseID;
+        }
+
+        // Attempts to look up the database ID for this connection's device record, returning -1 when lookup fails
+        // so that only a single lookup attempt is made per initialization
+        private int LookupDatabaseID()
+        {
+            try
+            {
+                using AdoDataConnection connection = new("systemSettings");
+                TableOperations<DeviceRecord> deviceTable = new(connection);
+                DeviceRecord device = deviceTable.QueryRecordWhere("Acronym = {0}", Name);
+                return device?.ID ?? -1;
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to look up database ID for device \"{Name}\" while resolving detached child devices: {ex.Message} Re-save the connection with the device wizard to stamp the \"{DetachedDeviceLink.DatabaseIDKey}\" connection string parameter, which avoids the need for database access.", ex), nameof(LoadDetachedInputDevices));
+                return -1;
+            }
+        }
+
         // Load active device measurements for this mapper connection
         private void LoadDeviceMeasurements()
         {
             Dictionary<string, MeasurementKey> definedMeasurements = new();
+            ActiveMeasurementsTableLookup activeMeasurements = DataSourceLookups.GetLookupCache(DataSource).ActiveMeasurements;
 
-            foreach (DataRow row in DataSourceLookups.GetLookupCache(DataSource).ActiveMeasurements.LookupByDeviceID(SharedMappingID))
+            void addDefinedMeasurement(DataRow row)
             {
                 string signalReference = row["SignalReference"].ToString();
                 string signalType = row["SignalType"].ToString();
 
                 // Although statistics may be associated with device, it will not be this adapter producing them...
                 if (string.IsNullOrWhiteSpace(signalReference) || string.Equals(signalType, "STAT", StringComparison.OrdinalIgnoreCase))
-                    continue;
+                    return;
 
                 try
                 {
@@ -1373,6 +1532,21 @@ namespace PhasorProtocolAdapters
                 catch (Exception ex)
                 {
                     OnProcessException(MessageLevel.Warning, new InvalidOperationException($"Failed to load signal reference \"{signalReference}\" due to exception: {ex.Message}", ex), "Loading");
+                }
+            }
+
+            foreach (DataRow row in activeMeasurements.LookupByDeviceID(SharedMappingID))
+                addDefinedMeasurement(row);
+
+            // Measurements for detached child devices are associated with the child's own runtime ID, by design,
+            // so that downstream operations, e.g., automated calculations, treat the children as standalone
+            // devices - as a result, detached child measurements are looked up by device acronym instead
+            if (m_detachedChildAcronyms?.Count > 0)
+            {
+                foreach (string childAcronym in m_detachedChildAcronyms)
+                {
+                    foreach (DataRow row in activeMeasurements.LookupByDeviceNameNoStat(childAcronym))
+                        addDefinedMeasurement(row);
                 }
             }
 
@@ -1684,6 +1858,24 @@ namespace PhasorProtocolAdapters
             }
 
             return status.ToString();
+        }
+
+        /// <summary>
+        /// Attempts to start this <see cref="PhasorMeasurementMapper"/>.
+        /// </summary>
+        /// <remarks>
+        /// Start requests are ignored when this adapter represents a detached child device placeholder
+        /// since stream data for the device is provided by its parent concentrator connection.
+        /// </remarks>
+        public override void Start()
+        {
+            if (m_detachedPlaceholder)
+            {
+                OnStatusMessage(MessageLevel.Info, $"Start request ignored: \"{Name}\" is a detached child device placeholder -- its parent concentrator connection \"{m_detachedParentIdentifier}\" provides data for the device.");
+                return;
+            }
+
+            base.Start();
         }
 
         /// <summary>
@@ -2475,7 +2667,12 @@ namespace PhasorProtocolAdapters
                 TableOperations<MeasurementRecord> measurementTable = new(connection);
 
                 DeviceRecord device = deviceTable.QueryRecordWhere("Acronym = {0}", Name);
-                IEnumerable<DeviceRecord> childDevices = deviceTable.QueryRecordsWhere("ParentID = {0}", device.ID);
+
+                // Child devices are linked by ParentID or, for detached children modeled as standalone
+                // devices, by a "parentID" connection string value referencing the parent device
+                IEnumerable<DeviceRecord> childDevices = deviceTable
+                    .QueryRecordsWhere("ParentID = {0} OR (ParentID IS NULL AND ConnectionString LIKE {1})", device.ID, $"%{DetachedDeviceLink.ParentIDKey}={device.ID}%")
+                    .Where(childDevice => childDevice.ParentID == device.ID || DetachedDeviceLink.TryParseParentID(childDevice.ConnectionString, out int parentID) && parentID == device.ID);
 
                 List<int> deviceIDs = new() { device.ID };
                 deviceIDs.AddRange(childDevices.Select(childDevice => childDevice.ID));

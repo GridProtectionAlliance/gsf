@@ -168,8 +168,24 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 m_parentID = value;
                 OnPropertyChanged("ParentID");
+                OnPropertyChanged("EffectiveParentID");
+                OnPropertyChanged("IsDetachedChild");
             }
         }
+
+        /// <summary>
+        /// Gets the effective parent device ID for this <see cref="Device"/>, i.e., the defined
+        /// <see cref="ParentID"/>, when not <c>null</c>, falling back on any parent device ID defined in
+        /// the <see cref="ConnectionString"/> for a detached child device.
+        /// </summary>
+        public int? EffectiveParentID => DetachedDeviceLink.GetEffectiveParentID(m_parentID, m_connectionString);
+
+        /// <summary>
+        /// Gets flag that determines if this <see cref="Device"/> is a detached child of a concentrator,
+        /// i.e., a child device modeled as a standalone device whose parent linkage is defined in the
+        /// <see cref="ConnectionString"/> instead of the <see cref="ParentID"/> field.
+        /// </summary>
+        public bool IsDetachedChild => m_parentID is null && !m_isConcentrator && DetachedDeviceLink.IsDetachedChild(m_connectionString);
 
         /// <summary>
         /// Gets or sets <see cref="Device"/> UniqueID.
@@ -233,6 +249,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 m_isConcentrator = value;
                 OnPropertyChanged("IsConcentrator");
+                OnPropertyChanged("IsDetachedChild");
 
                 if (m_isConcentrator)
                     ParentID = null;
@@ -365,6 +382,8 @@ namespace GSF.PhasorProtocols.UI.DataModels
             {
                 m_connectionString = value;
                 OnPropertyChanged("ConnectionString");
+                OnPropertyChanged("EffectiveParentID");
+                OnPropertyChanged("IsDetachedChild");
             }
         }
 
@@ -1091,6 +1110,11 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 createdConnection = CreateConnection(ref database);
 
+                // A device attached to a parent by ParentID should not also carry detached child linkage
+                // parameters in its connection string - clear any stale tokens, e.g., after a re-attach
+                if (device.ParentID is not null && DetachedDeviceLink.IsDetachedChild(device.ConnectionString))
+                    device.ConnectionString = DetachedDeviceLink.ClearChildLink(device.ConnectionString);
+
                 object nodeID = device.NodeID == Guid.Empty ? database.CurrentNodeID() : database.Guid(device.NodeID);
                 string query;
 
@@ -1350,7 +1374,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
                         // If changing the historian for a concentrator style device - must assume desire to change historian for all children devices
                         if (historianUpdated && device.IsConcentrator)
                         {
-                            foreach (Device childDevice in GetDevices(database, $"WHERE ParentID = {device.ID}"))
+                            foreach (Device childDevice in GetChildDevices(database, device.ID))
                             {
                                 // Recursively call this function for each child device with updated historian which will also fix measurement's historian
                                 childDevice.HistorianID = savedDevice.HistorianID;
@@ -1399,7 +1423,20 @@ namespace GSF.PhasorProtocols.UI.DataModels
 
                 // Does not delete the Parent Device
                 database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("UPDATE Device SET ParentID = null WHERE ParentID = {0}", "OldParentID", "NewParentID"), DefaultTimeout, device.ID);
-                
+
+                // Clear detached child linkage, i.e., "parentID" connection string values, referencing this device
+                DataTable detachedChildren = database.Connection.RetrieveData(database.AdapterType, $"SELECT ID, ConnectionString FROM Device WHERE ParentID IS NULL AND ConnectionString LIKE '%{DetachedDeviceLink.ParentIDKey}={device.ID}%'");
+
+                foreach (DataRow row in detachedChildren.Rows)
+                {
+                    string connectionString = row["ConnectionString"].ToNonNullString();
+
+                    if (!DetachedDeviceLink.TryParseParentID(connectionString, out int parentID) || parentID != device.ID)
+                        continue;
+
+                    database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("UPDATE Device SET ConnectionString = {0} WHERE ID = {1}", "connectionString", "childID"), DefaultTimeout, DetachedDeviceLink.ClearChildLink(connectionString).ToNotNull(), Convert.ToInt32(row["ID"]));
+                }
+
                 // Deletes the Parent Device 
                 //database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM Device WHERE ParentID = {0}", "ParentID"), DefaultTimeout, device.ID);
                 database.Connection.ExecuteNonQuery(database.ParameterizedQueryString("DELETE FROM Device WHERE ID = {0}", "deviceID"), DefaultTimeout, device.ID);
@@ -1605,6 +1642,25 @@ namespace GSF.PhasorProtocols.UI.DataModels
         }
 
         /// <summary>
+        /// Retrieves child <see cref="Device"/> records for the specified parent device, including detached
+        /// children, i.e., children modeled as standalone devices that reference the parent through a
+        /// "parentID" connection string value instead of the ParentID field.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="parentID">ID of the parent <see cref="Device"/>.</param>
+        /// <returns>Collection of child <see cref="Device"/> records; empty collection when parent has no children.</returns>
+        public static ObservableCollection<Device> GetChildDevices(AdoDataConnection database, int parentID)
+        {
+            ObservableCollection<Device> devices = GetDevices(database, $"WHERE ParentID = {parentID} OR (ParentID IS NULL AND ConnectionString LIKE '%{DetachedDeviceLink.ParentIDKey}={parentID}%')");
+
+            if (devices is null)
+                return new ObservableCollection<Device>();
+
+            // LIKE based filter can over match, e.g., "parentID=5" matches "parentID=52", so parsed values are verified
+            return new ObservableCollection<Device>(devices.Where(device => device.ParentID == parentID || device.EffectiveParentID == parentID));
+        }
+
+        /// <summary>
         /// Sends required commands to back-end service to notify that <see cref="Device"/> configuration has changed.
         /// </summary>
         /// <param name="device"><see cref="Device"/> whose configuration has changed.</param>
@@ -1614,7 +1670,7 @@ namespace GSF.PhasorProtocols.UI.DataModels
             if (device is null || !device.Enabled)
                 CommonFunctions.SendCommandToService("ReloadConfig");
             else
-                CommonFunctions.SendCommandToService($"Initialize {CommonFunctions.GetRuntimeID("Device", device.ParentID ?? device.ID)}");
+                CommonFunctions.SendCommandToService($"Initialize {CommonFunctions.GetRuntimeID("Device", device.IsConcentrator ? device.ID : device.EffectiveParentID ?? device.ID)}");
         }
 
         private static string ParseConnectionString(string connectionString)
