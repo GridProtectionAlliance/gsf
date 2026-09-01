@@ -24,6 +24,7 @@
 using System;
 using System.ComponentModel;
 using GSF.Net.Ftp;
+using GSF.Net.SFtp;
 
 // ReSharper disable InconsistentNaming
 namespace GSF.Net.VirtualFtpClient;
@@ -43,9 +44,13 @@ public enum FtpType
     /// </summary>
     [Description("TFTP: Trivial File Transfer Protocol")]
     TFtp,
+    /// <summary>
+    /// Secure File Transport Protocol (SFTP)
+    /// </summary>
+    [Description("SFTP: Secure File Transfer Protocol")]
+    SFtp,
 
     // Future: FTPS
-    // Future: SFTP/SSH
 }
 
 /// <summary>
@@ -155,6 +160,7 @@ public class FtpClient : IDisposable
     // Fields
     private Ftp.FtpClient m_ftpClient;
     private TFtp.TFtpClient m_tftpClient;
+    private SFtp.SFtpClient m_sftpClient;
     private bool m_disposed;
 
     #endregion
@@ -249,9 +255,26 @@ public class FtpClient : IDisposable
     public string TFtpDirectoryFile { get; set; } = DefaultTFtpDirectoryFile;
 
     /// <summary>
+    /// Gets or sets the file from which to load the SSH private key for authentication.
+    /// </summary>
+    public string SFtpKeyFile { get; set; }
+
+    /// <summary>
+    /// Gets or sets the pass phrase used to decrypt the key file.
+    /// </summary>
+    public string SFtpPassPhrase { get; set; }
+
+    /// <summary>
+    /// Gets or sets the file with the certificate that certifies the private key.
+    /// </summary>
+    public string SFtpCertificateFile { get; set; }
+
+    /// <summary>
     /// Returns true if FTP session is currently connected.
     /// </summary>
-    public bool IsConnected => FtpClientConnection?.IsConnected ?? TFtpClientConnection != null;
+    public bool IsConnected => FtpClientConnection?.IsConnected
+        ?? SFtpClientConnection?.Client.IsConnected
+        ?? TFtpClientConnection != null;
 
     internal Ftp.FtpClient FtpClientConnection
     {
@@ -291,13 +314,23 @@ public class FtpClient : IDisposable
     internal TFtp.TFtpClient TFtpClientConnection
     {
         get => m_tftpClient;
+        set => m_tftpClient = value;
+    }
+
+    internal SFtp.SFtpClient SFtpClientConnection
+    {
+        get => m_sftpClient;
         set
         {
-            if (m_tftpClient != null && m_tftpClient != value)
-                m_ftpClient?.Dispose();
+            if (m_sftpClient == value)
+                return;
 
-            // Assign new reference
-            m_tftpClient = value;
+            if (m_sftpClient is not null)
+            {
+                m_sftpClient?.Dispose();
+            }
+
+            m_sftpClient = value;
         }
     }
 
@@ -375,6 +408,24 @@ public class FtpClient : IDisposable
                 break;
             }
 
+            case FtpType.SFtp:
+            {
+                SFtpClientConnection = new()
+                {
+                    Server = Server,
+                    Port = Port ?? SFtpClient.DefaultPort
+                };
+
+                if (string.IsNullOrEmpty(SFtpKeyFile))
+                    SFtpClientConnection.Connect(userName, password);
+                else
+                    SFtpClientConnection.Connect(userName, SFtpKeyFile, SFtpPassPhrase, SFtpCertificateFile);
+
+                RootDirectory = new SFtpDirectory(this, SFtpClientConnection.RootDirectory);
+                CurrentDirectory = new SFtpDirectory(this, SFtpClientConnection.CurrentDirectory);
+                break;
+            }
+
             default:
                 throw new ArgumentOutOfRangeException();
         }
@@ -392,14 +443,24 @@ public class FtpClient : IDisposable
         if (!IsConnected)
             throw new InvalidOperationException("You must be connected to the FTP server before you can set the current directory.");
 
-        if (FtpType != FtpType.Ftp) // TFTP only has a single, root directory
+        if (FtpType == FtpType.TFtp) // TFTP only has a single, root directory
             return;
 
         if (directoryPath.Length <= 0)
             return;
 
-        FtpClientConnection.SetCurrentDirectory(directoryPath);
-        CurrentDirectory = new NativeFtpDirectory(this, FtpClientConnection.CurrentDirectory);
+        switch (FtpType)
+        {
+            case FtpType.Ftp:
+                FtpClientConnection.SetCurrentDirectory(directoryPath);
+                CurrentDirectory = new NativeFtpDirectory(this, FtpClientConnection.CurrentDirectory);
+                break;
+
+            case FtpType.SFtp:
+                SFtpClientConnection.Client.ChangeDirectory(directoryPath);
+                CurrentDirectory = new SFtpDirectory(this, SFtpClientConnection.CurrentDirectory);
+                break;
+        }
     }
 
     internal void OnBeginFileTransfer(string localFileName, string remoteFileName, TransferDirection transferDirection) => 
