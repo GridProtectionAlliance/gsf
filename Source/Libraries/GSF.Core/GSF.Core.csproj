@@ -102,7 +102,7 @@
     <None Include="GSF.Core.ruleset" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Generators\GSF.CodeGenerators\GSF.CodeGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
