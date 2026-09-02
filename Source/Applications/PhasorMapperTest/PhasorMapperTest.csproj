@@ -21,6 +21,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <ProjectReference Include="..\..\Libraries\Adapters\PhasorProtocolAdapters\PhasorProtocolAdapters.csproj" />
 	  <ProjectReference Include="..\..\Libraries\GSF.Core\GSF.Core.csproj" />
 	  <ProjectReference Include="..\..\Libraries\GSF.PhasorProtocols\GSF.PhasorProtocols.csproj" />

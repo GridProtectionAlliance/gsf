@@ -65,7 +65,7 @@ namespace GSF.Net.Snmp.Security
         /// <returns></returns>
         public byte[] GetSaltBytes()
         {
-            return BitConverter.GetBytes(NextSalt).Reverse().ToArray();
+            return BitConverter.GetBytes(NextSalt).AsEnumerable().Reverse().ToArray();
         }
 
         /// <summary>
