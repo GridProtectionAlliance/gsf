@@ -154,19 +154,26 @@ Public NotInheritable Class InsertHeader
 
     Private ReadOnly Property FullName() As String
         Get
+            ' If a registered name is found in the registry, we use that as the full name of the user
+            Dim registeredOfficeName As String = Registry.GetValue("HKEY_CURRENT_USER\Software\Microsoft\Office\Common\UserInfo", "UserName", "")
+
+            If Not String.IsNullOrWhiteSpace(registeredOfficeName) Then
+                Return registeredOfficeName
+            End If
+
             ' If machine name and domain are the same, user is likely not logged into a domain so
             ' there's a good probability that no active directory services will be available...
             If String.Compare(Environment.MachineName.Trim(), Environment.UserDomainName.Trim(), True) = 0 Then
-                ' If not running on a domain, we use user name from Visual Studio registration
-                Dim registeredName As String = Registry.GetValue("HKEY_USERS\.DEFAULT\Software\Microsoft\VisualStudio\14.0_Config\Registration", "UserName", "")
+                ' If not running on a domain, we use username from fixed registry location that user can customize
+                Dim registeredDeveloperName As String = Registry.GetValue("HKEY_USERS\.DEFAULT\Software\GridProtectionAlliance\Developer", "UserName", "")
 
-                If String.IsNullOrEmpty(registeredName) Then
+                If String.IsNullOrEmpty(registeredDeveloperName) Then
                     Return Environment.UserName
                 Else
-                    Return registeredName
+                    Return registeredDeveloperName
                 End If
             Else
-                ' Otherwise we get name defined in ActiveDirectory for logged in user
+                ' Otherwise we get name defined in ActiveDirectory for logged-in user
                 If Not String.IsNullOrEmpty(FirstName) AndAlso Not String.IsNullOrEmpty(LastName) Then
                     If String.IsNullOrEmpty(MiddleInitial) Then
                         Return FirstName & " " & LastName
