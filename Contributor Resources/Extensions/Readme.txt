@@ -8,7 +8,7 @@ Installation steps follow:
   1) Close all instances of Visual Studio that are currently running
   2) Double-click the GPAVSExtension#VER#.vsix file to begin the installation
   3) Click the "Install" button to install the extension
-  4) Start Visual Studio 2015
+  4) Start Visual Studio
 
 * Second, assign a shortcut key to the InsertHeader command:
 
@@ -24,4 +24,4 @@ Installation steps follow:
  10) Open a C# code window, click anywhere in the file
  11) Press Ctrl+Alt+H, header will be inserted at top of document
 
-These instructions have been tested with Visual Studio 2015.
+These instructions have been tested with Visual Studio 2026.
