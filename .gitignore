@@ -219,3 +219,6 @@ FakesAssemblies/
 **/*.Server/ModelManifest.xml
 _Pvt_Extensions
 /Source/GridSolutionsFramework.VC.db
+
+
+.github/upgrades
