@@ -2636,8 +2636,11 @@ public sealed class MultiProtocolFrameParser : IFrameParser
         {
             transportProtocol = (TransportProtocol)Enum.Parse(typeof(TransportProtocol), setting, true);
 
-            // The communications engine only recognizes the transport protocol key as "protocol"
-            connectionString = connectionString.ReplaceCaseInsensitive("transportProtocol", "protocol");
+            // The communications engine only recognizes the transport
+            // protocol key as "protocol" and enum value as a string
+            settings.Remove("transportProtocol");
+            settings["protocol"] = transportProtocol.ToString();
+            connectionString = settings.JoinKeyValuePairs();
         }
         else
         {
