@@ -251,27 +251,27 @@ namespace PowerCalculations.UI.DataModels
 						var voltagePhasorID = row.ConvertField<int>("voltagePhasorID");
 						var phasors = Phasor.Load(database, new List<int> {currentPhasorID, voltagePhasorID});
 
-						calculationList[keys.IndexOf(id)] = new PowerCalculation
-						{
-							ID = row.ConvertField<int>("ID"),
-							CircuitDescription = row.Field<string>("CircuitDescription"),
-							Enabled = row.ConvertField<bool>("Enabled"),
-							NodeID = database.Guid(row, "NodeID")
-						};
+						var powerCalculation = new PowerCalculation
+                        {
+                            ID = row.ConvertField<int>("ID"),
+                            Enabled = row.ConvertField<bool>("Enabled"),
+                            NodeID = database.Guid(row, "NodeID")
+                        };
 
 						foreach (var phasor in phasors)
 						{
 							if (phasor.ID == currentPhasorID)
-							{
-								calculationList[keys.IndexOf(id)].CurrentPhasor = phasor;
-							}
+                                powerCalculation.CurrentPhasor = phasor;
 							else if (phasor.ID == voltagePhasorID)
-							{
-								calculationList[keys.IndexOf(id)].VoltagePhasor = phasor;
-							}
+                                powerCalculation.VoltagePhasor = phasor;
 						}
 
-						var mkeys = new List<Guid> { voltageAngle, voltageMagnitude, currentAngle, currentMagnitude };
+						// Assign circuit description after voltage/current phasors
+						// so it does not get overwritten by model update triggers
+						powerCalculation.CircuitDescription = row.Field<string>("CircuitDescription");
+                        calculationList[keys.IndexOf(id)] = powerCalculation;
+
+                        var mkeys = new List<Guid> { voltageAngle, voltageMagnitude, currentAngle, currentMagnitude };
 						if (activePower != null) { mkeys.Add(activePower.Value); }
 						if (reactivePower != null) { mkeys.Add(reactivePower.Value); }
 						if (apparentPower != null) { mkeys.Add(apparentPower.Value); }
