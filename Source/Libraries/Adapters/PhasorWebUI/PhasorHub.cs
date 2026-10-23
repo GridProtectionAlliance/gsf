@@ -474,6 +474,7 @@ namespace PhasorWebUI
             DataContext.Table<Measurement>().UpdateRecord(measurement);
         }
 
+        [AuthorizeHubRole("Administrator, Editor")]
         public void AddNewOrUpdateMeasurement(Measurement measurement)
         {
             DataContext.Table<Measurement>().AddNewOrUpdateRecord(measurement);
