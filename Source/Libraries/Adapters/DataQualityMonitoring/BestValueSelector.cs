@@ -27,6 +27,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using GSF;
+using GSF.Diagnostics;
 using GSF.TimeSeries;
 using GSF.TimeSeries.Adapters;
 
@@ -237,10 +238,17 @@ namespace DataQualityMonitoring
             if (settings.TryGetValue(nameof(PublishBadValues), out setting))
                 m_publishBadValues = setting.ParseBoolean();
             else
-                m_publishBadValues = DefaultHandleZeroAsBad;
+                m_publishBadValues = DefaultPublishBadValues;
 
-            if (!settings.TryGetValue(nameof(BadFlags), out setting) || !Enum.TryParse(setting, out m_badFlags))
+            if (!settings.TryGetValue(nameof(BadFlags), out setting))
+            {
                 m_badFlags = DefaultBadFlags;
+            }
+            else if (!Enum.TryParse(setting, true, out m_badFlags))
+            {
+                m_badFlags = DefaultBadFlags;
+                OnStatusMessage(MessageLevel.Warning, $"Failed to parse {nameof(BadFlags)} value \"{setting}\", default bad flags were selected.", flags: MessageFlags.UsageIssue);
+            }
 
             if (settings.TryGetValue(nameof(HandleZeroAsBad), out setting))
                 m_handleZeroAsBad = setting.ParseBoolean();
