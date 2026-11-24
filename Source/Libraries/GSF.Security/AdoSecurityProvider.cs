@@ -445,7 +445,7 @@ namespace GSF.Security
                             try
                             {
                                 // Load user data, looking up by e-mail address
-                                User user = graphClient.Users.Request().Filter($"mail eq '{userData.Username}'").GetAsync().Result.FirstOrDefault();
+                                User user = graphClient.Users.Request().Filter($"mail eq '{EscapeAzureFilter(userData.Username)}'").GetAsync().Result.FirstOrDefault();
 
                                 if (user is null)
                                     throw new SecurityException($"Failed to load user \"{userData.Username}\" from Azure AD application \"{config.ClientID}\".");
@@ -806,7 +806,7 @@ namespace GSF.Security
                                         try
                                         {
                                             // Load user data in application context, looking by e-mail address
-                                            User user = graphClient.Users.Request().Filter($"mail eq '{username}'").GetAsync().Result.FirstOrDefault();
+                                            User user = graphClient.Users.Request().Filter($"mail eq '{EscapeAzureFilter(username)}'").GetAsync().Result.FirstOrDefault();
 
                                             isAuthenticated = user is not null;
                                             retryCount = 2;
@@ -1523,6 +1523,9 @@ namespace GSF.Security
         private static string EncodeEscapeSequences(string value) => 
             value.ToNonNullString().Replace("\\", "\\\\");
 
+        // Graph Filters do not need escaping except for ' as the API handles other characters.
+        private static string EscapeAzureFilter(string value) =>
+            value.ToNonNullString().Replace("'","''");
         #endregion
     }
 }
